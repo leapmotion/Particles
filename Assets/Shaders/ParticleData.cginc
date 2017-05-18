@@ -8,8 +8,8 @@
 #define RADIUS 0.01
 
 #define MAX_SOCIAL_RANGE (RADIUS * 20)
-#define MAX_COLLISION_FORCE 5
-#define MAX_SOCIAL_FORCE 0.1
+#define MAX_COLLISION_FORCE 2
+#define MAX_SOCIAL_FORCE 0.5
 
 
 

@@ -26,17 +26,21 @@ void Simulate_Basic (uint3 id_full : SV_DispatchThreadID)
 
     Particle other = _Particles[i];
     float3 toOther = other.position - p.position;
-    float distance = length(toOther);
+    float distanceSqrd = dot(toOther, toOther);
+    
+    if(distanceSqrd < MAX_SOCIAL_RANGE * MAX_SOCIAL_RANGE && distanceSqrd > 0) {
+      float distance = sqrt(distanceSqrd);
 
-    //This is for long range interaction
-    if(distance < MAX_SOCIAL_RANGE) {
-      accumForce += float4(MAX_SOCIAL_FORCE * (toOther / distance), 1);
-    }
+      //This is for long range interaction
+      if(distance < MAX_SOCIAL_RANGE) {
+        accumForce += float4(MAX_SOCIAL_FORCE * (toOther / distance), 1);
+      }
 
-    //This is for collision
-    if(distance < RADIUS * 2) {
-      float penetration = 1.0 - distance / (2 * RADIUS);
-      p.velocity -= _DeltaTime * MAX_COLLISION_FORCE * (toOther / distance) * penetration;
+      //This is for collision
+      if(distance < RADIUS * 2) {
+        float penetration = 1.0 - distance / (2 * RADIUS);
+        p.velocity -= _DeltaTime * MAX_COLLISION_FORCE * (toOther / distance) * penetration;
+      }
     }
   }
 

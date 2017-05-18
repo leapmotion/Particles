@@ -73,14 +73,14 @@ public class ParticleManager : MonoBehaviour {
     Debug.Log(Time.deltaTime);
 
     _simulationShader.Dispatch(_simulationKernelIndex, MAX_PARTICLES / 64, 1, 1);
-
-
+    
     //dispatch particle simulation here
     Graphics.DrawMeshInstancedIndirect(_mesh,
-                                       0,
-                                       _displayMaterial,
-                                       new Bounds(Vector3.zero, Vector3.one * 10000),
-                                       _argBuffer);
+                                        0,
+                                        _displayMaterial,
+                                        new Bounds(Vector3.zero, Vector3.one * 10000),
+                                        _argBuffer);
+
   }
 
   void OnPostRender() {

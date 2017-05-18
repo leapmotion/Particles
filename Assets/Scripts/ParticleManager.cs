@@ -30,6 +30,11 @@ public class ParticleManager : MonoBehaviour {
   }
 
   void OnEnable() {
+    if (!SystemInfo.supportsInstancing) {
+      Debug.LogError("This system does not support instancing!");
+      return;
+    }
+
     _argBuffer = new ComputeBuffer(5, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
     _particleBuffer = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
 
@@ -73,7 +78,7 @@ public class ParticleManager : MonoBehaviour {
     Debug.Log(Time.deltaTime);
 
     _simulationShader.Dispatch(_simulationKernelIndex, MAX_PARTICLES / 64, 1, 1);
-    
+
     //dispatch particle simulation here
     Graphics.DrawMeshInstancedIndirect(_mesh,
                                         0,

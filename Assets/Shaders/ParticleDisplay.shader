@@ -58,7 +58,7 @@
 
       Particle p = _Particles[v.instanceID];
       v.vertex *= RADIUS * 2;
-      v.color = p.color;
+      v.color = float4(p.color, 1);
     }
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {

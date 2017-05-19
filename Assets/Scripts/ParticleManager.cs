@@ -4,7 +4,7 @@ using float4 = UnityEngine.Vector4;
 using float3 = UnityEngine.Vector3;
 
 public class ParticleManager : MonoBehaviour {
-  public const int MAX_PARTICLES = 64 * 10;
+  public const int MAX_PARTICLES = 64 * 300;
   public const float MAX_DELTA_TIME = 1.0f / 30.0f;
   public const string SIMULATION_KERNEL_NAME = "Simulate_Basic";
 

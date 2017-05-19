@@ -11,12 +11,8 @@
 #define MAX_COLLISION_FORCE 2
 #define MAX_SOCIAL_FORCE 0.5
 
-
-
-
-
 struct Particle {
   float3 position;
   float3 velocity;
-  float4 color;
+  float3 color;
 };

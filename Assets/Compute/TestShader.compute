@@ -1,0 +1,179 @@
+﻿#pragma kernel Simulate
+#pragma kernel Integrate_Naive
+#pragma kernel Integrate_X
+#pragma kernel Integrate_Y
+#pragma kernel Integrate_Z
+#pragma kernel Copy
+#pragma kernel Sort
+
+#define BOX_SIDE 64
+#define BOX_COUNT (BOX_SIDE * BOX_SIDE * BOX_SIDE)
+
+uniform float3 _Center;
+
+struct Particle {
+  float3 position;
+  float3 velocity;
+  float3 color;
+};
+
+RWStructuredBuffer<Particle> _ParticleFront;
+RWStructuredBuffer<Particle> _ParticleBack;
+
+RWStructuredBuffer<uint> _Count;
+
+RWStructuredBuffer<uint> _BoxStart;
+RWStructuredBuffer<uint> _BoxCount;
+
+float noise(float2 n ){
+	return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+}
+
+uint3 GetBoxPos(float3 position) {
+ return (uint3)(position * 8 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+}
+
+uint GetBox(uint3 boxPos){
+  return boxPos.x + boxPos.y * BOX_SIDE + boxPos.z * BOX_SIDE * BOX_SIDE;
+}
+
+uint GetBox(float3 position){
+  return GetBox(GetBoxPos(position));
+}
+
+[numthreads(64,1,1)]
+void Simulate(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  //Grab the particle from the front buffer
+  Particle particle = _ParticleFront[index];
+
+  uint3 boxPos = GetBoxPos(particle.position);
+  for(int dx=-1;dx<=1; dx++) {
+    for(int dy=-1; dy<=1; dy++) {
+      for(int dz=-1; dz<=1; dz++) {
+        uint3 deltaBoxPos = boxPos + uint3(dx, dy, dz);
+        uint deltaBox = GetBox(deltaBoxPos);
+
+        uint start = _BoxStart[deltaBox];
+        uint count = _BoxCount[deltaBox];
+
+        for(uint i=start; i<start + count; i++){
+          if(i == index) continue;
+
+          Particle other = _ParticleFront[i];
+          float3 fromOther = (particle.position - other.position);
+          float distSqrd = dot(fromOther, fromOther);
+          if(distSqrd < 0.025 * 0.025) {
+            float dist = sqrt(distSqrd);
+
+            particle.velocity += fromOther / dist * (0.025 - dist) * 0.1;
+          }
+        }
+      }
+    }
+  }
+
+  float3 toCenter = (_Center - particle.position);
+  float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
+  particle.velocity += forceToCenter * 0.0002;
+  particle.velocity *= 0.99;
+
+  //Do simulation here
+  particle.position += particle.velocity;
+
+  //Increment the count of the new box we have landed in
+  uint newBox = GetBox(particle.position);
+  InterlockedAdd(_Count[newBox], 1);
+
+  //Set color based on box
+
+  float r = noise(float2(newBox, newBox * 23));
+  float g = noise(float2(newBox * 44, newBox + 99));
+  float b = noise(float2(newBox * 3.4, newBox * 9));
+
+  particle.color = float3(r, g, b);
+  //particle.color = abs(70 * particle.velocity);
+
+  //Store the particle into the back buffer
+  _ParticleBack[index] = particle;
+}
+
+[numthreads(64,1,1)]
+void Integrate_Naive (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x;
+  uint sum = 0;
+  for(uint i=0; i<=index; i++){
+    sum += _Count[i];
+  }
+
+  _BoxStart[index] = sum;
+  _BoxCount[index] = _Count[index];
+  _Count[index] = 0;
+}
+
+[numthreads(4,4,4)]
+void Integrate_X (uint3 id : SV_DispatchThreadID)
+{
+  uint start = id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint index = start + id.x;
+
+  uint sum = 0;
+  for(uint i=start; i<=index; i++){
+    sum += _Count[i];
+  }
+
+  _BoxStart[index] = sum;
+}
+
+[numthreads(4,4,4)]
+void Integrate_Y (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint start = (BOX_SIDE - 1) + id.z * BOX_SIDE * BOX_SIDE;
+
+  uint sum = _BoxStart[index];
+  for(uint i=start; i<index; i += BOX_SIDE){
+    sum += _BoxStart[i];
+  }
+
+  _BoxCount[index] = sum;
+}
+
+[numthreads(4,4,4)]
+void Integrate_Z (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint start = (BOX_SIDE - 1) + ((BOX_SIDE - 1) * BOX_SIDE);
+
+  uint sum = _BoxCount[index];
+  for(uint i=start; i<index; i += (BOX_SIDE * BOX_SIDE)){
+    sum += _BoxCount[i];
+  }
+
+  _BoxStart[index] = sum;
+}
+
+[numthreads(64,1,1)]
+void Copy(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  _BoxCount[index] = _Count[index];
+  _Count[index] = 0;
+}
+
+[numthreads(64,1,1)]
+void Sort(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  Particle particle = _ParticleBack[index];
+
+  uint box = GetBox(particle.position);
+
+  uint newIndex;
+  InterlockedAdd(_BoxStart[box], -1, newIndex);
+  newIndex--;
+
+  _ParticleFront[newIndex] = particle;
+}

@@ -58,7 +58,7 @@
 
       Particle p = _Particles[v.instanceID];
       float3 vel = p.position - p.prevPosition;
-      v.vertex *= RADIUS * (1 + 20 * length(vel));
+      v.vertex *= RADIUS / (1 + 20 * length(vel));
       v.color = float4(p.color, 1);
     }
 

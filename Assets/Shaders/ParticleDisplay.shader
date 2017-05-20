@@ -57,7 +57,8 @@
       UNITY_INITIALIZE_OUTPUT(Input, o);
 
       Particle p = _Particles[v.instanceID];
-      v.vertex *= RADIUS * 2;
+      float3 vel = p.position - p.prevPosition;
+      v.vertex *= RADIUS * 2 * (1 + 20 * length(vel));
       v.color = float4(p.color, 1);
     }
 

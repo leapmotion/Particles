@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using Leap;
+using Leap.Unity;
 
 public class ComputeTests : MonoBehaviour {
   public const int MAX_PARTICLES = 1024 * 64;
+  public const int MAX_CAPSULES = 1024;
 
   public const int BOX_SIDE = 64;
   public const int BOX_COUNT = BOX_SIDE * BOX_SIDE * BOX_SIDE;
+
+  [SerializeField]
+  private LeapProvider _provider;
 
   [SerializeField]
   private Mesh _mesh;
@@ -25,6 +31,11 @@ public class ComputeTests : MonoBehaviour {
     public Vector3 color;
   }
 
+  private struct Capsule {
+    public Vector3 pointA;
+    public Vector3 pointB;
+  }
+
   private int _integrateVerlet;
   private int _simulate;
   private int _integrateNaive;
@@ -33,6 +44,9 @@ public class ComputeTests : MonoBehaviour {
   private int _integrate_z;
   private int _copy;
   private int _sort;
+
+  private ComputeBuffer _capsules;
+  private Capsule[] _capsuleArray = new Capsule[MAX_CAPSULES];
 
   private ComputeBuffer _particleFront;
   private ComputeBuffer _particleBack;
@@ -46,6 +60,8 @@ public class ComputeTests : MonoBehaviour {
   private Material _displayMat;
 
   void OnEnable() {
+    _capsules = new ComputeBuffer(MAX_CAPSULES, Marshal.SizeOf(typeof(Capsule)));
+
     _particleFront = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
     _particleBack = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
 
@@ -109,6 +125,22 @@ public class ComputeTests : MonoBehaviour {
   }
 
   void Update() {
+    int index = 0;
+    Frame frame = _provider.CurrentFrame;
+    foreach (var hand in frame.Hands) {
+      foreach (var finger in hand.Fingers) {
+        foreach (var bone in finger.bones) {
+          _capsuleArray[index++] = new Capsule() {
+            pointA = bone.PrevJoint.ToVector3(),
+            pointB = bone.NextJoint.ToVector3()
+          };
+        }
+      }
+    }
+
+    _capsules.SetData(_capsuleArray);
+    _shader.SetInt("_CapsuleCount", index);
+
     for (int i = 0; i < 4; i++) {
       _shader.SetVector("_Center", transform.position);
 

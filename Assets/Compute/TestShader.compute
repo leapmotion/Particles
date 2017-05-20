@@ -20,6 +20,15 @@ struct Particle {
   float3 color;
 };
 
+struct Capsule {
+  float3 point0;
+  float3 point1;
+}
+
+#define CAPSULE_RADIUS 0.055
+uniform int _CapsuleCount;
+StructuredBuffer<Capsule> _Capsules;
+
 RWStructuredBuffer<Particle> _ParticleFront;
 RWStructuredBuffer<Particle> _ParticleBack;
 
@@ -136,10 +145,36 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
     }
   }
 
+  for(int i=0; i<_CapsuleCount; i++){
+    Capsule capsule = _Capsules[i];
+
+    Vector3 ba = capsule.point0 - capsule.point1;
+    Vector3 anchor = lerp(a, b, dot(particle.position - a, ba) / ba.sqrMagnitude);
+    Vector3 delta = particle.position - anchor;
+
+    particle.position += normalize(delta) * max(CAPSULE_RADIUS, length(delta));
+  }
+
   float boxSize = 0.8;
 
-  float3 clamped = clamp(particle.position, float3(-boxSize, -boxSize, -boxSize), float3(boxSize, boxSize, boxSize));
-  particle.position += 1.2 * (clamped - particle.position);
+  float clampHeight = 0.8;
+  float clampRadius = 1.2;
+
+
+  //BOX
+  //float3 clamped = clamp(particle.position, -clampHeight, clampHeight);
+  
+  //CYLINDER
+  float3 clamped = particle.position;
+  clamped.y = clamp(clamped.y, -clampHeight, clampHeight);
+  clamped.xz = normalize(clamped.xz) * min(clampRadius, length(clamped.xz));
+
+  //SPHERE
+  //float3 clamped = normalize(particle.position) * min(clampRadius, length(particle.position));
+
+  //SOFT SPHERE
+
+  particle.position += 2 * (clamped - particle.position);
 
   //particle.velocity *= 0.99;
 

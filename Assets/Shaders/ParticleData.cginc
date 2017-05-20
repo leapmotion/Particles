@@ -13,6 +13,6 @@
 
 struct Particle {
   float3 position;
-  float3 velocity;
+  float3 prevPosition;
   float3 color;
 };

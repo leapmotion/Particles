@@ -30,7 +30,7 @@ float noise(float2 n ){
 }
 
 uint3 GetBoxPos(float3 position) {
- return (uint3)(position * 8 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+ return (uint3)(position * 12 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
 }
 
 uint GetBox(uint3 boxPos){
@@ -41,6 +41,24 @@ uint GetBox(float3 position){
   return GetBox(GetBoxPos(position));
 }
 
+float3 rgb2hsv(float3 c)
+{
+    float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    float4 p = lerp(float4(c.bg, K.wz), float4(c.gb, K.xy), step(c.b, c.g));
+    float4 q = lerp(float4(p.xyw, c.r), float4(c.r, p.yzx), step(p.x, c.r));
+ 
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float3 hsv2rgb(float3 c)
+{
+    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 [numthreads(64,1,1)]
 void Simulate(uint3 id : SV_DispatchThreadID) {
   uint index = id.x;
@@ -48,6 +66,14 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
   //Grab the particle from the front buffer
   Particle particle = _ParticleFront[index];
 
+  /*
+  if(length(particle.position) < 0.02) {
+    particle.position = particle.position +  float3(2, 0, 0);
+    particle.velocity = float3(0,0,0);
+  }
+  */
+
+  uint total = 0;
   uint3 boxPos = GetBoxPos(particle.position);
   for(int dx=-1;dx<=1; dx++) {
     for(int dy=-1; dy<=1; dy++) {
@@ -64,19 +90,49 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
           Particle other = _ParticleFront[i];
           float3 fromOther = (particle.position - other.position);
           float distSqrd = dot(fromOther, fromOther);
-          if(distSqrd < 0.025 * 0.025) {
+          if(distSqrd < 0.035 * 0.035) {
             float dist = sqrt(distSqrd);
 
-            particle.velocity += fromOther / dist * (0.025 - dist) * 0.1;
+            total++;
+            particle.color += 0.01 * other.color;
+            particle.velocity += fromOther / dist * (0.035 - dist) * 0.1;
           }
         }
       }
     }
   }
 
+  particle.color = normalize(particle.color);
+  
+  float3 hsv = rgb2hsv(particle.color);
+  hsv.y = clamp(hsv.y, 0.2, 1);
+  hsv.x = clamp(hsv.x, 0, 1);
+  hsv.z = clamp(hsv.z, 0, 1);
+  particle.color = hsv2rgb(hsv);
+
+
+
+
+  float maxC = max(particle.color.r, max(particle.color.g, particle.color.b));
+  if(particle.color.r >= maxC) {
+    particle.color.r += 0.01;
+  }
+    if(particle.color.g >= maxC) {
+    particle.color.g += 0.01;
+  }
+    if(particle.color.b >= maxC) {
+    particle.color.b += 0.01;
+  }
+
   float3 toCenter = (_Center - particle.position);
   float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
+
+  float3 aroundCenter = cross(_Center - particle.position, float3(0,1,0));
+  float3 forceAroundCenter = normalize(aroundCenter) / (0.3 + dot(toCenter, toCenter));
+
   particle.velocity += forceToCenter * 0.0002;
+  particle.velocity += forceAroundCenter * 0.0001;
+
   particle.velocity *= 0.99;
 
   //Do simulation here
@@ -92,8 +148,8 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
   float g = noise(float2(newBox * 44, newBox + 99));
   float b = noise(float2(newBox * 3.4, newBox * 9));
 
-  particle.color = float3(r, g, b);
-  //particle.color = abs(70 * particle.velocity);
+  //particle.color += 0.01 * float3(r, g, b);
+  //particle.color += float3(saturate(length(10 * particle.velocity) - 1), 0, 0);
 
   //Store the particle into the back buffer
   _ParticleBack[index] = particle;

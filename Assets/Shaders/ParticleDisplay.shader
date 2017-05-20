@@ -62,9 +62,10 @@
     }
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
-      o.Albedo = IN.color.rgb;
+      o.Albedo = 0;// IN.color.rgb;
 			o.Metallic = 0;
 			o.Smoothness = 0;
+      o.Emission = IN.color.rgb;
 		}
 		ENDCG
 	}

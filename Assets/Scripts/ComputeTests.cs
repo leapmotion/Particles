@@ -21,10 +21,11 @@ public class ComputeTests : MonoBehaviour {
   [StructLayout(LayoutKind.Sequential)]
   private struct Particle {
     public Vector3 position;
-    public Vector3 velocity;
+    public Vector3 prevPosition;
     public Vector3 color;
   }
 
+  private int _integrateVerlet;
   private int _simulate;
   private int _integrateNaive;
   private int _integrate_x;
@@ -64,6 +65,7 @@ public class ComputeTests : MonoBehaviour {
     }
     _count.SetData(counts);
 
+    _integrateVerlet = _shader.FindKernel("IntegrateVerlet");
     _simulate = _shader.FindKernel("Simulate");
     _integrate_x = _shader.FindKernel("Integrate_X");
     _integrate_y = _shader.FindKernel("Integrate_Y");
@@ -74,15 +76,16 @@ public class ComputeTests : MonoBehaviour {
 
     Particle[] particles = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
+      Vector3 pos = Vector3.Scale(new Vector3(1, 0.1f, 1), (Random.insideUnitSphere * 1));
       particles[i] = new Particle() {
-        position = Vector3.Scale(new Vector3(1, 0.1f, 1), (Random.insideUnitSphere * 2)),
-        velocity = Random.insideUnitSphere * 0.001f,
+        position = pos,
+        prevPosition = pos,
         color = new Vector3(Random.value, Random.value, Random.value)
       };
     }
     _particleFront.SetData(particles);
 
-    foreach (var index in new int[] { _simulate, _integrate_x, _integrate_y, _integrate_z, _integrateNaive, _copy, _sort }) {
+    foreach (var index in new int[] { _integrateVerlet, _simulate, _integrate_x, _integrate_y, _integrate_z, _integrateNaive, _copy, _sort }) {
       _shader.SetBuffer(index, "_ParticleFront", _particleFront);
       _shader.SetBuffer(index, "_ParticleBack", _particleBack);
       _shader.SetBuffer(index, "_Count", _count);
@@ -106,51 +109,54 @@ public class ComputeTests : MonoBehaviour {
   }
 
   void Update() {
-    _shader.SetVector("_Center", transform.position);
+    for (int i = 0; i < 4; i++) {
+      _shader.SetVector("_Center", transform.position);
 
-    _shader.Dispatch(_simulate, MAX_PARTICLES / 64, 1, 1);
+      _shader.Dispatch(_integrateVerlet, MAX_PARTICLES / 64, 1, 1);
+      _shader.Dispatch(_simulate, MAX_PARTICLES / 64, 1, 1);
 
-    /*
-    Debug.Log("###### Counts after simulate: ");
-    uint[] counts = new uint[BOX_COUNT];
-    _count.GetData(counts);
-    uint prevCount = uint.MaxValue;
-    uint totalCount = 0;
-    for (int i = 0; i < counts.Length; i++) {
-      uint value = counts[i];
-      totalCount += value;
-      if (value != prevCount) {
-        Debug.Log("i: " + value);
+      /*
+      Debug.Log("###### Counts after simulate: ");
+      uint[] counts = new uint[BOX_COUNT];
+      _count.GetData(counts);
+      uint prevCount = uint.MaxValue;
+      uint totalCount = 0;
+      for (int i = 0; i < counts.Length; i++) {
+        uint value = counts[i];
+        totalCount += value;
+        if (value != prevCount) {
+          Debug.Log("i: " + value);
+        }
+        prevCount = value;
       }
-      prevCount = value;
-    }
-    Debug.Log("Total count " + totalCount);
-    */
+      Debug.Log("Total count " + totalCount);
+      */
 
-    _shader.Dispatch(_integrate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-    _shader.Dispatch(_integrate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-    _shader.Dispatch(_integrate_z, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+      _shader.Dispatch(_integrate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+      _shader.Dispatch(_integrate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+      _shader.Dispatch(_integrate_z, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
 
-    //_shader.Dispatch(_integrateNaive, BOX_COUNT / 64, 1, 1);
+      //_shader.Dispatch(_integrateNaive, BOX_COUNT / 64, 1, 1);
 
-    _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
-    _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
+      _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
+      _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
 
-    /*
-    uint[] starts = new uint[BOX_COUNT];
-    _boxStart.GetData(starts);
+      /*
+      uint[] starts = new uint[BOX_COUNT];
+      _boxStart.GetData(starts);
 
 
-    Debug.Log("#####");
-    uint prev = uint.MaxValue;
-    for (int i = 0; i < starts.Length; i++) {
-      uint value = starts[i];
-      if (value != prev) {
-        Debug.Log(i + ": " + value);
+      Debug.Log("#####");
+      uint prev = uint.MaxValue;
+      for (int i = 0; i < starts.Length; i++) {
+        uint value = starts[i];
+        if (value != prev) {
+          Debug.Log(i + ": " + value);
+        }
+        prev = value;
       }
-      prev = value;
+      */
     }
-    */
   }
 
   void LateUpdate() {

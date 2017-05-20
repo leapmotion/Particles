@@ -1,4 +1,5 @@
-﻿#pragma kernel Simulate
+﻿#pragma kernel IntegrateVerlet
+#pragma kernel Simulate
 #pragma kernel Integrate_Naive
 #pragma kernel Integrate_X
 #pragma kernel Integrate_Y
@@ -6,6 +7,8 @@
 #pragma kernel Copy
 #pragma kernel Sort
 
+#define RADIUS 0.035
+#define SQR_RADIUS (RADIUS * RADIUS)
 #define BOX_SIDE 64
 #define BOX_COUNT (BOX_SIDE * BOX_SIDE * BOX_SIDE)
 
@@ -13,7 +16,7 @@ uniform float3 _Center;
 
 struct Particle {
   float3 position;
-  float3 velocity;
+  float3 prevPosition;
   float3 color;
 };
 
@@ -30,7 +33,7 @@ float noise(float2 n ){
 }
 
 uint3 GetBoxPos(float3 position) {
- return (uint3)(position * 12 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+ return (uint3)(position * 18 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
 }
 
 uint GetBox(uint3 boxPos){
@@ -60,25 +63,54 @@ float3 hsv2rgb(float3 c)
 }
 
 [numthreads(64,1,1)]
+void IntegrateVerlet(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  Particle particle = _ParticleFront[index];
+
+  float3 toCenter = (_Center - particle.position);
+  float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
+
+  float3 aroundCenter = cross(_Center - particle.position, float3(0,1,0));
+  float3 forceAroundCenter = normalize(aroundCenter) / (0.1 + dot(toCenter, toCenter));
+
+  {
+    float3 tempPos = particle.position;
+
+    particle.position += 0.9999 * (particle.position - particle.prevPosition);
+    particle.position += forceToCenter * 0.0002;
+    particle.position += forceAroundCenter * 0.00001;
+    particle.position.y -= 0.0001;
+
+    particle.prevPosition = tempPos;
+  }
+
+  _ParticleFront[index] = particle;
+}
+
+[numthreads(64,1,1)]
 void Simulate(uint3 id : SV_DispatchThreadID) {
   uint index = id.x;
 
   //Grab the particle from the front buffer
   Particle particle = _ParticleFront[index];
 
-  /*
-  if(length(particle.position) < 0.02) {
-    particle.position = particle.position +  float3(2, 0, 0);
-    particle.velocity = float3(0,0,0);
-  }
-  */
 
-  uint total = 0;
   uint3 boxPos = GetBoxPos(particle.position);
+
+  uint wow = index;
+  float ddr = noise(float2(wow, wow * 23));
+  float ddg = noise(float2(wow * 44, wow + 99));
+  float ddb = noise(float2(wow * 3.4, wow * 9));
+
   for(int dx=-1;dx<=1; dx++) {
     for(int dy=-1; dy<=1; dy++) {
       for(int dz=-1; dz<=1; dz++) {
-        uint3 deltaBoxPos = boxPos + uint3(dx, dy, dz);
+        int dxs = ddr > 0.5 ? -1 : 1;
+        int dys = ddg > 0.5 ? -1 : 1;
+        int dzs = ddb > 0.5 ? -1 : 1;
+
+        uint3 deltaBoxPos = boxPos + uint3(dx * dxs, dy * dys, dz * dzs);
         uint deltaBox = GetBox(deltaBoxPos);
 
         uint start = _BoxStart[deltaBox];
@@ -90,66 +122,39 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
           Particle other = _ParticleFront[i];
           float3 fromOther = (particle.position - other.position);
           float distSqrd = dot(fromOther, fromOther);
-          if(distSqrd < 0.035 * 0.035) {
-            float dist = sqrt(distSqrd);
 
-            total++;
-            particle.color += 0.01 * other.color;
-            particle.velocity += fromOther / dist * (0.035 - dist) * 0.1;
+          if(distSqrd < SQR_RADIUS) {
+            //float deltaLength = length(fromOther);
+            //float diff = (deltaLength - RADIUS) / deltaLength;
+            //particle.position -= fromOther * diff * 0.5;
+
+            fromOther *= SQR_RADIUS / (dot(fromOther, fromOther) + SQR_RADIUS) - 0.5;
+            particle.position += fromOther;
           }
         }
       }
     }
   }
 
-  particle.color = normalize(particle.color);
-  
-  float3 hsv = rgb2hsv(particle.color);
-  hsv.y = clamp(hsv.y, 0.2, 1);
-  hsv.x = clamp(hsv.x, 0, 1);
-  hsv.z = clamp(hsv.z, 0, 1);
-  particle.color = hsv2rgb(hsv);
+  float boxSize = 0.8;
 
+  float3 clamped = clamp(particle.position, float3(-boxSize, -boxSize, -boxSize), float3(boxSize, boxSize, boxSize));
+  particle.position += 1.2 * (clamped - particle.position);
 
-
-
-  float maxC = max(particle.color.r, max(particle.color.g, particle.color.b));
-  if(particle.color.r >= maxC) {
-    particle.color.r += 0.01;
-  }
-    if(particle.color.g >= maxC) {
-    particle.color.g += 0.01;
-  }
-    if(particle.color.b >= maxC) {
-    particle.color.b += 0.01;
-  }
-
-  float3 toCenter = (_Center - particle.position);
-  float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
-
-  float3 aroundCenter = cross(_Center - particle.position, float3(0,1,0));
-  float3 forceAroundCenter = normalize(aroundCenter) / (0.3 + dot(toCenter, toCenter));
-
-  particle.velocity += forceToCenter * 0.0002;
-  particle.velocity += forceAroundCenter * 0.0001;
-
-  particle.velocity *= 0.99;
-
-  //Do simulation here
-  particle.position += particle.velocity;
+  //particle.velocity *= 0.99;
 
   //Increment the count of the new box we have landed in
   uint newBox = GetBox(particle.position);
   InterlockedAdd(_Count[newBox], 1);
 
-  //Set color based on box
-
   float r = noise(float2(newBox, newBox * 23));
   float g = noise(float2(newBox * 44, newBox + 99));
   float b = noise(float2(newBox * 3.4, newBox * 9));
 
-  //particle.color += 0.01 * float3(r, g, b);
-  //particle.color += float3(saturate(length(10 * particle.velocity) - 1), 0, 0);
+  particle.color = float3(r, g, b);
+
+  float3 disp = particle.position - particle.prevPosition;
+  particle.color = abs(70 * disp);
 
   //Store the particle into the back buffer
   _ParticleBack[index] = particle;

@@ -31,6 +31,7 @@ public class ComputeTests : MonoBehaviour {
     public Vector3 color;
   }
 
+  [StructLayout(LayoutKind.Sequential)]
   private struct Capsule {
     public Vector3 pointA;
     public Vector3 pointB;
@@ -92,7 +93,7 @@ public class ComputeTests : MonoBehaviour {
 
     Particle[] particles = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
-      Vector3 pos = Vector3.Scale(new Vector3(1, 0.1f, 1), (Random.insideUnitSphere * 1));
+      Vector3 pos = 0.3f * Vector3.Scale(new Vector3(1, 0.1f, 1), (Random.insideUnitSphere * 1));
       particles[i] = new Particle() {
         position = pos,
         prevPosition = pos,
@@ -102,6 +103,7 @@ public class ComputeTests : MonoBehaviour {
     _particleFront.SetData(particles);
 
     foreach (var index in new int[] { _integrateVerlet, _simulate, _integrate_x, _integrate_y, _integrate_z, _integrateNaive, _copy, _sort }) {
+      _shader.SetBuffer(index, "_Capsules", _capsules);
       _shader.SetBuffer(index, "_ParticleFront", _particleFront);
       _shader.SetBuffer(index, "_ParticleBack", _particleBack);
       _shader.SetBuffer(index, "_Count", _count);
@@ -122,6 +124,7 @@ public class ComputeTests : MonoBehaviour {
     if (_boxCount != null) _boxCount.Release();
 
     if (_argBuffer != null) _argBuffer.Release();
+    if (_capsules != null) _capsules.Release();
   }
 
   void Update() {
@@ -141,7 +144,7 @@ public class ComputeTests : MonoBehaviour {
     _capsules.SetData(_capsuleArray);
     _shader.SetInt("_CapsuleCount", index);
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 2; i++) {
       _shader.SetVector("_Center", transform.position);
 
       _shader.Dispatch(_integrateVerlet, MAX_PARTICLES / 64, 1, 1);

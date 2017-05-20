@@ -7,7 +7,7 @@
 #pragma kernel Copy
 #pragma kernel Sort
 
-#define RADIUS 0.035
+#define RADIUS 0.0175
 #define SQR_RADIUS (RADIUS * RADIUS)
 #define BOX_SIDE 64
 #define BOX_COUNT (BOX_SIDE * BOX_SIDE * BOX_SIDE)
@@ -21,11 +21,11 @@ struct Particle {
 };
 
 struct Capsule {
-  float3 point0;
-  float3 point1;
-}
+  float3 a;
+  float3 b;
+};
 
-#define CAPSULE_RADIUS 0.055
+#define CAPSULE_RADIUS 0.025
 uniform int _CapsuleCount;
 StructuredBuffer<Capsule> _Capsules;
 
@@ -42,7 +42,7 @@ float noise(float2 n ){
 }
 
 uint3 GetBoxPos(float3 position) {
- return (uint3)(position * 18 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+ return (uint3)(position * 28 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
 }
 
 uint GetBox(uint3 boxPos){
@@ -88,7 +88,7 @@ void IntegrateVerlet(uint3 id : SV_DispatchThreadID) {
 
     particle.position += 0.9999 * (particle.position - particle.prevPosition);
     particle.position += forceToCenter * 0.0002;
-    particle.position += forceAroundCenter * 0.00001;
+    //particle.position += forceAroundCenter * 0.00001;
     particle.position.y -= 0.0001;
 
     particle.prevPosition = tempPos;
@@ -148,26 +148,28 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
   for(int i=0; i<_CapsuleCount; i++){
     Capsule capsule = _Capsules[i];
 
-    Vector3 ba = capsule.point0 - capsule.point1;
-    Vector3 anchor = lerp(a, b, dot(particle.position - a, ba) / ba.sqrMagnitude);
-    Vector3 delta = particle.position - anchor;
+    float3 ba = capsule.b - capsule.a;
+    float3 anchor = lerp(capsule.a, capsule.b, saturate(dot(particle.position - capsule.a, ba) / dot(ba, ba)));
+    float3 delta = particle.position - anchor;
 
-    particle.position += normalize(delta) * max(CAPSULE_RADIUS, length(delta));
+    if(length(delta) > 0){
+      particle.position = lerp(particle.position, anchor + normalize(delta) * max(CAPSULE_RADIUS, length(delta)), 0.09);
+    }
   }
 
-  float boxSize = 0.8;
+  float boxSize = 0.9;
 
-  float clampHeight = 0.8;
-  float clampRadius = 1.2;
+  float clampHeight = 0.3;
+  float clampRadius = 0.9;
 
 
   //BOX
-  //float3 clamped = clamp(particle.position, -clampHeight, clampHeight);
+  float3 clamped = clamp(particle.position, -boxSize, boxSize);
   
   //CYLINDER
-  float3 clamped = particle.position;
-  clamped.y = clamp(clamped.y, -clampHeight, clampHeight);
-  clamped.xz = normalize(clamped.xz) * min(clampRadius, length(clamped.xz));
+  //float3 clamped = particle.position;
+  //clamped.y = clamp(clamped.y, -clampHeight, clampHeight);
+  //clamped.xz = normalize(clamped.xz) * min(clampRadius, length(clamped.xz));
 
   //SPHERE
   //float3 clamped = normalize(particle.position) * min(clampRadius, length(particle.position));

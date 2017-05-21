@@ -1,0 +1,277 @@
+﻿#pragma kernel IntegrateVerlet
+#pragma kernel Simulate
+#pragma kernel Integrate_Naive
+#pragma kernel Integrate_X
+#pragma kernel Integrate_Y
+#pragma kernel Integrate_Z
+#pragma kernel Copy
+#pragma kernel Sort
+
+#define RADIUS 0.0175
+#define SQR_RADIUS (RADIUS * RADIUS)
+#define BOX_SIDE 64
+#define BOX_COUNT (BOX_SIDE * BOX_SIDE * BOX_SIDE)
+
+uniform float3 _Center;
+
+struct Particle {
+  float3 position;
+  float3 prevPosition;
+  float3 color;
+};
+
+struct Capsule {
+  float3 a;
+  float3 b;
+};
+
+#define CAPSULE_RADIUS 0.025
+uniform int _CapsuleCount;
+StructuredBuffer<Capsule> _Capsules;
+
+RWStructuredBuffer<Particle> _ParticleFront;
+RWStructuredBuffer<Particle> _ParticleBack;
+
+RWStructuredBuffer<uint> _Count;
+
+RWStructuredBuffer<uint> _BoxStart;
+RWStructuredBuffer<uint> _BoxCount;
+
+float noise(float2 n ){
+	return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+}
+
+uint3 GetBoxPos(float3 position) {
+ return (uint3)(position * 28 + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+}
+
+uint GetBox(uint3 boxPos){
+  return boxPos.x + boxPos.y * BOX_SIDE + boxPos.z * BOX_SIDE * BOX_SIDE;
+}
+
+uint GetBox(float3 position){
+  return GetBox(GetBoxPos(position));
+}
+
+float3 rgb2hsv(float3 c)
+{
+    float4 K = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    float4 p = lerp(float4(c.bg, K.wz), float4(c.gb, K.xy), step(c.b, c.g));
+    float4 q = lerp(float4(p.xyw, c.r), float4(c.r, p.yzx), step(p.x, c.r));
+ 
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return float3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+float3 hsv2rgb(float3 c)
+{
+    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+[numthreads(64,1,1)]
+void IntegrateVerlet(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  Particle particle = _ParticleFront[index];
+
+  float3 toCenter = (_Center - particle.position);
+  float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
+
+  float3 aroundCenter = cross(_Center - particle.position, float3(0,1,0));
+  float3 forceAroundCenter = normalize(aroundCenter) / (0.1 + dot(toCenter, toCenter));
+
+  {
+    float3 tempPos = particle.position;
+
+    particle.position += 0.9999 * (particle.position - particle.prevPosition);
+    particle.position += forceToCenter * 0.0002;
+    //particle.position += forceAroundCenter * 0.00001;
+    particle.position.y -= 0.0001;
+
+    particle.prevPosition = tempPos;
+  }
+
+  _ParticleFront[index] = particle;
+}
+
+[numthreads(64,1,1)]
+void Simulate(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  //Grab the particle from the front buffer
+  Particle particle = _ParticleFront[index];
+
+
+  uint3 boxPos = GetBoxPos(particle.position);
+
+  uint wow = index;
+  float ddr = noise(float2(wow, wow * 23));
+  float ddg = noise(float2(wow * 44, wow + 99));
+  float ddb = noise(float2(wow * 3.4, wow * 9));
+
+  for(int dx=-1;dx<=1; dx++) {
+    for(int dy=-1; dy<=1; dy++) {
+      for(int dz=-1; dz<=1; dz++) {
+        int dxs = ddr > 0.5 ? -1 : 1;
+        int dys = ddg > 0.5 ? -1 : 1;
+        int dzs = ddb > 0.5 ? -1 : 1;
+
+        uint3 deltaBoxPos = boxPos + uint3(dx * dxs, dy * dys, dz * dzs);
+        uint deltaBox = GetBox(deltaBoxPos);
+
+        uint start = _BoxStart[deltaBox];
+        uint count = _BoxCount[deltaBox];
+
+        for(uint i=start; i<start + count; i++){
+          if(i == index) continue;
+
+          Particle other = _ParticleFront[i];
+          float3 fromOther = (particle.position - other.position);
+          float distSqrd = dot(fromOther, fromOther);
+
+          if(distSqrd < SQR_RADIUS) {
+            //float deltaLength = length(fromOther);
+            //float diff = (deltaLength - RADIUS) / deltaLength;
+            //particle.position -= fromOther * diff * 0.5;
+
+            fromOther *= SQR_RADIUS / (dot(fromOther, fromOther) + SQR_RADIUS) - 0.5;
+            particle.position += fromOther;
+          }
+        }
+      }
+    }
+  }
+
+  for(int i=0; i<_CapsuleCount; i++){
+    Capsule capsule = _Capsules[i];
+
+    float3 ba = capsule.b - capsule.a;
+    float3 anchor = lerp(capsule.a, capsule.b, saturate(dot(particle.position - capsule.a, ba) / dot(ba, ba)));
+    float3 delta = particle.position - anchor;
+
+    if(length(delta) > 0){
+      particle.position = lerp(particle.position, anchor + normalize(delta) * max(CAPSULE_RADIUS, length(delta)), 0.09);
+    }
+  }
+
+  float boxSize = 0.9;
+
+  float clampHeight = 0.3;
+  float clampRadius = 0.9;
+
+
+  //BOX
+  float3 clamped = clamp(particle.position, -boxSize, boxSize);
+  
+  //CYLINDER
+  //float3 clamped = particle.position;
+  //clamped.y = clamp(clamped.y, -clampHeight, clampHeight);
+  //clamped.xz = normalize(clamped.xz) * min(clampRadius, length(clamped.xz));
+
+  //SPHERE
+  //float3 clamped = normalize(particle.position) * min(clampRadius, length(particle.position));
+
+  //SOFT SPHERE
+
+  particle.position += 2 * (clamped - particle.position);
+
+  //particle.velocity *= 0.99;
+
+  //Increment the count of the new box we have landed in
+  uint newBox = GetBox(particle.position);
+  InterlockedAdd(_Count[newBox], 1);
+
+  float r = noise(float2(newBox, newBox * 23));
+  float g = noise(float2(newBox * 44, newBox + 99));
+  float b = noise(float2(newBox * 3.4, newBox * 9));
+
+  particle.color = float3(r, g, b);
+
+  float3 disp = particle.position - particle.prevPosition;
+  particle.color = abs(70 * disp);
+
+  //Store the particle into the back buffer
+  _ParticleBack[index] = particle;
+}
+
+[numthreads(64,1,1)]
+void Integrate_Naive (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x;
+  uint sum = 0;
+  for(uint i=0; i<=index; i++){
+    sum += _Count[i];
+  }
+
+  _BoxStart[index] = sum;
+  _BoxCount[index] = _Count[index];
+  _Count[index] = 0;
+}
+
+[numthreads(4,4,4)]
+void Integrate_X (uint3 id : SV_DispatchThreadID)
+{
+  uint start = id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint index = start + id.x;
+
+  uint sum = 0;
+  for(uint i=start; i<=index; i++){
+    sum += _Count[i];
+  }
+
+  _BoxStart[index] = sum;
+}
+
+[numthreads(4,4,4)]
+void Integrate_Y (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint start = (BOX_SIDE - 1) + id.z * BOX_SIDE * BOX_SIDE;
+
+  uint sum = _BoxStart[index];
+  for(uint i=start; i<index; i += BOX_SIDE){
+    sum += _BoxStart[i];
+  }
+
+  _BoxCount[index] = sum;
+}
+
+[numthreads(4,4,4)]
+void Integrate_Z (uint3 id : SV_DispatchThreadID)
+{
+  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+  uint start = (BOX_SIDE - 1) + ((BOX_SIDE - 1) * BOX_SIDE);
+
+  uint sum = _BoxCount[index];
+  for(uint i=start; i<index; i += (BOX_SIDE * BOX_SIDE)){
+    sum += _BoxCount[i];
+  }
+
+  _BoxStart[index] = sum;
+}
+
+[numthreads(64,1,1)]
+void Copy(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  _BoxCount[index] = _Count[index];
+  _Count[index] = 0;
+}
+
+[numthreads(64,1,1)]
+void Sort(uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  Particle particle = _ParticleBack[index];
+
+  uint box = GetBox(particle.position);
+
+  uint newIndex;
+  InterlockedAdd(_BoxStart[box], -1, newIndex);
+  newIndex--;
+
+  _ParticleFront[newIndex] = particle;
+}

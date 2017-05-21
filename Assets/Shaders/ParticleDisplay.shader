@@ -57,14 +57,16 @@
       UNITY_INITIALIZE_OUTPUT(Input, o);
 
       Particle p = _Particles[v.instanceID];
-      v.vertex *= RADIUS * 2;
-      v.color = p.color;
+      float3 vel = p.position - p.prevPosition;
+      v.vertex *= RADIUS / (1 + 20 * length(vel));
+      v.color = float4(p.color, 1);
     }
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {
-      o.Albedo = IN.color.rgb;
+      //o.Albedo = IN.color.rgb;
 			o.Metallic = 0;
 			o.Smoothness = 0;
+      o.Emission = IN.color.rgb;
 		}
 		ENDCG
 	}

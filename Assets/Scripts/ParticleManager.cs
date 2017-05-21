@@ -5,6 +5,13 @@ using float3 = UnityEngine.Vector3;
 
 public class ParticleManager : MonoBehaviour {
 
+//<<<<<<< HEAD
+//=======
+//  public const int MAX_PARTICLES = 64 * 300;
+//  public const float MAX_DELTA_TIME = 1.0f / 30.0f;
+//  public const string SIMULATION_KERNEL_NAME = "Simulate_Basic";
+//>>>>>>> 11af230f8e0c9848d5e3b1981d36cfd37c07db0d
+
 	private const string SIMULATION_KERNEL_NAME = "Simulate_Basic";
 
  	private const float ZERO 		= 0.0f;

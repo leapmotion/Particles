@@ -109,12 +109,6 @@ void runParticleCollision(uint index, Particle particle, Particle other, inout f
   float distSqrd = dot(fromOther, fromOther);
 
   if (distSqrd < SQR_RADIUS) {
-    /*
-    float deltaLength = length(fromOther);
-    float diff = (deltaLength - RADIUS) / deltaLength;
-    depenetration -= fromOther * diff * 0.5;
-    */
-
     fromOther *= SQR_RADIUS / (distSqrd + SQR_RADIUS) - 0.5;
     depenetration += float4(fromOther, 1);
   }

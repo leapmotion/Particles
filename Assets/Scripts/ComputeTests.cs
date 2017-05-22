@@ -100,7 +100,9 @@ public class ComputeTests : MonoBehaviour {
 
     Particle[] particles = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
-      Vector3 pos = 0.5f * Random.insideUnitSphere;
+      Vector3 pos = new Vector3(Random.Range(-0.9f, 0.9f),
+                                Random.Range(-0.9f, -0.8f),
+                                Random.Range(-0.9f, 0.9f));
       particles[i] = new Particle() {
         position = pos,
         prevPosition = pos,
@@ -161,10 +163,6 @@ public class ComputeTests : MonoBehaviour {
         _shader.Dispatch(_integrate, MAX_PARTICLES / 64, 1, 1);
       }
 
-      using (new ProfilerSample("Resolve Collisions")) {
-        _shader.Dispatch(_resolveCollisions, MAX_PARTICLES / 64, 1, 1);
-      }
-
       using (new ProfilerSample("Accumulate")) {
         _shader.Dispatch(_accumulate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
         _shader.Dispatch(_accumulate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
@@ -177,6 +175,10 @@ public class ComputeTests : MonoBehaviour {
 
       using (new ProfilerSample("Sort")) {
         _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
+      }
+
+      using (new ProfilerSample("Resolve Collisions")) {
+        _shader.Dispatch(_resolveCollisions, MAX_PARTICLES / 64, 1, 1);
       }
     }
 

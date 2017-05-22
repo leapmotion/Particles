@@ -93,7 +93,7 @@ public class ComputeTests : MonoBehaviour {
 
     Particle[] particles = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
-      Vector3 pos = 0.3f * Vector3.Scale(new Vector3(1, 0.1f, 1), (Random.insideUnitSphere * 1));
+      Vector3 pos = 0.5f * Random.insideUnitSphere;
       particles[i] = new Particle() {
         position = pos,
         prevPosition = pos,
@@ -147,8 +147,13 @@ public class ComputeTests : MonoBehaviour {
     for (int i = 0; i < 2; i++) {
       _shader.SetVector("_Center", transform.position);
 
-      _shader.Dispatch(_integrateVerlet, MAX_PARTICLES / 64, 1, 1);
-      _shader.Dispatch(_simulate, MAX_PARTICLES / 64, 1, 1);
+      using (new ProfilerSample("Integrate")) {
+        _shader.Dispatch(_integrateVerlet, MAX_PARTICLES / 64, 1, 1);
+      }
+
+      using (new ProfilerSample("Simulate")){
+        _shader.Dispatch(_simulate, MAX_PARTICLES / 64, 1, 1);
+      }
 
       /*
       Debug.Log("###### Counts after simulate: ");
@@ -167,14 +172,21 @@ public class ComputeTests : MonoBehaviour {
       Debug.Log("Total count " + totalCount);
       */
 
-      _shader.Dispatch(_integrate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-      _shader.Dispatch(_integrate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-      _shader.Dispatch(_integrate_z, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+      using (new ProfilerSample("Accumulate")) {
+        _shader.Dispatch(_integrate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+        _shader.Dispatch(_integrate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+        _shader.Dispatch(_integrate_z, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+      }
 
       //_shader.Dispatch(_integrateNaive, BOX_COUNT / 64, 1, 1);
 
-      _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
-      _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
+      using (new ProfilerSample("Copy")) {
+        _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
+      }
+
+      using (new ProfilerSample("Sort")) {
+        _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
+      }
 
       /*
       uint[] starts = new uint[BOX_COUNT];

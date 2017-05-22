@@ -107,42 +107,43 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
 
   uint3 boxPos = GetBoxPos(particle.position);
 
-  uint wow = index;
-  float ddr = noise(float2(wow, wow * 23));
-  float ddg = noise(float2(wow * 44, wow + 99));
-  float ddb = noise(float2(wow * 3.4, wow * 9));
-
-  for(int dx=-1;dx<=1; dx++) {
-    for(int dy=-1; dy<=1; dy++) {
-      for(int dz=-1; dz<=1; dz++) {
-        int dxs = ddr > 0.5 ? -1 : 1;
-        int dys = ddg > 0.5 ? -1 : 1;
-        int dzs = ddb > 0.5 ? -1 : 1;
-
-        uint3 deltaBoxPos = boxPos + uint3(dx * dxs, dy * dys, dz * dzs);
+  float3 depenetration = float3(0, 0, 0);
+  uint collisions = 0;
+  for (int dx = -1; dx <= 1; dx++) {
+    for (int dy = -1; dy <= 1; dy++) {
+      for (int dz = -1; dz <= 1; dz++) {
+        uint3 deltaBoxPos = boxPos + uint3(dx, dy, dz);
         uint deltaBox = GetBox(deltaBoxPos);
 
         uint start = _BoxStart[deltaBox];
         uint count = _BoxCount[deltaBox];
 
-        for(uint i=start; i<start + count; i++){
-          if(i == index) continue;
+        for (uint i = start; i < start + count; i++) {
+          if (i == index) continue;
 
           Particle other = _ParticleFront[i];
           float3 fromOther = (particle.position - other.position);
           float distSqrd = dot(fromOther, fromOther);
 
-          if(distSqrd < SQR_RADIUS) {
-            //float deltaLength = length(fromOther);
-            //float diff = (deltaLength - RADIUS) / deltaLength;
-            //particle.position -= fromOther * diff * 0.5;
+          if (distSqrd < SQR_RADIUS) {
+            collisions++;
 
+            /*
+            float deltaLength = length(fromOther);
+            float diff = (deltaLength - RADIUS) / deltaLength;
+            depenetration -= fromOther * diff * 0.5;
+            */
+            
             fromOther *= SQR_RADIUS / (dot(fromOther, fromOther) + SQR_RADIUS) - 0.5;
-            particle.position += fromOther;
+            depenetration += fromOther; 
           }
         }
       }
     }
+  }
+
+  if (collisions > 0) {
+    particle.position += depenetration / collisions;
   }
 
   for(int i=0; i<_CapsuleCount; i++){
@@ -173,8 +174,6 @@ void Simulate(uint3 id : SV_DispatchThreadID) {
 
   //SPHERE
   //float3 clamped = normalize(particle.position) * min(clampRadius, length(particle.position));
-
-  //SOFT SPHERE
 
   particle.position += 2 * (clamped - particle.position);
 

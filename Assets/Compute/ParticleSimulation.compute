@@ -10,6 +10,7 @@ RWStructuredBuffer<Particle> _Particles;
 [numthreads(64,1,1)]
 void Simulate_Basic (uint3 id_full : SV_DispatchThreadID)
 {
+  /*
   uint index = id_full.x;
 
   Particle p = _Particles[index];
@@ -55,4 +56,5 @@ void Simulate_Basic (uint3 id_full : SV_DispatchThreadID)
   p.position += _DeltaTime * p.velocity;
 
   _Particles[index] = p;
+  */
 }

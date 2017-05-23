@@ -53,6 +53,7 @@ public class ParticleManager : MonoBehaviour {
   	private struct Head 
 	{
     	public	Vector3 position;
+    	public	Vector3 rightward;
     	public	Vector3 upward;
     	public	Vector3 forward;
 		public	float 	focalDistance;
@@ -60,12 +61,16 @@ public class ParticleManager : MonoBehaviour {
 
   	private struct Hand 
 	{
+		public  bool	isRightHand;
     	public	Vector3 position;
     	public	Vector3 rightward;
     	public	Vector3 upward;
     	public	Vector3 forward;
-		public  bool	rightHand;
-		// more to be added later...
+    	public	Vector3 thumbFinger;
+    	public	Vector3 indexFinger;
+    	public	Vector3 middleFinger;
+    	public	Vector3 ringFinger;
+    	public	Vector3 pinkyFinger;
   	}
 
  	private struct Species 
@@ -196,9 +201,32 @@ public class ParticleManager : MonoBehaviour {
 
 	void SimulateParticles( float deltaTime ) 
 	{
-		_myHead.position = _camera.transform.position;
-		_myHead.forward  = _camera.transform.forward;
-		_myHead.upward   = _camera.transform.up;
+		//----------------------------------------------------
+		// set the position, forward, and up of my head...
+		//----------------------------------------------------
+		_myHead.position 	= _camera.transform.position;
+		_myHead.rightward	= _camera.transform.right;
+		_myHead.upward   	= _camera.transform.up;
+		_myHead.forward  	= _camera.transform.forward;
+
+		//----------------------------------------------------
+		// set the values for my fingers...
+		//----------------------------------------------------
+		/*
+		_myRightHand.isRightHand 	= true;
+		_myRightHand.position		= _myHead.position - Vector3.up * 2.0f + _myHead.forward * 2.0f;
+    	_myRightHand.rightward		= _myHead.rightward;
+    	_myRightHand.upward			= Vector3.up;
+    	public	Vector3 upward;
+    	public	Vector3 forward;
+    	public	Vector3 thumbFinger;
+    	public	Vector3 indexFinger;
+    	public	Vector3 middleFinger;
+    	public	Vector3 ringFinger;
+    	public	Vector3 pinkyFinger;
+		*/
+
+
 
 		if ( _useComputeShader ) 
 		{

@@ -42,6 +42,9 @@ public class ParticleManager : MonoBehaviour {
   private bool _useComputeShader = false;
 
   [SerializeField]
+  private bool _useMultithreading = false;
+
+  [SerializeField]
   private Mesh _mesh;
 
   [SerializeField]
@@ -251,14 +254,36 @@ public class ParticleManager : MonoBehaviour {
   }
 
   #region CPU IMPLEMENTATION
+  ParallelForeach _parallelForeach;
+
   //----------------------------------------------------
   // run the physics for all the particles
   //----------------------------------------------------
   private void simulateParticlesCPU(float deltaTime) {
+    if (_useMultithreading) {
+      if (_parallelForeach == null) {
+        _parallelForeach = new ParallelForeach((a, b) => particleSimulationLogic(a, b, deltaTime));
+      }
+
+      _parallelForeach.Dispatch(_numParticles);
+      _parallelForeach.Wait();
+    } else {
+      particleSimulationLogic(0, _numParticles, deltaTime);
+    }
+
+    //----------------------------
+    // swap back and front buffer
+    //----------------------------
+    var temp = _backBuffer;
+    _backBuffer = _particles;
+    _particles = temp;
+  }
+
+  private void particleSimulationLogic(int startIndex, int endIndex, float deltaTime) {
     //-------------------------------------------------------------------
     // Loop through every other particle to compare against this particle
     //-------------------------------------------------------------------
-    for (int index = 0; index < _numParticles; index++) {
+    for (int index = startIndex; index < endIndex; index++) {
       Particle p = _particles[index];
 
       p.accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
@@ -340,17 +365,7 @@ public class ParticleManager : MonoBehaviour {
       //----------------------
       _backBuffer[index] = p;
     }
-
-    //----------------------------
-    // swap back and front buffer
-    //----------------------------
-    var temp = _backBuffer;
-    _backBuffer = _particles;
-    _particles = temp;
   }
-
-
-
 
   private void displayParticlesCPU() {
     var block = new MaterialPropertyBlock();

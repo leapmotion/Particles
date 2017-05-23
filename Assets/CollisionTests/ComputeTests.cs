@@ -4,17 +4,37 @@ using System.Runtime.InteropServices;
 using UnityEngine;
 using Leap;
 using Leap.Unity;
+using Leap.Unity.RuntimeGizmos;
 
-public class ComputeTests : MonoBehaviour {
+public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
   public const int MAX_PARTICLES = 1024 * 64;
   public const int MAX_CAPSULES = 1024;
 
   public const int BOX_SIDE = 64;
   public const int BOX_COUNT = BOX_SIDE * BOX_SIDE * BOX_SIDE;
 
+  [Header("Hands")]
   [SerializeField]
   private LeapProvider _provider;
 
+  [SerializeField]
+  private float _handCapsuleRadius = 0.025f;
+
+  [Header("Custom Capsule")]
+  [SerializeField]
+  private Transform _capsuleA;
+
+  [SerializeField]
+  private Transform _capsuleB;
+
+  [SerializeField]
+  private float _capsuleRadius;
+
+  [Header("Custom Plane")]
+  [SerializeField]
+  private Transform _plane;
+
+  [Header("Settings")]
   [SerializeField]
   private Mesh _mesh;
 
@@ -35,6 +55,7 @@ public class ComputeTests : MonoBehaviour {
   private struct Capsule {
     public Vector3 pointA;
     public Vector3 pointB;
+    public float radius;
   }
 
   [StructLayout(LayoutKind.Sequential)]
@@ -100,9 +121,9 @@ public class ComputeTests : MonoBehaviour {
 
     Particle[] particles = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
-      Vector3 pos = new Vector3(Random.Range(-0.9f, 0.9f),
-                                Random.Range(-0.9f, -0.8f),
-                                Random.Range(-0.9f, 0.9f));
+      Vector3 pos = new Vector3(Random.Range(-0.2f, 0.2f),
+                                Random.Range(-0.9f, 0f),
+                                Random.Range(-0.2f, 0.2f));
       particles[i] = new Particle() {
         position = pos,
         prevPosition = pos,
@@ -147,7 +168,8 @@ public class ComputeTests : MonoBehaviour {
         foreach (var bone in finger.bones) {
           _capsuleArray[index++] = new Capsule() {
             pointA = bone.PrevJoint.ToVector3(),
-            pointB = bone.NextJoint.ToVector3()
+            pointB = bone.NextJoint.ToVector3(),
+            radius = _handCapsuleRadius
           };
         }
       }
@@ -155,6 +177,9 @@ public class ComputeTests : MonoBehaviour {
 
     _capsules.SetData(_capsuleArray);
     _shader.SetInt("_CapsuleCount", index);
+
+    _shader.SetVector("_PlanePosition", _plane.position);
+    _shader.SetVector("_PlaneNormal", _plane.up);
 
     for (int i = 0; i < 2; i++) {
       _shader.SetVector("_Center", transform.position);
@@ -196,5 +221,9 @@ public class ComputeTests : MonoBehaviour {
                                         _displayMat,
                                         new Bounds(Vector3.zero, Vector3.one * 10000),
                                         _argBuffer);
+  }
+
+  public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
+    drawer.DrawWireCapsule(_capsuleA.position, _capsuleB.position, _capsuleRadius);
   }
 }

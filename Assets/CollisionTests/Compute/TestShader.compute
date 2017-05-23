@@ -24,15 +24,18 @@ struct Particle {
 struct Capsule {
   float3 a;
   float3 b;
+  float radius;
 };
 
 struct DebugData {
   uint tests;
 };
 
-#define CAPSULE_RADIUS 0.025
 uniform int _CapsuleCount;
 StructuredBuffer<Capsule> _Capsules;
+
+uniform float3 _PlanePosition;
+uniform float3 _PlaneNormal;
 
 RWStructuredBuffer<Particle> _ParticleFront;
 RWStructuredBuffer<Particle> _ParticleBack;
@@ -67,17 +70,17 @@ void Integrate(uint3 id : SV_DispatchThreadID) {
   Particle particle = _ParticleFront[index];
 
   float3 toCenter = (_Center - particle.position);
-  float3 forceToCenter = normalize(toCenter) / (1 + dot(toCenter, toCenter));
+  float3 forceToCenter = toCenter / (1 + dot(toCenter, toCenter));
 
   float3 aroundCenter = cross(_Center - particle.position, float3(0, 1, 0));
-  float3 forceAroundCenter = normalize(aroundCenter) / (0.1 + dot(toCenter, toCenter));
+  float3 forceAroundCenter = aroundCenter / (0.1 + dot(toCenter, toCenter));
 
   {
     float3 tempPos = particle.position;
 
     particle.position += 0.9999 * (particle.position - particle.prevPosition);
-    particle.position += forceToCenter * 0.0002;
-    //particle.position += forceAroundCenter * 0.00001;
+    //particle.position += forceToCenter * 0.0002;
+    particle.position += forceAroundCenter * 0.00001;
     particle.position.y -= 0.0001;
 
     particle.prevPosition = tempPos;
@@ -277,7 +280,7 @@ void ResolveCollisions(uint3 id : SV_DispatchThreadID) {
     float3 delta = particle.position - anchor;
 
     if (length(delta) > 0) {
-      particle.position = lerp(particle.position, anchor + normalize(delta) * max(CAPSULE_RADIUS, length(delta)), 0.09);
+      particle.position = lerp(particle.position, anchor + normalize(delta) * max(capsule.radius, length(delta)), 0.09);
     }
   }
 
@@ -296,6 +299,12 @@ void ResolveCollisions(uint3 id : SV_DispatchThreadID) {
 
   //SPHERE
   //float3 clamped = normalize(particle.position) * min(clampRadius, length(particle.position));
+
+  float3 fromPlane = clamped - _PlanePosition;
+  float alongPlane = dot(fromPlane, _PlaneNormal);
+  if (alongPlane < 0) {
+    clamped = lerp(clamped, clamped - _PlaneNormal * alongPlane, 0.05);
+  }
 
   particle.position += 2 * (clamped - particle.position);
 

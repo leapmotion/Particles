@@ -64,14 +64,6 @@ namespace Leap.Unity {
       }
     }
 
-    public void highFive() {
-      try {
-        highFive();
-      } catch (Exception e) {
-        Debug.Log("High five");
-      }
-    }
-
     public Enumerator GetEnumerator() {
       return new Enumerator(this);
     }

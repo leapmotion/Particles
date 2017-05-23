@@ -81,6 +81,8 @@ public class ParticleManager : MonoBehaviour {
  	[StructLayout(LayoutKind.Sequential)]
   	private struct Particle 
 	{
+		public	bool	active;
+		public  float 	age;
 		public	int		species;
     	public 	Vector3	position;
     	public 	Vector3	velocity;
@@ -138,6 +140,8 @@ public class ParticleManager : MonoBehaviour {
     _backBuffer = new Particle[MAX_PARTICLES];
     for (int i = 0; i < MAX_PARTICLES; i++) {
       _particles[i] = new Particle();
+      _particles[i].age = 0.0f;
+      _particles[i].active = false;
       _particles[i].species = 0;
       _particles[i].accumulatedForce = Vector4.zero;
       _particles[i].velocity = Vector3.zero;
@@ -194,6 +198,17 @@ public class ParticleManager : MonoBehaviour {
 	void SimulateParticles( float deltaTime ) 
 	{
 		//----------------------------------------------------
+		// this is just a test to make sure active is working.......
+		//----------------------------------------------------
+		for (int i = 0; i < _numParticles; i++) 
+		{
+			if ( i < _numParticles * 0.9f )
+			{
+				_particles[i].active = true;
+			}
+		}
+
+		//----------------------------------------------------
 		// set the position, forward, and up of my head...
 		//----------------------------------------------------
 		_myHead.position 	= _camera.transform.position;
@@ -202,21 +217,18 @@ public class ParticleManager : MonoBehaviour {
 		_myHead.forward  	= _camera.transform.forward;
 
 		//----------------------------------------------------
-		// set the values for my fingers...
+		// set the values for my hands and fingers...
 		//----------------------------------------------------
 		_myRightHand.isRightHand 	= true;
-		_myRightHand.position		= _myHead.position - Vector3.up * 2.0f + _myHead.forward * 2.0f;
+		_myRightHand.position		= _myHead.position - Vector3.up * 2.0f + _myHead.forward * 2.0f + _myHead.rightward * 1.0f;
     	_myRightHand.rightward		= _myHead.rightward;
     	_myRightHand.upward			= Vector3.up;
-    	/*
-		public	Vector3 upward;
-    	public	Vector3 forward;
-    	public	Vector3 thumbFinger;
-    	public	Vector3 indexFinger;
-    	public	Vector3 middleFinger;
-    	public	Vector3 ringFinger;
-    	public	Vector3 pinkyFinger;
-		*/
+    	_myRightHand.forward		= _myHead.forward;
+    	_myRightHand.thumbFinger 	= _myRightHand.position + _myRightHand.rightward * -0.05f;
+    	_myRightHand.indexFinger  	= _myRightHand.position + _myRightHand.forward   *  0.05f+ _myRightHand.rightward * -0.01f;
+    	_myRightHand.middleFinger 	= _myRightHand.position + _myRightHand.forward   *  0.05f+ _myRightHand.rightward * -0.02f;
+    	_myRightHand.ringFinger 	= _myRightHand.position + _myRightHand.forward   *  0.05f+ _myRightHand.rightward * -0.03f;
+    	_myRightHand.pinkyFinger 	= _myRightHand.position + _myRightHand.forward   *  0.05f+ _myRightHand.rightward * -0.04f;
 
     if (_useComputeShader) {
       simulateParticlesCompute(deltaTime);
@@ -275,6 +287,16 @@ public class ParticleManager : MonoBehaviour {
     }
   }
 
+
+ 	//-------------------------------------------------
+  	// emit particles!
+  	//-------------------------------------------------
+  	private void emitParticles( Vector3 emitPosition ) 
+	{
+	}
+
+
+
   #region CPU IMPLEMENTATION
   ParallelForeach _parallelForeach;
 
@@ -296,107 +318,133 @@ public class ParticleManager : MonoBehaviour {
     //----------------------------
     // swap back and front buffer
     //----------------------------
-    var temp = _backBuffer;
+    var temp 	= _backBuffer;
     _backBuffer = _particles;
-    _particles = temp;
+    _particles 	= temp;
   }
 
-  private void particleSimulationLogic(int startIndex, int endIndex, float deltaTime) {
-    //-------------------------------------------------------------------
-    // Loop through every other particle to compare against this particle
-    //-------------------------------------------------------------------
-    for (int index = startIndex; index < endIndex; index++) {
-      Particle p = _particles[index];
+ 	private void particleSimulationLogic(int startIndex, int endIndex, float deltaTime) 
+	{
+		//-------------------------------------------------------
+		// Loop through every other particle 				  
+		//-------------------------------------------------------
+   		for (int index = startIndex; index < endIndex; index++) 
+		{
+			if ( _particles[index].active ) 
+			{
+	      		Particle p = _particles[index];
 
-      p.accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
+				//------------------------------------------------------
+				// reset accumulated force for this go-round
+				//------------------------------------------------------
+				p.accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
 
-      //-------------------------------------------------------------------
-      // Loop through every other particle to compare against this particle
-      //-------------------------------------------------------------------
-      for (uint i = 0; i < _numParticles; i++) {
-        if (i == index) continue; //Dont compare against self!
+				//------------------
+				// advance age
+				//------------------
+				p.age += deltaTime;
 
-        Particle other = _particles[i];
-        float3 vectorToOther = other.position - p.position;
-        float distanceSquared = vectorToOther.sqrMagnitude;
+				//-------------------------------------------------------------------
+				// Loop through every other particle to compare against this particle
+				//-------------------------------------------------------------------
+				for (uint i = 0; i < _numParticles; i++) 
+				{
+					if ( _particles[i].active )
+					{
+		        		if (i == index) continue; //Dont compare against self!
+		
+				        Particle other = _particles[i];
+				        float3 	 vectorToOther = other.position - p.position;
+				        float 	 distanceSquared = vectorToOther.sqrMagnitude;
+		
+		        		float socialRangeSquared = _species[p.species].socialRange * _species[p.species].socialRange;
+		        		if ((distanceSquared < socialRangeSquared) && (distanceSquared > ZERO)) 
+						{
+							float distance = Mathf.Sqrt(distanceSquared);
+							float3 directionToOther = vectorToOther / distance;
+		
+							//--------------------------------------------------------------------------
+							// Accumulate forces from social attractions/repulsions to other particles
+							//--------------------------------------------------------------------------
+							p.accumulatedForce += (float4)(_species[p.species].socialForce * directionToOther);
+							p.accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
+		
+							//----------------------------------------
+							// collisions
+							//----------------------------------------
+							float combinedRadius = PARTICLE_RADIUS * 2;
+		          			if (distance < combinedRadius) 
+							{
+								float penetration = ONE - distance / combinedRadius;
+								float averageCollisionForce =
+		            			(
+		              				_species[p.species].collisionForce +
+		              				_species[other.species].collisionForce
+		            			) * ONE_HALF;
+		
+		            			p.velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
+		          			}
+						}
+	        		}
+	      		}
+	
+				//---------------------------------------------
+				// Apply accumulated forces to the velocity
+				//---------------------------------------------
+				if (p.accumulatedForce.w > 0) 
+				{
+					//--------------------------------------------------------------
+					// NOTE _ we divide by w, which is the number of particles 
+					// that contributed to the accumulated force
+					//--------------------------------------------------------------
+					p.velocity += deltaTime * (Vector3)p.accumulatedForce / p.accumulatedForce.w;
+				}
+	
+				//--------------------------------------------------------------------------------------
+				// apply forces to keep the particle from getting past the boundary of the environment
+				//--------------------------------------------------------------------------------------
+				Vector3 vectorFromHome = p.position - _homePosition;
+				float distanceFromHome = vectorFromHome.magnitude;
+	
+				if (distanceFromHome > ENVIRONMENT_RADIUS) 
+				{
+					Vector3 directionFromHome = vectorFromHome / distanceFromHome;
+					float force = (distanceFromHome - ENVIRONMENT_RADIUS) * BOUNDARY_FORCE;
+					p.velocity -= force * directionFromHome * deltaTime;
+				}
+	
+				//-------------------------------------------
+				// dampening (kinda like air friction)
+				//-------------------------------------------
+				p.velocity *= (ONE - _species[p.species].drag);
+	
+				//------------------------------------
+				// update position by velocity
+				//------------------------------------
+				p.position += p.velocity;
+	
+				//----------------------
+				// fill back buffer
+				//----------------------
+				_backBuffer[index] = p;
+			}
+		}
+	}
 
-        float socialRangeSquared = _species[p.species].socialRange * _species[p.species].socialRange;
-        if ((distanceSquared < socialRangeSquared) && (distanceSquared > ZERO)) {
-          float distance = Mathf.Sqrt(distanceSquared);
-          float3 directionToOther = vectorToOther / distance;
 
-          //--------------------------------------------------------------------------
-          // Accumulate forces from social attractions/repulsions to other particles
-          //--------------------------------------------------------------------------
-          p.accumulatedForce += (float4)(_species[p.species].socialForce * directionToOther);
-          p.accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
 
-          //----------------------------------------
-          // collisions
-          //----------------------------------------
-          float combinedRadius = PARTICLE_RADIUS * 2;
-          if (distance < combinedRadius) {
-            float penetration = ONE - distance / combinedRadius;
-            float averageCollisionForce =
-            (
-              _species[p.species].collisionForce +
-              _species[other.species].collisionForce
-            ) * ONE_HALF;
+	private void displayParticlesCPU() {
+    	var block = new MaterialPropertyBlock();
+    	for (int i = 0; i < _numParticles; i++) {
+			if ( _particles[i].active ) 
+			{
+				block.SetColor("_Color", _species[_particles[i].species].color);
+				var matrix = Matrix4x4.TRS(_particles[i].position, Quaternion.identity, Vector3.one * PARTICLE_RADIUS * 2);
+				Graphics.DrawMesh(_mesh, matrix, _cpuMaterial, 0, null, 0, block);
+    		}
+  		}
+	}
 
-            p.velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
-          }
-        }
-      }
-
-      //---------------------------------------------
-      // Apply accumulated forces to the velocity
-      //---------------------------------------------
-      if (p.accumulatedForce.w > 0) {
-        //--------------------------------------------------------------
-        // NOTE _ we divide by w, which is the number of particles 
-        // that contributed to the accumulated force
-        //--------------------------------------------------------------
-        p.velocity += deltaTime * (Vector3)p.accumulatedForce / p.accumulatedForce.w;
-      }
-
-      //--------------------------------------------------------------------------------------
-      // apply forces to keep the particle from getting past the boundary of the environment
-      //--------------------------------------------------------------------------------------
-      Vector3 vectorFromHome = p.position - _homePosition;
-      float distanceFromHome = vectorFromHome.magnitude;
-
-      if (distanceFromHome > ENVIRONMENT_RADIUS) {
-        Vector3 directionFromHome = vectorFromHome / distanceFromHome;
-        float force = (distanceFromHome - ENVIRONMENT_RADIUS) * BOUNDARY_FORCE;
-        p.velocity -= force * directionFromHome * deltaTime;
-      }
-
-      //-------------------------------------------
-      // dampening (kinda like air friction)
-      //-------------------------------------------
-      p.velocity *= (ONE - _species[p.species].drag);
-
-      //------------------------------------
-      // update position by velocity
-      //------------------------------------
-      //p.position += deltaTime * p.velocity;  // Alex, are you sure we need to scale position update? Let's discuss...
-      p.position += p.velocity;
-
-      //----------------------
-      // fill back buffer
-      //----------------------
-      _backBuffer[index] = p;
-    }
-  }
-
-  private void displayParticlesCPU() {
-    var block = new MaterialPropertyBlock();
-    for (int i = 0; i < _numParticles; i++) {
-      block.SetColor("_Color", _species[_particles[i].species].color);
-      var matrix = Matrix4x4.TRS(_particles[i].position, Quaternion.identity, Vector3.one * PARTICLE_RADIUS * 2);
-      Graphics.DrawMesh(_mesh, matrix, _cpuMaterial, 0, null, 0, block);
-    }
-  }
 
   #endregion
 

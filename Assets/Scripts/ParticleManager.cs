@@ -21,15 +21,15 @@ public class ParticleManager : MonoBehaviour {
 	private const int   MAX_SPECIES 		= 10; // let's allow one for each finger
 	private const float MAX_DELTA_TIME 		= ONE / 20.0f;
 	private const float TEST_DELTA_TIME 	= MAX_DELTA_TIME;
-  	private const float BOUNDARY_FORCE		= 0.5f;
+  	private const float BOUNDARY_FORCE		= 0.01f;
   	private const float MIN_DRAG 			= 0.01f;
   	private const float MAX_DRAG 			= 0.2f;
-  	private const float PARTICLE_RADIUS		= 0.01f; //meters
-  	private const float ENVIRONMENT_RADIUS	= 1.0f;  //meters
-  	private const float MAX_SOCIAL_RANGE 	= 0.4f;  //meters
+  	private const float PARTICLE_RADIUS		= 0.005f; //meters
+  	private const float ENVIRONMENT_RADIUS	= 0.8f;   //meters
+  	private const float MAX_SOCIAL_RANGE 	= 0.4f;   //meters
   	private const float MIN_COLLISION_FORCE = 0.0f;
-  	private const float MAX_COLLISION_FORCE = 0.9f;
-	private const float MAX_SOCIAL_FORCE 	= 0.2f;
+	private const float MAX_COLLISION_FORCE = 1.0f;
+  	private const float MAX_SOCIAL_FORCE 	= 0.1f;
 
 	//---------------------------------------
 	// head and hand metrics
@@ -40,6 +40,21 @@ public class ParticleManager : MonoBehaviour {
 	private const float HAND_LENGTH	= 0.1f;
 	private const float HAND_WIDTH	= 0.05f;
 	private const float HAND_DEPTH	= 0.02f;
+
+	//---------------------------------------
+	// finger indices
+	//---------------------------------------
+	private const int LEFT_THUMB_FINGER		= 0;
+	private const int LEFT_INDEX_FINGER 	= 1;
+	private const int LEFT_MIDDLE_FINGER 	= 2;
+	private const int LEFT_RING_FINGER 		= 3;
+	private const int LEFT_PINKY_FINGER 	= 4;
+	private const int RIGHT_THUMB_FINGER	= 5;
+	private const int RIGHT_INDEX_FINGER 	= 6;
+	private const int RIGHT_MIDDLE_FINGER 	= 7;
+	private const int RIGHT_RING_FINGER 	= 8;
+	private const int RIGHT_PINKY_FINGER 	= 9;
+	private const int NUM_FINGERS			= 10;
 
 	[SerializeField]
 	private bool _useComputeShader = false;
@@ -62,20 +77,14 @@ public class ParticleManager : MonoBehaviour {
 		public Quaternion 	rotation;
   	}
 
-  	private struct Hand 
+  	private struct ParticleEmitter 
 	{
-		public 	GameObject 	gameObject;
-		public 	bool		isRightHand;
-    	public	Vector3 	thumbFingerPosition;
-    	public	Vector3 	indexFingerPosition;
-    	public	Vector3 	middleFingerPosition;
-    	public	Vector3 	ringFingerPosition;
-    	public	Vector3 	pinkyFingerPosition;
-    	public	Vector3 	thumbFingerDirection;
-    	public	Vector3 	indexFingerDirection;
-    	public	Vector3 	middleFingerDirection;
-    	public	Vector3 	ringFingerDirection;
-    	public	Vector3 	pinkyFingerDirection;
+		public	Vector3 position;
+		public	Vector3 direction;
+		public	float   strength;
+		public	float   jitter;
+		public  float 	rate;
+		public	int		species;
   	}
 
 	//-------------------------------------------------------------------
@@ -102,21 +111,22 @@ public class ParticleManager : MonoBehaviour {
   	}
 
 	[SerializeField]
-	private ComputeShader 	_simulationShader;
-	private Particle[]		_particles;
-	private Particle[] 		_backBuffer;
-	private Species[]		_species;
-	private Head			_myHead;
-	private Hand			_myLeftHand;
-	private Hand			_myRightHand;
-	private Vector3			_homePosition;
-	private Material 		_cpuMaterial;
-	private Material 		_computeMaterial;
-	private ComputeBuffer	_particleBuffer;
-	private int				_numParticles;
-	private ComputeBuffer 	_argBuffer;
-	private int 			_simulationKernelIndex;
-	private Camera			_camera;
+	private ComputeShader 		_simulationShader;
+	private ParticleEmitter[] 	_emitters;
+	private Particle[]			_particles;
+	private Particle[] 			_backBuffer;
+	private Species[]			_species;
+	private Head				_myHead;
+	private GameObject			_myLeftHand;
+	private GameObject			_myRightHand;
+	private Vector3				_homePosition;
+	private Material 			_cpuMaterial;
+	private Material 			_computeMaterial;
+	private ComputeBuffer		_particleBuffer;
+	private int					_numParticles;
+	private ComputeBuffer 		_argBuffer;
+	private int 				_simulationKernelIndex;
+	private Camera				_camera;
 
   void OnEnable() {
     if (!SystemInfo.supportsComputeShaders) {
@@ -149,6 +159,21 @@ public class ParticleManager : MonoBehaviour {
 	// create head and hands (for testing purposes)
 	//-----------------------------------------------
 	createHeadAndHands();
+
+	//-----------------------------------------
+	// intitialize emitter array
+	//-----------------------------------------
+	_emitters = new ParticleEmitter[ NUM_FINGERS ];
+	for (int e = 0; e < NUM_FINGERS; e++) 
+	{
+		_emitters[e] = new ParticleEmitter();
+		_emitters[e].position 	= Vector3.zero;
+		_emitters[e].direction 	= Vector3.one;
+		_emitters[e].species   	= 0;
+		_emitters[e].rate		= ZERO;
+		_emitters[e].strength 	= ZERO;
+		_emitters[e].jitter 	= ZERO;
+	}
 
 	//-----------------------------------------
 	// intitialize particle array
@@ -187,6 +212,12 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     randomizeEcosystem();
 
+    //-----------------------------------------
+    // set up the emitters
+    //-----------------------------------------
+	initializeEmitters();
+
+
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
     args[1] = MAX_PARTICLES;
@@ -222,13 +253,35 @@ public class ParticleManager : MonoBehaviour {
 		_myHead.gameObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
 	 	_myHead.gameObject.transform.localScale = new Vector3( HEAD_WIDTH, HEAD_LENGTH, HEAD_DEPTH );	
 
-		_myLeftHand.isRightHand	= false;
-		_myLeftHand.gameObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
-	 	_myLeftHand.gameObject.transform.localScale = new Vector3( HAND_WIDTH, HAND_LENGTH, HAND_DEPTH );	
+		_myLeftHand = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+	 	_myLeftHand.transform.localScale = new Vector3( HAND_WIDTH, HAND_LENGTH, HAND_DEPTH );	
 
-		_myRightHand.isRightHand = true;
-		_myRightHand.gameObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
-	 	_myRightHand.gameObject.transform.localScale = new Vector3( HAND_WIDTH, HAND_LENGTH, HAND_DEPTH );
+		_myRightHand = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+	 	_myRightHand.transform.localScale = new Vector3( HAND_WIDTH, HAND_LENGTH, HAND_DEPTH );
+	}
+
+
+	//-------------------------------------------
+	// initialize emitters...
+	//-------------------------------------------
+	void initializeEmitters() 
+	{
+		for (int e=0; e<NUM_FINGERS; e++)
+		{
+			_emitters[e].strength = 0.05f;
+			_emitters[e].rate = 0.1f;
+		}
+
+		_emitters[ LEFT_THUMB_FINGER	].species = 0;
+		_emitters[ LEFT_INDEX_FINGER 	].species = 1;
+		_emitters[ LEFT_MIDDLE_FINGER 	].species = 2;
+		_emitters[ LEFT_RING_FINGER 	].species = 3;
+		_emitters[ LEFT_PINKY_FINGER 	].species = 4;
+		_emitters[ RIGHT_THUMB_FINGER	].species = 0;
+		_emitters[ RIGHT_INDEX_FINGER 	].species = 1;
+		_emitters[ RIGHT_MIDDLE_FINGER 	].species = 2;
+		_emitters[ RIGHT_RING_FINGER	].species = 3;
+		_emitters[ RIGHT_PINKY_FINGER	].species = 4;
 	}
 
 
@@ -248,22 +301,17 @@ public class ParticleManager : MonoBehaviour {
 		//--------------------------------------------------------------------------------
 	   _homePosition = _myHead.gameObject.transform.position + _myHead.gameObject.transform.forward * ENVIRONMENT_RADIUS;
 
-		//---------------------------------------------------------------
-		// Emit particles (totally for debug and testing!)
-		//---------------------------------------------------------------
-		float emitForce = 0.05f;
-		if ( Random.value < 0.1 ) emitParticle( _myLeftHand.thumbFingerPosition,	_myLeftHand.thumbFingerDirection	* emitForce, 0 );
-		if ( Random.value < 0.1 ) emitParticle( _myLeftHand.indexFingerPosition,	_myLeftHand.indexFingerDirection 	* emitForce, 0 );
-		if ( Random.value < 0.1 ) emitParticle( _myLeftHand.middleFingerPosition,	_myLeftHand.middleFingerDirection 	* emitForce, 1 );
-		if ( Random.value < 0.1 ) emitParticle( _myLeftHand.ringFingerPosition,		_myLeftHand.ringFingerDirection 	* emitForce, 1 );
-		if ( Random.value < 0.1 ) emitParticle( _myLeftHand.pinkyFingerPosition,	_myLeftHand.pinkyFingerDirection 	* emitForce, 2 );
+		//------------------------------------
+		// update the particle emitters
+		//------------------------------------
+		for (int e=0; e<NUM_FINGERS; e++)
+		{
+			updateParticleEmitter(e);
+		}
 
-		if ( Random.value < 0.1 ) emitParticle( _myRightHand.thumbFingerPosition,	_myRightHand.thumbFingerDirection 	* emitForce, 2 );
-		if ( Random.value < 0.1 ) emitParticle( _myRightHand.indexFingerPosition,	_myRightHand.indexFingerDirection 	* emitForce, 2 );
-		if ( Random.value < 0.1 ) emitParticle( _myRightHand.middleFingerPosition,	_myRightHand.middleFingerDirection 	* emitForce, 3 );
-		if ( Random.value < 0.1 ) emitParticle( _myRightHand.ringFingerPosition,	_myRightHand.ringFingerDirection 	* emitForce, 3 );
-		if ( Random.value < 0.1 ) emitParticle( _myRightHand.pinkyFingerPosition,	_myRightHand.pinkyFingerDirection 	* emitForce, 4 );
-
+		//------------------------------------
+		// simulate particle physics...
+		//------------------------------------
 		if ( _useComputeShader ) 
 		{
 			simulateParticlesCompute( deltaTime );
@@ -304,56 +352,56 @@ public class ParticleManager : MonoBehaviour {
 		float upwardAmount 	  = 0.1f;
 		float forwardAmount   = 0.2f;
 
-		_myLeftHand.gameObject.transform.position  = _myHead.gameObject.transform.position + headRightward * -rightwardAmount + Vector3.up * -upwardAmount + headForward * forwardAmount;
-		_myRightHand.gameObject.transform.position = _myHead.gameObject.transform.position + headRightward *  rightwardAmount + Vector3.up * -upwardAmount + headForward * forwardAmount;
+		_myLeftHand.transform.position  = _myHead.gameObject.transform.position + headRightward * -rightwardAmount + Vector3.up * -upwardAmount + headForward * forwardAmount;
+		_myRightHand.transform.position = _myHead.gameObject.transform.position + headRightward *  rightwardAmount + Vector3.up * -upwardAmount + headForward * forwardAmount;
 
 		float waveAroundRange = 0.06f;
 		float leftEnvelope  = Mathf.Sin( Time.time * 0.4f );
 		float rightEnvelope = Mathf.Cos( Time.time * 1.0f );
-		_myLeftHand.gameObject.transform.position  += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Sin( Time.time * 1.0f );
-		_myLeftHand.gameObject.transform.position  += waveAroundRange * leftEnvelope * Vector3.right * Mathf.Cos( Time.time * 1.5f );
+		_myLeftHand.transform.position  += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Sin( Time.time * 1.0f );
+		_myLeftHand.transform.position  += waveAroundRange * leftEnvelope * Vector3.right * Mathf.Cos( Time.time * 1.5f );
 
-		_myRightHand.gameObject.transform.position += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Cos( Time.time * 1.2f );
-		_myRightHand.gameObject.transform.position += waveAroundRange * leftEnvelope * Vector3.right * Mathf.Sin( Time.time * 1.8f );
+		_myRightHand.transform.position += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Cos( Time.time * 1.2f );
+		_myRightHand.transform.position += waveAroundRange * leftEnvelope * Vector3.right * Mathf.Sin( Time.time * 1.8f );
 
 		//---------------------------------------------------------
 		// set the rotations of the hands...
 		//---------------------------------------------------------
-		_myLeftHand.gameObject.transform.rotation  = Quaternion.identity;
-		_myRightHand.gameObject.transform.rotation = Quaternion.identity;
+		_myLeftHand.transform.rotation  = Quaternion.identity;
+		_myRightHand.transform.rotation = Quaternion.identity;
 
-		_myLeftHand.gameObject.transform.Rotate ( 60.0f + 30.0f * Mathf.Sin( Time.time * 1.3f ), -30.0f + 20.0f * Mathf.Sin( Time.time * 3.3f ), 0.0f );
-		_myRightHand.gameObject.transform.Rotate( 60.0f + 30.0f * Mathf.Cos( Time.time * 1.0f ),  30.0f + 20.0f * Mathf.Cos( Time.time * 2.5f ), 0.0f );
+		_myLeftHand.transform.Rotate ( 60.0f + 30.0f * Mathf.Sin( Time.time * 1.3f ), -30.0f + 20.0f * Mathf.Sin( Time.time * 3.3f ), 0.0f );
+		_myRightHand.transform.Rotate( 60.0f + 30.0f * Mathf.Cos( Time.time * 1.0f ),  30.0f + 20.0f * Mathf.Cos( Time.time * 2.5f ), 0.0f );
 	
 		//---------------------------------------------------------
-		// set the positions of the fingers...
+		// set the positions of the finger emitters...
+		// NOT IMPLEMENTED YET
 		//---------------------------------------------------------
-   		_myLeftHand.thumbFingerPosition 	= _myLeftHand.gameObject.transform.position;
-    	_myLeftHand.indexFingerPosition  	= _myLeftHand.gameObject.transform.position;
-    	_myLeftHand.middleFingerPosition 	= _myLeftHand.gameObject.transform.position;
-    	_myLeftHand.ringFingerPosition 		= _myLeftHand.gameObject.transform.position;
-    	_myLeftHand.pinkyFingerPosition 	= _myLeftHand.gameObject.transform.position;
-
-    	_myRightHand.thumbFingerPosition 	= _myRightHand.gameObject.transform.position;
-    	_myRightHand.indexFingerPosition  	= _myRightHand.gameObject.transform.position;
-    	_myRightHand.middleFingerPosition 	= _myRightHand.gameObject.transform.position;
-    	_myRightHand.ringFingerPosition 	= _myRightHand.gameObject.transform.position;
-    	_myRightHand.pinkyFingerPosition 	= _myRightHand.gameObject.transform.position;
+   		_emitters[ LEFT_THUMB_FINGER 	].position	= _myLeftHand.transform.position;
+    	_emitters[ LEFT_INDEX_FINGER 	].position	= _myLeftHand.transform.position;
+    	_emitters[ LEFT_MIDDLE_FINGER 	].position	= _myLeftHand.transform.position;
+    	_emitters[ LEFT_RING_FINGER 	].position	= _myLeftHand.transform.position;
+    	_emitters[ LEFT_PINKY_FINGER 	].position 	= _myLeftHand.transform.position;
+   		_emitters[ RIGHT_THUMB_FINGER 	].position	= _myRightHand.transform.position;
+    	_emitters[ RIGHT_INDEX_FINGER 	].position	= _myRightHand.transform.position;
+    	_emitters[ RIGHT_MIDDLE_FINGER 	].position	= _myRightHand.transform.position;
+    	_emitters[ RIGHT_RING_FINGER 	].position	= _myRightHand.transform.position;
+    	_emitters[ RIGHT_PINKY_FINGER 	].position 	= _myRightHand.transform.position;
 
 		//---------------------------------------------------------
-		// set the directions of the fingers ...
+		// set the directions of the finger emitters ...
+		// NOT IMPLEMENTED YET
 		//---------------------------------------------------------
-	   	_myLeftHand.thumbFingerDirection	= _myLeftHand.gameObject.transform.up;
-    	_myLeftHand.indexFingerDirection  	= _myLeftHand.gameObject.transform.up;
-    	_myLeftHand.middleFingerDirection 	= _myLeftHand.gameObject.transform.up;
-    	_myLeftHand.ringFingerDirection   	= _myLeftHand.gameObject.transform.up;
-    	_myLeftHand.pinkyFingerDirection  	= _myLeftHand.gameObject.transform.up;
-
-    	_myRightHand.thumbFingerDirection 	= _myRightHand.gameObject.transform.up;
-    	_myRightHand.indexFingerDirection 	= _myRightHand.gameObject.transform.up;
-    	_myRightHand.middleFingerDirection	= _myRightHand.gameObject.transform.up;
-    	_myRightHand.ringFingerDirection  	= _myRightHand.gameObject.transform.up;
-    	_myRightHand.pinkyFingerDirection	= _myRightHand.gameObject.transform.up;
+   		_emitters[ LEFT_THUMB_FINGER 	].direction	= _myLeftHand.transform.up;
+    	_emitters[ LEFT_INDEX_FINGER 	].direction	= _myLeftHand.transform.up;
+    	_emitters[ LEFT_MIDDLE_FINGER 	].direction	= _myLeftHand.transform.up;
+    	_emitters[ LEFT_RING_FINGER 	].direction	= _myLeftHand.transform.up;
+    	_emitters[ LEFT_PINKY_FINGER 	].direction = _myLeftHand.transform.up;
+   		_emitters[ RIGHT_THUMB_FINGER 	].direction	= _myRightHand.transform.up;
+    	_emitters[ RIGHT_INDEX_FINGER 	].direction	= _myRightHand.transform.up;
+    	_emitters[ RIGHT_MIDDLE_FINGER 	].direction	= _myRightHand.transform.up;
+    	_emitters[ RIGHT_RING_FINGER 	].direction	= _myRightHand.transform.up;
+    	_emitters[ RIGHT_PINKY_FINGER 	].direction = _myRightHand.transform.up;
 	}
 
 
@@ -396,9 +444,6 @@ public class ParticleManager : MonoBehaviour {
 		{
 			_species[s].drag 			= MIN_DRAG + Random.value * (MAX_DRAG - MIN_DRAG);
 			_species[s].socialForce 	= -MAX_SOCIAL_FORCE + Random.value * MAX_SOCIAL_FORCE * 2.0f;
-
-//Debug.Log( "social force for species " + s + " = " + _species[s].socialForce );
-
 			_species[s].socialRange 	= Random.value * MAX_SOCIAL_RANGE;
 			_species[s].collisionForce 	= MIN_COLLISION_FORCE + Random.value * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);
 			_species[s].color 			= new Color(Random.value, Random.value, Random.value, ONE);
@@ -418,19 +463,33 @@ public class ParticleManager : MonoBehaviour {
 
 
 
- 	//------------------------------------------------------------------------------------
-  	// emit a single particle 
-  	//------------------------------------------------------------------------------------
-	private void emitParticle( Vector3 emitPosition, Vector3 emitForce, int emitSpecies ) 
+ 	//-------------------------------------------
+  	// update particle emitter 
+  	//-------------------------------------------
+	private void updateParticleEmitter( int e ) 
 	{
-		int p = (int)( Random.value * _numParticles );
-
-		if ( ! _particles[p].active )
+		if ( Random.value < 0.1 ) 
 		{
-			_particles[p].active   = true;
-			_particles[p].position = emitPosition;
-			_particles[p].velocity = emitForce + new Vector3( Random.value * 0.01f, Random.value * 0.01f, Random.value * 0.01f );
-			_particles[p].species  = emitSpecies;
+			int p = (int)( Random.value * _numParticles );
+	
+			if ( ! _particles[p].active )
+			{
+				_particles[p].active   = true;
+				_particles[p].species  = _emitters[e].species;
+				_particles[p].position = _emitters[e].position;
+				_particles[p].velocity = _emitters[e].direction * _emitters[e].strength; 
+	
+				if ( _emitters[e].jitter > 0.0f )
+				{
+					_particles[p].velocity += 
+					new Vector3
+					( 
+						-_emitters[e].jitter + Random.value * _emitters[e].jitter * 2.0f, 
+						-_emitters[e].jitter + Random.value * _emitters[e].jitter * 2.0f, 
+						-_emitters[e].jitter + Random.value * _emitters[e].jitter * 2.0f 
+					);
+				}
+			}
 		}
 	}
 

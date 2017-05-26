@@ -26,7 +26,7 @@ public class ParticleManager : MonoBehaviour {
   	private const float MAX_DRAG 			= 0.2f;
   	private const float PARTICLE_RADIUS		= 0.01f; //meters
   	private const float ENVIRONMENT_RADIUS	= 1.0f;  //meters
-  	private const float MAX_SOCIAL_RANGE 	= 0.2f;  //meters
+  	private const float MAX_SOCIAL_RANGE 	= 0.4f;  //meters
   	private const float MIN_COLLISION_FORCE = 0.0f;
   	private const float MAX_COLLISION_FORCE = 0.9f;
 	private const float MAX_SOCIAL_FORCE 	= 0.2f;
@@ -396,6 +396,9 @@ public class ParticleManager : MonoBehaviour {
 		{
 			_species[s].drag 			= MIN_DRAG + Random.value * (MAX_DRAG - MIN_DRAG);
 			_species[s].socialForce 	= -MAX_SOCIAL_FORCE + Random.value * MAX_SOCIAL_FORCE * 2.0f;
+
+//Debug.Log( "social force for species " + s + " = " + _species[s].socialForce );
+
 			_species[s].socialRange 	= Random.value * MAX_SOCIAL_RANGE;
 			_species[s].collisionForce 	= MIN_COLLISION_FORCE + Random.value * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);
 			_species[s].color 			= new Color(Random.value, Random.value, Random.value, ONE);
@@ -474,36 +477,34 @@ public class ParticleManager : MonoBehaviour {
 		//-------------------------------------------------------
 		// Loop through every particle 				  
 		//-------------------------------------------------------
-   		for (int index = startIndex; index < endIndex; index++) 
+   		for (int i = startIndex; i < endIndex; i++) 
 		{
-			if ( _particles[index].active ) 
+			if ( _particles[i].active ) 
 			{
-	      		Particle p = _particles[index];
-
 				//------------------------------------------------------
 				// reset accumulated force 
 				//------------------------------------------------------
-				p.accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
+				_particles[i].accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
 
 				//------------------
 				// advance age
 				//------------------
-				p.age += deltaTime;
+				_particles[i].age += deltaTime;
 
 				//---------------------------------------
 				// Loop through every (other) particle  
 				//---------------------------------------
-				for (uint i = 0; i < _numParticles; i++) 
+				for (uint o = 0; o < _numParticles; o++) 
 				{
-					if ( _particles[i].active )
+					if ( _particles[o].active )
 					{
-		        		if (i == index) continue; //Dont compare against self!
+		        		if (o == i) continue; //Dont compare against self!
 		
-				        Particle other = _particles[i];
-				        float3 	 vectorToOther = other.position - p.position;
+				        Particle other = _particles[o];
+				        float3 	 vectorToOther = other.position - _particles[i].position;
 				        float 	 distanceSquared = vectorToOther.sqrMagnitude;
 		
-		        		float socialRangeSquared = _species[p.species].socialRange * _species[p.species].socialRange;
+		        		float socialRangeSquared = _species[ _particles[i].species ].socialRange * _species[ _particles[i].species ].socialRange;
 		        		if ((distanceSquared < socialRangeSquared) && (distanceSquared > ZERO)) 
 						{
 							float distance = Mathf.Sqrt(distanceSquared);
@@ -512,8 +513,8 @@ public class ParticleManager : MonoBehaviour {
 							//--------------------------------------------------------------------------
 							// Accumulate forces from social attractions/repulsions to other particles
 							//--------------------------------------------------------------------------
-							p.accumulatedForce += (float4)(_species[p.species].socialForce * directionToOther);
-							p.accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
+							_particles[i].accumulatedForce += (float4)(_species[ _particles[i].species ].socialForce * directionToOther);
+							_particles[i].accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
 		
 							//----------------------------------------
 							// collisions
@@ -524,11 +525,11 @@ public class ParticleManager : MonoBehaviour {
 								float penetration = ONE - distance / combinedRadius;
 								float averageCollisionForce =
 		            			(
-		              				_species[p.species].collisionForce +
+		              				_species[_particles[i].species].collisionForce +
 		              				_species[other.species].collisionForce
 		            			) * ONE_HALF;
 		
-		            			p.velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
+		            			_particles[i].velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
 		          			}
 						}
 	        		}
@@ -537,41 +538,41 @@ public class ParticleManager : MonoBehaviour {
 				//---------------------------------------------
 				// Apply accumulated forces to the velocity
 				//---------------------------------------------
-				if (p.accumulatedForce.w > 0) 
+				if ( _particles[i].accumulatedForce.w > 0 ) 
 				{
 					//-----------------------------------------------------------------------------------------
 					// divide by w, which is the number of particles that contributed to the accumulated force
 					//-----------------------------------------------------------------------------------------
-					p.velocity += deltaTime * (Vector3)p.accumulatedForce / p.accumulatedForce.w;
+					_particles[i].velocity += deltaTime * (Vector3)_particles[i].accumulatedForce / _particles[i].accumulatedForce.w;
 				}
 	
 				//--------------------------------------------------------------------------------------
 				// apply forces to keep the particle from getting past the boundary of the environment
 				//--------------------------------------------------------------------------------------
-				Vector3 vectorFromHome = p.position - _homePosition;
+				Vector3 vectorFromHome = _particles[i].position - _homePosition;
 				float distanceFromHome = vectorFromHome.magnitude;
-	
-				if (distanceFromHome > ENVIRONMENT_RADIUS) 
+		
+				if ( distanceFromHome > ENVIRONMENT_RADIUS ) 
 				{
 					Vector3 directionFromHome = vectorFromHome / distanceFromHome;
-					float force = (distanceFromHome - ENVIRONMENT_RADIUS) * BOUNDARY_FORCE;
-					p.velocity -= force * directionFromHome * deltaTime;
+					float force = ( distanceFromHome - ENVIRONMENT_RADIUS ) * BOUNDARY_FORCE;
+					_particles[i].velocity -= force * directionFromHome * deltaTime;
 				}
 
 				//-------------------------------------------
 				// dampening (kinda like air friction)
 				//-------------------------------------------
-				p.velocity *= (ONE - _species[p.species].drag);
+				_particles[i].velocity *= (ONE - _species[_particles[i].species].drag);
 	
 				//------------------------------------
 				// update position by velocity
 				//------------------------------------
-				p.position += p.velocity;
+				_particles[i].position += _particles[i].velocity;
 	
 				//----------------------
 				// fill back buffer
 				//----------------------
-				_backBuffer[index] = p;
+				_backBuffer[i] = _particles[i];
 			}
 		}
 	}

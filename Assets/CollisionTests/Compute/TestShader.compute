@@ -61,7 +61,7 @@ void Integrate(uint3 id : SV_DispatchThreadID) {
   {
     float3 tempPos = particle.position;
 
-    particle.position += 0.9999 * (particle.position - particle.prevPosition);
+    particle.position += DAMP_CONSTANT * (particle.position - particle.prevPosition);
     //particle.position += forceToCenter * 0.0002;
     particle.position += forceAroundCenter * 0.00001;
     particle.position.y -= 0.0001;

@@ -2,7 +2,7 @@
 #define MAX_FORCE_STEPS 5
 #define MAX_SPECIES 8
 
-#define FRICTION 0.01
+#define FRICTION 0.001
 #define DAMP_CONSTANT (1.0 - FRICTION)
 
 #define RADIUS 0.0175
@@ -16,6 +16,18 @@ struct Particle {
   float3 position;
   float3 prevPosition;
   float3 color;
+  uint species;
+};
+
+struct SpeciesData {
+  float drag;
+  float collisionForce;
+  float4 color;
+};
+
+struct PerSpeciesPairData {
+  float socialForce;
+  float socialRange;
 };
 
 struct Capsule {

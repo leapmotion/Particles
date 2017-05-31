@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,7 @@ public class EquivilanceTests : MonoBehaviour {
   public bool resetValues = false;
   public int spawnCount = 100;
 
-  [Range(0, 1)]
+  [Range(0, 10)]
   public float checkRange = 0.5f;
   public float gridSize = 0.1f;
 
@@ -40,9 +40,6 @@ public class EquivilanceTests : MonoBehaviour {
         points.Add(Random.insideUnitSphere);
       }
     }
-
-
-
   }
 
   private void OnDrawGizmos() {
@@ -95,10 +92,13 @@ public class EquivilanceTests : MonoBehaviour {
       foreach (var pair in pointCenter) {
         int count = pointCount[pair.Key];
         Vector3 center = pair.Value / count;
+        float averageRadius = pointList[pair.Key].Select(v => Vector3.Distance(center, v)).
+                                                  //Max();
+                                                  Sum() / count;
 
         Vector3 toCenter = center - transform.position;
-        float nearDist = Mathf.Max(0, toCenter.magnitude - gridSize * 0.5f);
-        float farDist = toCenter.magnitude + gridSize * 0.5f;
+        float nearDist = Mathf.Max(0, toCenter.magnitude - averageRadius);
+        float farDist = toCenter.magnitude + averageRadius;
         float percent = Mathf.Clamp01(Mathf.InverseLerp(nearDist, farDist, checkRange));
 
         if (percent > 0) {
@@ -112,6 +112,7 @@ public class EquivilanceTests : MonoBehaviour {
       }
       method1Force /= method1Count;
 
+      #region AAA
       method2Force = Vector3.zero;
       method2Count = 0;
       foreach (var pair in pointList) {
@@ -139,29 +140,35 @@ public class EquivilanceTests : MonoBehaviour {
         }
       }
       method2Force /= method2Count;
+      #endregion
 
       method3Force = Vector3.zero;
       method3Count = 0;
       foreach (var pair in pointList) {
         var list = pair.Value;
         var count = pointCount[pair.Key];
-        var center = pointCenter[pair.Key];
+        var center = pointCenter[pair.Key] / count;
 
         if (count > method3Threshold) {
           Vector3 toCenter = center - transform.position;
           float nearDist = Mathf.Max(0, toCenter.magnitude - gridSize * 0.5f);
           float farDist = toCenter.magnitude + gridSize * 0.5f;
           float percent = Mathf.Clamp01(Mathf.InverseLerp(nearDist, farDist, checkRange));
-          
+
           if (percent > 0) {
-            Debug.Log(count);
-            method3Force += toCenter.normalized * count * percent;
-            method3Count += count * percent;
+            float effectiveCount = percent * count;
+            Vector3 dir = toCenter.normalized;
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(center, 0.017f);
+            method3Force += dir * effectiveCount;
+            method3Count += effectiveCount;
           }
         } else {
           foreach (var point in list) {
             Vector3 toPoint = point - transform.position;
             if (toPoint.magnitude < checkRange) {
+              Gizmos.color = Color.magenta;
+              Gizmos.DrawWireSphere(point, 0.017f);
               method3Force += toPoint.normalized;
               method3Count += 1;
             }
@@ -170,6 +177,32 @@ public class EquivilanceTests : MonoBehaviour {
       }
       method3Force /= method3Count;
     }
+
+    /*
+    {
+      Vector3 center = Vector3.zero;
+      foreach (var point in points) {
+        center += point;
+      }
+      center /= points.Count;
+
+      float averageDistToCenter = 0;
+      foreach (var point in points) {
+        averageDistToCenter += (point - center).magnitude;
+      }
+      averageDistToCenter /= points.Count;
+
+      float stdv = 0;
+      foreach (var point in points) {
+        stdv += Mathf.Pow((point - center).magnitude - averageDistToCenter, 2);
+      }
+      stdv = Mathf.Sqrt(stdv / (points.Count - 1));
+
+      Gizmos.color = new Color(0, 1, 0, 1f);
+      Gizmos.DrawSphere(center, averageDistToCenter - stdv);
+      Gizmos.DrawWireSphere(center, averageDistToCenter + stdv);
+    }
+    */
 
     {
       HashSet<Point> drawn = new HashSet<Point>();
@@ -193,14 +226,17 @@ public class EquivilanceTests : MonoBehaviour {
         Gizmos.DrawWireCube(gridPoint + Vector3.one * gridSize * 0.5f, Vector3.one * gridSize);
       }
 
-      Gizmos.color = Color.green;
-      Gizmos.DrawRay(transform.position, actualForce);
-
       Gizmos.color = Color.red;
-      //Gizmos.DrawRay(transform.position, method1Force);
+      Gizmos.DrawRay(transform.position, method1Force);
+
+      //Gizmos.color = Color.blue;
+      //Gizmos.DrawRay(transform.position, method2Force);
 
       Gizmos.color = Color.magenta;
       Gizmos.DrawRay(transform.position, method3Force);
+
+      Gizmos.color = Color.green;
+      Gizmos.DrawRay(transform.position, actualForce);
     }
   }
 

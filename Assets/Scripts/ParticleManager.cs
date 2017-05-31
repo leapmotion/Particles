@@ -52,8 +52,8 @@ public class ParticleManager : MonoBehaviour {
  	private struct Species 
 	{
 		public  float 	drag;
-		public	float	socialForce;
-		public	float	socialRange;
+		public	float[]	socialForce;
+		public	float[]	socialRange;
 		public	float	collisionForce;
     	public	Vector4 color;
   	}
@@ -63,7 +63,7 @@ public class ParticleManager : MonoBehaviour {
 	{
 		public	bool	active;				// currently being used for birth and death
 		public  float 	age;				// in seconds
-		public	int		species;			// set at birth
+		public	int		species;			// attributes set at birth
     	public 	Vector3	position;			// dynamic
     	public 	Vector3	velocity;			// dynamic
     	public 	Vector4	accumulatedForce; 	// dynamic
@@ -132,15 +132,22 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     // intitialize species array
     //-----------------------------------------
-    _species = new Species[MAX_SPECIES];
+    _species = new Species[ MAX_SPECIES ];
     for (int s = 0; s < MAX_SPECIES; s++) 
 	{
-      _species[s] = new Species();
-      _species[s].drag = ZERO;
-      _species[s].socialForce = ZERO;
-      _species[s].socialRange = ZERO;
-      _species[s].collisionForce = ZERO;
-      _species[s].color = new Color(ZERO, ZERO, ZERO, ZERO);
+      	_species[s] = new Species();
+      	_species[s].drag = ZERO;
+		_species[s].collisionForce = ZERO;
+		_species[s].color = new Color(ZERO, ZERO, ZERO, ZERO);
+
+		_species[s].socialForce = new float[ MAX_SPECIES ];
+		_species[s].socialRange = new float[ MAX_SPECIES ];
+
+		for (int o=0; o<MAX_SPECIES; o++)
+		{
+			_species[s].socialForce[o] = ZERO;
+			_species[s].socialRange[o] = ZERO;
+		}
     }
 
     //-----------------------------------------
@@ -242,11 +249,15 @@ public class ParticleManager : MonoBehaviour {
 		//----------------------------------------
 		for (int s = 0; s < MAX_SPECIES; s++) 
 		{
-			_species[s].drag 			= MIN_DRAG + Random.value * (MAX_DRAG - MIN_DRAG);
-			_species[s].socialForce 	= -MAX_SOCIAL_FORCE + Random.value * MAX_SOCIAL_FORCE * 2.0f;
-			_species[s].socialRange 	= Random.value * MAX_SOCIAL_RANGE;
+			_species[s].drag = MIN_DRAG + Random.value * (MAX_DRAG - MIN_DRAG);
 			_species[s].collisionForce 	= MIN_COLLISION_FORCE + Random.value * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);
 			_species[s].color 			= new Color(Random.value, Random.value, Random.value, ONE);
+
+			for (int o=0; o<MAX_SPECIES; o++)
+			{
+				_species[s].socialForce[o] = -MAX_SOCIAL_FORCE + Random.value * MAX_SOCIAL_FORCE * 2.0f;
+				_species[s].socialRange[o] = Random.value * MAX_SOCIAL_RANGE;
+			}
 		}
 
 		//--------------------------------------
@@ -333,7 +344,10 @@ public class ParticleManager : MonoBehaviour {
     _particles 	= temp;
   }
 
- 	private void particleSimulationLogic(int startIndex, int endIndex, float deltaTime) 
+
+
+
+ 	private void particleSimulationLogic( int startIndex, int endIndex, float deltaTime ) 
 	{
 		//-------------------------------------------------------
 		// Loop through every particle 				  
@@ -345,7 +359,7 @@ public class ParticleManager : MonoBehaviour {
 				//------------------------------------------------------
 				// reset accumulated force 
 				//------------------------------------------------------
-				_particles[i].accumulatedForce = new float4(ZERO, ZERO, ZERO, ZERO);
+				_particles[i].accumulatedForce = new float4( ZERO, ZERO, ZERO, ZERO );
 
 				//------------------
 				// advance age
@@ -363,18 +377,21 @@ public class ParticleManager : MonoBehaviour {
 		
 				        Particle other = _particles[o];
 				        float3 	 vectorToOther = other.position - _particles[i].position;
-				        float 	 distanceSquared = vectorToOther.sqrMagnitude;
-		
-		        		float socialRangeSquared = _species[ _particles[i].species ].socialRange * _species[ _particles[i].species ].socialRange;
-		        		if ((distanceSquared < socialRangeSquared) && (distanceSquared > ZERO)) 
+				        float 	 distanceSquared = vectorToOther.sqrMagnitude;		
+
+						float XsocialRangeSquared = 
+						_species[ _particles[i].species ].socialRange[ other.species ] * 
+						_species[ _particles[i].species ].socialRange[ other.species ];
+
+		        		if ( ( distanceSquared < XsocialRangeSquared ) && ( distanceSquared > ZERO ) ) 
 						{
-							float distance = Mathf.Sqrt(distanceSquared);
+							float distance = Mathf.Sqrt( distanceSquared );
 							float3 directionToOther = vectorToOther / distance;
 		
 							//--------------------------------------------------------------------------
 							// Accumulate forces from social attractions/repulsions to other particles
 							//--------------------------------------------------------------------------
-							_particles[i].accumulatedForce += (float4)(_species[ _particles[i].species ].socialForce * directionToOther);
+							_particles[i].accumulatedForce += (float4)(_species[ _particles[i].species ].socialForce[ other.species ] * directionToOther);
 							_particles[i].accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
 		
 							//----------------------------------------
@@ -386,8 +403,8 @@ public class ParticleManager : MonoBehaviour {
 								float penetration = ONE - distance / combinedRadius;
 								float averageCollisionForce =
 		            			(
-		              				_species[_particles[i].species].collisionForce +
-		              				_species[other.species].collisionForce
+		              				_species[ _particles[i].species ].collisionForce +
+		              				_species[ other.species ].collisionForce
 		            			) * ONE_HALF;
 		
 		            			_particles[i].velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;

@@ -1,6 +1,6 @@
 
 #define MAX_FORCE_STEPS 5
-#define MAX_SPECIES 8
+#define SPECIES_COUNT 8
 
 #define FRICTION 0.001
 #define DAMP_CONSTANT (1.0 - FRICTION)
@@ -16,7 +16,6 @@ struct Particle {
   float3 position;
   float3 prevPosition;
   float3 color;
-  uint species;
 };
 
 struct SpeciesData {
@@ -25,7 +24,7 @@ struct SpeciesData {
   float4 color;
 };
 
-struct PerSpeciesPairData {
+struct SocialData {
   float socialForce;
   float socialRange;
 };
@@ -52,5 +51,14 @@ void doParticleOnParticleCollision(Particle particle, Particle other, inout floa
 }
 
 void doParticleOnParticleForces(Particle particle, Particle other, inout float4 totalForce) {
+  /*
+  float3 toOther = (other.position - particle.position);
+  float dist = length(toOther);
 
+  SocialData socialData = GetSocialData(particle, other);
+  if (dist < socialData.socialRange) {
+    float3 directionToOther = toOther / dist;
+    totalForce += float4(directionToOther * socialData.socialForce, 1);
+  }
+  */
 }

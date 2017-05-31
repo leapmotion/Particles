@@ -16,7 +16,7 @@
     #pragma instancing_options procedural:setup
     #include "Assets/Shaders/ParticleData.cginc"
 
-#ifdef SHADER_API_D3D11
+#ifdef UNITY_COMPILER_HLSL
     StructuredBuffer<Particle> _Particles;
 #endif
 

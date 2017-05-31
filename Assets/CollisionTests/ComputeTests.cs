@@ -10,8 +10,8 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
   public const int MAX_PARTICLES = 1024 * 64;
   public const int MAX_CAPSULES = 1024;
 
-  public const int BOX_SIDE = 64;
-  public const int BOX_COUNT = BOX_SIDE * BOX_SIDE * BOX_SIDE;
+  public const int COLLISION_CHUNK_SIDE = 64;
+  public const int CHUNK_COUNT = COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
 
   [Header("Hands")]
   [SerializeField]
@@ -78,8 +78,8 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
   private ComputeBuffer _particleBack;
 
   private ComputeBuffer _count;
-  private ComputeBuffer _boxStart;
-  private ComputeBuffer _boxEnd;
+  private ComputeBuffer _chunkStart;
+  private ComputeBuffer _chunkEnd;
 
   private ComputeBuffer _debugData;
 
@@ -93,9 +93,9 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
     _particleFront = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
     _particleBack = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
 
-    _count = new ComputeBuffer(BOX_COUNT, sizeof(uint));
-    _boxStart = new ComputeBuffer(BOX_COUNT, sizeof(uint));
-    _boxEnd = new ComputeBuffer(BOX_COUNT, sizeof(uint));
+    _count = new ComputeBuffer(CHUNK_COUNT, sizeof(uint));
+    _chunkStart = new ComputeBuffer(CHUNK_COUNT, sizeof(uint));
+    _chunkEnd = new ComputeBuffer(CHUNK_COUNT, sizeof(uint));
 
     _debugData = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(DebugData)));
 
@@ -105,8 +105,8 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
     args[1] = MAX_PARTICLES;
     _argBuffer.SetData(args);
 
-    uint[] counts = new uint[BOX_COUNT];
-    for (int i = 0; i < BOX_COUNT; i++) {
+    uint[] counts = new uint[CHUNK_COUNT];
+    for (int i = 0; i < CHUNK_COUNT; i++) {
       counts[i] = 0;
     }
     _count.SetData(counts);
@@ -137,8 +137,8 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
       _shader.SetBuffer(index, "_ParticleFront", _particleFront);
       _shader.SetBuffer(index, "_ParticleBack", _particleBack);
       _shader.SetBuffer(index, "_Count", _count);
-      _shader.SetBuffer(index, "_BoxStart", _boxStart);
-      _shader.SetBuffer(index, "_BoxEnd", _boxEnd);
+      _shader.SetBuffer(index, "_ChunkStart", _chunkStart);
+      _shader.SetBuffer(index, "_ChunkEnd", _chunkEnd);
       _shader.SetBuffer(index, "_DebugData", _debugData);
     }
 
@@ -151,8 +151,8 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
     if (_particleBack != null) _particleBack.Release();
 
     if (_count != null) _count.Release();
-    if (_boxStart != null) _boxStart.Release();
-    if (_boxEnd != null) _boxEnd.Release();
+    if (_chunkStart != null) _chunkStart.Release();
+    if (_chunkEnd != null) _chunkEnd.Release();
 
     if (_argBuffer != null) _argBuffer.Release();
     if (_capsules != null) _capsules.Release();
@@ -189,13 +189,13 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
       }
 
       using (new ProfilerSample("Accumulate")) {
-        _shader.Dispatch(_accumulate_x, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-        _shader.Dispatch(_accumulate_y, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
-        _shader.Dispatch(_accumulate_z, BOX_SIDE / 4, BOX_SIDE / 4, BOX_SIDE / 4);
+        _shader.Dispatch(_accumulate_x, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4);
+        _shader.Dispatch(_accumulate_y, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4);
+        _shader.Dispatch(_accumulate_z, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4, COLLISION_CHUNK_SIDE / 4);
       }
 
       using (new ProfilerSample("Copy")) {
-        _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
+        _shader.Dispatch(_copy, CHUNK_COUNT / 64, 1, 1);
       }
 
       using (new ProfilerSample("Sort")) {

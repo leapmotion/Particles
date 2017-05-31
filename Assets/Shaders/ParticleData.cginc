@@ -5,7 +5,8 @@
 #define FRICTION 0.01
 #define DAMP_CONSTANT (1.0 - FRICTION)
 
-#define RADIUS 0.01
+#define RADIUS 0.0175
+#define SQR_RADIUS (RADIUS * RADIUS)
 
 #define MAX_SOCIAL_RANGE (RADIUS * 20)
 #define MAX_COLLISION_FORCE 2
@@ -15,4 +16,10 @@ struct Particle {
   float3 position;
   float3 prevPosition;
   float3 color;
+};
+
+struct Capsule {
+  float3 a;
+  float3 b;
+  float radius;
 };

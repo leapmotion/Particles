@@ -23,3 +23,22 @@ struct Capsule {
   float3 b;
   float radius;
 };
+
+float noise(float2 n) {
+  return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+}
+
+void doParticleOnParticleCollision(Particle particle, Particle other, inout float4 totalDepenetration) {
+  float3 fromOther = (particle.position - other.position);
+  float distSqrd = dot(fromOther, fromOther);
+
+  if (distSqrd < SQR_RADIUS) {
+    float deltalength = sqrt(distSqrd);
+    fromOther *= -0.5 * (deltalength - RADIUS) / deltalength;
+    totalDepenetration += float4(fromOther, 1);
+  }
+}
+
+void doParticleOnParticleForces(Particle particle, Particle other, inout float4 totalForce) {
+
+}

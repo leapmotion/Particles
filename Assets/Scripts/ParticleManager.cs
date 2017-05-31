@@ -14,7 +14,7 @@ public class ParticleManager : MonoBehaviour {
 	//---------------------------------------------
 	// particle physics constants
 	//---------------------------------------------
-  	private const int 	MAX_PARTICLES 		= 64 * 8;
+  	private const int 	NUM_PARTICLES 		= 64 * 8;
 	private const int   MIN_FORCE_STEPS 	= 1;
 	private const int   MAX_FORCE_STEPS 	= 5;
 	private const int   MIN_SPECIES 		= 1;
@@ -30,6 +30,7 @@ public class ParticleManager : MonoBehaviour {
   	private const float MIN_COLLISION_FORCE = 0.0f;
 	private const float MAX_COLLISION_FORCE = 1.0f;
   	private const float MAX_SOCIAL_FORCE 	= 0.1f;
+	private	const int	NULL_PARTICLE		= -1;
 
 	[SerializeField]
 	private bool _useComputeShader = false;
@@ -52,6 +53,7 @@ public class ParticleManager : MonoBehaviour {
  	private struct Species 
 	{
 		public  float 	drag;
+        public 	int		steps;
 		public	float[]	socialForce;
 		public	float[]	socialRange;
 		public	float	collisionForce;
@@ -67,6 +69,11 @@ public class ParticleManager : MonoBehaviour {
     	public 	Vector3	position;			// dynamic
     	public 	Vector3	velocity;			// dynamic
     	public 	Vector4	accumulatedForce; 	// dynamic
+
+//I need to finish this...
+//this.xf     = new Array( MAX_FORCE_STEPS );
+//this.yf     = new Array( MAX_FORCE_STEPS );
+
   	}
 
 	[SerializeField]
@@ -78,7 +85,6 @@ public class ParticleManager : MonoBehaviour {
 	private Material 			_cpuMaterial;
 	private Material 			_computeMaterial;
 	private ComputeBuffer		_particleBuffer;
-	private int					_numParticles;
 	private ComputeBuffer 		_argBuffer;
 	private int 				_simulationKernelIndex;
 	private ParticleControl		_particleController;
@@ -96,7 +102,7 @@ public class ParticleManager : MonoBehaviour {
     }
 
     _argBuffer = new ComputeBuffer(5, 5 * sizeof(uint), ComputeBufferType.IndirectArguments);
-    _particleBuffer = new ComputeBuffer(MAX_PARTICLES, Marshal.SizeOf(typeof(Particle)));
+    _particleBuffer = new ComputeBuffer(NUM_PARTICLES, Marshal.SizeOf(typeof(Particle)));
 
     _cpuMaterial = new Material(_cpuShader);
 
@@ -104,7 +110,7 @@ public class ParticleManager : MonoBehaviour {
     _computeMaterial.SetBuffer("_Particles", _particleBuffer);
 
     _simulationKernelIndex = _simulationShader.FindKernel(SIMULATION_KERNEL_NAME);
-    _simulationShader.SetInt("_MaxParticles", _numParticles);
+    _simulationShader.SetInt("_MaxParticles", NUM_PARTICLES);
     _simulationShader.SetBuffer(_simulationKernelIndex, "_Particles", _particleBuffer);
 
     _homePosition = Vector3.zero;
@@ -114,12 +120,12 @@ public class ParticleManager : MonoBehaviour {
 	//-----------------------------------------
 	// intitialize particle array
 	//-----------------------------------------
-	_particles  = new Particle[MAX_PARTICLES];
-	_backBuffer = new Particle[MAX_PARTICLES];
-	for (int i = 0; i < MAX_PARTICLES; i++) 
+	_particles  = new Particle[NUM_PARTICLES];
+	_backBuffer = new Particle[NUM_PARTICLES];
+	for (int i = 0; i < NUM_PARTICLES; i++) 
 	{
 	  _particles[i] = new Particle();
-	  _particles[i].age = 0.0f;
+	  _particles[i].age = ZERO;
 	  _particles[i].active = false;
 	  _particles[i].species = 0;
 	  _particles[i].accumulatedForce = Vector4.zero;
@@ -137,6 +143,7 @@ public class ParticleManager : MonoBehaviour {
 	{
       	_species[s] = new Species();
       	_species[s].drag = ZERO;
+      	_species[s].steps = 0;
 		_species[s].collisionForce = ZERO;
 		_species[s].color = new Color(ZERO, ZERO, ZERO, ZERO);
 
@@ -151,13 +158,13 @@ public class ParticleManager : MonoBehaviour {
     }
 
     //-----------------------------------------
-    // randomize ecosystem
+    // randomize species
     //-----------------------------------------
-    randomizeEcosystem();
+    randomizeSpecies();
 
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
-    args[1] = MAX_PARTICLES;
+    args[1] = NUM_PARTICLES;
     _argBuffer.SetData(args);
   }
 
@@ -179,7 +186,7 @@ public class ParticleManager : MonoBehaviour {
 
   void OnPostRender() {
     _computeMaterial.SetPass(0);
-    Graphics.DrawProcedural(MeshTopology.Points, _numParticles);
+    Graphics.DrawProcedural(MeshTopology.Points, NUM_PARTICLES);
   }
 
 	//-------------------------------------------
@@ -197,7 +204,7 @@ public class ParticleManager : MonoBehaviour {
 		//------------------------------------
 		for (int e=0; e<_particleController.getNumEmitters(); e++)
 		{
-			updateEmittedParticles(e);
+			updateEmittingParticles(e);
 		}
 
 		//------------------------------------
@@ -225,7 +232,7 @@ public class ParticleManager : MonoBehaviour {
   #region COMPUTE SHADER IMPLEMENTATION
   private void simulateParticlesCompute(float deltaTime) {
     _simulationShader.SetFloat("_DeltaTime", deltaTime);
-    _simulationShader.Dispatch(_simulationKernelIndex, _numParticles / 64, 1, 1);
+    _simulationShader.Dispatch(_simulationKernelIndex, NUM_PARTICLES / 64, 1, 1);
   }
 
   private void displayParticlesCompute() {
@@ -240,15 +247,13 @@ public class ParticleManager : MonoBehaviour {
 
 
 	//----------------------------------
-	// randomize ecosystem
+	// randomize species
 	//----------------------------------
-	private void randomizeEcosystem() 
+	private void randomizeSpecies() 
 	{
-		//----------------------------------------
-		// randomize species genes
-		//----------------------------------------
 		for (int s = 0; s < MAX_SPECIES; s++) 
 		{
+			_species[s].steps = MIN_FORCE_STEPS + (int)( ( MAX_FORCE_STEPS - MIN_FORCE_STEPS ) * Random.value );            
 			_species[s].drag = MIN_DRAG + Random.value * (MAX_DRAG - MIN_DRAG);
 			_species[s].collisionForce 	= MIN_COLLISION_FORCE + Random.value * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);
 			_species[s].color 			= new Color(Random.value, Random.value, Random.value, ONE);
@@ -259,32 +264,20 @@ public class ParticleManager : MonoBehaviour {
 				_species[s].socialRange[o] = Random.value * MAX_SOCIAL_RANGE;
 			}
 		}
-
-		//--------------------------------------
-		// randomize particles
-		//--------------------------------------
-		_numParticles = MAX_PARTICLES;
-		for (int i = 0; i < _numParticles; i++) 
-		{
-			_particles[i].species  = MIN_SPECIES + (int)(Random.value * (MAX_SPECIES - MIN_SPECIES));
-			_particles[i].position = _homePosition + Random.insideUnitSphere * ENVIRONMENT_RADIUS;
-			_particles[i].velocity = Vector3.zero;
-		}
 	}
-
 
  	//-------------------------------------------
 	// update the emission of particles 
   	//-------------------------------------------
-	private void updateEmittedParticles( int e ) 
+	private void updateEmittingParticles( int e ) 
 	{
 		if ( _particleController.getEmitterActive(e) )
 		{
 			if ( Random.value < _particleController.getEmitterRate(e) ) 
 			{
-				int p = (int)( Random.value * _numParticles );
+				int p = getIndexOfInactiveParticle();
 		
-				if ( ! _particles[p].active )
+				if ( p != NULL_PARTICLE )
 				{
 					_particles[p].active   = true;
 					_particles[p].species  = _particleController.getEmitterSpecies(e);
@@ -295,12 +288,33 @@ public class ParticleManager : MonoBehaviour {
 		}
 	}
 
+
+ 	//-----------------------------------------
+  	// get an inactive particle
+	//
+	// THIS IS NOT EFFICIENT - it will be
+	// replaced by a more efficient process.
+  	//-----------------------------------------
+	private int getIndexOfInactiveParticle() 
+	{
+		for (int p=0; p<NUM_PARTICLES; p++) 
+		{
+			if ( ! _particles[p].active )
+			{
+				return p;
+			}
+		}
+
+		return NULL_PARTICLE;
+	}
+
+
  	//----------------------------------
   	// kill particle
   	//----------------------------------
 	private void killParticle( int p ) 
 	{
-		if ( ( p >=0 ) && ( p < MAX_PARTICLES) )
+		if ( ( p >=0 ) && ( p < NUM_PARTICLES) )
 		{
 			_particles[p].active = false;
 		}
@@ -319,10 +333,10 @@ public class ParticleManager : MonoBehaviour {
         _parallelForeach = new ParallelForeach((a, b) => particleSimulationLogic(a, b, deltaTime));
       }
 
-      _parallelForeach.Dispatch(_numParticles);
+      _parallelForeach.Dispatch(NUM_PARTICLES);
       _parallelForeach.Wait();
     } else {
-      particleSimulationLogic(0, _numParticles, deltaTime);
+      particleSimulationLogic(0, NUM_PARTICLES, deltaTime);
     }
 
     //----------------------------
@@ -357,7 +371,7 @@ public class ParticleManager : MonoBehaviour {
 				//---------------------------------------
 				// Loop through every (other) particle  
 				//---------------------------------------
-				for (uint o = 0; o < _numParticles; o++) 
+				for (uint o = 0; o < NUM_PARTICLES; o++) 
 				{
 					if ( _particles[o].active )
 					{
@@ -447,7 +461,7 @@ public class ParticleManager : MonoBehaviour {
 
 	private void displayParticlesCPU() {
     	var block = new MaterialPropertyBlock();
-    	for (int i = 0; i < _numParticles; i++) {
+    	for (int i = 0; i < NUM_PARTICLES; i++) {
 			if ( _particles[i].active ) 
 			{
 				block.SetColor("_Color", _species[_particles[i].species].color);

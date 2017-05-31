@@ -193,11 +193,11 @@ public class ParticleManager : MonoBehaviour {
 	   _homePosition = _particleController.getHeadPosition() + _particleController.getHeadForward() * ENVIRONMENT_RADIUS;
 
 		//------------------------------------
-		// update the particle emitters
+		// update the emission of particles 
 		//------------------------------------
 		for (int e=0; e<_particleController.getNumEmitters(); e++)
 		{
-			updateParticleEmitter(e);
+			updateEmittedParticles(e);
 		}
 
 		//------------------------------------
@@ -274,37 +274,26 @@ public class ParticleManager : MonoBehaviour {
 
 
  	//-------------------------------------------
-  	// update particle emitter 
+	// update the emission of particles 
   	//-------------------------------------------
-	private void updateParticleEmitter( int e ) 
+	private void updateEmittedParticles( int e ) 
 	{
-		if ( Random.value < 0.1 ) 
+		if ( _particleController.getEmitterActive(e) )
 		{
-			int p = (int)( Random.value * _numParticles );
-	
-			if ( ! _particles[p].active )
+			if ( Random.value < _particleController.getEmitterRate(e) ) 
 			{
-				_particles[p].active   = true;
-				_particles[p].species  = _particleController.getEmitterSpecies(e);
-				_particles[p].position = _particleController.getEmitterPosition(e);
-				_particles[p].velocity = _particleController.getEmitterDirection(e) * _particleController.getEmitterStrength(e); 
-
-				float jitter = _particleController.getEmitterJitter(e);
-	
-				if ( jitter > 0.0f )
+				int p = (int)( Random.value * _numParticles );
+		
+				if ( ! _particles[p].active )
 				{
-					_particles[p].velocity += 
-					new Vector3
-					( 
-						-jitter + Random.value * jitter * 2.0f, 
-						-jitter + Random.value * jitter * 2.0f, 
-						-jitter + Random.value * jitter * 2.0f 
-					);
+					_particles[p].active   = true;
+					_particles[p].species  = _particleController.getEmitterSpecies(e);
+					_particles[p].position = _particleController.getEmitterPosition(e);
+					_particles[p].velocity = _particleController.getEmitterDirection(e) * _particleController.getEmitterStrength(e); 
 				}
 			}
 		}
 	}
-
 
  	//----------------------------------
   	// kill particle
@@ -346,7 +335,6 @@ public class ParticleManager : MonoBehaviour {
 
 
 
-
  	private void particleSimulationLogic( int startIndex, int endIndex, float deltaTime ) 
 	{
 		//-------------------------------------------------------
@@ -379,11 +367,11 @@ public class ParticleManager : MonoBehaviour {
 				        float3 	 vectorToOther = other.position - _particles[i].position;
 				        float 	 distanceSquared = vectorToOther.sqrMagnitude;		
 
-						float XsocialRangeSquared = 
+						float socialRangeSquared = 
 						_species[ _particles[i].species ].socialRange[ other.species ] * 
 						_species[ _particles[i].species ].socialRange[ other.species ];
 
-		        		if ( ( distanceSquared < XsocialRangeSquared ) && ( distanceSquared > ZERO ) ) 
+		        		if ( ( distanceSquared < socialRangeSquared ) && ( distanceSquared > ZERO ) ) 
 						{
 							float distance = Mathf.Sqrt( distanceSquared );
 							float3 directionToOther = vectorToOther / distance;

@@ -31,10 +31,10 @@ public class ParticleControl : MonoBehaviour {
 
   	private struct ParticleEmitter 
 	{
+		public  bool	active;
 		public	Vector3 position;
 		public	Vector3 direction;
 		public	float   strength;
-		public	float   jitter;
 		public  float 	rate;
 		public	int		species;
   	}
@@ -72,12 +72,12 @@ public class ParticleControl : MonoBehaviour {
 		for (int e = 0; e < NUM_FINGERS; e++) 
 		{
 			_emitters[e] = new ParticleEmitter();
+			_emitters[e].active		= false;
 			_emitters[e].position 	= Vector3.zero;
 			_emitters[e].direction 	= Vector3.one;
 			_emitters[e].species   	= 0;
 			_emitters[e].rate		= 0.0f;
 			_emitters[e].strength 	= 0.0f;
-			_emitters[e].jitter 	= 0.0f;
 		}
 
 		initializeEmitters();
@@ -91,8 +91,9 @@ public class ParticleControl : MonoBehaviour {
 	{
 		for (int e=0; e<ParticleControl.NUM_FINGERS; e++)
 		{
+			_emitters[e].active	= true;
 			_emitters[e].strength = 0.05f;
-			_emitters[e].rate = 0.1f;
+			_emitters[e].rate = 0.06f;
 		}
 
 		_emitters[ ParticleControl.LEFT_THUMB_FINGER	].species = 0;
@@ -190,8 +191,8 @@ public class ParticleControl : MonoBehaviour {
 	public Vector3	getHeadUpward 		() { return _myHead.gameObject.transform.up; 		}
 	public Vector3	getHeadForward 		() { return _myHead.gameObject.transform.forward; 	}
 
+	public bool 	getEmitterActive	( int e ) { return _emitters[e].active;		}
 	public int 		getEmitterSpecies	( int e ) { return _emitters[e].species;	}
-	public float 	getEmitterJitter	( int e ) { return _emitters[e].jitter;		}
 	public Vector3	getEmitterPosition	( int e ) { return _emitters[e].position;	}
 	public Vector3	getEmitterDirection	( int e ) { return _emitters[e].direction;	}
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}

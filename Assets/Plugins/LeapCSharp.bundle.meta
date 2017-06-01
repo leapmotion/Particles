@@ -1,6 +1,7 @@
 fileFormatVersion: 2
-guid: 6cf44866ede046a44a9b054bb62ffa49
-timeCreated: 1496348300
+guid: 409221b706d274f62878f220cc2c0e44
+folderAsset: yes
+timeCreated: 1496348211
 licenseType: Free
 PluginImporter:
   serializedVersion: 2
@@ -13,22 +14,33 @@ PluginImporter:
       first:
         Any: 
       second:
-        enabled: 1
+        enabled: 0
         settings: {}
     data:
       first:
         Editor: Editor
       second:
-        enabled: 0
+        enabled: 1
         settings:
           DefaultValueInitialized: true
     data:
       first:
-        Windows Store Apps: WindowsStoreApps
+        Standalone: OSXIntel
       second:
-        enabled: 0
-        settings:
-          CPU: AnyCPU
+        enabled: 1
+        settings: {}
+    data:
+      first:
+        Standalone: OSXIntel64
+      second:
+        enabled: 1
+        settings: {}
+    data:
+      first:
+        Standalone: OSXUniversal
+      second:
+        enabled: 1
+        settings: {}
   userData: 
   assetBundleName: 
   assetBundleVariant: 

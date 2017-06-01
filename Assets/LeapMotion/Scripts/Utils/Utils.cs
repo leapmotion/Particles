@@ -335,7 +335,7 @@ namespace Leap.Unity {
       return new ChildrenEnumerator(t);
     }
 
-    public struct ChildrenEnumerator {
+    public struct ChildrenEnumerator : IEnumerator<Transform> {
       private Transform _t;
       private int _idx;
       private int _count;
@@ -355,6 +355,7 @@ namespace Leap.Unity {
       public Transform Current {
         get { return _t == null ? null : _t.GetChild(_idx); }
       }
+      object System.Collections.IEnumerator.Current { get { return Current; } }
       public void Reset() {
         _idx = -1;
         _count = _t.childCount;
@@ -425,6 +426,15 @@ namespace Leap.Unity {
       }
     }
 
+    public static void GetCapsulePoints(this CapsuleCollider capsule, out Vector3 a,
+                                                                      out Vector3 b) {
+      a = capsule.GetDirection() * ((capsule.height * 0.5f) - capsule.radius);
+      b = -a;
+
+      a = capsule.transform.TransformPoint(a);
+      b = capsule.transform.TransformPoint(b);
+    }
+
     /// <summary>
     /// Manipulates capsule.transform.position, capsule.transform.rotation, and capsule.height
     /// so that the line segment defined by the capsule connects world-space points a and b.
@@ -443,6 +453,64 @@ namespace Leap.Unity {
       Vector3 aCapsuleSpace = capsule.transform.InverseTransformPoint(a);
       float capsuleSpaceDistToA = aCapsuleSpace.magnitude;
       capsule.height = (capsuleSpaceDistToA + capsule.radius) * 2;
+    }
+
+    /// <summary>
+    /// Recursively searches the hierarchy of the argument GameObject to find all of the
+    /// Colliders that are attached to the object's Rigidbody (or that _would_ be 
+    /// attached to its Rigidbody if it doesn't have one) and adds them to the provided
+    /// colliders list. Warning: The provided "colliders" List will be cleared before
+    /// use.
+    /// 
+    /// Colliders that are the children of other Rigidbody elements beneath the argument
+    /// object are ignored.
+    /// </summary>
+    public static void FindColliders<T>(GameObject obj, List<T> colliders) where T : Collider {
+      colliders.Clear();
+      Stack<Transform> toVisit = Pool<Stack<Transform>>.Spawn();
+      List<T> collidersBuffer = Pool<List<T>>.Spawn();
+
+      try {
+        // Traverse the hierarchy of this object's transform to find
+        // all of its Colliders.
+        toVisit.Push(obj.transform);
+        Transform curTransform;
+        while (toVisit.Count > 0) {
+          curTransform = toVisit.Pop();
+
+          // Recursively search children and children's children
+          foreach (var child in curTransform.GetChildren()) {
+            // Ignore children with Rigidbodies of their own; its own Rigidbody
+            // owns its own colliders and the colliders of its children
+            if (child.GetComponent<Rigidbody>() == null) {
+              toVisit.Push(child);
+            }
+          }
+
+          // Since we'll visit every child, all we need to do is add the colliders
+          // of every transform we visit.
+          collidersBuffer.Clear();
+          curTransform.GetComponents<T>(collidersBuffer);
+          foreach (var collider in collidersBuffer) {
+            colliders.Add(collider);
+          }
+        }
+      }
+      finally {
+        toVisit.Clear();
+        Pool<Stack<Transform>>.Recycle(toVisit);
+
+        collidersBuffer.Clear();
+        Pool<List<T>>.Recycle(collidersBuffer);
+      }
+    }
+
+    #endregion
+
+    #region Color Utils
+
+    public static Color WithAlpha(this Color color, float alpha) {
+      return new Color(color.r, color.g, color.b, alpha);
     }
 
     #endregion

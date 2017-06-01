@@ -101,7 +101,6 @@ namespace Leap.Unity.Space {
     public static void WorldSpaceUnwarp(this ITransformer transformer,
                                         Vector3 worldWarpedPosition, Quaternion worldWarpedRotation,
                                         out Vector3 worldRectilinearPosition, out Quaternion worldRectilinearRotation) {
-
       Transform spaceTransform = transformer.anchor.space.transform;
 
       Vector3 anchorLocalWarpedPosition = spaceTransform.InverseTransformPoint(worldWarpedPosition);
@@ -115,4 +114,5 @@ namespace Leap.Unity.Space {
     }
 
   }
+
 }

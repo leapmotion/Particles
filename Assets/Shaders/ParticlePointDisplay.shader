@@ -12,13 +12,17 @@
 			#pragma fragment frag
 			
 			#include "UnityCG.cginc"
-      #include "Assets/Shaders/ParticleData.cginc"
+
+      struct Particle {
+        float3 position;
+        float3 velocity;
+      };
+
+      StructuredBuffer<Particle> _Particles;
 
 			struct v2f {
 				float4 vertex : SV_POSITION;
 			};
-
-      StructuredBuffer<Particle> _Particles;
 			
 			v2f vert (uint inst : SV_VertexID) {
 				v2f o;

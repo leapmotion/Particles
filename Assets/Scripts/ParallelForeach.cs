@@ -10,6 +10,8 @@ public class ParallelForeach {
   private int _workersLeft;
   private object _finishedMonitor = new object();
 
+  public Action OnComplete;
+
   public ParallelForeach(Action<int, int> action) : this(action, SystemInfo.processorCount) { }
 
   public ParallelForeach(Action<int, int> action, int threads) {
@@ -83,6 +85,9 @@ public class ParallelForeach {
         Monitor.Enter(_parent._finishedMonitor);
         int newValue = Interlocked.Decrement(ref _parent._workersLeft);
         if (newValue == 0) {
+          if (_parent.OnComplete != null) {
+            _parent.OnComplete();
+          }
           Monitor.Pulse(_parent._finishedMonitor);
         }
         Monitor.Exit(_parent._finishedMonitor);

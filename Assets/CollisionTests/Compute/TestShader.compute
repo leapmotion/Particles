@@ -91,8 +91,8 @@ void Accumulate_X(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(4, 4, 4)]
 void Accumulate_Y(uint3 id : SV_DispatchThreadID) {
-  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
   uint start = (COLLISION_CHUNK_SIDE - 1) + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
+  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
 
   uint sum = _ChunkStart[index];
   for (uint i = start; i < index; i += COLLISION_CHUNK_SIDE) {
@@ -104,8 +104,8 @@ void Accumulate_Y(uint3 id : SV_DispatchThreadID) {
 
 [numthreads(4, 4, 4)]
 void Accumulate_Z(uint3 id : SV_DispatchThreadID) {
-  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
   uint start = (COLLISION_CHUNK_SIDE - 1) + ((COLLISION_CHUNK_SIDE - 1) * COLLISION_CHUNK_SIDE);
+  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE; 
 
   uint sum = _ChunkEnd[index];
   for (uint i = start; i < index; i += (COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE)) {

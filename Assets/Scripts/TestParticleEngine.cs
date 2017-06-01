@@ -6,11 +6,13 @@ public class TestParticleEngine : ParticleEngineBase {
     base.Update();
 
     if (Input.GetKey(KeyCode.Space)) {
-      TryEmit(new Particle() {
-        position = new Vector3(0.45f, 0, 0),
-        prevPosition = new Vector3(0.45f, 0, 0) + Random.insideUnitSphere * 0.01f,
-        species = 0
-      });
+      for (int i = 0; i < 10; i++) {
+        TryEmit(new Particle() {
+          position = new Vector3(0.45f, 0, 0),
+          prevPosition = new Vector3(0.45f, 0, 0) + Random.insideUnitSphere * 0.01f,
+          species = 0
+        });
+      }
     }
   }
 
@@ -37,7 +39,7 @@ public class TestParticleEngine : ParticleEngineBase {
   }
 
   protected override void DoParticleGlobalForces(ref Particle particle, ref SpeciesData speciesData) {
-    particle.position += Vector3.down * 0.001f;
+    particle.position -= particle.position.normalized * 0.0001f;
   }
 
   protected override bool DoParticleInteraction(ref Particle particle, ref SpeciesData speciesData, ref Particle other, ref SpeciesData otherSpeciesData, ref Vector3 particleDisplacement) {

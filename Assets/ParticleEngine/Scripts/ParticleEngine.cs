@@ -141,8 +141,6 @@ public abstract class ParticleEngineBase : MonoBehaviour {
   }
 
   protected virtual void Update() {
-    collisionChecks = 0;
-    collisions = 0;
     System.Array.Clear(integrationTimes, 0, integrationTimes.Length);
     System.Array.Clear(collisionTimes, 0, collisionTimes.Length);
     System.Array.Clear(sortingTimes, 0, sortingTimes.Length);
@@ -254,8 +252,6 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
-    GUILayout.Label("Collision Checks: " + collisionChecks);
-    GUILayout.Label("Collisions: " + collisions);
     displayTimingData("Integration:", integrationTimes);
     displayTimingData("Collision:", collisionTimes);
     displayTimingData("Sorting:", sortingTimes);
@@ -492,9 +488,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
       resolveParticleCollisions(start, end, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
     }
   }
-
-  private int collisionChecks = 0;
-  private int collisions = 0;
+  
   private void resolveParticleCollisions(int start,
                                          int end,
                                      ref Particle particle,
@@ -502,18 +496,14 @@ public abstract class ParticleEngineBase : MonoBehaviour {
                                      ref Vector3 totalDepenetration,
                                      ref int numCollisions) {
     for (int i = start; i < end; ++i) {
-      collisionChecks++;
       float dx = particle.position.x - _particlesBack[i].position.x;
       float dy = particle.position.y - _particlesBack[i].position.y;
       float dz = particle.position.z - _particlesBack[i].position.z;
       float sqrDist = dx * dx + dy * dy + dz * dz;
 
       if (sqrDist < 0.05f * 0.05f && sqrDist > 0.000000001f) {
-        collisions++;
         float dist = Mathf.Sqrt(sqrDist);
         float constant = -0.5f * (dist - 0.05f) / dist;
-
-        //float constant = (0.05f / (sqrDist + 0.05f) - 0.5f);
 
         totalDepenetration.x += dx * constant;
         totalDepenetration.y += dy * constant;

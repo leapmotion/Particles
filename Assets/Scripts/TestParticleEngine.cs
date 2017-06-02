@@ -8,8 +8,8 @@ public class TestParticleEngine : ParticleEngineBase {
   protected override void Update() {
     base.Update();
 
-    if (Input.GetKey(KeyCode.Space)) {
-      for (int i = 0; i < 10; i++) {
+    if (Input.GetKey(KeyCode.Mouse0)) {
+      for (int i = 0; i < 50; i++) {
         Vector3 position = Random.insideUnitSphere * 0.5f;
         TryEmit(new Particle() {
           position = position,
@@ -69,8 +69,8 @@ public class TestParticleEngine : ParticleEngineBase {
   }
 
   protected override void DoParticleGlobalForces(ref Particle particle, ref SpeciesData speciesData) {
-    //particle.position -= particle.position.normalized * 0.0002f;
-    //particle.position += Vector3.Cross(particle.position, Vector3.up) * 0.0004f;
+    particle.position -= particle.position.normalized * 0.0002f;
+    particle.position += Vector3.Cross(particle.position, Vector3.up) * 0.0004f;
     //particle.position += Vector3.down * 0.001f;
   }
 

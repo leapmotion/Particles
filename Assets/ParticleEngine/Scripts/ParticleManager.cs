@@ -376,7 +376,6 @@ public class ParticleManager : MonoBehaviour {
 					if (_particles[i].accumulatedForce == null) {
 						_particles[i].accumulatedForce = new Vector3[ MAX_FORCE_STEPS ];
 					}
-					_particles[i].accumulatedForce[a] = Vector3.zero;
 				}
 
 				//------------------
@@ -449,19 +448,15 @@ public class ParticleManager : MonoBehaviour {
 					socialForces = Vector3.zero;
 				}
 
-				/*
 				//----------------------------------------------------------
-				// scroll the array of force steps and apply delayed force
+				// load and then scroll the array of force steps 
 				//----------------------------------------------------------
-				_particles[i].accumulatedForce[ _species[ _particles[i].species ].steps ] = socialForces;
+				_particles[i].accumulatedForce[ _species[ _particles[i].species ].steps - 1 ] = socialForces;
 
 				for (int a=0; a<_species[ _particles[i].species ].steps-1; a++) 
 				{
 					_particles[i].accumulatedForce[a] = _particles[i].accumulatedForce[a+1];
 				}
-				*/
-
-_particles[i].accumulatedForce[0] = socialForces;
 
 				//----------------------------------------------------------
 				// apply accumulated forces to velocity
@@ -498,11 +493,6 @@ _particles[i].accumulatedForce[0] = socialForces;
 			}
 		}
 	}
-
-
-
-
-
 
 
 

@@ -34,7 +34,8 @@ public class ParticleManager : MonoBehaviour {
   	private const float MAX_DRAG 			= 0.3f;
   	private const float MIN_COLLISION_FORCE = 0.1f;
 	private const float MAX_COLLISION_FORCE = 0.5f;
-  	private const float MAX_SOCIAL_FORCE 	= 0.1f;
+//private const float MAX_SOCIAL_FORCE 	= 0.1f;
+  	private const float MAX_SOCIAL_FORCE 	= 0.005f;
   	private const float MAX_SOCIAL_RANGE 	= 0.4f;
 
 	[SerializeField]
@@ -70,12 +71,10 @@ public class ParticleManager : MonoBehaviour {
 	{
 		public	bool		active;				// currently being used for birth and death
 		public  float 		age;				// in seconds
-		public	int			species;			// attributes set at birth
+		public	int			species;			// set at birth
     	public 	Vector3		position;			// dynamic
     	public 	Vector3		velocity;			// dynamic
-		//public 	Vector3[]   accumulatedForce;	// dynamic
-		public 	Vector3     accumulatedForce;	// dynamic
-		public	int			numAccumulations;
+		public 	Vector3[]   accumulatedForce;	// dynamic
   	}
 
 	[SerializeField]
@@ -132,18 +131,13 @@ public class ParticleManager : MonoBehaviour {
 	  	_particles[i].species = 0;
 	  	_particles[i].velocity = Vector3.zero;
 	  	_particles[i].position = Vector3.zero;
-	  	_particles[i].numAccumulations = 0;
 
-		/*
 		_particles[i].accumulatedForce = new Vector3[ MAX_FORCE_STEPS ];
 		
 		for (int a=0; a<MAX_FORCE_STEPS; a++) 
 		{
 			_particles[i].accumulatedForce[a] = Vector3.zero;
 		}
-		*/
-		_particles[i].accumulatedForce = Vector3.zero;
-
 	}
 
     _particleBuffer.SetData(_particles);
@@ -363,6 +357,8 @@ public class ParticleManager : MonoBehaviour {
 
 
 
+
+
  	private void particleSimulationLogic( int startIndex, int endIndex, float deltaTime ) 
 	{
 		//-------------------------------------------------------
@@ -375,20 +371,21 @@ public class ParticleManager : MonoBehaviour {
 				//------------------------------------------------------
 				// reset accumulated force 
 				//------------------------------------------------------
-				/*
 				for (int a=0; a<MAX_FORCE_STEPS; a++) 
 				{
+					if (_particles[i].accumulatedForce == null) {
+						_particles[i].accumulatedForce = new Vector3[ MAX_FORCE_STEPS ];
+					}
 					_particles[i].accumulatedForce[a] = Vector3.zero;
 				}
-				*/
-
-				_particles[i].accumulatedForce = Vector3.zero;
-				_particles[i].numAccumulations = 0;
 
 				//------------------
 				// advance age
 				//------------------
 				_particles[i].age += deltaTime;
+
+				int numSocialForces = 0;
+				Vector3 socialForces = Vector3.zero;
 
 				//---------------------------------------
 				// Loop through every (other) particle  
@@ -415,10 +412,9 @@ public class ParticleManager : MonoBehaviour {
 							//--------------------------------------------------------------------------
 							// Accumulate forces from social attractions/repulsions to other particles
 							//--------------------------------------------------------------------------
-							//_particles[i].accumulatedForce[0] += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
-							_particles[i].accumulatedForce += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
-							_particles[i].numAccumulations ++; //keeping track of the number of particles exerting a force
-		
+							socialForces += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
+							numSocialForces ++; 
+
 							//----------------------------------------
 							// collisions
 							//----------------------------------------
@@ -438,18 +434,40 @@ public class ParticleManager : MonoBehaviour {
 	        		}
 	      		}
 
-				//---------------------------------------------
-				// Apply accumulated forces to the velocity
-				//---------------------------------------------
-				if ( _particles[i].numAccumulations > 0 ) 
+				//--------------------------------
+				// normalize social forces 
+				//--------------------------------
+				if ( numSocialForces > 0 ) 
 				{
 					//-----------------------------------------------------------------------------------------
 					// divide by w, which is the number of particles that contributed to the accumulated force
 					//-----------------------------------------------------------------------------------------
-					//_particles[i].velocity += deltaTime * _particles[i].accumulatedForce[0] / _particles[i].numAccumulations;
-					_particles[i].velocity += deltaTime * _particles[i].accumulatedForce / _particles[i].numAccumulations;
+					socialForces /= numSocialForces;
 				}
-	
+				else 
+				{
+					socialForces = Vector3.zero;
+				}
+
+				/*
+				//----------------------------------------------------------
+				// scroll the array of force steps and apply delayed force
+				//----------------------------------------------------------
+				_particles[i].accumulatedForce[ _species[ _particles[i].species ].steps ] = socialForces;
+
+				for (int a=0; a<_species[ _particles[i].species ].steps-1; a++) 
+				{
+					_particles[i].accumulatedForce[a] = _particles[i].accumulatedForce[a+1];
+				}
+				*/
+
+_particles[i].accumulatedForce[0] = socialForces;
+
+				//----------------------------------------------------------
+				// apply accumulated forces to velocity
+				//----------------------------------------------------------
+				_particles[i].velocity += _particles[i].accumulatedForce[0];
+
 				//--------------------------------------------------------------------------------------
 				// apply forces to keep the particle from getting past the boundary of the environment
 				//--------------------------------------------------------------------------------------
@@ -480,6 +498,12 @@ public class ParticleManager : MonoBehaviour {
 			}
 		}
 	}
+
+
+
+
+
+
 
 
 

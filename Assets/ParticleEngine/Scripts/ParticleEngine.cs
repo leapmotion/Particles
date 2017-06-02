@@ -225,7 +225,6 @@ public abstract class ParticleEngineBase : MonoBehaviour {
                 matrix[2, 3] = _particlesFront[index].position.z;
                 _instanceMatrices[i] = matrix;
                 index++;
-                //_instanceMatrices[i] = Matrix4x4.TRS(_particlesFront[index++].position, Quaternion.identity, Vector3.one * 0.05f);
               }
               remaining -= toDraw;
             }
@@ -419,38 +418,47 @@ public abstract class ParticleEngineBase : MonoBehaviour {
     int numCollisions = 0;
     Vector3 totalDepenetration = Vector3.zero;
 
-    Vector3 chunkFloatPos = particle.position / _chunkSize + Vector3.one * _chunkSide * 0.5f;
-    int chunkX = (int)chunkFloatPos.x;
-    int chunkY = (int)chunkFloatPos.y;
-    int chunkZ = (int)chunkFloatPos.z;
+    float chunkFloatX = particle.position.x / _chunkSize + _halfChunkSide;
+    float chunkFloatY = particle.position.y / _chunkSize + _halfChunkSide;
+    float chunkFloatZ = particle.position.z / _chunkSize + _halfChunkSide;
 
-    chunkX += (chunkFloatPos.x - (int)chunkFloatPos.x < 0.5) ? -1 : 0;
-    chunkY += (chunkFloatPos.y - (int)chunkFloatPos.y < 0.5) ? -1 : 0;
-    chunkZ += (chunkFloatPos.z - (int)chunkFloatPos.z < 0.5) ? -1 : 0;
+    int chunkX = (int)chunkFloatX;
+    int chunkY = (int)chunkFloatY;
+    int chunkZ = (int)chunkFloatZ;
 
-    int chunk = chunkX + chunkY * _chunkSide + chunkZ * _chunkSide * _chunkSide;
-    int chunkA_Start = _chunkStart[chunk];
-    int chunkA_End = _chunkEnd[chunk + 1];
+    chunkX += (chunkFloatX - chunkX < 0.5) ? -1 : 0;
 
-    resolveParticleCollisions(chunkA_Start, chunkA_End, index, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+    int offsetY = chunkY + ((chunkFloatY - chunkY > 0.5f) ? 1 : -1);
+    int offsetZ = chunkZ + ((chunkFloatZ - chunkZ > 0.5f) ? 1 : -1);
 
-    chunk += _chunkSide;
-    int chunkB_Start = _chunkStart[chunk];
-    int chunkB_End = _chunkEnd[chunk + 1];
+    int chunkA = chunkX + offsetY * _chunkSide + chunkZ * _chunkSideSqrd;
+    int chunkA_Start = _chunkStart[chunkA];
+    int chunkA_End = _chunkEnd[chunkA + 1];
 
-    resolveParticleCollisions(chunkB_Start, chunkB_End, index, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+    resolveParticleCollisions(chunkA_Start, chunkA_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    chunk += (_chunkSide * _chunkSide);
-    int chunkC_Start = _chunkStart[chunk];
-    int chunkC_End = _chunkEnd[chunk + 1];
+    int chunkB = chunkX + chunkY * _chunkSide + offsetZ * _chunkSideSqrd;
+    int chunkB_Start = _chunkStart[chunkB];
+    int chunkB_End = _chunkEnd[chunkB + 1];
 
-    resolveParticleCollisions(chunkC_Start, chunkC_End, index, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+    resolveParticleCollisions(chunkB_Start, chunkB_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    chunk -= _chunkSide;
-    int chunkD_Start = _chunkStart[chunk];
-    int chunkD_End = _chunkEnd[chunk + 1];
+    int chunkC = chunkX + offsetY * _chunkSide + offsetZ * _chunkSideSqrd;
+    int chunkC_Start = _chunkStart[chunkC];
+    int chunkC_End = _chunkEnd[chunkC + 1];
 
-    resolveParticleCollisions(chunkD_Start, chunkD_End, index, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+    resolveParticleCollisions(chunkC_Start, chunkC_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+
+    int chunkD = chunkX + chunkY * _chunkSide + chunkZ * _chunkSideSqrd;
+    int chunkD_Start = _chunkStart[chunkD];
+    int chunkD_End = index;
+
+    resolveParticleCollisions(chunkD_Start, chunkD_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
+
+    int chunkE_Start = index + 1;
+    int chunkE_End = _chunkEnd[chunkD + 1];
+
+    resolveParticleCollisions(chunkE_Start, chunkE_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
     if (numCollisions > 0) {
       particle.position += totalDepenetration / numCollisions;
@@ -479,7 +487,6 @@ public abstract class ParticleEngineBase : MonoBehaviour {
                                      ref SpeciesData speciesData,
                                      ref Vector3 totalDepenetration,
                                      ref int numCollisions) {
-
     for (int i = start; i < end; i++) {
       float dx = particle.position.x - _particlesBack[i].position.x;
       float dy = particle.position.y - _particlesBack[i].position.y;
@@ -487,10 +494,10 @@ public abstract class ParticleEngineBase : MonoBehaviour {
       float sqrDist = dx * dx + dy * dy + dz * dz;
 
       if (sqrDist < 0.05f * 0.05f && sqrDist > 0.000000001f) {
-        //float dist = Mathf.Sqrt(sqrDist);
-        //float constant = -0.5f * (dist - 0.05f) / dist;
+        float dist = Mathf.Sqrt(sqrDist);
+        float constant = -0.5f * (dist - 0.05f) / dist;
 
-        float constant = (0.05f / (sqrDist + 0.05f) - 0.5f);
+        //float constant = (0.05f / (sqrDist + 0.05f) - 0.5f);
 
         totalDepenetration.x += dx * constant;
         totalDepenetration.y += dy * constant;

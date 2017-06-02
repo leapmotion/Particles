@@ -53,6 +53,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   //Collision acceleration structures
   private int _chunkSide;
+  private int _chunkSideSqrd;
+  private float _halfChunkSide;
   private int _numChunks;
   private Vector3 _collisionOffset;
   private Vector3 _collisionSize;
@@ -118,6 +120,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
     };
 
     _chunkSide = (int)_chunkResolution;
+    _chunkSideSqrd = _chunkSide * _chunkSide;
+    _halfChunkSide = _chunkSide / 2;
     _numChunks = _chunkSide * _chunkSide * _chunkSide;
 
     _instanceMatrices = new Matrix4x4[_maxParticles];
@@ -374,16 +378,12 @@ public abstract class ParticleEngineBase : MonoBehaviour {
   private void sortParticlesIntoChunks(int workerIndex, int startIndex, int endIndex) {
     long startTick = _stopwatch.ElapsedTicks;
     for (int i = startIndex; i < endIndex; i++) {
-      sortParticleIntoChunk(i, ref _particlesFront[i]);
+      int chunk = getChunk(ref _particlesFront[i]);
+
+      int newIndex = Interlocked.Add(ref _chunkStart[chunk], -1);
+      _particlesBack[newIndex] = _particlesFront[i];
     }
     sortingTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
-  }
-
-  private void sortParticleIntoChunk(int index, ref Particle particle) {
-    int chunk = getChunk(ref particle);
-
-    int newIndex = Interlocked.Add(ref _chunkStart[chunk], -1);
-    _particlesBack[newIndex] = particle;
   }
 
   private void resolveCollisions(int workerIndex, int startIndex, int endIndex) {
@@ -479,6 +479,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
                                      ref SpeciesData speciesData,
                                      ref Vector3 totalDepenetration,
                                      ref int numCollisions) {
+
     for (int i = start; i < end; i++) {
       float dx = particle.position.x - _particlesBack[i].position.x;
       float dy = particle.position.y - _particlesBack[i].position.y;
@@ -486,8 +487,11 @@ public abstract class ParticleEngineBase : MonoBehaviour {
       float sqrDist = dx * dx + dy * dy + dz * dz;
 
       if (sqrDist < 0.05f * 0.05f && sqrDist > 0.000000001f) {
-        float dist = Mathf.Sqrt(sqrDist);
-        float constant = -0.5f * (dist - 0.05f) / dist;
+        //float dist = Mathf.Sqrt(sqrDist);
+        //float constant = -0.5f * (dist - 0.05f) / dist;
+
+        float constant = (0.05f / (sqrDist + 0.05f) - 0.5f);
+
         totalDepenetration.x += dx * constant;
         totalDepenetration.y += dy * constant;
         totalDepenetration.z += dz * constant;
@@ -497,35 +501,14 @@ public abstract class ParticleEngineBase : MonoBehaviour {
   }
 
   private int getChunk(ref Particle particle) {
-    Vector3 floatPos = particle.position / _chunkSize + Vector3.one * _chunkSide * 0.5f;
-    return getChunk(new ChunkIndex(floatPos));
+    int x = (int)(particle.position.x / _chunkSize + _halfChunkSide);
+    int y = (int)(particle.position.y / _chunkSize + _halfChunkSide);
+    int z = (int)(particle.position.z / _chunkSize + _halfChunkSide);
+    return x + y * _chunkSide + z * _chunkSideSqrd;
   }
-
-  private int getChunk(ChunkIndex index) {
-    return index.x + index.y * _chunkSide + index.z * _chunkSide * _chunkSide;
-  }
-
-  private int getChunkAtOffset(ChunkIndex index, int offsetX, int offsetY, int offsetZ) {
-    return index.x + offsetX + (index.y + offsetY) * _chunkSide + (index.z + offsetZ) * _chunkSide * _chunkSide;
-  }
-
 
   private float frac(float value) {
     return value - (int)value;
-  }
-
-  private struct ChunkIndex {
-    public int x, y, z;
-
-    public ChunkIndex(Vector3 position) {
-      x = (int)position.x;
-      y = (int)position.y;
-      z = (int)position.z;
-    }
-
-    public static ChunkIndex operator +(ChunkIndex a, ChunkIndex b) {
-      return new ChunkIndex() { x = a.x + b.x, y = a.y + b.y, z = a.z + b.z };
-    }
   }
   #endregion
 }

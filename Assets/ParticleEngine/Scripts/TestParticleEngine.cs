@@ -42,7 +42,7 @@ public class TestParticleEngine : ParticleEngineBase {
     //if (particle.position.sqrMagnitude > 1) {
     //  particle.position = particle.position.normalized;
     //}
-    
+
     Vector3 pos = particle.position;
     if (pos.x < -boxSize) {
       pos.x = -boxSize;
@@ -68,10 +68,34 @@ public class TestParticleEngine : ParticleEngineBase {
     particle.position = pos;
   }
 
+  [Range(0, 1)]
+  public float gravity = 0;
+
+  [Range(0, 1)]
+  public float center = 0;
+
+  [Range(0, 1)]
+  public float swirl = 0;
+
+
+  public void SetGravity(float gravity) {
+    this.gravity = gravity;
+  }
+
+  public void SetCenter(float center) {
+    this.center = center;
+  }
+
+  public void SetSwirl(float swirl) {
+    this.swirl = swirl;
+  }
+
+
+
   protected override void DoParticleGlobalForces(ref Particle particle, ref SpeciesData speciesData) {
-    particle.position -= particle.position.normalized * 0.0002f;
-    particle.position += Vector3.Cross(particle.position, Vector3.up) * 0.0004f;
-    //particle.position += Vector3.down * 0.001f;
+    particle.position -= center * particle.position.normalized * 0.0002f;
+    particle.position += swirl * Vector3.Cross(particle.position, Vector3.up) * 0.0004f;
+    particle.position += gravity * Vector3.down * 0.001f;
   }
 
   protected override bool DoParticleInteraction(ref Particle particle, ref SpeciesData speciesData, ref Particle other, ref SpeciesData otherSpeciesData, ref Vector3 particleDisplacement) {

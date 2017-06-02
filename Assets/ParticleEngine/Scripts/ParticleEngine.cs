@@ -238,7 +238,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   private void OnGUI() {
     Matrix4x4 ogScale = GUI.matrix;
-    GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 5);
+    //GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 5);
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);

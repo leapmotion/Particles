@@ -17,7 +17,7 @@ public class ParticleManager : MonoBehaviour {
 	private	const int	NULL_PARTICLE		= -1;
   	private const int 	NUM_PARTICLES 		= 64 * 8;
 	private const int   MIN_FORCE_STEPS 	= 1;
-	private const int   MAX_FORCE_STEPS 	= 5;
+	private const int   MAX_FORCE_STEPS 	= 7;
 	private const int   MIN_SPECIES 		= 1;
 	private const int   MAX_SPECIES 		= 12;
 	private const float MAX_DELTA_TIME 		= ONE / 20.0f;
@@ -34,7 +34,6 @@ public class ParticleManager : MonoBehaviour {
   	private const float MAX_DRAG 			= 0.3f;
   	private const float MIN_COLLISION_FORCE = 0.1f;
 	private const float MAX_COLLISION_FORCE = 0.5f;
-//private const float MAX_SOCIAL_FORCE 	= 0.1f;
   	private const float MAX_SOCIAL_FORCE 	= 0.005f;
   	private const float MAX_SOCIAL_RANGE 	= 0.4f;
 
@@ -459,7 +458,7 @@ public class ParticleManager : MonoBehaviour {
 				}
 
 				//----------------------------------------------------------
-				// apply accumulated forces to velocity
+				// apply accumulated force to velocity
 				//----------------------------------------------------------
 				_particles[i].velocity += _particles[i].accumulatedForce[0];
 

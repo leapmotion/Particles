@@ -116,6 +116,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
     };
 
     _sortingForeach.OnComplete += () => {
+      System.Array.Copy(_particlesBack, _particlesFront, _particlesFront.Length);
       _resolveCollisionsForeach.Dispatch(_aliveParticles);
     };
 
@@ -140,6 +141,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
   }
 
   protected virtual void Update() {
+    collisionChecks = 0;
+    collisions = 0;
     System.Array.Clear(integrationTimes, 0, integrationTimes.Length);
     System.Array.Clear(collisionTimes, 0, collisionTimes.Length);
     System.Array.Clear(sortingTimes, 0, sortingTimes.Length);
@@ -167,6 +170,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
         sortParticlesIntoChunks(0, 0, _aliveParticles);
       }
 
+      System.Array.Copy(_particlesBack, _particlesFront, _particlesFront.Length);
+
       using (new ProfilerSample("Resolve Collisions")) {
         resolveCollisions(0, 0, _aliveParticles);
       }
@@ -191,7 +196,11 @@ public abstract class ParticleEngineBase : MonoBehaviour {
           for (int i = 0; i < _aliveParticles; i++) {
             matrix = Matrix4x4.TRS(_particlesFront[i].position, Quaternion.identity, Vector3.one * 0.05f);
 
-            int chunk = getChunk(ref _particlesFront[i]);
+
+            int x = (int)(_particlesFront[i].position.x / _chunkSize + _halfChunkSide);
+            int z = (int)(_particlesFront[i].position.z / _chunkSize + _halfChunkSide);
+
+            int chunk = x + z * _chunkSideSqrd;
             block.SetColor("_Color", _randomColors[chunk]);
 
             //int chunkStart = _chunkStart[chunk];
@@ -245,6 +254,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
+    GUILayout.Label("Collision Checks: " + collisionChecks);
+    GUILayout.Label("Collisions: " + collisions);
     displayTimingData("Integration:", integrationTimes);
     displayTimingData("Collision:", collisionTimes);
     displayTimingData("Sorting:", sortingTimes);
@@ -368,7 +379,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   private void accumulateCollisionChunksNaive() {
     int sum = 0;
-    for (int i = 0; i < _numChunks; i++) {
+    for (int i = 0; i < _numChunks; ++i) {
       sum += _chunkCount[i];
       _chunkStart[i] = _chunkEnd[i] = sum;
     }
@@ -376,7 +387,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   private void sortParticlesIntoChunks(int workerIndex, int startIndex, int endIndex) {
     long startTick = _stopwatch.ElapsedTicks;
-    for (int i = startIndex; i < endIndex; i++) {
+    for (int i = startIndex; i < endIndex; ++i) {
       int chunk = getChunk(ref _particlesFront[i]);
 
       int newIndex = Interlocked.Add(ref _chunkStart[chunk], -1);
@@ -387,8 +398,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   private void resolveCollisions(int workerIndex, int startIndex, int endIndex) {
     long startTick = _stopwatch.ElapsedTicks;
-    for (int i = startIndex; i < endIndex; i++) {
-      _particlesFront[i] = _particlesBack[i];
+    for (int i = startIndex; i < endIndex; ++i) {
       resolveCollisions(i, ref _particlesFront[i], ref _speciesData[_particlesFront[i].species]);
     }
     collisionTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
@@ -428,40 +438,42 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
     chunkX += (chunkFloatX - chunkX < 0.5) ? -1 : 0;
 
-    int offsetY = chunkY + ((chunkFloatY - chunkY > 0.5f) ? 1 : -1);
-    int offsetZ = chunkZ + ((chunkFloatZ - chunkZ > 0.5f) ? 1 : -1);
+    int offsetY = ((chunkFloatY - chunkY > 0.5f) ? _chunkSide : -_chunkSide);
+    int offsetZ = ((chunkFloatZ - chunkZ > 0.5f) ? _chunkSideSqrd : -_chunkSideSqrd);
 
-    int chunkA = chunkX + offsetY * _chunkSide + chunkZ * _chunkSideSqrd;
-    int chunkA_Start = _chunkStart[chunkA];
-    int chunkA_End = _chunkEnd[chunkA + 1];
+    int chunk = chunkX + chunkY * _chunkSide + chunkZ * _chunkSideSqrd;
+    int chunkA_Start = _chunkStart[chunk];
+    int chunkA_End = index;
 
     resolveParticleCollisions(chunkA_Start, chunkA_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    int chunkB = chunkX + chunkY * _chunkSide + offsetZ * _chunkSideSqrd;
-    int chunkB_Start = _chunkStart[chunkB];
-    int chunkB_End = _chunkEnd[chunkB + 1];
+    int chunkB_Start = index + 1;
+    int chunkB_End = _chunkEnd[chunk + 1];
 
     resolveParticleCollisions(chunkB_Start, chunkB_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    int chunkC = chunkX + offsetY * _chunkSide + offsetZ * _chunkSideSqrd;
-    int chunkC_Start = _chunkStart[chunkC];
-    int chunkC_End = _chunkEnd[chunkC + 1];
+    chunk += offsetY;
+    int chunkC_Start = _chunkStart[chunk];
+    int chunkC_End = _chunkEnd[chunk + 1];
 
     resolveParticleCollisions(chunkC_Start, chunkC_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    int chunkD = chunkX + chunkY * _chunkSide + chunkZ * _chunkSideSqrd;
-    int chunkD_Start = _chunkStart[chunkD];
-    int chunkD_End = index;
+    chunk += offsetZ;
+    int chunkD_Start = _chunkStart[chunk];
+    int chunkD_End = _chunkEnd[chunk + 1];
 
     resolveParticleCollisions(chunkD_Start, chunkD_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
-    int chunkE_Start = index + 1;
-    int chunkE_End = _chunkEnd[chunkD + 1];
+    chunk -= offsetY;
+    int chunkE_Start = _chunkStart[chunk];
+    int chunkE_End = _chunkEnd[chunk + 1];
 
     resolveParticleCollisions(chunkE_Start, chunkE_End, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
 
     if (numCollisions > 0) {
-      particle.position += totalDepenetration / numCollisions;
+      particle.position.x += totalDepenetration.x / numCollisions;
+      particle.position.y += totalDepenetration.y / numCollisions;
+      particle.position.z += totalDepenetration.z / numCollisions;
     }
   }
 
@@ -481,19 +493,23 @@ public abstract class ParticleEngineBase : MonoBehaviour {
     }
   }
 
+  private int collisionChecks = 0;
+  private int collisions = 0;
   private void resolveParticleCollisions(int start,
                                          int end,
                                      ref Particle particle,
                                      ref SpeciesData speciesData,
                                      ref Vector3 totalDepenetration,
                                      ref int numCollisions) {
-    for (int i = start; i < end; i++) {
+    for (int i = start; i < end; ++i) {
+      collisionChecks++;
       float dx = particle.position.x - _particlesBack[i].position.x;
       float dy = particle.position.y - _particlesBack[i].position.y;
       float dz = particle.position.z - _particlesBack[i].position.z;
       float sqrDist = dx * dx + dy * dy + dz * dz;
 
       if (sqrDist < 0.05f * 0.05f && sqrDist > 0.000000001f) {
+        collisions++;
         float dist = Mathf.Sqrt(sqrDist);
         float constant = -0.5f * (dist - 0.05f) / dist;
 

@@ -1,4 +1,13 @@
-﻿using Leap.Unity.Attributes;
+/******************************************************************************
+ * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
+ * Leap Motion proprietary and  confidential.                                 *
+ *                                                                            *
+ * Use subject to the terms of the Leap Motion SDK Agreement available at     *
+ * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
+ * between Leap Motion and you, your company or other organization.           *
+ ******************************************************************************/
+
+using Leap.Unity.Attributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -84,6 +93,13 @@ namespace Leap.Unity.Attachments {
     }
 
     void Update() {
+      #if UNITY_EDITOR
+      PrefabType prefabType = PrefabUtility.GetPrefabType(this.gameObject);
+      if (prefabType == PrefabType.Prefab || prefabType == PrefabType.ModelPrefab) {
+        return;
+      }
+      #endif
+
       bool requiresReinitialization = false;
 
       using (new ProfilerSample("Attachment Hands Update", this.gameObject)) {
@@ -97,13 +113,13 @@ namespace Leap.Unity.Attachments {
 
           var leapHand = handAccessors[i]();
 
-#if UNITY_EDITOR
+          #if UNITY_EDITOR
           if (Hands.Provider != null) {
             if (leapHand == null && !Application.isPlaying) {
               leapHand = TestHandFactory.MakeTestHand(0, i, i == 0).TransformedCopy(UnityMatrixExtension.GetLeapMatrix(Hands.Provider.transform));
             }
           }
-#endif
+          #endif
 
           using (new ProfilerSample(attachmentHand.gameObject.name + " Update Points")) {
             foreach (var point in attachmentHand.points) {

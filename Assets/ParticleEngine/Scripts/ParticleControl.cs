@@ -143,7 +143,6 @@ public class ParticleControl : MonoBehaviour {
 
 		float waveAroundRange = 0.06f;
 		float leftEnvelope  = Mathf.Sin( Time.time * 0.4f );
-		float rightEnvelope = Mathf.Cos( Time.time * 1.0f );
 		_myLeftHand.palm.transform.position  += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Sin( Time.time * 1.0f );
 		_myLeftHand.palm.transform.position  += waveAroundRange * leftEnvelope * Vector3.right * Mathf.Cos( Time.time * 1.5f );
 		_myRightHand.palm.transform.position += waveAroundRange * leftEnvelope * Vector3.up    * Mathf.Cos( Time.time * 1.2f );

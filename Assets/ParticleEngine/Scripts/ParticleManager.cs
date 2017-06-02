@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
-using float4 = UnityEngine.Vector4;
-using float3 = UnityEngine.Vector3;
+//using float4 = UnityEngine.Vector4;
+//using float3 = UnityEngine.Vector3;
 
 public class ParticleManager : MonoBehaviour {
 
@@ -22,9 +22,10 @@ public class ParticleManager : MonoBehaviour {
 	private const int   MAX_SPECIES 		= 12;
 	private const float MAX_DELTA_TIME 		= ONE / 20.0f;
 	private const float TEST_DELTA_TIME 	= MAX_DELTA_TIME;
-  	private const float BOUNDARY_FORCE		= 0.01f;
-  	private const float PARTICLE_RADIUS		= 0.01f;  //meters
-  	private const float ENVIRONMENT_RADIUS	= 0.8f;   //meters
+  	private const float PARTICLE_RADIUS		= 0.005f; //meters
+ 	private const float BOUNDARY_FORCE		= 0.1f;
+  	private const float ENVIRONMENT_RADIUS	= 1.0f;   //meters
+  	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
 
 	//---------------------------------------------------------
 	// These parameters are critical for clustering behavior
@@ -67,17 +68,14 @@ public class ParticleManager : MonoBehaviour {
  	[StructLayout(LayoutKind.Sequential)]
   	private struct Particle 
 	{
-		public	bool	active;				// currently being used for birth and death
-		public  float 	age;				// in seconds
-		public	int		species;			// attributes set at birth
-    	public 	Vector3	position;			// dynamic
-    	public 	Vector3	velocity;			// dynamic
-    	public 	Vector4	accumulatedForce; 	// dynamic
-
-//I need to finish this...
-//this.xf     = new Array( MAX_FORCE_STEPS );
-//this.yf     = new Array( MAX_FORCE_STEPS );
-
+		public	bool		active;				// currently being used for birth and death
+		public  float 		age;				// in seconds
+		public	int			species;			// attributes set at birth
+    	public 	Vector3		position;			// dynamic
+    	public 	Vector3		velocity;			// dynamic
+		//public 	Vector3[]   accumulatedForce;	// dynamic
+		public 	Vector3     accumulatedForce;	// dynamic
+		public	int			numAccumulations;
   	}
 
 	[SerializeField]
@@ -91,8 +89,7 @@ public class ParticleManager : MonoBehaviour {
 	private ComputeBuffer		_particleBuffer;
 	private ComputeBuffer 		_argBuffer;
 	private int 				_simulationKernelIndex;
-
-	public ParticleControl		_particleController;
+	public  ParticleControl		_particleController;
 
 
   void OnEnable() {
@@ -129,13 +126,24 @@ public class ParticleManager : MonoBehaviour {
 	_backBuffer = new Particle[NUM_PARTICLES];
 	for (int i = 0; i < NUM_PARTICLES; i++) 
 	{
-	  _particles[i] = new Particle();
-	  _particles[i].age = ZERO;
-	  _particles[i].active = false;
-	  _particles[i].species = 0;
-	  _particles[i].accumulatedForce = Vector4.zero;
-	  _particles[i].velocity = Vector3.zero;
-	  _particles[i].position = Vector3.zero;
+	  	_particles[i] = new Particle();
+	  	_particles[i].age = ZERO;
+	  	_particles[i].active = false;
+	  	_particles[i].species = 0;
+	  	_particles[i].velocity = Vector3.zero;
+	  	_particles[i].position = Vector3.zero;
+	  	_particles[i].numAccumulations = 0;
+
+		/*
+		_particles[i].accumulatedForce = new Vector3[ MAX_FORCE_STEPS ];
+		
+		for (int a=0; a<MAX_FORCE_STEPS; a++) 
+		{
+			_particles[i].accumulatedForce[a] = Vector3.zero;
+		}
+		*/
+		_particles[i].accumulatedForce = Vector3.zero;
+
 	}
 
     _particleBuffer.SetData(_particles);
@@ -202,7 +210,7 @@ public class ParticleManager : MonoBehaviour {
 		//--------------------------------------------------------------------------------
 		// The home position is the centroid of the environment in which particles live...
 		//--------------------------------------------------------------------------------
-	   _homePosition = _particleController.getHeadPosition() + _particleController.getHeadForward() * ENVIRONMENT_RADIUS;
+	   _homePosition = _particleController.getHeadPosition() + _particleController.getHeadForward() * ENVIRONMENT_FRONT_OFFSET;
 
 		//------------------------------------
 		// update the emission of particles 
@@ -341,6 +349,7 @@ public class ParticleManager : MonoBehaviour {
       _parallelForeach.Dispatch(NUM_PARTICLES);
       _parallelForeach.Wait();
     } else {
+
       particleSimulationLogic(0, NUM_PARTICLES, deltaTime);
     }
 
@@ -366,7 +375,15 @@ public class ParticleManager : MonoBehaviour {
 				//------------------------------------------------------
 				// reset accumulated force 
 				//------------------------------------------------------
-				_particles[i].accumulatedForce = new float4( ZERO, ZERO, ZERO, ZERO );
+				/*
+				for (int a=0; a<MAX_FORCE_STEPS; a++) 
+				{
+					_particles[i].accumulatedForce[a] = Vector3.zero;
+				}
+				*/
+
+				_particles[i].accumulatedForce = Vector3.zero;
+				_particles[i].numAccumulations = 0;
 
 				//------------------
 				// advance age
@@ -383,7 +400,7 @@ public class ParticleManager : MonoBehaviour {
 		        		if (o == i) continue; //Dont compare against self!
 		
 				        Particle other = _particles[o];
-				        float3 	 vectorToOther = other.position - _particles[i].position;
+				        Vector3	 vectorToOther = other.position - _particles[i].position;
 				        float 	 distanceSquared = vectorToOther.sqrMagnitude;		
 
 						float socialRangeSquared = 
@@ -393,13 +410,14 @@ public class ParticleManager : MonoBehaviour {
 		        		if ( ( distanceSquared < socialRangeSquared ) && ( distanceSquared > ZERO ) ) 
 						{
 							float distance = Mathf.Sqrt( distanceSquared );
-							float3 directionToOther = vectorToOther / distance;
+							Vector3 directionToOther = vectorToOther / distance;
 		
 							//--------------------------------------------------------------------------
 							// Accumulate forces from social attractions/repulsions to other particles
 							//--------------------------------------------------------------------------
-							_particles[i].accumulatedForce += (float4)(_species[ _particles[i].species ].socialForce[ other.species ] * directionToOther);
-							_particles[i].accumulatedForce.w += 1; //keeping track of the number of particles exerting a force
+							//_particles[i].accumulatedForce[0] += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
+							_particles[i].accumulatedForce += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
+							_particles[i].numAccumulations ++; //keeping track of the number of particles exerting a force
 		
 							//----------------------------------------
 							// collisions
@@ -423,12 +441,13 @@ public class ParticleManager : MonoBehaviour {
 				//---------------------------------------------
 				// Apply accumulated forces to the velocity
 				//---------------------------------------------
-				if ( _particles[i].accumulatedForce.w > 0 ) 
+				if ( _particles[i].numAccumulations > 0 ) 
 				{
 					//-----------------------------------------------------------------------------------------
 					// divide by w, which is the number of particles that contributed to the accumulated force
 					//-----------------------------------------------------------------------------------------
-					_particles[i].velocity += deltaTime * (Vector3)_particles[i].accumulatedForce / _particles[i].accumulatedForce.w;
+					//_particles[i].velocity += deltaTime * _particles[i].accumulatedForce[0] / _particles[i].numAccumulations;
+					_particles[i].velocity += deltaTime * _particles[i].accumulatedForce / _particles[i].numAccumulations;
 				}
 	
 				//--------------------------------------------------------------------------------------

@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class ParticleControl : MonoBehaviour {
 
-	//---------------------------------------
-	// head and hand metrics
-	//---------------------------------------
 	private const float HEAD_LENGTH		= 0.13f;
 	private const float HEAD_WIDTH		= 0.10f;
 	private const float HEAD_DEPTH		= 0.10f;
@@ -16,16 +13,14 @@ public class ParticleControl : MonoBehaviour {
 	private const float FINGER_LENGTH	= 0.08f;
 	private const float FINGER_RADIUS	= 0.02f;
 
-	//---------------------------------------
-	// finger indices
-	//---------------------------------------
-	private const int LEFT_THUMB_FINGER 	= 0;
-	private const int LEFT_INDEX_FINGER 	= 1;
-	private const int LEFT_PINKY_FINGER 	= 2;
-	private const int RIGHT_THUMB_FINGER	= 3;
-	private const int RIGHT_INDEX_FINGER	= 4;
-	private const int RIGHT_PINKY_FINGER	= 5;
-	private const int NUM_FINGERS			= 6;
+	private const int NUM_HANDS = 2;
+
+	private const int THUMB_FINGER 	= 0;
+	private const int INDEX_FINGER 	= 1;
+	private const int PINKY_FINGER 	= 2;
+	private const int NUM_FINGERS_PER_HAND	= 3;
+	
+	private const int NUM_EMITTERS = NUM_FINGERS_PER_HAND * NUM_HANDS;
 
   	private struct ParticleEmitter 
 	{
@@ -40,17 +35,20 @@ public class ParticleControl : MonoBehaviour {
   	private struct Head 
 	{
 		public GameObject gameObject;
-		public bool movingForward;
-		public bool turning;
-		public float turnAmount;
   	}
 
- 	private struct Hand 
+ 	private struct Finger 
+	{
+		public GameObject gameObject;
+		public float rightOffset;
+		public float upOffset;
+		public float forwardRotation;
+  	}
+
+	private struct Hand 
 	{
 		public GameObject palm;
-		public GameObject thumb;
-		public GameObject index;
-		public GameObject pinky;
+		public Finger[] fingers;
 		public bool isRightHand;
   	}
 
@@ -66,29 +64,46 @@ public class ParticleControl : MonoBehaviour {
 		_myHead.gameObject	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myLeftHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myRightHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myLeftHand.thumb 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myRightHand.thumb 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myLeftHand.index 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myRightHand.index 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myLeftHand.pinky 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
-		_myRightHand.pinky 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 
-		float pinkyRadius = FINGER_RADIUS * 0.8f;
-		float thumbLength = FINGER_LENGTH * 0.8f;
+		_myLeftHand.fingers  = new Finger[ NUM_FINGERS_PER_HAND ];
+		_myRightHand.fingers = new Finger[ NUM_FINGERS_PER_HAND ];
+		
+		for (int f=0; f<NUM_FINGERS_PER_HAND; f++) 
+		{
+			_myLeftHand.fingers [f].rightOffset = PALM_WIDTH * 0.3f;
+			_myRightHand.fingers[f].rightOffset = PALM_WIDTH * 0.3f;
 
-	 	_myHead.gameObject.transform.localScale	= new Vector3( HEAD_WIDTH, 		HEAD_LENGTH, 	HEAD_DEPTH 		);	
-	 	_myLeftHand.palm.transform.localScale  	= new Vector3( PALM_WIDTH, 		PALM_LENGTH, 	PALM_DEPTH 		);	
-	 	_myRightHand.palm.transform.localScale 	= new Vector3( PALM_WIDTH, 		PALM_LENGTH, 	PALM_DEPTH 		);
-	 	_myLeftHand.thumb.transform.localScale  = new Vector3( FINGER_RADIUS, 	thumbLength, 	FINGER_RADIUS 	);	
-	 	_myRightHand.thumb.transform.localScale = new Vector3( FINGER_RADIUS, 	thumbLength, 	FINGER_RADIUS 	);
-	 	_myLeftHand.index.transform.localScale  = new Vector3( FINGER_RADIUS, 	FINGER_LENGTH, 	FINGER_RADIUS 	);	
-	 	_myRightHand.index.transform.localScale = new Vector3( FINGER_RADIUS, 	FINGER_LENGTH, 	FINGER_RADIUS 	);
-	 	_myLeftHand.pinky.transform.localScale  = new Vector3( pinkyRadius, 	FINGER_LENGTH, 	pinkyRadius 	);	
-	 	_myRightHand.pinky.transform.localScale = new Vector3( pinkyRadius, 	FINGER_LENGTH, 	pinkyRadius 	);
+			_myLeftHand.fingers [f].forwardRotation = 0.0f;
+			_myRightHand.fingers[f].forwardRotation = 0.0f;
 
-		_myHead.movingForward = false;
-		_myHead.turning = false;
-		_myHead.turnAmount = 0.0f;
+			if ( f == INDEX_FINGER ) 
+			{ 
+				_myRightHand.fingers[f].rightOffset *= -1.0f; 
+			}
+			if ( f == THUMB_FINGER ) 
+			{ 
+				_myRightHand.fingers[f].rightOffset *= -1.0f; 
+				_myLeftHand.fingers [f].forwardRotation = -60.0f;
+				_myRightHand.fingers[f].forwardRotation =  60.0f;
+			}
+			if ( f == PINKY_FINGER )
+			{
+				_myLeftHand.fingers[f].rightOffset *= -1.0f;
+			}
+
+			_myLeftHand.fingers [f].upOffset = PALM_WIDTH * 0.4f;
+			_myRightHand.fingers[f].upOffset = PALM_WIDTH * 0.4f;
+
+			_myLeftHand.fingers [f].gameObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+			_myRightHand.fingers[f].gameObject = GameObject.CreatePrimitive( PrimitiveType.Sphere );
+
+	 		_myLeftHand.fingers	[f].gameObject.transform.localScale = new Vector3( FINGER_RADIUS, FINGER_LENGTH, FINGER_RADIUS 	);	
+	 		_myRightHand.fingers[f].gameObject.transform.localScale = new Vector3( FINGER_RADIUS, FINGER_LENGTH, FINGER_RADIUS 	);	
+		}
+
+	 	_myHead.gameObject.transform.localScale	= new Vector3( HEAD_WIDTH,	HEAD_LENGTH,	HEAD_DEPTH	);	
+	 	_myLeftHand.palm.transform.localScale  	= new Vector3( PALM_WIDTH,	PALM_LENGTH, 	PALM_DEPTH	);	
+	 	_myRightHand.palm.transform.localScale 	= new Vector3( PALM_WIDTH,	PALM_LENGTH, 	PALM_DEPTH	);
 		
 		_myLeftHand.isRightHand  = false;
 		_myRightHand.isRightHand = true;
@@ -96,8 +111,8 @@ public class ParticleControl : MonoBehaviour {
 		//-----------------------------------------
 		// create and intitialize emitter array
 		//-----------------------------------------
-		_emitters = new ParticleEmitter[ NUM_FINGERS ];
-		for (int e = 0; e < NUM_FINGERS; e++) 
+		_emitters = new ParticleEmitter[ NUM_EMITTERS ];
+		for (int e = 0; e < NUM_EMITTERS; e++) 
 		{
 			_emitters[e] = new ParticleEmitter();
 		}
@@ -111,7 +126,7 @@ public class ParticleControl : MonoBehaviour {
 	//-------------------------------------------
 	private void initializeEmitters() 
 	{
-		for (int e=0; e<NUM_FINGERS; e++)
+		for (int e=0; e<NUM_EMITTERS; e++)
 		{
 			_emitters[e].strength 	= 0.05f;
 			_emitters[e].rate 		= 0.12f;
@@ -158,68 +173,45 @@ public class ParticleControl : MonoBehaviour {
 		_myRightHand.palm.transform.Rotate( 30.0f + 30.0f * Mathf.Cos( Time.time * 1.0f ),  30.0f + 20.0f * Mathf.Cos( Time.time * 2.5f ), 0.0f );
 	
 		//---------------------------------------------------------
-		// set the finger emitters...
+		// attach fingers to the hands...
 		//---------------------------------------------------------
-		_myLeftHand.index.transform.position = _myLeftHand.palm.transform.position 
-		+ _myLeftHand.palm.transform.right   * PALM_WIDTH *  0.3f
-		+ _myLeftHand.palm.transform.up 	 * PALM_WIDTH *  0.4f;
-		
-		_myRightHand.index.transform.position = _myRightHand.palm.transform.position 
-		+ _myRightHand.palm.transform.right   * PALM_WIDTH * -0.3f
-		+ _myRightHand.palm.transform.up 	  * PALM_WIDTH *  0.4f;
+		for (int f=0; f<NUM_FINGERS_PER_HAND; f++) 
+		{
+			_myLeftHand.fingers[f].gameObject.transform.position = _myLeftHand.palm.transform.position
+			+ _myLeftHand.palm.transform.right * _myLeftHand.fingers[f].rightOffset
+			+ _myLeftHand.palm.transform.up	   * _myLeftHand.fingers[f].upOffset;
 
+			_myRightHand.fingers[f].gameObject.transform.position = _myRightHand.palm.transform.position
+			+ _myRightHand.palm.transform.right * _myRightHand.fingers[f].rightOffset
+			+ _myRightHand.palm.transform.up	* _myRightHand.fingers[f].upOffset;
 
+			_myLeftHand.fingers [f].gameObject.transform.rotation = _myLeftHand.palm.transform.rotation;
+			_myRightHand.fingers[f].gameObject.transform.rotation = _myRightHand.palm.transform.rotation;
 
-		_myLeftHand.thumb.transform.position = _myLeftHand.palm.transform.position 
-		+ _myLeftHand.palm.transform.right   * PALM_WIDTH *  0.3f
-		+ _myLeftHand.palm.transform.up 	 * PALM_WIDTH *  0.4f;
-		
-		_myRightHand.thumb.transform.position = _myRightHand.palm.transform.position 
-		+ _myRightHand.palm.transform.right   * PALM_WIDTH * -0.3f
-		+ _myRightHand.palm.transform.up 	  * PALM_WIDTH *  0.4f;
-
-		_myLeftHand.thumb.transform.rotation  = _myLeftHand.palm.transform.rotation;
-		_myRightHand.thumb.transform.rotation = _myRightHand.palm.transform.rotation;
-
-		_myLeftHand.thumb.transform.RotateAround ( _myLeftHand.palm.transform.position,  _myLeftHand.palm.transform.forward, -60.0f );
-		_myRightHand.thumb.transform.RotateAround( _myRightHand.palm.transform.position, _myRightHand.palm.transform.forward, 60.0f );
-
-
-
-
-		_myLeftHand.pinky.transform.position = _myLeftHand.palm.transform.position 
-		+ _myLeftHand.palm.transform.right   * PALM_WIDTH * -0.3f
-		+ _myLeftHand.palm.transform.up 	 * PALM_WIDTH *  0.4f;
-		
-		_myRightHand.pinky.transform.position = _myRightHand.palm.transform.position 
-		+ _myRightHand.palm.transform.right   * PALM_WIDTH *  0.3f
-		+ _myRightHand.palm.transform.up 	  * PALM_WIDTH *  0.4f;
-
-		_myLeftHand.index.transform.rotation  = _myLeftHand.palm.transform.rotation;
-		_myRightHand.index.transform.rotation = _myRightHand.palm.transform.rotation;
-		_myLeftHand.pinky.transform.rotation  = _myLeftHand.palm.transform.rotation;
-		_myRightHand.pinky.transform.rotation = _myRightHand.palm.transform.rotation;
-
-    	_emitters[ LEFT_THUMB_FINGER 	].position	= _myLeftHand.thumb.transform.position;
-    	_emitters[ LEFT_INDEX_FINGER 	].position	= _myLeftHand.index.transform.position;
-    	_emitters[ LEFT_PINKY_FINGER 	].position	= _myLeftHand.pinky.transform.position;
-    	_emitters[ RIGHT_THUMB_FINGER 	].position	= _myRightHand.thumb.transform.position;
-    	_emitters[ RIGHT_INDEX_FINGER 	].position	= _myRightHand.index.transform.position;
-    	_emitters[ RIGHT_PINKY_FINGER 	].position	= _myRightHand.pinky.transform.position;
-
-    	_emitters[ LEFT_THUMB_FINGER 	].direction	= _myLeftHand.thumb.transform.up;
-    	_emitters[ LEFT_INDEX_FINGER 	].direction	= _myLeftHand.index.transform.up;
-    	_emitters[ LEFT_PINKY_FINGER 	].direction	= _myLeftHand.pinky.transform.up;
-    	_emitters[ RIGHT_THUMB_FINGER 	].direction	= _myRightHand.thumb.transform.up;
-    	_emitters[ RIGHT_INDEX_FINGER 	].direction	= _myRightHand.index.transform.up;
-    	_emitters[ RIGHT_PINKY_FINGER 	].direction	= _myRightHand.pinky.transform.up;
+			_myLeftHand.fingers[f].gameObject.transform.RotateAround ( _myLeftHand.palm.transform.position,  _myLeftHand.palm.transform.forward,  _myLeftHand.fingers [f].forwardRotation );
+			_myRightHand.fingers[f].gameObject.transform.RotateAround( _myRightHand.palm.transform.position, _myRightHand.palm.transform.forward, _myRightHand.fingers[f].forwardRotation );
+		}
 
 		//---------------------------------------------------------
-		// turning finger emitters of and off...
+		// attach emitters to fingers...
+		//---------------------------------------------------------
+		for (int f=0; f<NUM_FINGERS_PER_HAND; f++) 
+		{
+			int left  = f;
+			int right = f + NUM_FINGERS_PER_HAND;
+
+	    	_emitters[ left  ].position  = _myLeftHand.fingers [f].gameObject.transform.position;
+			_emitters[ right ].position  = _myRightHand.fingers[f].gameObject.transform.position;
+	    	_emitters[ left  ].direction = _myLeftHand.fingers [f].gameObject.transform.up;
+	    	_emitters[ right ].direction = _myRightHand.fingers[f].gameObject.transform.up;
+		}
+
+		//---------------------------------------------------------
+		// turn emitters on and off...
 		//---------------------------------------------------------
 		float chance = 0.95f;
 
-		for (int e=0; e<NUM_FINGERS; e++)
+		for (int e=0; e<NUM_EMITTERS; e++)
 		{
 			if ( Random.value > chance ) { _emitters[e].active = true;  }
 			if ( Random.value > chance ) { _emitters[e].active = false; }
@@ -241,5 +233,5 @@ public class ParticleControl : MonoBehaviour {
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
 
-	public int getNumEmitters() { return NUM_FINGERS; }
+	public int getNumEmitters() { return NUM_EMITTERS; }
 }

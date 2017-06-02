@@ -1,7 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
-//using float4 = UnityEngine.Vector4;
-//using float3 = UnityEngine.Vector3;
 
 public class ParticleManager : MonoBehaviour {
 
@@ -20,9 +18,9 @@ public class ParticleManager : MonoBehaviour {
 	private const int   MAX_FORCE_STEPS 	= 7;
 	private const int   MIN_SPECIES 		= 1;
 	private const int   MAX_SPECIES 		= 12;
-	private const float MAX_DELTA_TIME 		= ONE / 20.0f;
+	private const float MAX_DELTA_TIME 		= ONE / 10.0f;
 	private const float TEST_DELTA_TIME 	= MAX_DELTA_TIME;
-  	private const float PARTICLE_RADIUS		= 0.005f; //meters
+  	private const float PARTICLE_RADIUS		= 0.007f; //meters
  	private const float BOUNDARY_FORCE		= 0.1f;
   	private const float ENVIRONMENT_RADIUS	= 1.0f;   //meters
   	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
@@ -34,7 +32,7 @@ public class ParticleManager : MonoBehaviour {
   	private const float MAX_DRAG 			= 0.3f;
   	private const float MIN_COLLISION_FORCE = 0.1f;
 	private const float MAX_COLLISION_FORCE = 0.5f;
-  	private const float MAX_SOCIAL_FORCE 	= 0.005f;
+  	private const float MAX_SOCIAL_FORCE 	= 0.003f;
   	private const float MAX_SOCIAL_RANGE 	= 0.4f;
 
 	[SerializeField]
@@ -297,9 +295,6 @@ public class ParticleManager : MonoBehaviour {
 
  	//-----------------------------------------
   	// get an inactive particle
-	//
-	// THIS IS NOT EFFICIENT - it will be
-	// replaced by a more efficient process.
   	//-----------------------------------------
 	private int getIndexOfInactiveParticle() 
 	{

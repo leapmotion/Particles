@@ -17,10 +17,10 @@ public class ParticleManager : MonoBehaviour {
 	private const int   MIN_FORCE_STEPS 	= 1;
 	private const int   MAX_FORCE_STEPS 	= 7;
 	private const int   MIN_SPECIES 		= 1;
-	private const int   MAX_SPECIES 		= 12;
-	private const float MAX_DELTA_TIME 		= ONE / 10.0f;
+	private const int   MAX_SPECIES 		= 10;
+	private const float MAX_DELTA_TIME 		= ONE / 5.0f;
 	private const float TEST_DELTA_TIME 	= MAX_DELTA_TIME;
-  	private const float PARTICLE_RADIUS		= 0.007f; //meters
+	private const float PARTICLE_RADIUS		= 0.01f; //meters
  	private const float BOUNDARY_FORCE		= 0.1f;
   	private const float ENVIRONMENT_RADIUS	= 1.0f;   //meters
   	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
@@ -30,10 +30,10 @@ public class ParticleManager : MonoBehaviour {
 	//---------------------------------------------------------
    	private const float MIN_DRAG 			= 0.05f;
   	private const float MAX_DRAG 			= 0.3f;
-  	private const float MIN_COLLISION_FORCE = 0.1f;
-	private const float MAX_COLLISION_FORCE = 0.5f;
+  	private const float MIN_COLLISION_FORCE = 0.01f;
+	private const float MAX_COLLISION_FORCE = 0.2f;
   	private const float MAX_SOCIAL_FORCE 	= 0.003f;
-  	private const float MAX_SOCIAL_RANGE 	= 0.4f;
+  	private const float MAX_SOCIAL_RANGE 	= 0.5f;
 
 	[SerializeField]
 	private bool _useComputeShader = false;
@@ -85,7 +85,10 @@ public class ParticleManager : MonoBehaviour {
 	private ComputeBuffer		_particleBuffer;
 	private ComputeBuffer 		_argBuffer;
 	private int 				_simulationKernelIndex;
-	public  ParticleControl		_particleController;
+	private int					_frameCount;
+
+
+	public ParticleControl _particleController;
 
 
   void OnEnable() {
@@ -113,7 +116,7 @@ public class ParticleManager : MonoBehaviour {
 
     _homePosition = Vector3.zero;
 
-	//_particleController = GetComponent<ParticleControl>();
+	_frameCount = 0;
 
 	//-----------------------------------------
 	// intitialize particle array
@@ -162,9 +165,12 @@ public class ParticleManager : MonoBehaviour {
     }
 
     //-----------------------------------------
-    // randomize species
+    // initialize species parameters
     //-----------------------------------------
     randomizeSpecies();
+
+	//setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
+
 
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
@@ -198,6 +204,8 @@ public class ParticleManager : MonoBehaviour {
 	//-------------------------------------------
 	void SimulateParticles( float deltaTime ) 
 	{
+		_frameCount ++;
+
 		//--------------------------------------------------------------------------------
 		// The home position is the centroid of the environment in which particles live...
 		//--------------------------------------------------------------------------------
@@ -207,6 +215,17 @@ public class ParticleManager : MonoBehaviour {
 		// update the emission of particles 
 		//------------------------------------
 		updateEmittingParticles();
+
+		//------------------------------------------------
+		// if clear requested, kill all particles now...  
+		//------------------------------------------------
+		if ( _particleController.getClearRequest() )
+		{
+			for (int p=0; p<NUM_PARTICLES; p++) 
+			{
+				_particles[p].active = false;
+			}
+		}
 
 		//------------------------------------
 		// simulate particle physics...
@@ -267,16 +286,90 @@ public class ParticleManager : MonoBehaviour {
 		}
 	}
 
+
+	//--------------------------------------
+	// set ecosystem to preset
+	//--------------------------------------
+	private void setPresetEcosystem( int e ) 
+	{
+		if ( e == ParticleControl.ECOSYSTEM_CHASE )
+		{
+			for (int s=0; s<MAX_SPECIES; s++) 
+			{
+				_species[s].steps = MIN_FORCE_STEPS;     
+				_species[s].collisionForce 	= MIN_COLLISION_FORCE;
+				_species[s].drag = MIN_DRAG;
+
+				for (int o=0; o<MAX_SPECIES; o++) 
+				{
+					_species[s].socialForce[o] = 0.0f;
+					_species[s].socialRange[o] = MAX_SOCIAL_RANGE;
+				}
+
+				_species[s].socialForce[s] = MAX_SOCIAL_FORCE * 0.1f;
+			}
+
+			_species[0].color = new Color( 0.7f, 0.0f, 0.0f, ONE );
+			_species[1].color = new Color( 0.7f, 0.3f, 0.0f, ONE );
+			_species[2].color = new Color( 0.7f, 0.7f, 0.0f, ONE );
+			_species[3].color = new Color( 0.0f, 0.7f, 0.0f, ONE );
+			_species[4].color = new Color( 0.0f, 0.0f, 0.7f, ONE );
+			_species[5].color = new Color( 0.4f, 0.0f, 0.7f, ONE );
+			_species[6].color = new Color( 1.0f, 0.3f, 0.3f, ONE );
+			_species[7].color = new Color( 1.0f, 0.6f, 0.3f, ONE );
+			_species[8].color = new Color( 1.0f, 1.0f, 0.3f, ONE );
+			_species[9].color = new Color( 0.3f, 1.0f, 0.3f, ONE );
+
+			float chase = 0.9f;
+			_species[0].socialForce[1] = MAX_SOCIAL_FORCE * chase;
+			_species[1].socialForce[2] = MAX_SOCIAL_FORCE * chase;
+			_species[2].socialForce[3] = MAX_SOCIAL_FORCE * chase;
+			_species[3].socialForce[4] = MAX_SOCIAL_FORCE * chase;
+			_species[4].socialForce[5] = MAX_SOCIAL_FORCE * chase;
+			_species[5].socialForce[6] = MAX_SOCIAL_FORCE * chase;
+			_species[6].socialForce[7] = MAX_SOCIAL_FORCE * chase;
+			_species[7].socialForce[8] = MAX_SOCIAL_FORCE * chase;
+			_species[8].socialForce[9] = MAX_SOCIAL_FORCE * chase;
+			_species[8].socialForce[0] = MAX_SOCIAL_FORCE * chase;
+
+			float flee = -0.6f;
+			_species[0].socialForce[9] = MAX_SOCIAL_FORCE * flee;
+			_species[1].socialForce[0] = MAX_SOCIAL_FORCE * flee;
+			_species[2].socialForce[1] = MAX_SOCIAL_FORCE * flee;
+			_species[3].socialForce[2] = MAX_SOCIAL_FORCE * flee;
+			_species[4].socialForce[3] = MAX_SOCIAL_FORCE * flee;
+			_species[5].socialForce[4] = MAX_SOCIAL_FORCE * flee;
+			_species[6].socialForce[5] = MAX_SOCIAL_FORCE * flee;
+			_species[7].socialForce[6] = MAX_SOCIAL_FORCE * flee;
+			_species[8].socialForce[7] = MAX_SOCIAL_FORCE * flee;
+			_species[8].socialForce[8] = MAX_SOCIAL_FORCE * flee;
+
+			float range = 0.8f;
+			_species[0].socialRange[9] = MAX_SOCIAL_RANGE * range;
+			_species[1].socialRange[0] = MAX_SOCIAL_RANGE * range;
+			_species[2].socialRange[1] = MAX_SOCIAL_RANGE * range;
+			_species[3].socialRange[2] = MAX_SOCIAL_RANGE * range;
+			_species[4].socialRange[3] = MAX_SOCIAL_RANGE * range;
+			_species[5].socialRange[4] = MAX_SOCIAL_RANGE * range;
+			_species[6].socialRange[5] = MAX_SOCIAL_RANGE * range;
+			_species[7].socialRange[6] = MAX_SOCIAL_RANGE * range;
+			_species[8].socialRange[7] = MAX_SOCIAL_RANGE * range;
+			_species[8].socialRange[8] = MAX_SOCIAL_RANGE * range;
+		}
+	}
+
  	//-------------------------------------------
 	// update the emission of particles 
   	//-------------------------------------------
 	private void updateEmittingParticles() 
 	{
 		for (int e=0; e<_particleController.getNumEmitters(); e++)
-		{	
+		{
 			if ( _particleController.getEmitterActive(e) )
-			{
-				if ( Random.value < _particleController.getEmitterRate(e) ) 
+			{				
+				int mod = 7; // this will do for now - we will need to implement proper particle emission rate..
+
+				if ( _frameCount % mod == 0 ) 
 				{
 					int p = getIndexOfInactiveParticle();
 			
@@ -294,7 +387,7 @@ public class ParticleManager : MonoBehaviour {
 
 
  	//-----------------------------------------
-  	// get an inactive particle
+  	// get the first inactive particle
   	//-----------------------------------------
 	private int getIndexOfInactiveParticle() 
 	{
@@ -308,7 +401,6 @@ public class ParticleManager : MonoBehaviour {
 
 		return NULL_PARTICLE;
 	}
-
 
  	//----------------------------------
   	// kill particle

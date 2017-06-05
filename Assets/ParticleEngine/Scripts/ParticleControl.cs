@@ -22,6 +22,16 @@ public class ParticleControl : MonoBehaviour {
 	
 	private const int NUM_EMITTERS = NUM_FINGERS_PER_HAND * NUM_HANDS;
 
+	public const int ECOSYSTEM_NULL		= -1;
+	public const int ECOSYSTEM_CHASE 	=  0;
+	public const int ECOSYSTEM_FLURRY	=  1;
+	public const int ECOSYSTEM_WTF		=  2;
+	public const int NUM_ECOSYSTEMS		=  3;
+
+	private int BUTTON_MARGIN 		= 10;
+	private int CLEAR_BUTTON_WIDTH  = 120;
+	private int CLEAR_BUTTON_HEIGHT = 20;
+
   	private struct ParticleEmitter 
 	{
 		public  bool	active;
@@ -58,9 +68,38 @@ public class ParticleControl : MonoBehaviour {
 	private Hand 	_myRightHand;
 	private ParticleEmitter[] _emitters;
 
+	private bool 	_clearRequested = false;
+	private Rect 	_clearButtonRect;
+	private string 	_clearButtonString;
+
+	//---------------------------------------
+	// public tweakers
+	//---------------------------------------
+	public int  _ecosystem 			= ECOSYSTEM_CHASE;
+	public bool _clear 				= false;
+	public bool _leftThumbActive 	= false;
+	public bool _leftIndexActive 	= false;
+	public bool _leftPinkyActive 	= false;
+	public bool _rightThumbActive 	= false;
+	public bool _rightIndexActive 	= false;
+	public bool _rightPinkyActive	= false;
+
 	//---------------------------------------
 	void Start() 
 	{
+		//------------------------------------
+		// create the clear button
+		//------------------------------------
+		_clearButtonRect = new 
+		Rect
+		( 
+			Screen.width  - CLEAR_BUTTON_WIDTH  - BUTTON_MARGIN, 
+			Screen.height - CLEAR_BUTTON_HEIGHT - BUTTON_MARGIN, 
+			CLEAR_BUTTON_WIDTH, 
+			CLEAR_BUTTON_HEIGHT 
+		);
+	
+
 		_myHead.gameObject	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myLeftHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myRightHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
@@ -122,6 +161,17 @@ public class ParticleControl : MonoBehaviour {
 
 
 	//-------------------------------------------
+	// GUI...
+	//-------------------------------------------
+    void OnGUI() 
+	{
+		if ( GUI.Button( _clearButtonRect, "clear all particles" ) )
+		{
+            clearAllParticles();
+        }
+    }
+
+	//-------------------------------------------
 	// initialize emitters...
 	//-------------------------------------------
 	private void initializeEmitters() 
@@ -129,15 +179,22 @@ public class ParticleControl : MonoBehaviour {
 		for (int e=0; e<NUM_EMITTERS; e++)
 		{
 			_emitters[e].strength 	= 0.05f;
-			_emitters[e].rate 		= 0.12f;
+			_emitters[e].rate 		= 0.0f;
 			_emitters[e].active		= false;
 			_emitters[e].position 	= Vector3.zero;
 			_emitters[e].direction 	= Vector3.one;
-			_emitters[e].species 	= e+1;
+			_emitters[e].species 	= e;
 		}
 	}
 
 
+	//-------------------------------------------
+	// clearAllParticles...
+	//-------------------------------------------
+	private void clearAllParticles()
+	{
+		_clearRequested = true;
+	}
 
 	//--------------
 	void Update () 
@@ -206,6 +263,7 @@ public class ParticleControl : MonoBehaviour {
 	    	_emitters[ right ].direction = _myRightHand.fingers[f].gameObject.transform.up;
 		}
 
+		/*
 		//---------------------------------------------------------
 		// turn emitters on and off...
 		//---------------------------------------------------------
@@ -216,6 +274,17 @@ public class ParticleControl : MonoBehaviour {
 			if ( Random.value > chance ) { _emitters[e].active = true;  }
 			if ( Random.value > chance ) { _emitters[e].active = false; }
 		}
+		*/
+
+		//---------------------------------------------------------
+		// get emission values from the editor...
+		//---------------------------------------------------------
+		_emitters[0].active = _leftThumbActive;
+		_emitters[1].active = _leftIndexActive;
+		_emitters[2].active = _leftPinkyActive;
+		_emitters[3].active = _rightThumbActive;
+		_emitters[4].active = _rightIndexActive;
+		_emitters[5].active	= _rightPinkyActive;
 	}
 
 	//------------------------------------------------------------------------------------
@@ -232,6 +301,20 @@ public class ParticleControl : MonoBehaviour {
 	public Vector3	getEmitterDirection	( int e ) { return _emitters[e].direction;	}
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
+
+
+	//------------------------------
+	// clear requested...
+	//------------------------------
+	public bool getClearRequest() 
+	{ 
+		if ( _clearRequested )
+		{
+			_clearRequested = false;
+			return true;
+		}
+		return false;
+	}
 
 	public int getNumEmitters() { return NUM_EMITTERS; }
 }

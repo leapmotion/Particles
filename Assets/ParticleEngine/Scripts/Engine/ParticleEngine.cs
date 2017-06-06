@@ -94,21 +94,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       _resolveCollisionsForeach.Dispatch(_aliveParticles);
     };
 
-    _instanceMatrices = new Matrix4x4[_maxParticles];
-    _particlesBack = new Particle[_maxParticles];
-    _particlesFront = new Particle[_maxParticles];
-    _speciesData = new SpeciesData[1];
-
-    _chunkCount = new int[NUM_CHUNKS];
-    _chunkStart = new int[NUM_CHUNKS];
-    _chunkEnd = new int[NUM_CHUNKS];
-
-    _randomColors = new Color[NUM_CHUNKS];
-    for (int i = 0; i < NUM_CHUNKS; i++) {
-      _randomColors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.5f, 1f));
-    }
-
-    OnInitialize();
+    ResetSimulation();
   }
 
   protected virtual void Update() {
@@ -258,6 +244,24 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
   }
 
+  public void ResetSimulation() {
+    _instanceMatrices = new Matrix4x4[_maxParticles];
+    _particlesBack = new Particle[_maxParticles];
+    _particlesFront = new Particle[_maxParticles];
+    _speciesData = new SpeciesData[1];
+
+    _chunkCount = new int[NUM_CHUNKS];
+    _chunkStart = new int[NUM_CHUNKS];
+    _chunkEnd = new int[NUM_CHUNKS];
+
+    _randomColors = new Color[NUM_CHUNKS];
+    for (int i = 0; i < NUM_CHUNKS; i++) {
+      _randomColors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.5f, 1f));
+    }
+
+    OnInitializeSimulation();
+  }
+
   public bool TryEmit(Particle particle) {
     if (_toEmit.Count + _aliveParticles >= _maxParticles) {
       return false;
@@ -267,7 +271,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
   }
 
-  protected abstract void OnInitialize();
+  protected abstract void OnInitializeSimulation();
   protected abstract void BeforeParticleUpdate();
 
   protected abstract bool DoParticleInteraction(ref Particle particle,

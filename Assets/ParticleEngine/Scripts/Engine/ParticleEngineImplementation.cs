@@ -35,7 +35,7 @@ public partial class ParticleEngineImplementation : ParticleEngine {
   /// Perform any initialization before particle simulation is started
   /// right here.
   /// </summary>
-  protected override void OnInitialize() {
+  protected override void OnInitializeSimulation() {
 
   }
 

@@ -2,7 +2,7 @@
 using Leap.Unity.RuntimeGizmos;
 
 public abstract partial class ParticleEngine {
-  private const float PARTICLE_RADIUS = 0.05f;
+  private const float PARTICLE_RADIUS = 0.025f;
   private const float MAX_SOCIAL_RADIUS = 0;
 
   public struct Particle {
@@ -57,37 +57,40 @@ public partial class ParticleEngineImplementation : ParticleEngine {
   }
 
   /// <summary>
-  /// 
+  /// Use this method to apply global particle constraints.
   /// </summary>
   protected override void DoParticleConstraints(ref Particle particle, ref SpeciesData speciesData) {
 
   }
 
   /// <summary>
-  /// 
+  /// Use this method to apply global forces that affect all particles.
   /// </summary>
   protected override void DoParticleGlobalForces(ref Particle particle, ref SpeciesData speciesData) {
-
+    particle.AddForce(Vector3.down * 0.001f);
   }
 
   /// <summary>
-  /// 
+  /// Use this method to define how one particle would interact with another.  You should
+  /// not modify either this particle or the other particle.  If you want to create a social
+  /// force, add it to totalSocialForce and increment totalSocialInteractions.  At the end
+  /// of the particle step all social forces will be averaged.
   /// </summary>
-  protected override bool DoParticleInteraction(ref Particle particle, ref SpeciesData speciesData, ref Particle other, ref SpeciesData otherSpeciesData, ref Vector3 particleDisplacement) {
-    return false;
+  protected override void DoParticleSocialInteraction(ref Particle particle, 
+                                                      ref SpeciesData speciesData, 
+                                                      ref Particle other, 
+                                                      ref SpeciesData otherSpeciesData, 
+                                                      ref Vector3 totalSocialforce,
+                                                      ref int totalSocialInteractions) {
+
   }
 
   /// <summary>
-  /// 
+  /// Called every frame for every particle to determine if it should be killed.  If you
+  /// return true from this method, the particle will be removed before the start of the next
+  /// simulation step.
   /// </summary>
   protected override bool ShouldKillParticle(ref Particle particle) {
     return false;
-  }
-
-  /// <summary>
-  /// 
-  /// </summary>
-  public override void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-
   }
 }

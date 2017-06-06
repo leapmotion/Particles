@@ -4,13 +4,16 @@ using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Attributes;
 using Leap.Unity.RuntimeGizmos;
+using System.Linq;
 
 public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoComponent {
-  private const int CHUNK_SIDE = 16;
+  private const int CHUNK_SIDE = 32;
   private const int CHUNK_SIDE_SQRD = CHUNK_SIDE * CHUNK_SIDE;
   private const int HALF_CHUNK_SIDE = CHUNK_SIDE / 2;
   private const int NUM_CHUNKS = CHUNK_SIDE * CHUNK_SIDE * CHUNK_SIDE;
-  private const float CHUNK_SIZE = PARTICLE_RADIUS * 2;
+  private const float CHUNK_SIZE = PARTICLE_DIAMETER;// PARTICLE_RADIUS * 4;
+
+  private const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
 
   [Header("Simulation")]
   [MinValue(0)]
@@ -60,6 +63,9 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private long[] sortingTimes = new long[32];
   private System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
 
+  //Drawing
+  protected RuntimeGizmoDrawer drawer;
+
   public enum ChunkResolution {
     Four = 4,
     Eight = 8,
@@ -98,8 +104,12 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   protected virtual void Update() {
+    RuntimeGizmoManager.TryGetGizmoDrawer(out drawer);
+
     BeforeParticleUpdate();
 
+    considerCount = 0;
+    collisionCount = 0;
     System.Array.Clear(integrationTimes, 0, integrationTimes.Length);
     System.Array.Clear(collisionTimes, 0, collisionTimes.Length);
     System.Array.Clear(sortingTimes, 0, sortingTimes.Length);
@@ -151,7 +161,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       switch (_renderMethod) {
         case DisplayMethod.DrawMesh:
           for (int i = 0; i < _aliveParticles; i++) {
-            matrix = Matrix4x4.TRS(_particlesFront[i].position, Quaternion.identity, Vector3.one * 0.05f);
+            matrix = Matrix4x4.TRS(_particlesFront[i].position, Quaternion.identity, Vector3.one * PARTICLE_DIAMETER);
             Graphics.DrawMesh(_particleMesh, matrix, _displayMaterial, 0);
           }
           break;
@@ -160,9 +170,9 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
           int index = 0;
 
           matrix = Matrix4x4.identity;
-          matrix[0, 0] = 0.05f;
-          matrix[1, 1] = 0.05f;
-          matrix[2, 2] = 0.05f;
+          matrix[0, 0] = PARTICLE_DIAMETER;
+          matrix[1, 1] = PARTICLE_DIAMETER;
+          matrix[2, 2] = PARTICLE_DIAMETER;
 
           while (remaining > 0) {
             block.SetColor("_Color", _randomColors[index]);
@@ -191,10 +201,16 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
   private void OnGUI() {
     Matrix4x4 ogScale = GUI.matrix;
-    GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 3f);
+    GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 1f);
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
+
+    GUILayout.Label("Collision Tests: " + considerCount / (float)_aliveParticles);
+    GUILayout.Label("Collisions: " + collisionCount / (float)_aliveParticles);
+
+    GUILayout.Label("Max Count: " + _chunkCount.Max());
+
     displayTimingData("Integration:", integrationTimes);
     displayTimingData("Collision:", collisionTimes);
     displayTimingData("Sorting:", sortingTimes);
@@ -274,11 +290,12 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract void OnInitializeSimulation();
   protected abstract void BeforeParticleUpdate();
 
-  protected abstract bool DoParticleInteraction(ref Particle particle,
-                                                ref SpeciesData speciesData,
-                                                ref Particle other,
-                                                ref SpeciesData otherSpeciesData,
-                                                ref Vector3 particleDisplacement);
+  protected abstract void DoParticleSocialInteraction(ref Particle particle,
+                                                      ref SpeciesData speciesData,
+                                                      ref Particle other,
+                                                      ref SpeciesData otherSpeciesData,
+                                                      ref Vector3 totalSocialforce,
+                                                      ref int totalSocialInteractions);
 
   protected abstract void DoParticleGlobalForces(ref Particle particle,
                                                  ref SpeciesData speciesData);
@@ -288,7 +305,9 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
   protected abstract bool ShouldKillParticle(ref Particle particle);
 
-  public abstract void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer);
+  public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
+
+  }
   #endregion
 
   #region PRIVATE IMPLEMENTATION
@@ -362,11 +381,16 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     collisionTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
   }
 
-  public bool use2x2 = true;
   private void resolveCollisions(int index, ref Particle particle, ref SpeciesData speciesData) {
-    resolveParticleCollisions2x2(index, ref particle, ref speciesData);
+    //resolveParticleCollisions2x2(index, ref particle, ref speciesData);
+    resolveParticleCollisionsNaive(index, ref particle, ref speciesData);
 
     Vector3 unclamped = particle.position;
+
+    particle.position.x = Mathf.Clamp(particle.position.x, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
+    particle.position.y = Mathf.Clamp(particle.position.y, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
+    particle.position.z = Mathf.Clamp(particle.position.z, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
+
     DoParticleConstraints(ref particle, ref speciesData);
     particle.position = unclamped + 2 * (particle.position - unclamped);
   }
@@ -451,6 +475,8 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
   }
 
+  int considerCount = 0;
+  int collisionCount = 0;
   private void resolveParticleCollisions(int start,
                                          int end,
                                      ref Particle particle,
@@ -458,14 +484,16 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
                                      ref Vector3 totalDepenetration,
                                      ref int numCollisions) {
     for (int i = start; i < end; ++i) {
+      considerCount++;
       float dx = particle.position.x - _particlesBack[i].position.x;
       float dy = particle.position.y - _particlesBack[i].position.y;
       float dz = particle.position.z - _particlesBack[i].position.z;
       float sqrDist = dx * dx + dy * dy + dz * dz;
 
-      if (sqrDist < 0.05f * 0.05f && sqrDist > 0.000000001f) {
+      if (sqrDist < PARTICLE_DIAMETER * PARTICLE_DIAMETER && sqrDist > 0.000000001f) {
+        collisionCount++;
         float dist = Mathf.Sqrt(sqrDist);
-        float constant = -0.5f * (dist - 0.05f) / dist;
+        float constant = -0.5f * (dist - PARTICLE_DIAMETER) / dist;
 
         totalDepenetration.x += dx * constant;
         totalDepenetration.y += dy * constant;
@@ -479,7 +507,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     int x = (int)(particle.position.x / CHUNK_SIZE + HALF_CHUNK_SIDE);
     int y = (int)(particle.position.y / CHUNK_SIZE + HALF_CHUNK_SIDE);
     int z = (int)(particle.position.z / CHUNK_SIZE + HALF_CHUNK_SIDE);
-    return x + y * CHUNK_SIDE + z * HALF_CHUNK_SIDE;
+    return x + y * CHUNK_SIDE + z * CHUNK_SIDE_SQRD;
   }
 
   private float frac(float value) {

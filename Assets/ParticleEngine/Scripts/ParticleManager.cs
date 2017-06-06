@@ -171,7 +171,6 @@ public class ParticleManager : MonoBehaviour {
 
 	//setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
 
-
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
     args[1] = NUM_PARTICLES;
@@ -562,6 +561,11 @@ public class ParticleManager : MonoBehaviour {
 					_particles[i].velocity -= force * directionFromHome * deltaTime;
 				}
 
+				//--------------------------------------------------------------------------------------
+				// apply forces from collisions with hands (represented as an array of capsules)
+				//--------------------------------------------------------------------------------------
+				updateCollisionsWithHands(i);				
+
 				//-------------------------------------------
 				// dampening (kinda like air friction)
 				//-------------------------------------------
@@ -580,6 +584,15 @@ public class ParticleManager : MonoBehaviour {
 		}
 	}
 
+
+
+
+	//--------------------------------------------------------------------------------------
+	// apply forces from collisions with hands (represented as an array of capsules)
+	//--------------------------------------------------------------------------------------
+ 	private void updateCollisionsWithHands( int p ) 
+	{
+	}
 
 
 

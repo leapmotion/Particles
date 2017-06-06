@@ -92,7 +92,7 @@ public class ParticleManager : MonoBehaviour {
 
 
   void OnEnable() {
-    if (!SystemInfo.supportsComputeShaders) {
+    if (_useComputeShader && !SystemInfo.supportsComputeShaders) {
       Debug.LogError("This system does not support compute shaders");
       return;
     }

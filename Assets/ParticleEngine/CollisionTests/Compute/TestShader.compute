@@ -6,26 +6,13 @@
 #pragma kernel Copy
 #pragma kernel Sort
 
-#define RADIUS 0.0175
-#define SQR_RADIUS (RADIUS * RADIUS)
+#include "Assets/Shaders/ParticleData.cginc"
 
-#define BOX_SIDE 64
-#define BOX_SIZE (1.0 / 28.0)
-#define BOX_COUNT (BOX_SIDE * BOX_SIDE * BOX_SIDE)
+#define COLLISION_CHUNK_SIDE 64
+#define COLLISION_CHUNK_SIZE (1.0 / 28.0)
+#define COLLISION_CHUNK_COUNT (COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE)
 
 uniform float3 _Center;
-
-struct Particle {
-  float3 position;
-  float3 prevPosition;
-  float3 color;
-};
-
-struct Capsule {
-  float3 a;
-  float3 b;
-  float radius;
-};
 
 struct DebugData {
   uint tests;
@@ -42,25 +29,21 @@ RWStructuredBuffer<Particle> _ParticleBack;
 
 RWStructuredBuffer<uint> _Count;
 
-RWStructuredBuffer<uint> _BoxStart;
-RWStructuredBuffer<uint> _BoxEnd;
+RWStructuredBuffer<uint> _ChunkStart;
+RWStructuredBuffer<uint> _ChunkEnd;
 
 RWStructuredBuffer<DebugData> _DebugData;
 
-float noise(float2 n) {
-  return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+uint3 GetChunkPos(float3 position) {
+  return (uint3)(position / COLLISION_CHUNK_SIZE + float3(COLLISION_CHUNK_SIDE, COLLISION_CHUNK_SIDE, COLLISION_CHUNK_SIDE) * 0.5);
 }
 
-uint3 GetBoxPos(float3 position) {
-  return (uint3)(position / BOX_SIZE + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5);
+uint GetChunk(uint3 chunkPos) {
+  return chunkPos.x + chunkPos.y * COLLISION_CHUNK_SIDE + chunkPos.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
 }
 
-uint GetBox(uint3 boxPos) {
-  return boxPos.x + boxPos.y * BOX_SIDE + boxPos.z * BOX_SIDE * BOX_SIDE;
-}
-
-uint GetBox(float3 position) {
-  return GetBox(GetBoxPos(position));
+uint GetChunk(float3 position) {
+  return GetChunk(GetChunkPos(position));
 }
 
 [numthreads(64, 1, 1)]
@@ -78,7 +61,7 @@ void Integrate(uint3 id : SV_DispatchThreadID) {
   {
     float3 tempPos = particle.position;
 
-    particle.position += 0.9999 * (particle.position - particle.prevPosition);
+    particle.position += DAMP_CONSTANT * (particle.position - particle.prevPosition);
     //particle.position += forceToCenter * 0.0002;
     particle.position += forceAroundCenter * 0.00001;
     particle.position.y -= 0.0001;
@@ -87,16 +70,15 @@ void Integrate(uint3 id : SV_DispatchThreadID) {
   }
 
   //Increment the count of the new box we have landed in
-  uint newBox = GetBox(particle.position);
-  InterlockedAdd(_Count[newBox], 1);
+  uint newChunk = GetChunk(particle.position);
+  InterlockedAdd(_Count[newChunk], 1);
 
   _ParticleFront[index] = particle;
 }
 
 [numthreads(4, 4, 4)]
-void Accumulate_X(uint3 id : SV_DispatchThreadID)
-{
-  uint start = id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
+void Accumulate_X(uint3 id : SV_DispatchThreadID) {
+  uint start = id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
   uint index = start + id.x;
 
   uint sum = 0;
@@ -104,42 +86,40 @@ void Accumulate_X(uint3 id : SV_DispatchThreadID)
     sum += _Count[i];
   }
 
-  _BoxStart[index] = sum;
+  _ChunkStart[index] = sum;
 }
 
 [numthreads(4, 4, 4)]
-void Accumulate_Y(uint3 id : SV_DispatchThreadID)
-{
-  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
-  uint start = (BOX_SIDE - 1) + id.z * BOX_SIDE * BOX_SIDE;
+void Accumulate_Y(uint3 id : SV_DispatchThreadID) {
+  uint start = (COLLISION_CHUNK_SIDE - 1) + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
+  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE;
 
-  uint sum = _BoxStart[index];
-  for (uint i = start; i < index; i += BOX_SIDE) {
-    sum += _BoxStart[i];
+  uint sum = _ChunkStart[index];
+  for (uint i = start; i < index; i += COLLISION_CHUNK_SIDE) {
+    sum += _ChunkStart[i];
   }
 
-  _BoxEnd[index] = sum;
+  _ChunkEnd[index] = sum;
 }
 
 [numthreads(4, 4, 4)]
-void Accumulate_Z(uint3 id : SV_DispatchThreadID)
-{
-  uint index = id.x + id.y * BOX_SIDE + id.z * BOX_SIDE * BOX_SIDE;
-  uint start = (BOX_SIDE - 1) + ((BOX_SIDE - 1) * BOX_SIDE);
+void Accumulate_Z(uint3 id : SV_DispatchThreadID) {
+  uint start = (COLLISION_CHUNK_SIDE - 1) + ((COLLISION_CHUNK_SIDE - 1) * COLLISION_CHUNK_SIDE);
+  uint index = id.x + id.y * COLLISION_CHUNK_SIDE + id.z * COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE; 
 
-  uint sum = _BoxEnd[index];
-  for (uint i = start; i < index; i += (BOX_SIDE * BOX_SIDE)) {
-    sum += _BoxEnd[i];
+  uint sum = _ChunkEnd[index];
+  for (uint i = start; i < index; i += (COLLISION_CHUNK_SIDE * COLLISION_CHUNK_SIDE)) {
+    sum += _ChunkEnd[i];
   }
 
-  _BoxStart[index] = sum;
+  _ChunkStart[index] = sum;
 }
 
 [numthreads(64, 1, 1)]
 void Copy(uint3 id : SV_DispatchThreadID) {
   uint index = id.x;
 
-  _BoxEnd[index] = _BoxStart[index];
+  _ChunkEnd[index] = _ChunkStart[index];
   _Count[index] = 0;
 }
 
@@ -149,109 +129,95 @@ void Sort(uint3 id : SV_DispatchThreadID) {
 
   Particle particle = _ParticleFront[index];
 
-  uint box = GetBox(particle.position);
+  uint chunk = GetChunk(particle.position);
 
   uint newIndex;
-  InterlockedAdd(_BoxStart[box], -1, newIndex);
+  InterlockedAdd(_ChunkStart[chunk], -1, newIndex);
   newIndex--;
 
   _ParticleBack[newIndex] = particle;
 }
 
-void runParticleCollision(uint index, Particle particle, Particle other, inout float4 depenetration) {
-  float3 fromOther = (particle.position - other.position);
-  float distSqrd = dot(fromOther, fromOther);
-
-  if (distSqrd < SQR_RADIUS) {
-    float deltalength = sqrt(distSqrd);
-    fromOther *= -0.5 * (deltalength - RADIUS) / deltalength;
-    depenetration += float4(fromOther, 1);
-
-    //fromOther *= SQR_RADIUS / (distSqrd + SQR_RADIUS) - 0.5;
-    //depenetration += float4(fromOther, 1);
-  }
-}
-
 void resolveParticleCollisions3x3(uint index, inout Particle particle) {
-  uint3 boxPos = GetBoxPos(particle.position);
+  uint3 chunkPos = GetChunkPos(particle.position);
 
-  float4 depenetration = float4(0, 0, 0, 0);
+  float4 totalDepenetration = float4(0, 0, 0, 0);
   uint collisions = 0;
   for (int dx = -1; dx <= 1; dx++) {
     for (int dy = -1; dy <= 1; dy++) {
       for (int dz = -1; dz <= 1; dz++) {
-        uint3 deltaBoxPos = boxPos + uint3(dx, dy, dz);
-        uint deltaBox = GetBox(deltaBoxPos);
+        uint3 deltaChunkPos = chunkPos + uint3(dx, dy, dz);
+        uint deltaChunk = GetChunk(deltaChunkPos);
 
-        uint start = _BoxStart[deltaBox];
-        uint end = _BoxEnd[deltaBox];
+        uint start = _ChunkStart[deltaChunk];
+        uint end = _ChunkEnd[deltaChunk];
 
         for (uint i = start; i < end; i++) {
           if (i == index) continue;
 
           Particle other = _ParticleBack[i];
-          runParticleCollision(index, particle, other, depenetration);
+          doParticleOnParticleCollision(particle, other, totalDepenetration);
         }
       }
     }
   }
 
-  if (depenetration.w > 0) {
-    particle.position += depenetration.xyz / depenetration.w;
+  if (totalDepenetration.w > 0) {
+    particle.position += totalDepenetration.xyz / totalDepenetration.w;
   }
 }
 
-void doParticleForeach(uint index, uint start, uint end, Particle particle, inout float4 depenetration) {
+void doParticleForeach(uint index, uint start, uint end, Particle particle, inout float4 totalDepenetration) {
   for (uint i = start; i < end; i += 1) {
     Particle other = _ParticleBack[i];
-    runParticleCollision(index, particle, other, depenetration);
+    doParticleOnParticleCollision(particle, other, totalDepenetration);
   }
 }
 
 void resolveParticleCollisions2x2(uint index, inout Particle particle) {
-  float3 boxFloatPos = particle.position / BOX_SIZE + float3(BOX_SIDE, BOX_SIDE, BOX_SIDE) * 0.5;
-  uint3 boxPos = (uint3)boxFloatPos;
+  float3 chunkFloatPos = particle.position / COLLISION_CHUNK_SIZE + float3(COLLISION_CHUNK_SIDE, COLLISION_CHUNK_SIDE, COLLISION_CHUNK_SIDE) * 0.5;
+  uint3 chunkPos = (uint3)chunkFloatPos;
 
   int3 offset;
   offset.x = 0;
-  offset.y = frac(boxFloatPos.y) > 0.5 ? 1 : -1;
-  offset.z = frac(boxFloatPos.z) > 0.5 ? 1 : -1;
+  offset.y = frac(chunkFloatPos.y) > 0.5 ? 1 : -1;
+  offset.z = frac(chunkFloatPos.z) > 0.5 ? 1 : -1;
 
-  boxPos.x += (frac(boxFloatPos.x) < 0.5) ? -1 : 0;
+  chunkPos.x += (frac(chunkFloatPos.x) < 0.5) ? -1 : 0;
 
-  float4 depenetration = float4(0, 0, 0, 0);
+  float4 totalDepenetration = float4(0, 0, 0, 0);
 
-  int boxA = GetBox(boxPos + int3(0, offset.y, 0));
-  int boxA_Start = _BoxStart[boxA];
-  int boxA_End = _BoxEnd[boxA + 1];
+  int chunkA = GetChunk(chunkPos + int3(0, offset.y, 0));
+  int chunkA_Start = _ChunkStart[chunkA];
+  int chunkA_End = _ChunkEnd[chunkA + 1];
 
-  doParticleForeach(index, boxA_Start, boxA_End, particle, depenetration);
+  doParticleForeach(index, chunkA_Start, chunkA_End, particle, totalDepenetration);
 
-  int boxB = GetBox(boxPos + int3(0, 0, offset.z));
-  int boxB_Start = _BoxStart[boxB];
-  int boxB_End = _BoxEnd[boxB + 1];
+  int chunkB = GetChunk(chunkPos + int3(0, 0, offset.z));
+  int chunkB_Start = _ChunkStart[chunkB];
+  int chunkB_End = _ChunkEnd[chunkB + 1];
 
-  doParticleForeach(index, boxB_Start, boxB_End, particle, depenetration);
+  doParticleForeach(index, chunkB_Start, chunkB_End, particle, totalDepenetration);
 
-  int boxC = GetBox(boxPos + int3(0, offset.y, offset.z));
-  int boxC_Start = _BoxStart[boxC];
-  int boxC_End = _BoxEnd[boxC + 1];
+  int chunkC = GetChunk(chunkPos + int3(0, offset.y, offset.z));
+  int chunkC_Start = _ChunkStart[chunkC];
+  int chunkC_End = _ChunkEnd[chunkC + 1];
 
-  doParticleForeach(index, boxC_Start, boxC_End, particle, depenetration);
+  doParticleForeach(index, chunkC_Start, chunkC_End, particle, totalDepenetration);
 
-  int boxD = GetBox(boxPos + int3(0, 0, 0));
-  uint boxD_Start = _BoxStart[boxD];
-  uint boxD_End = index;
+  int chunkD = GetChunk(chunkPos + int3(0, 0, 0));
+  uint chunkD_Start = _ChunkStart[chunkD];
+  uint chunkD_End = index;
 
-  doParticleForeach(index, boxD_Start, boxD_End, particle, depenetration);
+  doParticleForeach(index, chunkD_Start, chunkD_End, particle, totalDepenetration);
 
-  uint boxE_Start = index + 1;
-  uint boxE_End = _BoxEnd[boxD + 1];
+  uint chunkE_Start = index + 1;
+  uint chunkE_End = _ChunkEnd[chunkD + 1];
 
-  doParticleForeach(index, boxE_Start, boxE_End, particle, depenetration);
+  doParticleForeach(index, chunkE_Start, chunkE_End, particle, totalDepenetration);
 
-  if (depenetration.w > 0) {
-    particle.position += depenetration.xyz / depenetration.w;
+  if (totalDepenetration.w > 0) {
+    particle.position += totalDepenetration.xyz / totalDepenetration.w;
   }
 }
 
@@ -259,7 +225,7 @@ void resolveParticleCollisions2x2(uint index, inout Particle particle) {
 void ResolveCollisions(uint3 id : SV_DispatchThreadID) {
   uint index = id.x;
 
-  //Grab the particle from the front buffer
+  //Grab the particle from the back buffer
   Particle particle = _ParticleBack[index];
 
   float3 originalVel = particle.position - particle.prevPosition;

@@ -4,20 +4,28 @@ using UnityEngine;
 using Leap.Unity;
 
 public class ParallelForeach {
-  private Action<int, int> _action;
+  private Action<int, int, int> _action;
 
   private Worker[] _workers;
   private int _workersLeft;
   private object _finishedMonitor = new object();
 
+  public Action OnComplete;
+
   public ParallelForeach(Action<int, int> action) : this(action, SystemInfo.processorCount) { }
 
-  public ParallelForeach(Action<int, int> action, int threads) {
+  public ParallelForeach(Action<int, int> action, int threads) : this((a, b, c) => action(b, c), threads) { }
+
+  public ParallelForeach(Action<int, int, int> action) : this(action, SystemInfo.processorCount) { }
+
+  public ParallelForeach(Action<int, int, int> action, int threads) {
     _action = action;
 
     _workers = new Worker[threads];
     for (int i = 0; i < _workers.Length; i++) {
-      _workers[i] = new Worker(this);
+      _workers[i] = new Worker(this) {
+        workerIndex = i
+      };
     }
   }
 
@@ -59,6 +67,7 @@ public class ParallelForeach {
 
   private class Worker {
     public Thread thread;
+    public int workerIndex;
     public int start;
     public int end;
     public object monitor = new object();
@@ -69,6 +78,7 @@ public class ParallelForeach {
       _parent = parent;
 
       thread = new Thread(Run);
+      thread.Priority = System.Threading.ThreadPriority.Highest;
       thread.IsBackground = true;
       thread.Start();
     }
@@ -78,11 +88,18 @@ public class ParallelForeach {
       while (true) {
         Monitor.Wait(monitor);
 
-        _parent._action(start, end);
+        try {
+          _parent._action(workerIndex, start, end);
+        } catch (Exception e) {
+          Debug.LogException(e);
+        }
 
         Monitor.Enter(_parent._finishedMonitor);
         int newValue = Interlocked.Decrement(ref _parent._workersLeft);
         if (newValue == 0) {
+          if (_parent.OnComplete != null) {
+            _parent.OnComplete();
+          }
           Monitor.Pulse(_parent._finishedMonitor);
         }
         Monitor.Exit(_parent._finishedMonitor);

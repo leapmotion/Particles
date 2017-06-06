@@ -15,10 +15,13 @@ public abstract partial class ParticleEngine {
         return position - prevPosition;
       }
       set {
-
+        position = prevPosition + velocity;
       }
     }
 
+    public void AddForce(Vector3 force) {
+      position += force;
+    }
   }
 
   public struct SpeciesData { }
@@ -57,7 +60,7 @@ public partial class ParticleEngineImplementation : ParticleEngine {
   /// 
   /// </summary>
   protected override void DoParticleConstraints(ref Particle particle, ref SpeciesData speciesData) {
-    
+
   }
 
   /// <summary>

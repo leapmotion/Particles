@@ -248,7 +248,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
 
   private void OnGUI() {
     Matrix4x4 ogScale = GUI.matrix;
-    //GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 5);
+    GUI.matrix = ogScale * Matrix4x4.Scale(Vector3.one * 3f);
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
@@ -264,6 +264,8 @@ public abstract class ParticleEngineBase : MonoBehaviour {
   private void displayTimingData(string label, long[] data) {
     GUILayout.Label(label);
     long totalTicks = 0;
+
+    string threadLabel = "";
     for (int i = 0; i < data.Length; i++) {
       long ticks = data[i];
       totalTicks += ticks;
@@ -271,12 +273,15 @@ public abstract class ParticleEngineBase : MonoBehaviour {
       if (ticks != 0) {
         float ms = ticks * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
         ms = Mathf.Round(ms * 10) / 10.0f;
-        //GUILayout.Label("  Thread " + i + ": " + ms + "ms");
+
+        //threadLabel = threadLabel + "".PadLeft(Mathf.RoundToInt(ms), "0123456789ABCDEFGH"[i]);
+        GUILayout.Label("  Thread " + "0123456789ABCDEFGH"[i] + ": " + "".PadLeft(Mathf.RoundToInt(ms), '#'));
       }
     }
 
     float totalMs = totalTicks * 1000.0f / System.Diagnostics.Stopwatch.Frequency;
     totalMs = Mathf.Round(totalMs * 10) / 10.0f;
+    //GUILayout.Label("  Threads: " + threadLabel);
     GUILayout.Label("  Total: " + totalMs + "ms");
   }
 
@@ -488,7 +493,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
       resolveParticleCollisions(start, end, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
     }
   }
-  
+
   private void resolveParticleCollisions(int start,
                                          int end,
                                      ref Particle particle,

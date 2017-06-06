@@ -22,6 +22,16 @@ public class ParticleControl : MonoBehaviour {
 	
 	private const int NUM_EMITTERS = NUM_FINGERS_PER_HAND * NUM_HANDS;
 
+	public const int ECOSYSTEM_NULL		= -1;
+	public const int ECOSYSTEM_CHASE 	=  0;
+	public const int ECOSYSTEM_FLURRY	=  1;
+	public const int ECOSYSTEM_WTF		=  2;
+	public const int NUM_ECOSYSTEMS		=  3;
+
+	private int BUTTON_MARGIN 		= 10;
+	private int CLEAR_BUTTON_WIDTH  = 120;
+	private int CLEAR_BUTTON_HEIGHT = 20;
+
   	private struct ParticleEmitter 
 	{
 		public  bool	active;
@@ -30,11 +40,6 @@ public class ParticleControl : MonoBehaviour {
 		public	float   strength;
 		public  float 	rate;
 		public	int		species;
-  	}
-
-  	private struct Head 
-	{
-		public GameObject gameObject;
   	}
 
  	private struct Finger 
@@ -52,16 +57,46 @@ public class ParticleControl : MonoBehaviour {
 		public bool isRightHand;
   	}
 
-	public  Camera	_camera;
-	private Head 	_myHead;
-	private Hand 	_myLeftHand;
-	private Hand 	_myRightHand;
+	public  Camera		_camera;
+	private GameObject 	_myHead;
+	private Hand 		_myLeftHand;
+	private Hand 		_myRightHand;
 	private ParticleEmitter[] _emitters;
+
+	private bool 	_clearRequested = false;
+	private Rect 	_clearButtonRect;
+	private string 	_clearButtonString;
+	private bool	_displayBody = true;
+
+	//---------------------------------------
+	// public tweakers
+	//---------------------------------------
+	public int  _ecosystem 			= ECOSYSTEM_CHASE;
+	public bool _showHeadAndHands 	= true;
+	public bool _leftThumbActive 	= false;
+	public bool _leftIndexActive 	= false;
+	public bool _leftPinkyActive 	= false;
+	public bool _rightThumbActive 	= false;
+	public bool _rightIndexActive 	= false;
+	public bool _rightPinkyActive	= false;
 
 	//---------------------------------------
 	void Start() 
 	{
-		_myHead.gameObject	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
+		//------------------------------------
+		// create the clear button
+		//------------------------------------
+		_clearButtonRect = new 
+		Rect
+		( 
+			Screen.width  - CLEAR_BUTTON_WIDTH  - BUTTON_MARGIN, 
+			Screen.height - CLEAR_BUTTON_HEIGHT - BUTTON_MARGIN, 
+			CLEAR_BUTTON_WIDTH, 
+			CLEAR_BUTTON_HEIGHT 
+		);
+	
+
+		_myHead				= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myLeftHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myRightHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 
@@ -122,6 +157,17 @@ public class ParticleControl : MonoBehaviour {
 
 
 	//-------------------------------------------
+	// GUI...
+	//-------------------------------------------
+    void OnGUI() 
+	{
+		if ( GUI.Button( _clearButtonRect, "clear all particles" ) )
+		{
+            clearAllParticles();
+        }
+    }
+
+	//-------------------------------------------
 	// initialize emitters...
 	//-------------------------------------------
 	private void initializeEmitters() 
@@ -129,19 +175,36 @@ public class ParticleControl : MonoBehaviour {
 		for (int e=0; e<NUM_EMITTERS; e++)
 		{
 			_emitters[e].strength 	= 0.05f;
-			_emitters[e].rate 		= 0.12f;
+			_emitters[e].rate 		= 0.0f;
 			_emitters[e].active		= false;
 			_emitters[e].position 	= Vector3.zero;
 			_emitters[e].direction 	= Vector3.one;
-			_emitters[e].species 	= e+1;
+			_emitters[e].species 	= e;
 		}
 	}
+
+
+	//-------------------------------------------
+	// clearAllParticles...
+	//-------------------------------------------
+	private void clearAllParticles()
+	{
+		_clearRequested = true;
+	}
+
 
 
 
 	//--------------
 	void Update () 
-	{
+	{ 
+		//---------------------------------------------------------
+		// manage display of head and hands...
+		//---------------------------------------------------------
+		if ( _showHeadAndHands ) 	
+				{ if ( ! _displayBody ) { setBodyDisplay( true  ); } } 
+		else 	{ if (   _displayBody ) { setBodyDisplay( false ); } }
+		
 		//---------------------------------------------------------
 		// set the positions of the hands...
 		//---------------------------------------------------------
@@ -207,15 +270,14 @@ public class ParticleControl : MonoBehaviour {
 		}
 
 		//---------------------------------------------------------
-		// turn emitters on and off...
+		// get emission values from the editor...
 		//---------------------------------------------------------
-		float chance = 0.95f;
-
-		for (int e=0; e<NUM_EMITTERS; e++)
-		{
-			if ( Random.value > chance ) { _emitters[e].active = true;  }
-			if ( Random.value > chance ) { _emitters[e].active = false; }
-		}
+		_emitters[0].active = _leftThumbActive;
+		_emitters[1].active = _leftIndexActive;
+		_emitters[2].active = _leftPinkyActive;
+		_emitters[3].active = _rightThumbActive;
+		_emitters[4].active = _rightIndexActive;
+		_emitters[5].active	= _rightPinkyActive;
 	}
 
 	//------------------------------------------------------------------------------------
@@ -232,6 +294,41 @@ public class ParticleControl : MonoBehaviour {
 	public Vector3	getEmitterDirection	( int e ) { return _emitters[e].direction;	}
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
+
+
+
+
+	//---------------------------------------------
+	// turn on or off the display of the body...
+	//---------------------------------------------
+	private void setBodyDisplay( bool display )
+	{
+		_displayBody = display;
+
+		_myHead.GetComponentInChildren<MeshRenderer>().enabled  = display;
+
+		_myLeftHand.palm.GetComponentInChildren<MeshRenderer>().enabled  = display;
+		_myRightHand.palm.GetComponentInChildren<MeshRenderer>().enabled = display;
+
+		for (int f=0; f<NUM_FINGERS_PER_HAND; f++) 
+		{
+			_myLeftHand.fingers [f].gameObject.GetComponentInChildren<MeshRenderer>().enabled = display;
+			_myRightHand.fingers[f].gameObject.GetComponentInChildren<MeshRenderer>().enabled = display;
+		}		
+	}
+
+	//------------------------------
+	// clear requested...
+	//------------------------------
+	public bool getClearRequest() 
+	{ 
+		if ( _clearRequested )
+		{
+			_clearRequested = false;
+			return true;
+		}
+		return false;
+	}
 
 	public int getNumEmitters() { return NUM_EMITTERS; }
 }

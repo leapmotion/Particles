@@ -42,11 +42,6 @@ public class ParticleControl : MonoBehaviour {
 		public	int		species;
   	}
 
-  	private struct Head 
-	{
-		public GameObject gameObject;
-  	}
-
  	private struct Finger 
 	{
 		public GameObject gameObject;
@@ -62,21 +57,22 @@ public class ParticleControl : MonoBehaviour {
 		public bool isRightHand;
   	}
 
-	public  Camera	_camera;
-	private Head 	_myHead;
-	private Hand 	_myLeftHand;
-	private Hand 	_myRightHand;
+	public  Camera		_camera;
+	private GameObject 	_myHead;
+	private Hand 		_myLeftHand;
+	private Hand 		_myRightHand;
 	private ParticleEmitter[] _emitters;
 
 	private bool 	_clearRequested = false;
 	private Rect 	_clearButtonRect;
 	private string 	_clearButtonString;
+	private bool	_displayBody = true;
 
 	//---------------------------------------
 	// public tweakers
 	//---------------------------------------
 	public int  _ecosystem 			= ECOSYSTEM_CHASE;
-	public bool _clear 				= false;
+	public bool _showHeadAndHands 	= true;
 	public bool _leftThumbActive 	= false;
 	public bool _leftIndexActive 	= false;
 	public bool _leftPinkyActive 	= false;
@@ -100,7 +96,7 @@ public class ParticleControl : MonoBehaviour {
 		);
 	
 
-		_myHead.gameObject	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
+		_myHead				= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myLeftHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 		_myRightHand.palm 	= GameObject.CreatePrimitive( PrimitiveType.Sphere );
 
@@ -196,9 +192,19 @@ public class ParticleControl : MonoBehaviour {
 		_clearRequested = true;
 	}
 
+
+
+
 	//--------------
 	void Update () 
-	{
+	{ 
+		//---------------------------------------------------------
+		// manage display of head and hands...
+		//---------------------------------------------------------
+		if ( _showHeadAndHands ) 	
+				{ if ( ! _displayBody ) { setBodyDisplay( true  ); } } 
+		else 	{ if (   _displayBody ) { setBodyDisplay( false ); } }
+		
 		//---------------------------------------------------------
 		// set the positions of the hands...
 		//---------------------------------------------------------
@@ -263,19 +269,6 @@ public class ParticleControl : MonoBehaviour {
 	    	_emitters[ right ].direction = _myRightHand.fingers[f].gameObject.transform.up;
 		}
 
-		/*
-		//---------------------------------------------------------
-		// turn emitters on and off...
-		//---------------------------------------------------------
-		float chance = 0.95f;
-
-		for (int e=0; e<NUM_EMITTERS; e++)
-		{
-			if ( Random.value > chance ) { _emitters[e].active = true;  }
-			if ( Random.value > chance ) { _emitters[e].active = false; }
-		}
-		*/
-
 		//---------------------------------------------------------
 		// get emission values from the editor...
 		//---------------------------------------------------------
@@ -302,6 +295,27 @@ public class ParticleControl : MonoBehaviour {
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
 
+
+
+
+	//---------------------------------------------
+	// turn on or off the display of the body...
+	//---------------------------------------------
+	private void setBodyDisplay( bool display )
+	{
+		_displayBody = display;
+
+		_myHead.GetComponentInChildren<MeshRenderer>().enabled  = display;
+
+		_myLeftHand.palm.GetComponentInChildren<MeshRenderer>().enabled  = display;
+		_myRightHand.palm.GetComponentInChildren<MeshRenderer>().enabled = display;
+
+		for (int f=0; f<NUM_FINGERS_PER_HAND; f++) 
+		{
+			_myLeftHand.fingers [f].gameObject.GetComponentInChildren<MeshRenderer>().enabled = display;
+			_myRightHand.fingers[f].gameObject.GetComponentInChildren<MeshRenderer>().enabled = display;
+		}		
+	}
 
 	//------------------------------
 	// clear requested...

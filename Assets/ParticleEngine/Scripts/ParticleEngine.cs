@@ -265,7 +265,7 @@ public abstract class ParticleEngineBase : MonoBehaviour {
     GUILayout.Label(label);
     long totalTicks = 0;
 
-    string threadLabel = "";
+    //string threadLabel = "";
     for (int i = 0; i < data.Length; i++) {
       long ticks = data[i];
       totalTicks += ticks;

@@ -290,6 +290,11 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract void OnInitializeSimulation();
   protected abstract void BeforeParticleUpdate();
 
+  protected abstract void DoParticleCollisionInteraction(ref Particle particle,
+                                                         ref SpeciesData speciesData,
+                                                         ref Particle other,
+                                                         ref SpeciesData otherSpeciesData);
+
   protected abstract void DoParticleSocialInteraction(ref Particle particle,
                                                       ref SpeciesData speciesData,
                                                       ref Particle other,

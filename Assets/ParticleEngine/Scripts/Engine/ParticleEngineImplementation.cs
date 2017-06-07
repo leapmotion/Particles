@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using Leap.Unity.RuntimeGizmos;
 
 public abstract partial class ParticleEngine {
   private const float PARTICLE_RADIUS = 0.025f;
@@ -56,6 +55,29 @@ public partial class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
+  protected override void DoParticleCollisionInteraction(ref Particle particle, 
+                                                         ref SpeciesData speciesData, 
+                                                         ref Particle other, 
+                                                         ref SpeciesData otherSpeciesData) {
+
+  }
+
+  /// <summary>
+  /// Use this method to define how one particle would interact with another.  You should
+  /// not modify either this particle or the other particle.  If you want to create a social
+  /// force, add it to totalSocialForce and increment totalSocialInteractions.  At the end
+  /// of the particle step all social forces will be averaged.
+  /// </summary>
+  protected override void DoParticleSocialInteraction(ref Particle particle,
+                                                      ref SpeciesData speciesData,
+                                                      ref Particle other,
+                                                      ref SpeciesData otherSpeciesData,
+                                                      ref Vector3 totalSocialforce,
+                                                      ref int totalSocialInteractions) {
+
+  }
+
+
   /// <summary>
   /// Use this method to apply global particle constraints.
   /// </summary>
@@ -70,20 +92,7 @@ public partial class ParticleEngineImplementation : ParticleEngine {
     particle.AddForce(Vector3.down * 0.001f);
   }
 
-  /// <summary>
-  /// Use this method to define how one particle would interact with another.  You should
-  /// not modify either this particle or the other particle.  If you want to create a social
-  /// force, add it to totalSocialForce and increment totalSocialInteractions.  At the end
-  /// of the particle step all social forces will be averaged.
-  /// </summary>
-  protected override void DoParticleSocialInteraction(ref Particle particle, 
-                                                      ref SpeciesData speciesData, 
-                                                      ref Particle other, 
-                                                      ref SpeciesData otherSpeciesData, 
-                                                      ref Vector3 totalSocialforce,
-                                                      ref int totalSocialInteractions) {
 
-  }
 
   /// <summary>
   /// Called every frame for every particle to determine if it should be killed.  If you

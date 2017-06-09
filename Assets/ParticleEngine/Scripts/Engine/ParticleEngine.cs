@@ -13,8 +13,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private const int NUM_CHUNKS = CHUNK_SIDE * CHUNK_SIDE * CHUNK_SIDE;
   private const float CHUNK_SIZE = PARTICLE_DIAMETER;// PARTICLE_RADIUS * 4;
 
-  private const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
-
   [Header("Simulation")]
   [MinValue(0)]
   [EditTimeOnly]
@@ -29,6 +27,9 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private DisplayMethod _renderMethod = DisplayMethod.DrawMesh;
 
   [SerializeField]
+  private bool _showInstanceChunks = false;
+
+  [SerializeField]
   private Mesh _particleMesh;
 
   [SerializeField]
@@ -40,21 +41,25 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private int _aliveParticles = 0;
   private Queue<Particle> _toEmit = new Queue<Particle>();
 
-  private SpeciesData[] _speciesData;
-  private SocialData[] _socialData;
+  protected SpeciesData[] _speciesData;
+  protected SocialData[,] _socialData;
+
+  protected float _deltaTime;
 
   //Threading
   private ParallelForeach _integrationForeach;
-  private ParallelForeach _sortingForeach;
   private ParallelForeach _resolveCollisionsForeach;
 
   //Collision acceleration structures
+  /*
   private int[] _chunkCount;
   private int[] _chunkStart;
   private int[] _chunkEnd;
+  */
 
   //Rendering
-  private Matrix4x4[] _instanceMatrices;
+  private Matrix4x4[] _instanceMatrices = new Matrix4x4[1023];
+  private Vector4[] _instanceColors = new Vector4[1023];
   private Color[] _randomColors;
 
   //Timing
@@ -86,17 +91,10 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
     int cores = SystemInfo.processorCount;
     _integrationForeach = new ParallelForeach(integrateParticles, cores);
-    _sortingForeach = new ParallelForeach(sortParticlesIntoChunks, cores);
     _resolveCollisionsForeach = new ParallelForeach(resolveCollisions, cores);
 
     _integrationForeach.OnComplete += () => {
-      emitParticles();
-      accumulateCollisionChunksNaive();
-      _sortingForeach.Dispatch(_aliveParticles);
-    };
-
-    _sortingForeach.OnComplete += () => {
-      System.Array.Copy(_particlesBack, _particlesFront, _particlesFront.Length);
+      System.Array.Copy(_particlesFront, _particlesBack, _aliveParticles);
       _resolveCollisionsForeach.Dispatch(_aliveParticles);
     };
 
@@ -104,17 +102,18 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   protected virtual void Update() {
+    _deltaTime = 1f / 5f;
     RuntimeGizmoManager.TryGetGizmoDrawer(out drawer);
 
     BeforeParticleUpdate();
 
-    considerCount = 0;
-    collisionCount = 0;
-    System.Array.Clear(integrationTimes, 0, integrationTimes.Length);
-    System.Array.Clear(collisionTimes, 0, collisionTimes.Length);
-    System.Array.Clear(sortingTimes, 0, sortingTimes.Length);
+    using (new ProfilerSample("Destroy Particles")) {
+      destroyParticles();
+    }
 
-    System.Array.Clear(_chunkCount, 0, _chunkCount.Length);
+    using (new ProfilerSample("Emit Particles")) {
+      emitParticles();
+    }
 
     if (_useMultithreading) {
       using (new ProfilerSample("Dispatch Simulation Jobs")) {
@@ -125,19 +124,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         integrateParticles(0, 0, _aliveParticles);
       }
 
-      using (new ProfilerSample("Emit Particles")) {
-        emitParticles();
-      }
-
-      using (new ProfilerSample("Accumulate Collision Chunks")) {
-        accumulateCollisionChunksNaive();
-      }
-
-      using (new ProfilerSample("Sort Particles Into Chunks")) {
-        sortParticlesIntoChunks(0, 0, _aliveParticles);
-      }
-
-      System.Array.Copy(_particlesBack, _particlesFront, _particlesFront.Length);
+      System.Array.Copy(_particlesFront, _particlesBack, _aliveParticles);
 
       using (new ProfilerSample("Resolve Collisions")) {
         resolveCollisions(0, 0, _aliveParticles);
@@ -149,7 +136,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     if (_useMultithreading) {
       using (new ProfilerSample("Wait For Simulation Jobs")) {
         _integrationForeach.Wait();
-        _sortingForeach.Wait();
         _resolveCollisionsForeach.Wait();
       }
     }
@@ -168,6 +154,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         case DisplayMethod.DrawMeshInstanced:
           int remaining = _aliveParticles;
           int index = 0;
+          int colorIndex = 0;
 
           matrix = Matrix4x4.identity;
           matrix[0, 0] = PARTICLE_DIAMETER;
@@ -175,8 +162,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
           matrix[2, 2] = PARTICLE_DIAMETER;
 
           while (remaining > 0) {
-            block.SetColor("_Color", _randomColors[index]);
-
             int toDraw = Mathf.Min(1023, remaining);
             using (new ProfilerSample("Copy Particle Positions")) {
               for (int i = 0; i < toDraw; i++) {
@@ -184,14 +169,20 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
                 matrix[1, 3] = _particlesFront[index].position.y;
                 matrix[2, 3] = _particlesFront[index].position.z;
                 _instanceMatrices[i] = matrix;
+                _instanceColors[i] = _speciesData[_particlesFront[index].species].color;
                 index++;
               }
               remaining -= toDraw;
             }
 
+            if (_showInstanceChunks) {
+              block.SetColor("_Color", _randomColors[colorIndex++]);
+            } else {
+              block.SetVectorArray("_Color", _instanceColors);
+            }
+
             using (new ProfilerSample("Draw Mesh Instanced")) {
               Graphics.DrawMeshInstanced(_particleMesh, 0, _displayMaterial, _instanceMatrices, toDraw, block);
-              //Graphics.DrawMeshInstanced(_particleMesh, 0, _displayMaterial, _instanceMatrices, toDraw);
             }
           }
           break;
@@ -205,11 +196,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
-
-    GUILayout.Label("Collision Tests: " + considerCount / (float)_aliveParticles);
-    GUILayout.Label("Collisions: " + collisionCount / (float)_aliveParticles);
-
-    GUILayout.Label("Max Count: " + _chunkCount.Max());
 
     displayTimingData("Integration:", integrationTimes);
     displayTimingData("Collision:", collisionTimes);
@@ -261,14 +247,16 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   public void ResetSimulation() {
-    _instanceMatrices = new Matrix4x4[_maxParticles];
     _particlesBack = new Particle[_maxParticles];
     _particlesFront = new Particle[_maxParticles];
-    _speciesData = new SpeciesData[1];
+    _speciesData = new SpeciesData[MAX_SPECIES];
+    _socialData = new SocialData[MAX_SPECIES, MAX_SPECIES];
 
+    /*
     _chunkCount = new int[NUM_CHUNKS];
     _chunkStart = new int[NUM_CHUNKS];
     _chunkEnd = new int[NUM_CHUNKS];
+    */
 
     _randomColors = new Color[NUM_CHUNKS];
     for (int i = 0; i < NUM_CHUNKS; i++) {
@@ -297,6 +285,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
   protected abstract void DoParticleSocialInteraction(ref Particle particle,
                                                       ref SpeciesData speciesData,
+                                                      ref SocialData socialData,
                                                       ref Particle other,
                                                       ref SpeciesData otherSpeciesData,
                                                       ref Vector3 totalSocialforce,
@@ -316,16 +305,21 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   #endregion
 
   #region PRIVATE IMPLEMENTATION
+
+  private void destroyParticles() {
+    for (int i = _aliveParticles; i-- != 0;) {
+      if (ShouldKillParticle(ref _particlesFront[i])) {
+        _aliveParticles--;
+        _particlesFront[i] = _particlesFront[_aliveParticles];
+      }
+    }
+  }
+
   private void emitParticles() {
     while (_toEmit.Count > 0) {
       Particle toEmit = _toEmit.Dequeue();
 
-      //Make sure to increment the count of the chunk that we are emitting into
-      int emitChunk = getChunk(ref toEmit);
-      _chunkCount[emitChunk]++;
-
-      //Plop the particle onto the end of the front array, will be sorted into
-      //the right chunk by the next accumulate/sort cycle
+      //Plop the particle onto the end of the front array.
       _particlesFront[_aliveParticles++] = toEmit;
     }
   }
@@ -339,26 +333,68 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   private void integrateParticle(int index, ref Particle particle, ref SpeciesData speciesData) {
-    Vector3 originalPos = particle.position;
-
-    particle.position.x += 0.99f * (particle.position.x - particle.prevPosition.x);
-    particle.position.y += 0.99f * (particle.position.y - particle.prevPosition.y);
-    particle.position.z += 0.99f * (particle.position.z - particle.prevPosition.z);
+    particle.position.x += particle.velocity.x;
+    particle.position.y += particle.velocity.y;
+    particle.position.z += particle.velocity.z;
 
     DoParticleGlobalForces(ref particle, ref speciesData);
 
-    //TODO: particle-particle forces
-
-    particle.prevPosition = originalPos;
-
-    int newChunk = getChunk(ref particle);
-    if (newChunk < 0 || newChunk >= _chunkCount.Length) {
-      Debug.Log(newChunk);
-      Debug.Log(particle.position);
-    }
-    Interlocked.Add(ref _chunkCount[newChunk], 1);
+    doSocialForcesNaive(index, ref particle, ref speciesData);
   }
 
+  private void doSocialForcesNaive(int index, ref Particle particle, ref SpeciesData speciesData) {
+    Vector3 totalSocialForce = Vector3.zero;
+    int numSocialInteractions = 0;
+
+    for (int i = 0; i < index; i++) {
+      DoParticleSocialInteraction(ref particle,
+                                  ref speciesData,
+                                  ref _socialData[particle.species, _particlesBack[i].species],
+                                  ref _particlesBack[i],
+                                  ref _speciesData[_particlesBack[i].species],
+                                  ref totalSocialForce,
+                                  ref numSocialInteractions);
+    }
+    for (int i = index + 1; i < _aliveParticles; i++) {
+      DoParticleSocialInteraction(ref particle,
+                                  ref speciesData,
+                                  ref _socialData[particle.species, _particlesBack[i].species],
+                                  ref _particlesBack[i],
+                                  ref _speciesData[_particlesBack[i].species],
+                                  ref totalSocialForce,
+                                  ref numSocialInteractions);
+    }
+
+    if (numSocialInteractions > 0) {
+      particle.velocity += totalSocialForce / numSocialInteractions;
+    }
+  }
+
+  private void resolveCollisions(int workerIndex, int startIndex, int endIndex) {
+    long startTick = _stopwatch.ElapsedTicks;
+    for (int i = startIndex; i < endIndex; ++i) {
+      resolveCollisions(i, ref _particlesFront[i], ref _speciesData[_particlesFront[i].species]);
+    }
+    collisionTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
+  }
+
+  private void resolveCollisions(int index, ref Particle particle, ref SpeciesData speciesData) {
+    resolveParticleCollisionsNaive(index, ref particle, ref speciesData);
+
+    DoParticleConstraints(ref particle, ref speciesData);
+  }
+
+  private void resolveParticleCollisionsNaive(int index, ref Particle particle, ref SpeciesData speciesData) {
+    for (int i = 0; i < index; i++) {
+      DoParticleCollisionInteraction(ref particle, ref speciesData, ref _particlesBack[i], ref _speciesData[_particlesBack[i].species]);
+    }
+    for (int i = index + 1; i < _aliveParticles; i++) {
+      DoParticleCollisionInteraction(ref particle, ref speciesData, ref _particlesBack[i], ref _speciesData[_particlesBack[i].species]);
+    }
+  }
+
+  /*
+ 
   private void accumulateCollisionChunksNaive() {
     int sum = 0;
     for (int i = 0; i < NUM_CHUNKS; ++i) {
@@ -377,40 +413,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
     sortingTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
   }
-
-  private void resolveCollisions(int workerIndex, int startIndex, int endIndex) {
-    long startTick = _stopwatch.ElapsedTicks;
-    for (int i = startIndex; i < endIndex; ++i) {
-      resolveCollisions(i, ref _particlesFront[i], ref _speciesData[_particlesFront[i].species]);
-    }
-    collisionTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
-  }
-
-  private void resolveCollisions(int index, ref Particle particle, ref SpeciesData speciesData) {
-    //resolveParticleCollisions2x2(index, ref particle, ref speciesData);
-    resolveParticleCollisionsNaive(index, ref particle, ref speciesData);
-
-    Vector3 unclamped = particle.position;
-
-    particle.position.x = Mathf.Clamp(particle.position.x, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
-    particle.position.y = Mathf.Clamp(particle.position.y, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
-    particle.position.z = Mathf.Clamp(particle.position.z, -(HALF_CHUNK_SIDE - 2) * CHUNK_SIZE, (HALF_CHUNK_SIDE - 2) * CHUNK_SIZE);
-
-    DoParticleConstraints(ref particle, ref speciesData);
-    particle.position = unclamped + 2 * (particle.position - unclamped);
-  }
-
-  private void resolveParticleCollisionsNaive(int index, ref Particle particle, ref SpeciesData speciesData) {
-    Vector3 totalDepenetration = Vector3.zero;
-    int numCollisions = 0;
-
-    resolveParticleCollisions(0, aliveParticles, index, ref particle, ref speciesData, ref totalDepenetration, ref numCollisions);
-
-    if (numCollisions > 0) {
-      particle.position += totalDepenetration / numCollisions;
-    }
-  }
-
+  
   private void resolveParticleCollisions2x2(int index, ref Particle particle, ref SpeciesData speciesData) {
     int numCollisions = 0;
     Vector3 totalDepenetration = Vector3.zero;
@@ -514,9 +517,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     int z = (int)(particle.position.z / CHUNK_SIZE + HALF_CHUNK_SIDE);
     return x + y * CHUNK_SIDE + z * CHUNK_SIDE_SQRD;
   }
-
-  private float frac(float value) {
-    return value - (int)value;
-  }
+  */
   #endregion
 }

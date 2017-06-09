@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
 
+
 public class ParticleManager : MonoBehaviour {
 
 	private const string SIMULATION_KERNEL_NAME = "Simulate_Basic";
@@ -13,7 +14,7 @@ public class ParticleManager : MonoBehaviour {
 	// particle physics constants
 	//---------------------------------------------
 	private	const int	NULL_PARTICLE		= -1;
-  	private const int 	NUM_PARTICLES 		= 64 * 8;
+  	private const int 	NUM_PARTICLES 		= 64 * 4;
 	private const int   MIN_FORCE_STEPS 	= 1;
 	private const int   MAX_FORCE_STEPS 	= 7;
 	private const int   MIN_SPECIES 		= 1;
@@ -87,7 +88,6 @@ public class ParticleManager : MonoBehaviour {
 	private int 				_simulationKernelIndex;
 	private int					_frameCount;
 
-
 	public ParticleControl _particleController;
 
 
@@ -117,6 +117,7 @@ public class ParticleManager : MonoBehaviour {
     _homePosition = Vector3.zero;
 
 	_frameCount = 0;
+
 
 	//-----------------------------------------
 	// intitialize particle array
@@ -167,9 +168,9 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     // initialize species parameters
     //-----------------------------------------
-    randomizeSpecies();
+    //randomizeSpecies();
 
-	//setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
+	setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
 
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
@@ -553,7 +554,7 @@ public class ParticleManager : MonoBehaviour {
 				//--------------------------------------------------------------------------------------
 				Vector3 vectorFromHome = _particles[i].position - _homePosition;
 				float distanceFromHome = vectorFromHome.magnitude;
-		
+
 				if ( distanceFromHome > ENVIRONMENT_RADIUS ) 
 				{
 					Vector3 directionFromHome = vectorFromHome / distanceFromHome;
@@ -561,9 +562,9 @@ public class ParticleManager : MonoBehaviour {
 					_particles[i].velocity -= force * directionFromHome * deltaTime;
 				}
 
-				//--------------------------------------------------------------------------------------
-				// apply forces from collisions with hands (represented as an array of capsules)
-				//--------------------------------------------------------------------------------------
+				//------------------------------------------
+				// apply forces from collisions with hands 
+				//------------------------------------------
 				updateCollisionsWithHands(i);				
 
 				//-------------------------------------------
@@ -585,16 +586,20 @@ public class ParticleManager : MonoBehaviour {
 	}
 
 
-
-
-	//--------------------------------------------------------------------------------------
-	// apply forces from collisions with hands (represented as an array of capsules)
-	//--------------------------------------------------------------------------------------
+	//-------------------------------------------------
+	// THIS IS TOTALLY NOT OPTIMAL - it's a prototype
+	// for getting the capsule colliders from the hand 
+	// so the particles can bounce off.... 
+	//-------------------------------------------------
  	private void updateCollisionsWithHands( int p ) 
 	{
+		for (int c=0; c<_particleController.getNumHandColliders(); c++)
+		{
+			Vector3 p0   = _particleController.getHandColliderP0(c); 
+			Vector3 p1   = _particleController.getHandColliderP0(c); 
+			float radius = _particleController.getHandColliderRadius(c);
+		}
 	}
-
-
 
 	private void displayParticlesCPU() {
     	var block = new MaterialPropertyBlock();

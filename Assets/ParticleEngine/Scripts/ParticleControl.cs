@@ -13,6 +13,8 @@ public class ParticleControl : MonoBehaviour {
 	private const float FINGER_LENGTH	= 0.08f;
 	private const float FINGER_RADIUS	= 0.02f;
 
+	private const int NUM_HAND_COLLIDERS = 2;
+	
 	private const int NUM_HANDS = 2;
 
 	private const int THUMB_FINGER 	= 0;
@@ -57,11 +59,19 @@ public class ParticleControl : MonoBehaviour {
 		public bool isRightHand;
   	}
 
+ 	private struct CapsuleCollisionVolume 
+	{
+		public  Vector3 p0;
+		public  Vector3 p1;
+        public 	float radius;
+  	}
+
 	public  Camera		_camera;
 	private GameObject 	_myHead;
 	private Hand 		_myLeftHand;
 	private Hand 		_myRightHand;
 	private ParticleEmitter[] _emitters;
+	private CapsuleCollisionVolume[] _handColliderArray;
 
 	private bool 	_clearRequested = false;
 	private Rect 	_clearButtonRect;
@@ -153,6 +163,19 @@ public class ParticleControl : MonoBehaviour {
 		}
 
 		initializeEmitters();
+
+		//-----------------------------------------
+		// intitialize hand collision volumes
+		//-----------------------------------------
+		_handColliderArray = new CapsuleCollisionVolume[ NUM_HAND_COLLIDERS ];
+	
+		for (int c=0; c<NUM_HAND_COLLIDERS; c++)
+		{
+			_handColliderArray[c] = new CapsuleCollisionVolume();
+			_handColliderArray[c].p0 = Vector3.zero;
+			_handColliderArray[c].p1 = Vector3.zero;
+			_handColliderArray[c].radius = 0.0f;
+		}
 	}
 
 
@@ -204,7 +227,10 @@ public class ParticleControl : MonoBehaviour {
 		if ( _showHeadAndHands ) 	
 				{ if ( ! _displayBody ) { setBodyDisplay( true  ); } } 
 		else 	{ if (   _displayBody ) { setBodyDisplay( false ); } }
-		
+
+//_myHead.gameObject.transform.position = Vector3.zero;
+
+
 		//---------------------------------------------------------
 		// set the positions of the hands...
 		//---------------------------------------------------------
@@ -294,9 +320,11 @@ public class ParticleControl : MonoBehaviour {
 	public Vector3	getEmitterDirection	( int e ) { return _emitters[e].direction;	}
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
-
-
-
+	
+	public int 		getNumHandColliders() { return NUM_HAND_COLLIDERS; }
+	public Vector3 	getHandColliderP0		( int c ) { return _handColliderArray[c].p0; }
+	public Vector3 	getHandColliderP1		( int c ) { return _handColliderArray[c].p1; }
+	public float 	getHandColliderRadius	( int c ) { return _handColliderArray[c].radius; }
 
 	//---------------------------------------------
 	// turn on or off the display of the body...

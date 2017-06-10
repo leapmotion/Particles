@@ -82,13 +82,13 @@ public class ParticleControl : MonoBehaviour {
 	// public tweakers
 	//---------------------------------------
 	public int  _ecosystem 			= ECOSYSTEM_CHASE;
-	public bool _showHeadAndHands 	= true;
+	public bool _showHeadAndHands 	= false;
 	public bool _leftThumbActive 	= false;
-	public bool _leftIndexActive 	= false;
-	public bool _leftPinkyActive 	= false;
+	public bool _leftIndexActive 	= true;
+	public bool _leftPinkyActive 	= true;
 	public bool _rightThumbActive 	= false;
-	public bool _rightIndexActive 	= false;
-	public bool _rightPinkyActive	= false;
+	public bool _rightIndexActive 	= true;
+	public bool _rightPinkyActive	= true;
 
 	//---------------------------------------
 	void Start() 
@@ -227,9 +227,6 @@ public class ParticleControl : MonoBehaviour {
 		if ( _showHeadAndHands ) 	
 				{ if ( ! _displayBody ) { setBodyDisplay( true  ); } } 
 		else 	{ if (   _displayBody ) { setBodyDisplay( false ); } }
-
-//_myHead.gameObject.transform.position = Vector3.zero;
-
 
 		//---------------------------------------------------------
 		// set the positions of the hands...

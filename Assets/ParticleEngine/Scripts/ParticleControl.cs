@@ -13,7 +13,7 @@ public class ParticleControl : MonoBehaviour {
 	private const float FINGER_LENGTH	= 0.08f;
 	private const float FINGER_RADIUS	= 0.02f;
 
-	private const int NUM_HAND_COLLIDERS = 2;
+	private const int NUM_HAND_COLLIDERS = 3;
 	
 	private const int NUM_HANDS = 2;
 
@@ -163,20 +163,8 @@ public class ParticleControl : MonoBehaviour {
 		}
 
 		initializeEmitters();
-
-		//-----------------------------------------
-		// intitialize hand collision volumes
-		//-----------------------------------------
-		_handColliderArray = new CapsuleCollisionVolume[ NUM_HAND_COLLIDERS ];
-	
-		for (int c=0; c<NUM_HAND_COLLIDERS; c++)
-		{
-			_handColliderArray[c] = new CapsuleCollisionVolume();
-			_handColliderArray[c].p0 = Vector3.zero;
-			_handColliderArray[c].p1 = Vector3.zero;
-			_handColliderArray[c].radius = 0.0f;
-		}
 	}
+
 
 
 	//-------------------------------------------
@@ -301,6 +289,27 @@ public class ParticleControl : MonoBehaviour {
 		_emitters[3].active = _rightThumbActive;
 		_emitters[4].active = _rightIndexActive;
 		_emitters[5].active	= _rightPinkyActive;
+
+
+		//----------------------------------------------
+		// This is a prototype - used for testing 
+		// particle collisions with hand capsules...
+		//----------------------------------------------
+		_handColliderArray = new CapsuleCollisionVolume[ NUM_HAND_COLLIDERS ];
+
+		for (int c=0; c<NUM_HAND_COLLIDERS; c++)
+		{
+			string gameObjectName = "Capsule" + c.ToString();
+
+			GameObject capsule = GameObject.Find( gameObjectName );
+			float capsuleRadius = capsule.transform.localScale.x / 2.0f;
+			Vector3 axis = capsule.transform.up * ( capsule.transform.localScale.y - capsuleRadius );
+
+			_handColliderArray[c] = new CapsuleCollisionVolume();
+			_handColliderArray[c].p0 	 = capsule.transform.position - axis;
+			_handColliderArray[c].p1 	 = capsule.transform.position + axis;
+			_handColliderArray[c].radius = capsuleRadius;
+		}
 	}
 
 	//------------------------------------------------------------------------------------

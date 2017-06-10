@@ -13,17 +13,21 @@ public class ParticleManager : MonoBehaviour {
 	//---------------------------------------------
 	// particle physics constants
 	//---------------------------------------------
-	private	const int	NULL_PARTICLE		= -1;
-  	private const int 	NUM_PARTICLES 		= 64 * 4;
-	private const int   MIN_FORCE_STEPS 	= 1;
-	private const int   MAX_FORCE_STEPS 	= 7;
-	private const int   MIN_SPECIES 		= 1;
-	private const int   MAX_SPECIES 		= 10;
-	private const float MAX_DELTA_TIME 		= ONE / 5.0f;
-	private const float TEST_DELTA_TIME 	= MAX_DELTA_TIME;
-	private const float PARTICLE_RADIUS		= 0.01f; //meters
- 	private const float BOUNDARY_FORCE		= 0.1f;
-  	private const float ENVIRONMENT_RADIUS	= 1.0f;   //meters
+	private	const int	NULL_PARTICLE			= -1;
+  	private const int 	NUM_PARTICLES 			= 64 * 6;
+	private const int   MIN_FORCE_STEPS 		= 1;
+	private const int   MAX_FORCE_STEPS 		= 7;
+	private const int   MIN_SPECIES 			= 1;
+	private const int   MAX_SPECIES 			= 10;
+	private const float MAX_DELTA_TIME 			= ONE / 5.0f;
+	private const float TEST_DELTA_TIME 		= MAX_DELTA_TIME;
+	private const float PARTICLE_RADIUS			= 0.02f; //meters
+ 	private const float BOUNDARY_FORCE			= 0.01f;
+ 	private const float GRAVITY_FORCE			= 0.0f;
+ 	private const float HAND_COLLISION_FORCE	= 0.01f;
+ 	private const float HAND_COLLISION_FRICTION = 0.1f;
+//private const float ENVIRONMENT_RADIUS		= 1.0f;   //meters
+  	private const float ENVIRONMENT_RADIUS		= 0.3f;   //meters
   	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
 
 	//---------------------------------------------------------
@@ -358,6 +362,8 @@ public class ParticleManager : MonoBehaviour {
 		}
 	}
 
+
+
  	//-------------------------------------------
 	// update the emission of particles 
   	//-------------------------------------------
@@ -367,7 +373,9 @@ public class ParticleManager : MonoBehaviour {
 		{
 			if ( _particleController.getEmitterActive(e) )
 			{				
-				int mod = 7; // this will do for now - we will need to implement proper particle emission rate..
+int mod = 7; // this will do for now - we will need to implement proper particle emission rate..
+
+//int mod = 2;
 
 				if ( _frameCount % mod == 0 ) 
 				{
@@ -377,6 +385,21 @@ public class ParticleManager : MonoBehaviour {
 					{
 						_particles[p].active   = true;
 						_particles[p].species  = _particleController.getEmitterSpecies(e);
+
+/*
+float x = -0.3f + ( (float)p / (float)NUM_PARTICLES ) * 0.6f;
+float y = 0.8f;
+float z = 0.4f;
+
+float j = 0.2f;
+x += ( -j * ONE_HALF + Random.value * j );
+y += ( -j * ONE_HALF + Random.value * j );
+z += ( -j * ONE_HALF + Random.value * j );
+
+_particles[p].position = new Vector3( x, y, z );
+_particles[p].velocity = Vector3.zero;
+*/
+
 						_particles[p].position = _particleController.getEmitterPosition(e);
 						_particles[p].velocity = _particleController.getEmitterDirection(e) * _particleController.getEmitterStrength(e); 
 					}
@@ -454,6 +477,11 @@ public class ParticleManager : MonoBehaviour {
 		{
 			if ( _particles[i].active ) 
 			{
+				//------------------------------------------------------
+				// gravity baby! 
+				//------------------------------------------------------
+				_particles[i].velocity += Vector3.up * -GRAVITY_FORCE;
+
 				//------------------------------------------------------
 				// reset accumulated force 
 				//------------------------------------------------------
@@ -586,20 +614,58 @@ public class ParticleManager : MonoBehaviour {
 	}
 
 
-	//-------------------------------------------------
-	// THIS IS TOTALLY NOT OPTIMAL - it's a prototype
-	// for getting the capsule colliders from the hand 
-	// so the particles can bounce off.... 
-	//-------------------------------------------------
+	//---------------------------------------------------------
+	// collisions with capsules (representing parts of a hand)
+	//---------------------------------------------------------
  	private void updateCollisionsWithHands( int p ) 
 	{
 		for (int c=0; c<_particleController.getNumHandColliders(); c++)
 		{
-			Vector3 p0   = _particleController.getHandColliderP0(c); 
-			Vector3 p1   = _particleController.getHandColliderP0(c); 
-			float radius = _particleController.getHandColliderRadius(c);
+			Vector3 p0 = _particleController.getHandColliderP0(c); 
+			Vector3 p1 = _particleController.getHandColliderP1(c); 
+
+			Vector3 vectorFromP0ToParticle = _particles[p].position - p0;
+			Vector3 axis = p1 - p0;
+
+			float dot = Vector3.Dot( vectorFromP0ToParticle, axis );
+
+			Vector3 testVector = Vector3.zero;
+
+			bool testForCollision = false;
+
+			if ( dot < ZERO )
+			{
+				testForCollision = true;
+				testVector = vectorFromP0ToParticle;
+			}
+			else if ( dot > axis.magnitude * axis.magnitude ) 
+			{
+				testForCollision = true;
+				testVector = _particles[p].position - p1;
+			}
+			else 
+			{	
+				testForCollision = true;
+				float fractionAlongAxis = dot / ( axis.magnitude * axis.magnitude );
+				Vector3 pointOnAxis = p0 + axis * fractionAlongAxis;
+				testVector = _particles[p].position - pointOnAxis;
+			}
+	
+			if ( testForCollision )
+			{
+				float radius = _particleController.getHandColliderRadius(c);
+				float distance = testVector.magnitude;
+				if (( distance < radius + PARTICLE_RADIUS )
+				&&  ( distance > ZERO ))
+				{
+					Vector3 forceDirection = testVector / distance;
+					_particles[p].velocity += forceDirection * HAND_COLLISION_FORCE;
+					_particles[p].velocity *= ( ONE - HAND_COLLISION_FRICTION );
+				}	
+			}
 		}
 	}
+
 
 	private void displayParticlesCPU() {
     	var block = new MaterialPropertyBlock();

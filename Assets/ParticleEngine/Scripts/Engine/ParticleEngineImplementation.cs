@@ -181,7 +181,6 @@ public class ParticleEngineImplementation : ParticleEngine {
   }
   #endregion
 
-  #region SIMULATION
   /// <summary>
   /// Perform any initialization before particle simulation is started
   /// right here.
@@ -264,6 +263,30 @@ public class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
+  #region GLOBAL COLLISIONS
+
+  public struct Capsule {
+    public Vector3 v0, v1;
+    public float radius;
+
+    public void CollideWith(ref Particle particle) {
+      //TODO
+    }
+  }
+
+  public struct Sphere {
+    public Vector3 center;
+    public float radius;
+
+    public void CollideWith(ref Particle particle) {
+      //TODO
+    }
+  }
+
+  private Capsule[] _collisionCapsules = new Capsule[1024];
+  private int _numCollisionCapsules = 0;
+  private Sphere[] _spheres = new Sphere[1024];
+  private int _numCollisionSpheres = 0;
 
   /// <summary>
   /// Use this method to apply global particle constraints.
@@ -271,6 +294,7 @@ public class ParticleEngineImplementation : ParticleEngine {
   protected override void DoParticleConstraints(ref Particle particle, ref SpeciesData speciesData) {
 
   }
+  #endregion
 
   /// <summary>
   /// Use this method to apply global forces that affect all particles.
@@ -300,5 +324,4 @@ public class ParticleEngineImplementation : ParticleEngine {
     //Currently particles never die
     return false;
   }
-  #endregion
 }

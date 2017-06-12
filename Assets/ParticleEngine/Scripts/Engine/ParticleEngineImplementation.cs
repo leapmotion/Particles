@@ -37,7 +37,7 @@ public abstract partial class ParticleEngine {
   }
 }
 
-public partial class ParticleEngineImplementation : ParticleEngine {
+public class ParticleEngineImplementation : ParticleEngine {
 
   [Header("Species")]
   [MinMax(0, 1)]

@@ -13,6 +13,8 @@ public class ParticleControl : MonoBehaviour {
 	private const float FINGER_LENGTH	= 0.08f;
 	private const float FINGER_RADIUS	= 0.02f;
 
+	private const int NUM_HAND_COLLIDERS = 3;
+	
 	private const int NUM_HANDS = 2;
 
 	private const int THUMB_FINGER 	= 0;
@@ -57,11 +59,19 @@ public class ParticleControl : MonoBehaviour {
 		public bool isRightHand;
   	}
 
+ 	private struct CapsuleCollisionVolume 
+	{
+		public  Vector3 p0;
+		public  Vector3 p1;
+        public 	float radius;
+  	}
+
 	public  Camera		_camera;
 	private GameObject 	_myHead;
 	private Hand 		_myLeftHand;
 	private Hand 		_myRightHand;
 	private ParticleEmitter[] _emitters;
+	private CapsuleCollisionVolume[] _handColliderArray;
 
 	private bool 	_clearRequested = false;
 	private Rect 	_clearButtonRect;
@@ -72,13 +82,13 @@ public class ParticleControl : MonoBehaviour {
 	// public tweakers
 	//---------------------------------------
 	public int  _ecosystem 			= ECOSYSTEM_CHASE;
-	public bool _showHeadAndHands 	= true;
+	public bool _showHeadAndHands 	= false;
 	public bool _leftThumbActive 	= false;
-	public bool _leftIndexActive 	= false;
-	public bool _leftPinkyActive 	= false;
+	public bool _leftIndexActive 	= true;
+	public bool _leftPinkyActive 	= true;
 	public bool _rightThumbActive 	= false;
-	public bool _rightIndexActive 	= false;
-	public bool _rightPinkyActive	= false;
+	public bool _rightIndexActive 	= true;
+	public bool _rightPinkyActive	= true;
 
 	//---------------------------------------
 	void Start() 
@@ -156,6 +166,7 @@ public class ParticleControl : MonoBehaviour {
 	}
 
 
+
 	//-------------------------------------------
 	// GUI...
 	//-------------------------------------------
@@ -204,7 +215,7 @@ public class ParticleControl : MonoBehaviour {
 		if ( _showHeadAndHands ) 	
 				{ if ( ! _displayBody ) { setBodyDisplay( true  ); } } 
 		else 	{ if (   _displayBody ) { setBodyDisplay( false ); } }
-		
+
 		//---------------------------------------------------------
 		// set the positions of the hands...
 		//---------------------------------------------------------
@@ -278,6 +289,27 @@ public class ParticleControl : MonoBehaviour {
 		_emitters[3].active = _rightThumbActive;
 		_emitters[4].active = _rightIndexActive;
 		_emitters[5].active	= _rightPinkyActive;
+
+
+		//----------------------------------------------
+		// This is a prototype - used for testing 
+		// particle collisions with hand capsules...
+		//----------------------------------------------
+		_handColliderArray = new CapsuleCollisionVolume[ NUM_HAND_COLLIDERS ];
+
+		for (int c=0; c<NUM_HAND_COLLIDERS; c++)
+		{
+			string gameObjectName = "Capsule" + c.ToString();
+
+			GameObject capsule = GameObject.Find( gameObjectName );
+			float capsuleRadius = capsule.transform.localScale.x / 2.0f;
+			Vector3 axis = capsule.transform.up * ( capsule.transform.localScale.y - capsuleRadius );
+
+			_handColliderArray[c] = new CapsuleCollisionVolume();
+			_handColliderArray[c].p0 	 = capsule.transform.position - axis;
+			_handColliderArray[c].p1 	 = capsule.transform.position + axis;
+			_handColliderArray[c].radius = capsuleRadius;
+		}
 	}
 
 	//------------------------------------------------------------------------------------
@@ -294,9 +326,11 @@ public class ParticleControl : MonoBehaviour {
 	public Vector3	getEmitterDirection	( int e ) { return _emitters[e].direction;	}
 	public float	getEmitterStrength	( int e ) { return _emitters[e].strength;	}
 	public float	getEmitterRate		( int e ) { return _emitters[e].rate;		}
-
-
-
+	
+	public int 		getNumHandColliders() { return NUM_HAND_COLLIDERS; }
+	public Vector3 	getHandColliderP0		( int c ) { return _handColliderArray[c].p0; }
+	public Vector3 	getHandColliderP1		( int c ) { return _handColliderArray[c].p1; }
+	public float 	getHandColliderRadius	( int c ) { return _handColliderArray[c].radius; }
 
 	//---------------------------------------------
 	// turn on or off the display of the body...

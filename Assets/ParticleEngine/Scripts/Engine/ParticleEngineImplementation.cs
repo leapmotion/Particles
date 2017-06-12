@@ -43,15 +43,19 @@ public class ParticleEngineImplementation : ParticleEngine {
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-
-  [Units("Meters")]
+  
   [MinMax(0, 1)]
   [SerializeField]
-  private Vector2 _collisionForceRange = new Vector2(0.01f, 0.2f);
+  private Vector2 _collisionForce = new Vector2(0.01f, 0.2f);
 
-  [MinValue(0)]
+  [MinMax(0, 0.005f)]
   [SerializeField]
-  private float _maxSocialForce = 0.003f;
+  private Vector2 _socialForce = new Vector2(0, 0.003f);
+
+  [Tooltip("The probability that the social force for a species-species interaction is negative.")]
+  [Range(0, 1)]
+  [SerializeField]
+  private float _neativeSocialForceChance = 0.5f;
 
   [Units("Meters")]
   [MinMax(0, 1)]
@@ -82,12 +86,13 @@ public class ParticleEngineImplementation : ParticleEngine {
     for (int s = 0; s < MAX_SPECIES; s++) {
       //_speciesData[s].steps = MIN_FORCE_STEPS + (int)((MAX_FORCE_STEPS - MIN_FORCE_STEPS) * Random.value);
       _speciesData[s].drag = Random.Range(_dragRange.x, _dragRange.y);
-      _speciesData[s].collisionForce = Random.Range(_collisionForceRange.x, _collisionForceRange.y);
+      _speciesData[s].collisionForce = Random.Range(_collisionForce.x, _collisionForce.y);
       _speciesData[s].color = new Color(Random.value, Random.value, Random.value, 1);
 
       for (int o = 0; o < MAX_SPECIES; o++) {
         _socialData[s, o].socialForce = Random.Range(-MAX_SPECIES, MAX_SPECIES);
-        _socialData[s, o].socialForce = Random.Range(-_maxSocialForce, _maxSocialForce);
+        _socialData[s, o].socialForce = (Random.value < _neativeSocialForceChance ? -1 : 1) *
+                                        Random.Range(_socialForce.x, _socialForce.y);
         _socialData[s, o].socialRange = Random.Range(_socialRange.x, _socialRange.y);
       }
     }
@@ -105,7 +110,7 @@ public class ParticleEngineImplementation : ParticleEngine {
       case ParticleSystemPreset.EcosystemChase:
         for (int s = 0; s < MAX_SPECIES; s++) {
           //_speciesData[s].steps = MIN_FORCE_STEPS;
-          _speciesData[s].collisionForce = _collisionForceRange.x;
+          _speciesData[s].collisionForce = _collisionForce.x;
           _speciesData[s].drag = _dragRange.x;
 
           for (int o = 0; o < MAX_SPECIES; o++) {
@@ -113,7 +118,7 @@ public class ParticleEngineImplementation : ParticleEngine {
             _socialData[s, o].socialRange = _socialRange.y;
           }
 
-          _socialData[s, s].socialForce = _maxSocialForce * 0.1f;
+          _socialData[s, s].socialForce = _socialForce.y * 0.1f;
         }
 
         _speciesData[0].color = new Color(0.7f, 0.0f, 0.0f);
@@ -127,7 +132,7 @@ public class ParticleEngineImplementation : ParticleEngine {
         _speciesData[8].color = new Color(1.0f, 1.0f, 0.3f);
         _speciesData[9].color = new Color(0.3f, 1.0f, 0.3f);
 
-        float chase = 0.9f * _maxSocialForce;
+        float chase = 0.9f * _socialForce.y;
         _socialData[0, 1].socialForce = chase;
         _socialData[1, 2].socialForce = chase;
         _socialData[2, 3].socialForce = chase;
@@ -139,7 +144,7 @@ public class ParticleEngineImplementation : ParticleEngine {
         _socialData[8, 9].socialForce = chase;
         _socialData[8, 0].socialForce = chase;
 
-        float flee = -0.6f * _maxSocialForce;
+        float flee = -0.6f * _socialForce.y;
         _socialData[0, 9].socialForce = flee;
         _socialData[1, 0].socialForce = flee;
         _socialData[2, 1].socialForce = flee;
@@ -151,7 +156,7 @@ public class ParticleEngineImplementation : ParticleEngine {
         _socialData[8, 7].socialForce = flee;
         _socialData[8, 8].socialForce = flee;
 
-        float range = 0.8f * _maxSocialForce;
+        float range = 0.8f * _socialForce.y;
         _socialData[0, 9].socialRange = range;
         _socialData[1, 0].socialRange = range;
         _socialData[2, 1].socialRange = range;
@@ -214,7 +219,7 @@ public class ParticleEngineImplementation : ParticleEngine {
     if (distanceSquared < PARTICLE_DIAMETER_SQUARED && distanceSquared > Mathf.Epsilon) {
       float distance = Mathf.Sqrt(distanceSquared);
       Vector3 directionToOther = vectorToOther / distance;
-      
+
       float penetration = 1 - distance / PARTICLE_DIAMETER;
       float averageCollisionForce = (speciesData.collisionForce + otherSpeciesData.collisionForce) * 0.5f;
 
@@ -269,7 +274,7 @@ public class ParticleEngineImplementation : ParticleEngine {
       Vector3 directionFromHome = vectorFromHome / distanceFromHome;
 
       float force = (distanceFromHome - _environmentRadius) * _boundaryForce;
-      
+
       //Force applied gets stronger as the particle gets farther from home
       particle.velocity -= force * directionFromHome * _deltaTime;
     }

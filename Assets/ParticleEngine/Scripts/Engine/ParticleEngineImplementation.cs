@@ -44,6 +44,7 @@ public class ParticleEngineImplementation : ParticleEngine {
   [SerializeField]
   private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
 
+  [Units("Meters")]
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _collisionForceRange = new Vector2(0.01f, 0.2f);

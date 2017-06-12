@@ -43,7 +43,7 @@ public class ParticleEngineImplementation : ParticleEngine {
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-  
+
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _collisionForce = new Vector2(0.01f, 0.2f);
@@ -75,7 +75,19 @@ public class ParticleEngineImplementation : ParticleEngine {
   [SerializeField]
   private Transform _homeTransform;
 
+  [Header("Hand Collisions")]
+  [SerializeField]
+  private LeapProvider _provider;
+
+  [Header("Global Collisions")]
+  [SerializeField]
+  private Transform _globalCollidersAnchor;
+
   private Vector3 _homePosition;
+
+  public enum ParticleSystemPreset {
+    EcosystemChase
+  }
 
   #region ECOSYSTEM
 
@@ -98,9 +110,6 @@ public class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
-  public enum ParticleSystemPreset {
-    EcosystemChase
-  }
 
   //--------------------------------------
   // set ecosystem to preset

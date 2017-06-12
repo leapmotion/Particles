@@ -209,12 +209,15 @@ public partial class ParticleEngineImplementation : ParticleEngine {
     Vector3 vectorToOther = other.position - particle.position;
     float distanceSquared = vectorToOther.sqrMagnitude;
 
+    //If the distance between particles is less than the particle diameter, we are colliding!
     if (distanceSquared < PARTICLE_DIAMETER_SQUARED && distanceSquared > Mathf.Epsilon) {
       float distance = Mathf.Sqrt(distanceSquared);
       Vector3 directionToOther = vectorToOther / distance;
-
+      
       float penetration = 1 - distance / PARTICLE_DIAMETER;
       float averageCollisionForce = (speciesData.collisionForce + otherSpeciesData.collisionForce) * 0.5f;
+
+      //Collision force is a product of penetration (0-1) and the average collision force
       particle.velocity -= _deltaTime * averageCollisionForce * directionToOther * penetration;
     }
   }
@@ -239,6 +242,8 @@ public partial class ParticleEngineImplementation : ParticleEngine {
       float distance = Mathf.Sqrt(distanceSquared);
       Vector3 directionToOther = vectorToOther / distance;
 
+      //If we are close enough for a social force, add the new force to the total force sum
+      //and increment the number of total social interactions.
       totalSocialforce += socialData.socialForce * directionToOther;
       totalSocialInteractions++;
     }
@@ -261,7 +266,10 @@ public partial class ParticleEngineImplementation : ParticleEngine {
 
     if (distanceFromHome > _environmentRadius) {
       Vector3 directionFromHome = vectorFromHome / distanceFromHome;
+
       float force = (distanceFromHome - _environmentRadius) * _boundaryForce;
+      
+      //Force applied gets stronger as the particle gets farther from home
       particle.velocity -= force * directionFromHome * _deltaTime;
     }
 
@@ -274,6 +282,7 @@ public partial class ParticleEngineImplementation : ParticleEngine {
   /// simulation step.
   /// </summary>
   protected override bool ShouldKillParticle(ref Particle particle) {
+    //Currently particles never die
     return false;
   }
   #endregion

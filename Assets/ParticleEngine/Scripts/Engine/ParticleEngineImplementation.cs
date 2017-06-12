@@ -197,6 +197,11 @@ public partial class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
+  /// <summary>
+  /// Use this method to define how one particle should collider with another.  You should
+  /// directly modify the particle argument's velocity.  This method is called twice every 
+  /// frame for each pair of particles that could be potentially colliding.
+  /// </summary>
   protected override void DoParticleCollisionInteraction(ref Particle particle,
                                                          ref SpeciesData speciesData,
                                                          ref Particle other,

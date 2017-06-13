@@ -3,11 +3,26 @@ using Leap.Unity;
 using Leap.Unity.Attributes;
 
 public abstract partial class ParticleEngine {
-  public const int MAX_SPECIES = 12;
-  public const float PARTICLE_RADIUS = 0.01f;
-  public const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
-  public const float PARTICLE_DIAMETER_SQUARED = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-  public const float MAX_SOCIAL_RADIUS = 0;
+
+	public const int MAX_SPECIES = 10;
+	public const float PARTICLE_RADIUS = 0.01f;
+	public const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
+	public const float PARTICLE_DIAMETER_SQUARED = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
+	public const float MAX_SOCIAL_RADIUS = 0;
+ 	public const float BOUNDARY_FORCE = 0.01f;
+ 	public const float ENVIRONMENT_RADIUS = 1.0f;
+	
+	//---------------------------------------------------------
+	// These parameters are critical for clustering behavior
+	//---------------------------------------------------------
+	public const float MIN_DRAG				= 0.05f;
+	public const float MAX_DRAG 			= 0.3f;
+	public const float MIN_COLLISION_FORCE	= 0.01f;
+	public const float MAX_COLLISION_FORCE	= 0.2f;
+	public const float MAX_SOCIAL_FORCE 	= 0.003f;
+	public const float MIN_SOCIAL_RANGE 	= 0.0f;
+	public const float MAX_SOCIAL_RANGE 	= 0.5f;
+
 
   public struct Particle {
     public Vector3 position;
@@ -40,33 +55,33 @@ public abstract partial class ParticleEngine {
 public class ParticleEngineImplementation : ParticleEngine {
 
   [Header("Species")]
-  [MinMax(0, 1)]
+  [MinMax(MIN_DRAG, MAX_DRAG)]
   [SerializeField]
-  private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
+  private Vector2 _dragRange = new Vector2(MIN_DRAG, MAX_DRAG);
 
   [Units("Meters")]
-  [MinMax(0, 1)]
+  [MinMax(MIN_COLLISION_FORCE, MAX_COLLISION_FORCE)]
   [SerializeField]
-  private Vector2 _collisionForceRange = new Vector2(0.01f, 0.2f);
+  private Vector2 _collisionForceRange = new Vector2(MIN_COLLISION_FORCE, MAX_COLLISION_FORCE);
 
   [MinValue(0)]
   [SerializeField]
-  private float _maxSocialForce = 0.003f;
+  private float _maxSocialForce = MAX_SOCIAL_FORCE;
 
   [Units("Meters")]
-  [MinMax(0, 1)]
+  [MinMax(MIN_SOCIAL_RANGE, MAX_SOCIAL_RANGE)]
   [SerializeField]
-  private Vector2 _socialRange = new Vector2(0, 0.5f);
+  private Vector2 _socialRange = new Vector2(MIN_SOCIAL_RANGE, MAX_SOCIAL_RANGE);
 
   [Header("Environment")]
   [Units("Meters")]
   [MinValue(0)]
   [SerializeField]
-  private float _environmentRadius = 1.0f;
+  private float _environmentRadius = ENVIRONMENT_RADIUS;
 
   [MinValue(0)]
   [SerializeField]
-  private float _boundaryForce = 0.1f;
+  private float _boundaryForce = BOUNDARY_FORCE;
 
   [SerializeField]
   private Transform _homeTransform;
@@ -86,7 +101,7 @@ public class ParticleEngineImplementation : ParticleEngine {
       _speciesData[s].color = new Color(Random.value, Random.value, Random.value, 1);
 
       for (int o = 0; o < MAX_SPECIES; o++) {
-        _socialData[s, o].socialForce = Random.Range(-MAX_SPECIES, MAX_SPECIES);
+//_socialData[s, o].socialForce = Random.Range(-MAX_SPECIES, MAX_SPECIES);
         _socialData[s, o].socialForce = Random.Range(-_maxSocialForce, _maxSocialForce);
         _socialData[s, o].socialRange = Random.Range(_socialRange.x, _socialRange.y);
       }
@@ -173,6 +188,9 @@ public class ParticleEngineImplementation : ParticleEngine {
   /// right here.
   /// </summary>
   protected override void OnInitializeSimulation() {
+
+	//setPresetEcosystem( ParticleSystemPreset.EcosystemChase );
+
     randomizeSpecies();
   }
 
@@ -192,7 +210,7 @@ public class ParticleEngineImplementation : ParticleEngine {
         TryEmit(new Particle() {
           position = Random.insideUnitSphere * 0.5f,
           velocity = Vector3.zero,
-          species = Random.Range(0, MAX_SPECIES)
+		  species = Random.Range(0, MAX_SPECIES)
         });
       }
     }

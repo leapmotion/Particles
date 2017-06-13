@@ -5,12 +5,12 @@ using Leap.Unity.Attributes;
 public abstract partial class ParticleEngine {
 
 	public const int MAX_SPECIES = 10;
-	public const float PARTICLE_RADIUS = 0.01f;
+	public const float PARTICLE_RADIUS = 0.02f;
 	public const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
 	public const float PARTICLE_DIAMETER_SQUARED = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-	public const float MAX_SOCIAL_RADIUS = 0;
+	//public const float MAX_SOCIAL_RADIUS = 0;
  	public const float BOUNDARY_FORCE = 0.01f;
- 	public const float ENVIRONMENT_RADIUS = 1.0f;
+ 	public const float ENVIRONMENT_RADIUS = 0.03f;
 	
 	//---------------------------------------------------------
 	// These parameters are critical for clustering behavior
@@ -24,7 +24,6 @@ public abstract partial class ParticleEngine {
 	public const float MAX_SOCIAL_RANGE 	= 0.5f;
 	public const int   MIN_FORCE_STEPS 		= 1;
 	public const int   MAX_FORCE_STEPS 		= 7;
-
 
   public struct Particle {
     public Vector3 position;
@@ -109,78 +108,86 @@ public class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
+
   public enum ParticleSystemPreset {
     EcosystemChase
   }
 
-  //--------------------------------------
-  // set ecosystem to preset
-  //--------------------------------------
-  private void setPresetEcosystem(ParticleSystemPreset preset) {
-    switch (preset) {
-      case ParticleSystemPreset.EcosystemChase:
-        for (int s = 0; s < MAX_SPECIES; s++) {
-          //_speciesData[s].steps = MIN_FORCE_STEPS;
-          _speciesData[s].collisionForce = _collisionForceRange.x;
-          _speciesData[s].drag = _dragRange.x;
+	//--------------------------------------
+	// set ecosystem to preset
+	//--------------------------------------
+	private void setPresetEcosystem(ParticleSystemPreset preset) 
+	{
+		if ( preset == ParticleSystemPreset.EcosystemChase )
+		{
+			for (int s = 0; s < MAX_SPECIES; s++) 
+			{
+				//_speciesData[s].steps = MIN_FORCE_STEPS;
+				_speciesData[s].collisionForce = MIN_COLLISION_FORCE;
+				_speciesData[s].drag = MIN_DRAG;
 
-          for (int o = 0; o < MAX_SPECIES; o++) {
-            _socialData[s, o].socialForce = 0.0f;
-            _socialData[s, o].socialRange = _socialRange.y;
-          }
+          		for (int o = 0; o < MAX_SPECIES; o++) 
+				{
+					_socialData[s, o].socialForce = 0.0f;
+					_socialData[s, o].socialRange = MAX_SOCIAL_RANGE;
+				}
 
-          _socialData[s, s].socialForce = _maxSocialForce * 0.1f;
-        }
+				_socialData[s, s].socialForce = MAX_SOCIAL_FORCE * 0.1f;
+			}
 
-        _speciesData[0].color = new Color(0.7f, 0.0f, 0.0f);
-        _speciesData[1].color = new Color(0.7f, 0.3f, 0.0f);
-        _speciesData[2].color = new Color(0.7f, 0.7f, 0.0f);
-        _speciesData[3].color = new Color(0.0f, 0.7f, 0.0f);
-        _speciesData[4].color = new Color(0.0f, 0.0f, 0.7f);
-        _speciesData[5].color = new Color(0.4f, 0.0f, 0.7f);
-        _speciesData[6].color = new Color(1.0f, 0.3f, 0.3f);
-        _speciesData[7].color = new Color(1.0f, 0.6f, 0.3f);
-        _speciesData[8].color = new Color(1.0f, 1.0f, 0.3f);
-        _speciesData[9].color = new Color(0.3f, 1.0f, 0.3f);
+			_speciesData[0].color = new Color(0.7f, 0.0f, 0.0f);
+			_speciesData[1].color = new Color(0.7f, 0.3f, 0.0f);
+			_speciesData[2].color = new Color(0.7f, 0.7f, 0.0f);
+			_speciesData[3].color = new Color(0.0f, 0.7f, 0.0f);
+			_speciesData[4].color = new Color(0.0f, 0.0f, 0.7f);
+			_speciesData[5].color = new Color(0.4f, 0.0f, 0.7f);
+			_speciesData[6].color = new Color(1.0f, 0.3f, 0.3f);
+			_speciesData[7].color = new Color(1.0f, 0.6f, 0.3f);
+			_speciesData[8].color = new Color(1.0f, 1.0f, 0.3f);
+			_speciesData[9].color = new Color(0.3f, 1.0f, 0.3f);
 
-        float chase = 0.9f * _maxSocialForce;
-        _socialData[0, 1].socialForce = chase;
-        _socialData[1, 2].socialForce = chase;
-        _socialData[2, 3].socialForce = chase;
-        _socialData[3, 4].socialForce = chase;
-        _socialData[4, 5].socialForce = chase;
-        _socialData[5, 6].socialForce = chase;
-        _socialData[6, 7].socialForce = chase;
-        _socialData[7, 8].socialForce = chase;
-        _socialData[8, 9].socialForce = chase;
-        _socialData[8, 0].socialForce = chase;
+			float chase = 0.9f * MAX_SOCIAL_FORCE;
+			_socialData[0, 1].socialForce = chase;
+			_socialData[1, 2].socialForce = chase;
+			_socialData[2, 3].socialForce = chase;
+			_socialData[3, 4].socialForce = chase;
+			_socialData[4, 5].socialForce = chase;
+			_socialData[5, 6].socialForce = chase;
+			_socialData[6, 7].socialForce = chase;
+			_socialData[7, 8].socialForce = chase;
+			_socialData[8, 9].socialForce = chase;
+			_socialData[9, 0].socialForce = chase;
 
-        float flee = -0.6f * _maxSocialForce;
-        _socialData[0, 9].socialForce = flee;
-        _socialData[1, 0].socialForce = flee;
-        _socialData[2, 1].socialForce = flee;
-        _socialData[3, 2].socialForce = flee;
-        _socialData[4, 3].socialForce = flee;
-        _socialData[5, 4].socialForce = flee;
-        _socialData[6, 5].socialForce = flee;
-        _socialData[7, 6].socialForce = flee;
-        _socialData[8, 7].socialForce = flee;
-        _socialData[8, 8].socialForce = flee;
+			float flee = -0.6f * MAX_SOCIAL_FORCE;
+			_socialData[0, 9].socialForce = flee;
+			_socialData[1, 0].socialForce = flee;
+			_socialData[2, 1].socialForce = flee;
+			_socialData[3, 2].socialForce = flee;
+			_socialData[4, 3].socialForce = flee;
+			_socialData[5, 4].socialForce = flee;
+			_socialData[6, 5].socialForce = flee;
+			_socialData[7, 6].socialForce = flee;
+			_socialData[8, 7].socialForce = flee;
+			_socialData[9, 8].socialForce = flee;
 
-        float range = 0.8f * _maxSocialForce;
-        _socialData[0, 9].socialRange = range;
-        _socialData[1, 0].socialRange = range;
-        _socialData[2, 1].socialRange = range;
-        _socialData[3, 2].socialRange = range;
-        _socialData[4, 3].socialRange = range;
-        _socialData[5, 4].socialRange = range;
-        _socialData[6, 5].socialRange = range;
-        _socialData[7, 6].socialRange = range;
-        _socialData[8, 7].socialRange = range;
-        _socialData[8, 8].socialRange = range;
-        break;
-    }
-  }
+			float range = 0.8f * MAX_SOCIAL_FORCE;
+			_socialData[0, 9].socialRange = range;
+			_socialData[1, 0].socialRange = range;
+			_socialData[2, 1].socialRange = range;
+			_socialData[3, 2].socialRange = range;
+			_socialData[4, 3].socialRange = range;
+			_socialData[5, 4].socialRange = range;
+			_socialData[6, 5].socialRange = range;
+			_socialData[7, 6].socialRange = range;
+			_socialData[8, 7].socialRange = range;
+			_socialData[9, 8].socialRange = range;
+		}
+	}
+
+
+
+
+
   #endregion
 
   #region SIMULATION
@@ -190,9 +197,9 @@ public class ParticleEngineImplementation : ParticleEngine {
   /// </summary>
   protected override void OnInitializeSimulation() {
 
-	//setPresetEcosystem( ParticleSystemPreset.EcosystemChase );
+	setPresetEcosystem( ParticleSystemPreset.EcosystemChase );
 
-    randomizeSpecies();
+//randomizeSpecies();
   }
 
   /// <summary>

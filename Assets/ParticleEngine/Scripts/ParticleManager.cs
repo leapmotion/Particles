@@ -14,7 +14,7 @@ public class ParticleManager : MonoBehaviour {
 	// particle physics constants
 	//---------------------------------------------
 	private	const int	NULL_PARTICLE			= -1;
-  	private const int 	NUM_PARTICLES 			= 64 * 6;
+  	private const int 	NUM_PARTICLES 			= 64 * 4;
 	private const int   MIN_FORCE_STEPS 		= 1;
 	private const int   MAX_FORCE_STEPS 		= 7;
 	private const int   MIN_SPECIES 			= 1;
@@ -334,7 +334,7 @@ public class ParticleManager : MonoBehaviour {
 			_species[6].socialForce[7] = MAX_SOCIAL_FORCE * chase;
 			_species[7].socialForce[8] = MAX_SOCIAL_FORCE * chase;
 			_species[8].socialForce[9] = MAX_SOCIAL_FORCE * chase;
-			_species[8].socialForce[0] = MAX_SOCIAL_FORCE * chase;
+			_species[9].socialForce[0] = MAX_SOCIAL_FORCE * chase;
 
 			float flee = -0.6f;
 			_species[0].socialForce[9] = MAX_SOCIAL_FORCE * flee;
@@ -346,7 +346,7 @@ public class ParticleManager : MonoBehaviour {
 			_species[6].socialForce[5] = MAX_SOCIAL_FORCE * flee;
 			_species[7].socialForce[6] = MAX_SOCIAL_FORCE * flee;
 			_species[8].socialForce[7] = MAX_SOCIAL_FORCE * flee;
-			_species[8].socialForce[8] = MAX_SOCIAL_FORCE * flee;
+			_species[9].socialForce[8] = MAX_SOCIAL_FORCE * flee;
 
 			float range = 0.8f;
 			_species[0].socialRange[9] = MAX_SOCIAL_RANGE * range;
@@ -358,7 +358,7 @@ public class ParticleManager : MonoBehaviour {
 			_species[6].socialRange[5] = MAX_SOCIAL_RANGE * range;
 			_species[7].socialRange[6] = MAX_SOCIAL_RANGE * range;
 			_species[8].socialRange[7] = MAX_SOCIAL_RANGE * range;
-			_species[8].socialRange[8] = MAX_SOCIAL_RANGE * range;
+			_species[9].socialRange[8] = MAX_SOCIAL_RANGE * range;
 		}
 	}
 

@@ -243,10 +243,6 @@ public class ParticleEngineImplementation : ParticleEngine {
     }
   }
 
-
-
-
-
   #endregion
 
   /// <summary>

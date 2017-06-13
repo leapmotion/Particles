@@ -3,11 +3,27 @@ using Leap.Unity;
 using Leap.Unity.Attributes;
 
 public abstract partial class ParticleEngine {
-  public const int MAX_SPECIES = 12;
-  public const float PARTICLE_RADIUS = 0.01f;
+
+  public const int MAX_SPECIES = 10;
+  public const float PARTICLE_RADIUS = 0.02f;
   public const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
   public const float PARTICLE_DIAMETER_SQUARED = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
-  public const float MAX_SOCIAL_RADIUS = 0;
+  //public const float MAX_SOCIAL_RADIUS = 0;
+  public const float BOUNDARY_FORCE = 0.01f;
+  public const float ENVIRONMENT_RADIUS = 1.0f;
+
+  //---------------------------------------------------------
+  // These parameters are critical for clustering behavior
+  //---------------------------------------------------------
+  public const float MIN_DRAG = 0.05f;
+  public const float MAX_DRAG = 0.3f;
+  public const float MIN_COLLISION_FORCE = 0.01f;
+  public const float MAX_COLLISION_FORCE = 0.2f;
+  public const float MAX_SOCIAL_FORCE = 0.003f;
+  public const float MIN_SOCIAL_RANGE = 0.0f;
+  public const float MAX_SOCIAL_RANGE = 0.5f;
+  public const int MIN_FORCE_STEPS = 1;
+  public const int MAX_FORCE_STEPS = 7;
 
   public struct Particle {
     public Vector3 position;
@@ -40,37 +56,33 @@ public abstract partial class ParticleEngine {
 public class ParticleEngineImplementation : ParticleEngine {
 
   [Header("Species")]
-  [MinMax(0, 1)]
+  [MinMax(MIN_DRAG, MAX_DRAG)]
   [SerializeField]
-  private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-
-  [MinMax(0, 1)]
-  [SerializeField]
-  private Vector2 _collisionForce = new Vector2(0.01f, 0.2f);
-
-  [MinMax(0, 0.005f)]
-  [SerializeField]
-  private Vector2 _socialForce = new Vector2(0, 0.003f);
-
-  [Tooltip("The probability that the social force for a species-species interaction is negative.")]
-  [Range(0, 1)]
-  [SerializeField]
-  private float _neativeSocialForceChance = 0.5f;
+  private Vector2 _dragRange = new Vector2(MIN_DRAG, MAX_DRAG);
 
   [Units("Meters")]
-  [MinMax(0, 1)]
+  [MinMax(MIN_COLLISION_FORCE, MAX_COLLISION_FORCE)]
   [SerializeField]
-  private Vector2 _socialRange = new Vector2(0, 0.5f);
+  private Vector2 _collisionForceRange = new Vector2(MIN_COLLISION_FORCE, MAX_COLLISION_FORCE);
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _maxSocialForce = MAX_SOCIAL_FORCE;
+
+  [Units("Meters")]
+  [MinMax(MIN_SOCIAL_RANGE, MAX_SOCIAL_RANGE)]
+  [SerializeField]
+  private Vector2 _socialRange = new Vector2(MIN_SOCIAL_RANGE, MAX_SOCIAL_RANGE);
 
   [Header("Environment")]
   [Units("Meters")]
   [MinValue(0)]
   [SerializeField]
-  private float _environmentRadius = 1.0f;
+  private float _environmentRadius = ENVIRONMENT_RADIUS;
 
   [MinValue(0)]
   [SerializeField]
-  private float _boundaryForce = 0.1f;
+  private float _boundaryForce = BOUNDARY_FORCE;
 
   [SerializeField]
   private Transform _homeTransform;
@@ -98,87 +110,147 @@ public class ParticleEngineImplementation : ParticleEngine {
     for (int s = 0; s < MAX_SPECIES; s++) {
       //_speciesData[s].steps = MIN_FORCE_STEPS + (int)((MAX_FORCE_STEPS - MIN_FORCE_STEPS) * Random.value);
       _speciesData[s].drag = Random.Range(_dragRange.x, _dragRange.y);
-      _speciesData[s].collisionForce = Random.Range(_collisionForce.x, _collisionForce.y);
+      _speciesData[s].collisionForce = Random.Range(_collisionForceRange.x, _collisionForceRange.y);
       _speciesData[s].color = new Color(Random.value, Random.value, Random.value, 1);
 
       for (int o = 0; o < MAX_SPECIES; o++) {
-        _socialData[s, o].socialForce = Random.Range(-MAX_SPECIES, MAX_SPECIES);
-        _socialData[s, o].socialForce = (Random.value < _neativeSocialForceChance ? -1 : 1) *
-                                        Random.Range(_socialForce.x, _socialForce.y);
+        _socialData[s, o].socialForce = Random.Range(-_maxSocialForce, _maxSocialForce);
         _socialData[s, o].socialRange = Random.Range(_socialRange.x, _socialRange.y);
       }
     }
   }
 
+  public enum ParticleSystemPreset {
+    EcosystemChase,
+    EcosystemRedMenace
+  }
 
   //--------------------------------------
   // set ecosystem to preset
   //--------------------------------------
   private void setPresetEcosystem(ParticleSystemPreset preset) {
-    switch (preset) {
-      case ParticleSystemPreset.EcosystemChase:
-        for (int s = 0; s < MAX_SPECIES; s++) {
-          //_speciesData[s].steps = MIN_FORCE_STEPS;
-          _speciesData[s].collisionForce = _collisionForce.x;
-          _speciesData[s].drag = _dragRange.x;
+    if (preset == ParticleSystemPreset.EcosystemChase) {
+      for (int s = 0; s < MAX_SPECIES; s++) {
+        //_speciesData[s].steps = MIN_FORCE_STEPS;
+        _speciesData[s].collisionForce = MIN_COLLISION_FORCE;
+        _speciesData[s].drag = MIN_DRAG;
 
-          for (int o = 0; o < MAX_SPECIES; o++) {
-            _socialData[s, o].socialForce = 0.0f;
-            _socialData[s, o].socialRange = _socialRange.y;
-          }
-
-          _socialData[s, s].socialForce = _socialForce.y * 0.1f;
+        for (int o = 0; o < MAX_SPECIES; o++) {
+          _socialData[s, o].socialForce = 0.0f;
+          _socialData[s, o].socialRange = MAX_SOCIAL_RANGE;
         }
 
-        _speciesData[0].color = new Color(0.7f, 0.0f, 0.0f);
-        _speciesData[1].color = new Color(0.7f, 0.3f, 0.0f);
-        _speciesData[2].color = new Color(0.7f, 0.7f, 0.0f);
-        _speciesData[3].color = new Color(0.0f, 0.7f, 0.0f);
-        _speciesData[4].color = new Color(0.0f, 0.0f, 0.7f);
-        _speciesData[5].color = new Color(0.4f, 0.0f, 0.7f);
-        _speciesData[6].color = new Color(1.0f, 0.3f, 0.3f);
-        _speciesData[7].color = new Color(1.0f, 0.6f, 0.3f);
-        _speciesData[8].color = new Color(1.0f, 1.0f, 0.3f);
-        _speciesData[9].color = new Color(0.3f, 1.0f, 0.3f);
+        _socialData[s, s].socialForce = MAX_SOCIAL_FORCE * 0.1f;
+      }
 
-        float chase = 0.9f * _socialForce.y;
-        _socialData[0, 1].socialForce = chase;
-        _socialData[1, 2].socialForce = chase;
-        _socialData[2, 3].socialForce = chase;
-        _socialData[3, 4].socialForce = chase;
-        _socialData[4, 5].socialForce = chase;
-        _socialData[5, 6].socialForce = chase;
-        _socialData[6, 7].socialForce = chase;
-        _socialData[7, 8].socialForce = chase;
-        _socialData[8, 9].socialForce = chase;
-        _socialData[8, 0].socialForce = chase;
+      _speciesData[0].color = new Color(0.7f, 0.0f, 0.0f);
+      _speciesData[1].color = new Color(0.7f, 0.3f, 0.0f);
+      _speciesData[2].color = new Color(0.7f, 0.7f, 0.0f);
+      _speciesData[3].color = new Color(0.0f, 0.7f, 0.0f);
+      _speciesData[4].color = new Color(0.0f, 0.0f, 0.7f);
+      _speciesData[5].color = new Color(0.4f, 0.0f, 0.7f);
+      _speciesData[6].color = new Color(1.0f, 0.3f, 0.3f);
+      _speciesData[7].color = new Color(1.0f, 0.6f, 0.3f);
+      _speciesData[8].color = new Color(1.0f, 1.0f, 0.3f);
+      _speciesData[9].color = new Color(0.3f, 1.0f, 0.3f);
 
-        float flee = -0.6f * _socialForce.y;
-        _socialData[0, 9].socialForce = flee;
-        _socialData[1, 0].socialForce = flee;
-        _socialData[2, 1].socialForce = flee;
-        _socialData[3, 2].socialForce = flee;
-        _socialData[4, 3].socialForce = flee;
-        _socialData[5, 4].socialForce = flee;
-        _socialData[6, 5].socialForce = flee;
-        _socialData[7, 6].socialForce = flee;
-        _socialData[8, 7].socialForce = flee;
-        _socialData[8, 8].socialForce = flee;
+      float chase = 0.9f * MAX_SOCIAL_FORCE;
+      _socialData[0, 1].socialForce = chase;
+      _socialData[1, 2].socialForce = chase;
+      _socialData[2, 3].socialForce = chase;
+      _socialData[3, 4].socialForce = chase;
+      _socialData[4, 5].socialForce = chase;
+      _socialData[5, 6].socialForce = chase;
+      _socialData[6, 7].socialForce = chase;
+      _socialData[7, 8].socialForce = chase;
+      _socialData[8, 9].socialForce = chase;
+      _socialData[9, 0].socialForce = chase;
 
-        float range = 0.8f * _socialForce.y;
-        _socialData[0, 9].socialRange = range;
-        _socialData[1, 0].socialRange = range;
-        _socialData[2, 1].socialRange = range;
-        _socialData[3, 2].socialRange = range;
-        _socialData[4, 3].socialRange = range;
-        _socialData[5, 4].socialRange = range;
-        _socialData[6, 5].socialRange = range;
-        _socialData[7, 6].socialRange = range;
-        _socialData[8, 7].socialRange = range;
-        _socialData[8, 8].socialRange = range;
-        break;
+      float flee = -0.6f * MAX_SOCIAL_FORCE;
+      _socialData[0, 9].socialForce = flee;
+      _socialData[1, 0].socialForce = flee;
+      _socialData[2, 1].socialForce = flee;
+      _socialData[3, 2].socialForce = flee;
+      _socialData[4, 3].socialForce = flee;
+      _socialData[5, 4].socialForce = flee;
+      _socialData[6, 5].socialForce = flee;
+      _socialData[7, 6].socialForce = flee;
+      _socialData[8, 7].socialForce = flee;
+      _socialData[9, 8].socialForce = flee;
+
+      float range = 0.8f * MAX_SOCIAL_FORCE;
+      _socialData[0, 9].socialRange = range;
+      _socialData[1, 0].socialRange = range;
+      _socialData[2, 1].socialRange = range;
+      _socialData[3, 2].socialRange = range;
+      _socialData[4, 3].socialRange = range;
+      _socialData[5, 4].socialRange = range;
+      _socialData[6, 5].socialRange = range;
+      _socialData[7, 6].socialRange = range;
+      _socialData[8, 7].socialRange = range;
+      _socialData[9, 8].socialRange = range;
+    }
+    //-----------------------------------------------
+    // Red Menace
+    //-----------------------------------------------
+    if (preset == ParticleSystemPreset.EcosystemRedMenace) {
+      _speciesData[0].color = new Color(1.0f, 0.0f, 0.0f);
+      _speciesData[1].color = new Color(0.3f, 0.2f, 0.0f);
+      _speciesData[2].color = new Color(0.3f, 0.3f, 0.0f);
+      _speciesData[3].color = new Color(0.0f, 0.3f, 0.0f);
+      _speciesData[4].color = new Color(0.0f, 0.0f, 0.3f);
+      _speciesData[5].color = new Color(0.3f, 0.0f, 0.3f);
+      _speciesData[6].color = new Color(0.3f, 0.3f, 0.3f);
+      _speciesData[7].color = new Color(0.3f, 0.4f, 0.3f);
+      _speciesData[8].color = new Color(0.3f, 0.4f, 0.3f);
+      _speciesData[9].color = new Color(0.3f, 0.2f, 0.3f);
+
+
+      int redSpecies = 0;
+
+      float normalLove = MAX_SOCIAL_FORCE * 0.04f;
+      float fearOfRed = MAX_SOCIAL_FORCE * -1.0f;
+      float redLoveOfOthers = MAX_SOCIAL_FORCE * 2.0f;
+      float redLoveOfSelf = MAX_SOCIAL_FORCE * 0.9f;
+
+      float normalRange = MAX_SOCIAL_RANGE * 0.4f;
+      float fearRange = MAX_SOCIAL_RANGE * 0.3f;
+      float loveRange = MAX_SOCIAL_RANGE * 0.3f;
+      float redSelfRange = MAX_SOCIAL_RANGE * 0.4f;
+
+      float drag = 0.1f;
+      float collision = 0.3f;
+
+      for (int s = 0; s < MAX_SPECIES; s++) {
+        //_species[s].steps = MIN_FORCE_STEPS;     
+        _speciesData[s].collisionForce = MIN_COLLISION_FORCE + collision * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);
+        _speciesData[s].drag = MIN_DRAG + drag * (MAX_DRAG - MIN_DRAG);
+
+        for (int o = 0; o < MAX_SPECIES; o++) {
+          _socialData[s, o].socialForce = normalLove;
+          _socialData[s, o].socialRange = normalRange;
+        }
+
+        //------------------------------------
+        // everyone fears red except for red
+        // and red loves everyone
+        //------------------------------------
+        _socialData[s, redSpecies].socialForce = fearOfRed;
+        _socialData[s, redSpecies].socialRange = fearRange * ((float)s / (float)MAX_SPECIES);
+
+        _socialData[redSpecies, redSpecies].socialForce = redLoveOfSelf;
+        _socialData[redSpecies, redSpecies].socialRange = redSelfRange;
+
+        _socialData[redSpecies, s].socialForce = redLoveOfOthers;
+        _socialData[redSpecies, s].socialRange = loveRange;
+      }
     }
   }
+
+
+
+
+
   #endregion
 
   /// <summary>
@@ -186,7 +258,10 @@ public class ParticleEngineImplementation : ParticleEngine {
   /// right here.
   /// </summary>
   protected override void OnInitializeSimulation() {
-    randomizeSpecies();
+
+    setPresetEcosystem(ParticleSystemPreset.EcosystemRedMenace);
+
+    //randomizeSpecies();
   }
 
   /// <summary>

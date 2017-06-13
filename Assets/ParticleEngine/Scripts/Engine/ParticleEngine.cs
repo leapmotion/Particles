@@ -412,13 +412,13 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   private void integrateParticle(int index, ref PerWorkerData workerData, ref Particle particle, ref SpeciesData speciesData) {
-    particle.position.x += particle.velocity.x;
-    particle.position.y += particle.velocity.y;
-    particle.position.z += particle.velocity.z;
+    doSocialForcesNaive(index, ref particle, ref speciesData);
 
     DoParticleGlobalForces(ref particle, ref speciesData);
 
-    doSocialForcesNaive(index, ref particle, ref speciesData);
+    particle.position.x += particle.velocity.x;
+    particle.position.y += particle.velocity.y;
+    particle.position.z += particle.velocity.z;
 
     workerData.RegisterParticle(ref particle);
   }

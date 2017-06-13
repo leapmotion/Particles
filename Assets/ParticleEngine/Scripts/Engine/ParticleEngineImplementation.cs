@@ -97,10 +97,6 @@ public class ParticleEngineImplementation : ParticleEngine {
 
   private Vector3 _homePosition;
 
-  public enum ParticleSystemPreset {
-    EcosystemChase
-  }
-
   #region ECOSYSTEM
 
   //----------------------------------

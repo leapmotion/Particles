@@ -14,7 +14,7 @@ public class ParticleManager : MonoBehaviour {
 	// particle physics constants
 	//---------------------------------------------
 	private	const int	NULL_PARTICLE			= -1;
-  	private const int 	NUM_PARTICLES 			= 400;
+  	private const int 	NUM_PARTICLES 			= 200;
 	private const int   MIN_FORCE_STEPS 		= 1;
 	private const int   MAX_FORCE_STEPS 		= 7;
 	private const int   MIN_SPECIES 			= 1;
@@ -171,9 +171,9 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     // initialize species parameters
     //-----------------------------------------
-    //randomizeSpecies();
+//randomizeSpecies();
 
-	setPresetEcosystem( ParticleControl.ECOSYSTEM_RED_MENACE );
+	setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
 
     //-----------------------------------------
     // randomize particles 
@@ -438,11 +438,6 @@ public class ParticleManager : MonoBehaviour {
                 _species[ redSpecies ].socialForce[s] = redLoveOfOthers;
                 _species[ redSpecies ].socialRange[s] = loveRange;                
 	        }
-
-
-            for (int s=0; s<MAX_SPECIES; s++) 
-            {
-            }
 		}
 	}
 
@@ -593,41 +588,39 @@ _particles[p].velocity = Vector3.zero;
 					{
 		        		if (o == i) continue; //Dont compare against self!
 		
-				        Particle other = _particles[o];
-				        Vector3	 vectorToOther = other.position - _particles[i].position;
-				        float 	 distanceSquared = vectorToOther.sqrMagnitude;		
+				        Particle other 				= _particles[o];
+				        Vector3	 vectorToOther 		= other.position - _particles[i].position;
+				        float 	 distanceSquared	= vectorToOther.sqrMagnitude;		
+						float 	 distance 			= Mathf.Sqrt( distanceSquared );
+						Vector3  directionToOther 	= vectorToOther / distance;
 
-						float socialRangeSquared = 
-						_species[ _particles[i].species ].socialRange[ other.species ] * 
-						_species[ _particles[i].species ].socialRange[ other.species ];
-
-		        		if ( ( distanceSquared < socialRangeSquared ) && ( distanceSquared > ZERO ) ) 
-						{
-							float distance = Mathf.Sqrt( distanceSquared );
-							Vector3 directionToOther = vectorToOther / distance;
-		
+						//----------------------------------------
+						// social forces
+						//----------------------------------------
+		        		if ( ( distance < _species[ _particles[i].species ].socialRange[ other.species ] ) && ( distanceSquared > ZERO ) ) 
+						{		
 							//--------------------------------------------------------------------------
 							// Accumulate forces from social attractions/repulsions to other particles
 							//--------------------------------------------------------------------------
 							socialForces += _species[ _particles[i].species ].socialForce[ other.species ] * directionToOther;
 							numSocialForces ++; 
-
-							//----------------------------------------
-							// collisions
-							//----------------------------------------
-							float combinedRadius = PARTICLE_RADIUS * 2;
-		          			if (distance < combinedRadius) 
-							{
-								float penetration = ONE - distance / combinedRadius;
-								float averageCollisionForce =
-		            			(
-		              				_species[ _particles[i].species ].collisionForce +
-		              				_species[ other.species ].collisionForce
-		            			) * ONE_HALF;
-		
-		            			_particles[i].velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
-		          			}
 						}
+
+						//----------------------------------------
+						// collisions
+						//----------------------------------------
+						float combinedRadius = PARTICLE_RADIUS * 2;
+	          			if ( distance < combinedRadius ) 
+						{
+							float penetration = ONE - distance / combinedRadius;
+							float averageCollisionForce =
+	            			(
+	              				_species[ _particles[i].species ].collisionForce +
+	              				_species[ other.species ].collisionForce
+	            			) * ONE_HALF;
+	
+	            			_particles[i].velocity -= deltaTime * averageCollisionForce * directionToOther * penetration;
+	          			}
 	        		}
 	      		}
 

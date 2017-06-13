@@ -203,7 +203,7 @@ public class ParticleEngineImplementation : ParticleEngine {
     if (Input.GetKey(KeyCode.Space)) {
       for (int i = 0; i < 50; i++) {
         TryEmit(new Particle() {
-          position = Random.insideUnitSphere * 0.5f,
+          position = Random.insideUnitSphere * 0.05f,
           velocity = Vector3.zero,
           species = Random.Range(0, MAX_SPECIES)
         });

@@ -24,11 +24,11 @@ public class ParticleControl : MonoBehaviour {
 	
 	private const int NUM_EMITTERS = NUM_FINGERS_PER_HAND * NUM_HANDS;
 
-	public const int ECOSYSTEM_NULL		= -1;
-	public const int ECOSYSTEM_CHASE 	=  0;
-	public const int ECOSYSTEM_FLURRY	=  1;
-	public const int ECOSYSTEM_WTF		=  2;
-	public const int NUM_ECOSYSTEMS		=  3;
+	public const int ECOSYSTEM_NULL			= -1;
+	public const int ECOSYSTEM_CHASE 		=  0;
+	public const int ECOSYSTEM_RED_MENACE	=  1;
+	public const int ECOSYSTEM_WTF			=  2;
+	public const int NUM_ECOSYSTEMS			=  3;
 
 	private int BUTTON_MARGIN 		= 10;
 	private int CLEAR_BUTTON_WIDTH  = 120;

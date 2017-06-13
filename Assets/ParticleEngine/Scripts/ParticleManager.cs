@@ -14,7 +14,7 @@ public class ParticleManager : MonoBehaviour {
 	// particle physics constants
 	//---------------------------------------------
 	private	const int	NULL_PARTICLE			= -1;
-  	private const int 	NUM_PARTICLES 			= 64 * 4;
+  	private const int 	NUM_PARTICLES 			= 400;
 	private const int   MIN_FORCE_STEPS 		= 1;
 	private const int   MAX_FORCE_STEPS 		= 7;
 	private const int   MIN_SPECIES 			= 1;
@@ -26,8 +26,7 @@ public class ParticleManager : MonoBehaviour {
  	private const float GRAVITY_FORCE			= 0.0f;
  	private const float HAND_COLLISION_FORCE	= 0.01f;
  	private const float HAND_COLLISION_FRICTION = 0.1f;
-//private const float ENVIRONMENT_RADIUS		= 1.0f;   //meters
-  	private const float ENVIRONMENT_RADIUS		= 0.3f;   //meters
+  	private const float ENVIRONMENT_RADIUS		= 1.3f;   //meters
   	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
 
 	//---------------------------------------------------------
@@ -174,7 +173,24 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     //randomizeSpecies();
 
-	setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
+	setPresetEcosystem( ParticleControl.ECOSYSTEM_RED_MENACE );
+
+    //-----------------------------------------
+    // randomize particles 
+    //-----------------------------------------
+	for (int p = 0; p < NUM_PARTICLES; p++) 
+	{
+		_particles[p].active   = true;
+		_particles[p].species  = Random.Range(0, MAX_SPECIES);
+		_particles[p].position = _homePosition + Random.insideUnitSphere * 0.5f * ENVIRONMENT_RADIUS;
+		_particles[p].velocity = Vector3.zero; 
+	}
+
+
+
+
+
+
 
     uint[] args = new uint[5];
     args[0] = (uint)_mesh.GetIndexCount(0);
@@ -296,6 +312,9 @@ public class ParticleManager : MonoBehaviour {
 	//--------------------------------------
 	private void setPresetEcosystem( int e ) 
 	{
+		//-----------------------------------------------
+		// Chase
+		//-----------------------------------------------
 		if ( e == ParticleControl.ECOSYSTEM_CHASE )
 		{
 			for (int s=0; s<MAX_SPECIES; s++) 
@@ -360,6 +379,71 @@ public class ParticleManager : MonoBehaviour {
 			_species[8].socialRange[7] = MAX_SOCIAL_RANGE * range;
 			_species[9].socialRange[8] = MAX_SOCIAL_RANGE * range;
 		}
+
+		//-----------------------------------------------
+		// Red Menace
+		//-----------------------------------------------
+		if ( e == ParticleControl.ECOSYSTEM_RED_MENACE )
+		{
+			_species[0].color = new Color( 1.0f, 0.0f, 0.0f, ONE );
+			_species[1].color = new Color( 0.3f, 0.2f, 0.0f, ONE );
+			_species[2].color = new Color( 0.3f, 0.3f, 0.0f, ONE );
+			_species[3].color = new Color( 0.0f, 0.3f, 0.0f, ONE );
+			_species[4].color = new Color( 0.0f, 0.0f, 0.3f, ONE );
+			_species[5].color = new Color( 0.3f, 0.0f, 0.3f, ONE );
+			_species[6].color = new Color( 0.3f, 0.3f, 0.3f, ONE );
+			_species[7].color = new Color( 0.3f, 0.4f, 0.3f, ONE );
+			_species[8].color = new Color( 0.3f, 0.4f, 0.3f, ONE );
+			_species[9].color = new Color( 0.3f, 0.2f, 0.3f, ONE );
+
+
+			int redSpecies = 0;
+
+           	float normalLove 		= MAX_SOCIAL_FORCE *  0.04f;
+           	float fearOfRed  		= MAX_SOCIAL_FORCE * -1.0f;
+            float redLoveOfOthers	= MAX_SOCIAL_FORCE *  2.0f;
+            float redLoveOfSelf   	= MAX_SOCIAL_FORCE *  0.9f;
+
+           	float normalRange	= MAX_SOCIAL_RANGE *  0.4f;
+            float fearRange   	= MAX_SOCIAL_RANGE *  0.3f;
+            float loveRange   	= MAX_SOCIAL_RANGE *  0.3f;
+            float redSelfRange  = MAX_SOCIAL_RANGE *  0.4f;
+
+			float drag		= 0.1f;
+			float collision	= 0.3f;
+
+
+			for (int s=0; s<MAX_SPECIES; s++) 
+			{
+				_species[s].steps = MIN_FORCE_STEPS;     
+				_species[s].collisionForce 	= MIN_COLLISION_FORCE + collision * ( MAX_COLLISION_FORCE - MIN_COLLISION_FORCE );
+				_species[s].drag = MIN_DRAG + drag * ( MAX_DRAG - MIN_DRAG );
+
+				for (int o=0; o<MAX_SPECIES; o++) 
+				{
+					_species[s].socialForce[o] = normalLove;
+					_species[s].socialRange[o] = normalRange;
+	            }
+
+				//------------------------------------
+	            // everyone fears red except for red
+	            // and red loves everyone
+	            //------------------------------------
+                _species[s].socialForce[ redSpecies ] = fearOfRed;
+                _species[s].socialRange[ redSpecies ] = fearRange * ( (float)s / (float)MAX_SPECIES );
+                
+                _species[ redSpecies ].socialForce[ redSpecies ] = redLoveOfSelf;
+                _species[ redSpecies ].socialRange[ redSpecies ] = redSelfRange;
+
+                _species[ redSpecies ].socialForce[s] = redLoveOfOthers;
+                _species[ redSpecies ].socialRange[s] = loveRange;                
+	        }
+
+
+            for (int s=0; s<MAX_SPECIES; s++) 
+            {
+            }
+		}
 	}
 
 
@@ -373,7 +457,7 @@ public class ParticleManager : MonoBehaviour {
 		{
 			if ( _particleController.getEmitterActive(e) )
 			{				
-int mod = 7; // this will do for now - we will need to implement proper particle emission rate..
+int mod = 1; // this will do for now - we will need to implement proper particle emission rate..
 
 //int mod = 2;
 

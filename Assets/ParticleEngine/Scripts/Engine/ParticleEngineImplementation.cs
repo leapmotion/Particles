@@ -10,7 +10,7 @@ public abstract partial class ParticleEngine {
 	public const float PARTICLE_DIAMETER_SQUARED = PARTICLE_DIAMETER * PARTICLE_DIAMETER;
 	//public const float MAX_SOCIAL_RADIUS = 0;
  	public const float BOUNDARY_FORCE = 0.01f;
- 	public const float ENVIRONMENT_RADIUS = 0.03f;
+ 	public const float ENVIRONMENT_RADIUS = 1.0f;
 	
 	//---------------------------------------------------------
 	// These parameters are critical for clustering behavior
@@ -110,7 +110,8 @@ public class ParticleEngineImplementation : ParticleEngine {
 
 
   public enum ParticleSystemPreset {
-    EcosystemChase
+    EcosystemChase,
+	EcosystemRedMenace
   }
 
 	//--------------------------------------
@@ -182,6 +183,65 @@ public class ParticleEngineImplementation : ParticleEngine {
 			_socialData[8, 7].socialRange = range;
 			_socialData[9, 8].socialRange = range;
 		}
+		//-----------------------------------------------
+		// Red Menace
+		//-----------------------------------------------
+		if ( preset == ParticleSystemPreset.EcosystemRedMenace )
+		{
+			_speciesData[0].color = new Color( 1.0f, 0.0f, 0.0f );
+			_speciesData[1].color = new Color( 0.3f, 0.2f, 0.0f );
+			_speciesData[2].color = new Color( 0.3f, 0.3f, 0.0f );
+			_speciesData[3].color = new Color( 0.0f, 0.3f, 0.0f );
+			_speciesData[4].color = new Color( 0.0f, 0.0f, 0.3f );
+			_speciesData[5].color = new Color( 0.3f, 0.0f, 0.3f );
+			_speciesData[6].color = new Color( 0.3f, 0.3f, 0.3f );
+			_speciesData[7].color = new Color( 0.3f, 0.4f, 0.3f );
+			_speciesData[8].color = new Color( 0.3f, 0.4f, 0.3f );
+			_speciesData[9].color = new Color( 0.3f, 0.2f, 0.3f );
+
+
+			int redSpecies = 0;
+
+           	float normalLove 		= MAX_SOCIAL_FORCE *  0.04f;
+           	float fearOfRed  		= MAX_SOCIAL_FORCE * -1.0f;
+            float redLoveOfOthers	= MAX_SOCIAL_FORCE *  2.0f;
+            float redLoveOfSelf   	= MAX_SOCIAL_FORCE *  0.9f;
+
+           	float normalRange	= MAX_SOCIAL_RANGE *  0.4f;
+            float fearRange   	= MAX_SOCIAL_RANGE *  0.3f;
+            float loveRange   	= MAX_SOCIAL_RANGE *  0.3f;
+            float redSelfRange  = MAX_SOCIAL_RANGE *  0.4f;
+
+			float drag		= 0.1f;
+			float collision	= 0.3f;
+
+
+			for (int s=0; s<MAX_SPECIES; s++) 
+			{
+				//_species[s].steps = MIN_FORCE_STEPS;     
+				_speciesData[s].collisionForce 	= MIN_COLLISION_FORCE + collision * ( MAX_COLLISION_FORCE - MIN_COLLISION_FORCE );
+				_speciesData[s].drag = MIN_DRAG + drag * ( MAX_DRAG - MIN_DRAG );
+
+				for (int o=0; o<MAX_SPECIES; o++) 
+				{
+					_socialData[s, o].socialForce = normalLove;
+					_socialData[s, o].socialRange = normalRange;
+	            }
+
+				//------------------------------------
+	            // everyone fears red except for red
+	            // and red loves everyone
+	            //------------------------------------
+                _socialData[s, redSpecies ].socialForce = fearOfRed;
+                _socialData[s, redSpecies ].socialRange = fearRange * ( (float)s / (float)MAX_SPECIES );
+                
+                _socialData[ redSpecies, redSpecies ].socialForce = redLoveOfSelf;
+                _socialData[ redSpecies, redSpecies ].socialRange = redSelfRange;
+
+                _socialData[ redSpecies, s].socialForce = redLoveOfOthers;
+                _socialData[ redSpecies, s].socialRange = loveRange;                
+	        }
+		}
 	}
 
 
@@ -197,7 +257,7 @@ public class ParticleEngineImplementation : ParticleEngine {
   /// </summary>
   protected override void OnInitializeSimulation() {
 
-	setPresetEcosystem( ParticleSystemPreset.EcosystemChase );
+	setPresetEcosystem( ParticleSystemPreset.EcosystemRedMenace );
 
 //randomizeSpecies();
   }

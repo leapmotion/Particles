@@ -22,6 +22,8 @@ public abstract partial class ParticleEngine {
 	public const float MAX_SOCIAL_FORCE 	= 0.003f;
 	public const float MIN_SOCIAL_RANGE 	= 0.0f;
 	public const float MAX_SOCIAL_RANGE 	= 0.5f;
+	public const int   MIN_FORCE_STEPS 		= 1;
+	public const int   MAX_FORCE_STEPS 		= 7;
 
 
   public struct Particle {
@@ -101,7 +103,6 @@ public class ParticleEngineImplementation : ParticleEngine {
       _speciesData[s].color = new Color(Random.value, Random.value, Random.value, 1);
 
       for (int o = 0; o < MAX_SPECIES; o++) {
-//_socialData[s, o].socialForce = Random.Range(-MAX_SPECIES, MAX_SPECIES);
         _socialData[s, o].socialForce = Random.Range(-_maxSocialForce, _maxSocialForce);
         _socialData[s, o].socialRange = Random.Range(_socialRange.x, _socialRange.y);
       }

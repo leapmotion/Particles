@@ -18,7 +18,10 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private bool _useMultithreading = false;
 
   [SerializeField]
-  private bool _useChunking = false;
+  private bool _useCollisionChunking = false;
+
+  [SerializeField]
+  private bool _useSocialChunking = false;
 
   [Header("Rendering")]
   [SerializeField]
@@ -65,6 +68,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private long[] integrationTimes = new long[32];
   private long[] collisionTimes = new long[32];
   private long[] sortingTimes = new long[32];
+  private long[] socialForceTimes = new long[32];
   private System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
 
   //Drawing
@@ -81,7 +85,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       collisionChunkCount++;
       collisionChunkCounts[collisionChunkKey] = collisionChunkCount;
 
-      var socialChunkKey = new ChunkKey(ref particle.position, 1f / 0.5f);
+      var socialChunkKey = new ChunkKey(ref particle.position, 1f / 0.2f);
       int socialChunkCount;
       socialChunkCounts.TryGetValue(socialChunkKey, out socialChunkCount);
       socialChunkCount++;
@@ -181,21 +185,37 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       using (new ProfilerSample("Integrate Particles")) {
         integrateParticles(0, 0, _aliveParticles);
       }
+      Array.Copy(_particlesFront, _particlesBack, _aliveParticles);
 
-      if (_useChunking) {
+      if (_useCollisionChunking) {
         using (new ProfilerSample("Accumulate And Sort")) {
-          accumulateAndSort(isCollision: true);
+          sortIntoChunks(isCollision: true);
         }
 
         using (new ProfilerSample("Resolve Collisions")) {
           resolveCollisionsChunked();
-          //resolveCollisionsNaive(0, 0, _aliveParticles);
         }
       } else {
-        System.Array.Copy(_particlesFront, _particlesBack, _aliveParticles);
-
         using (new ProfilerSample("Resolve Collisions")) {
           resolveCollisionsNaive(0, 0, _aliveParticles);
+        }
+      }
+
+      using (new ProfilerSample("Apply Global Forces")) {
+        applyGlobalForces(0, 0, _aliveParticles);
+      }
+
+      if (_useSocialChunking) {
+        using (new ProfilerSample("Accumulate And Sort")) {
+          sortIntoChunks(isCollision: false);
+        }
+
+        using (new ProfilerSample("Apply Forces")) {
+          doSocialForcesChunked();
+        }
+      } else {
+        using (new ProfilerSample("Apply Forces")) {
+          doSocialForcesNaive(0, 0, _aliveParticles);
         }
       }
     }
@@ -266,9 +286,10 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     GUILayout.Label("Cores: " + SystemInfo.processorCount);
     GUILayout.Label("Particles: " + _aliveParticles);
 
-    displayTimingData("Integration:", integrationTimes);
     displayTimingData("Collision:", collisionTimes);
-    displayTimingData("Sorting:", sortingTimes);
+    displayTimingData("Social Forces:", socialForceTimes);
+    //displayTimingData("Integration:", integrationTimes);
+    //displayTimingData("Sorting:", sortingTimes);
     GUILayout.Space(50);
     _useMultithreading = GUILayout.Toggle(_useMultithreading, "Multithreading " + (_useMultithreading ? "enabled" : "disabled"));
 
@@ -370,13 +391,26 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract bool ShouldKillParticle(ref Particle particle);
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-    drawer.color = Color.blue;
-    foreach (var pair in _chunkCounts) {
-      var key = pair.Key;
-      float x = (key.x - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
-      float y = (key.y - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
-      float z = (key.z - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
-      drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * PARTICLE_DIAMETER);
+    if (Application.isPlaying) {
+      accumulateCounts(isCollision: true);
+      drawer.color = Color.blue;
+      foreach (var pair in _chunkCounts) {
+        var key = pair.Key;
+        float x = (key.x - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
+        float y = (key.y - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
+        float z = (key.z - ushort.MaxValue / 2 + 0.5f) * PARTICLE_DIAMETER;
+        drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * PARTICLE_DIAMETER);
+      }
+
+      accumulateCounts(isCollision: false);
+      drawer.color = Color.green;
+      foreach (var pair in _chunkCounts) {
+        var key = pair.Key;
+        float x = (key.x - ushort.MaxValue / 2 + 0.5f) * 0.2f;
+        float y = (key.y - ushort.MaxValue / 2 + 0.5f) * 0.2f;
+        float z = (key.z - ushort.MaxValue / 2 + 0.5f) * 0.2f;
+        drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * 0.2f);
+      }
     }
   }
   #endregion
@@ -412,15 +446,62 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   }
 
   private void integrateParticle(int index, ref PerWorkerData workerData, ref Particle particle, ref SpeciesData speciesData) {
-    doSocialForcesNaive(index, ref particle, ref speciesData);
-
-    DoParticleGlobalForces(ref particle, ref speciesData);
-
     particle.position.x += particle.velocity.x;
     particle.position.y += particle.velocity.y;
     particle.position.z += particle.velocity.z;
 
     workerData.RegisterParticle(ref particle);
+  }
+
+  private void accumulateCounts(bool isCollision) {
+    int sum;
+    _chunkCounts.Clear();
+    foreach (var workerData in _workerData) {
+      Dictionary<ChunkKey, int> counts = isCollision ? workerData.collisionChunkCounts : workerData.socialChunkCounts;
+      foreach (var pair in counts) {
+        _chunkCounts.TryGetValue(pair.Key, out sum);
+        sum += pair.Value;
+        _chunkCounts[pair.Key] = sum;
+      }
+    }
+  }
+
+  private void sortIntoChunks(bool isCollision) {
+    accumulateCounts(isCollision);
+
+    _chunkLocations.Clear();
+    int sum = 0;
+    foreach (var pair in _chunkCounts) {
+      _chunkLocations[pair.Key] = new ChunkLocation() {
+        start = sum,
+        end = sum
+      };
+      sum += pair.Value;
+    }
+
+    float chunkScale = 1.0f / (isCollision ? PARTICLE_DIAMETER : 0.2f);
+    for (int i = 0; i < _aliveParticles; i++) {
+      var chunkKey = new ChunkKey(ref _particlesFront[i].position, chunkScale);
+      var chunkLocation = _chunkLocations[chunkKey];
+
+      _particlesBack[chunkLocation.end] = _particlesFront[i];
+      chunkLocation.end++;
+      _chunkLocations[chunkKey] = chunkLocation;
+    }
+  }
+
+  private void applyGlobalForces(int workerIndex, int startIndex, int endIndex) {
+    for (int i = startIndex; i < endIndex; i++) {
+      DoParticleGlobalForces(ref _particlesFront[i], ref _speciesData[_particlesFront[i].species]);
+    }
+  }
+
+  private void doSocialForcesNaive(int workerIndex, int startIndex, int endIndex) {
+    long startTick = _stopwatch.ElapsedTicks;
+    for (int i = startIndex; i < endIndex; i++) {
+      doSocialForcesNaive(i, ref _particlesFront[i], ref _speciesData[_particlesFront[i].species]);
+    }
+    socialForceTimes[workerIndex] = _stopwatch.ElapsedTicks - startTick;
   }
 
   private void doSocialForcesNaive(int index, ref Particle particle, ref SpeciesData speciesData) {
@@ -451,6 +532,67 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
   }
 
+  private void doSocialForcesChunked() {
+    long startTick = _stopwatch.ElapsedTicks;
+    Array.Copy(_particlesBack, _particlesFront, _aliveParticles);
+
+    foreach (var pair in _chunkLocations) {
+      var chunkKey = pair.Key;
+      var chunkLocation = pair.Value;
+
+      for (int i = chunkLocation.start; i < chunkLocation.end; i++) {
+        var species = _speciesData[_particlesFront[i].species];
+
+        Vector3 totalSocialForce = Vector3.zero;
+        int numSocialForces = 0;
+
+        //Loop through our chunk
+        for (int j = i + 1; j < chunkLocation.end; j++) {
+          DoParticleSocialInteraction(ref _particlesFront[i],
+                                      ref species,
+                                      ref _socialData[_particlesFront[i].species, _particlesFront[j].species],
+                                      ref _particlesFront[j],
+                                      ref _speciesData[_particlesFront[j].species],
+                                      ref totalSocialForce,
+                                      ref numSocialForces);
+        }
+
+        for (int dx = -1; dx <= 1; dx++) {
+          for (int dy = -1; dy <= 1; dy++) {
+            for (int dz = -1; dz <= 1; dz++) {
+              if (dx == 0 && dy == 0 && dz == 0) {
+                continue;
+              }
+
+              ChunkKey offsetKey = chunkKey;
+              offsetKey.x = (ushort)(offsetKey.x + dx);
+              offsetKey.y = (ushort)(offsetKey.y + dy);
+              offsetKey.z = (ushort)(offsetKey.z + dz);
+
+              ChunkLocation offsetLocation;
+              if (_chunkLocations.TryGetValue(offsetKey, out offsetLocation)) {
+                for (int j = offsetLocation.start; j < offsetLocation.end; j++) {
+                  DoParticleSocialInteraction(ref _particlesFront[i],
+                                              ref species,
+                                              ref _socialData[_particlesFront[i].species, _particlesFront[j].species],
+                                              ref _particlesFront[j],
+                                              ref _speciesData[_particlesFront[j].species],
+                                              ref totalSocialForce,
+                                              ref numSocialForces);
+                }
+              }
+            }
+          }
+        }
+
+        if (numSocialForces > 0) {
+          _particlesFront[i].velocity += totalSocialForce / numSocialForces;
+        }
+      }
+    }
+    socialForceTimes[0] = _stopwatch.ElapsedTicks - startTick;
+  }
+
   private void resolveCollisionsNaive(int workerIndex, int startIndex, int endIndex) {
     long startTick = _stopwatch.ElapsedTicks;
     for (int i = startIndex; i < endIndex; ++i) {
@@ -471,38 +613,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
     for (int i = index + 1; i < _aliveParticles; i++) {
       DoParticleCollisionInteraction(ref particle, ref speciesData, ref _particlesBack[i], ref _speciesData[_particlesBack[i].species]);
-    }
-  }
-
-  private void accumulateAndSort(bool isCollision) {
-    int sum;
-    _chunkCounts.Clear();
-    foreach (var workerData in _workerData) {
-      Dictionary<ChunkKey, int> counts = isCollision ? workerData.collisionChunkCounts : workerData.socialChunkCounts;
-      foreach (var pair in counts) {
-        _chunkCounts.TryGetValue(pair.Key, out sum);
-        sum += pair.Value;
-        _chunkCounts[pair.Key] = sum;
-      }
-    }
-
-    _chunkLocations.Clear();
-    sum = 0;
-    foreach (var pair in _chunkCounts) {
-      _chunkLocations[pair.Key] = new ChunkLocation() {
-        start = sum,
-        end = sum
-      };
-      sum += pair.Value;
-    }
-
-    for (int i = 0; i < _aliveParticles; i++) {
-      var chunkKey = new ChunkKey(ref _particlesFront[i].position, 1f / PARTICLE_DIAMETER);
-      var chunkLocation = _chunkLocations[chunkKey];
-
-      _particlesBack[chunkLocation.end] = _particlesFront[i];
-      chunkLocation.end++;
-      _chunkLocations[chunkKey] = chunkLocation;
     }
   }
 

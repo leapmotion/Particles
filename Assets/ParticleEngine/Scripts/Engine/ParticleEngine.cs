@@ -85,7 +85,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       collisionChunkCount++;
       collisionChunkCounts[collisionChunkKey] = collisionChunkCount;
 
-      var socialChunkKey = new ChunkKey(ref particle.position, 1f / 0.2f);
+      var socialChunkKey = new ChunkKey(ref particle.position, 1f / MAX_SOCIAL_RANGE);
       int socialChunkCount;
       socialChunkCounts.TryGetValue(socialChunkKey, out socialChunkCount);
       socialChunkCount++;
@@ -201,10 +201,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         }
       }
 
-      using (new ProfilerSample("Apply Global Forces")) {
-        applyGlobalForces(0, 0, _aliveParticles);
-      }
-
       if (_useSocialChunking) {
         using (new ProfilerSample("Accumulate And Sort")) {
           sortIntoChunks(isCollision: false);
@@ -217,6 +213,10 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         using (new ProfilerSample("Apply Forces")) {
           doSocialForcesNaive(0, 0, _aliveParticles);
         }
+      }
+
+      using (new ProfilerSample("Apply Global Forces")) {
+        applyGlobalForces(0, 0, _aliveParticles);
       }
     }
   }
@@ -406,10 +406,10 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       drawer.color = Color.green;
       foreach (var pair in _chunkCounts) {
         var key = pair.Key;
-        float x = (key.x - ushort.MaxValue / 2 + 0.5f) * 0.2f;
-        float y = (key.y - ushort.MaxValue / 2 + 0.5f) * 0.2f;
-        float z = (key.z - ushort.MaxValue / 2 + 0.5f) * 0.2f;
-        drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * 0.2f);
+        float x = (key.x - ushort.MaxValue / 2 + 0.5f) * MAX_SOCIAL_RANGE;
+        float y = (key.y - ushort.MaxValue / 2 + 0.5f) * MAX_SOCIAL_RANGE;
+        float z = (key.z - ushort.MaxValue / 2 + 0.5f) * MAX_SOCIAL_RANGE;
+        drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * MAX_SOCIAL_RANGE);
       }
     }
   }
@@ -479,7 +479,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       sum += pair.Value;
     }
 
-    float chunkScale = 1.0f / (isCollision ? PARTICLE_DIAMETER : 0.2f);
+    float chunkScale = 1.0f / (isCollision ? PARTICLE_DIAMETER : MAX_SOCIAL_RANGE);
     for (int i = 0; i < _aliveParticles; i++) {
       var chunkKey = new ChunkKey(ref _particlesFront[i].position, chunkScale);
       var chunkLocation = _chunkLocations[chunkKey];

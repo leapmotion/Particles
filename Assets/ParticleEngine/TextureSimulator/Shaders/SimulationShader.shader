@@ -17,6 +17,7 @@
 	};
 
 	sampler2D _MainTex;
+  float2 _SocialData[100];
 			
   float nrand(float2 n){
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -30,7 +31,7 @@
 	}
 
   float4 integratePositions (v2f i) : SV_Target {
-    return tex2D(_MainTex, i.uv);
+    return float4(tex2D(_MainTex, i.uv).xyz, 0);
 	}
 			
   float4 forceTowardsOrigin (v2f i) : SV_Target {
@@ -41,7 +42,7 @@
     float3 toOrigin = -particle.xyz;
     float dist = length(toOrigin);
     if (dist > 0) {
-      accel = normalize(toOrigin) * 0.0003;
+      accel = normalize(toOrigin) * 0.00004;
     }
 
 		return float4(accel, 0);
@@ -56,20 +57,31 @@
     fixed3 accel = float3(0,0,0);
     float4 particle = tex2D(_MainTex, i.uv);
 
+    float socialOffset = (int)(particle.w * 10);
+    float4 totalSocialForce = float4(0, 0, 0, 0);
+
     float side = 64.0;
     for (float x = 0; x < 1; x += 1.0/ side) {
       for (float y = 0; y < 1; y += 1.0 / side) {
         float4 other = tex2D(_MainTex, float2(x, y));
         float3 fromOther = particle.xyz - other.xyz;
         float distance = length(fromOther);
+        float zeroMult = distance < 0.0001 ? 0 : (1.0 / distance);
 
-        float force = 1 - distance / 0.02;
-        force = distance < 0.0001 ? 0 : force;
-        force = distance > 0.02 ? 0 : force;
+        float collisionForce = 1 - distance / 0.02;
+        collisionForce = distance > 0.02 ? 0 : collisionForce;
+        accel += fromOther * (collisionForce * zeroMult * 0.005);
 
-        accel += fromOther * force * 0.9;
+        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+        float socialForce = socialData.x;
+        socialForce = distance > socialData.y ? 0 : socialForce;
+
+        totalSocialForce += float4(fromOther * socialForce, 1) * zeroMult;
       }
     }
+
+    float zeroMult = totalSocialForce.w < 0.5 ? 0 : (1.0 / totalSocialForce.w);
+    accel -= totalSocialForce.xyz * zeroMult;
 
 		return float4(accel, 0);
 	}
@@ -78,7 +90,8 @@
     float x = nrand(i.uv);
     float y = nrand(i.uv * 2 + float2(0.2f, 0.9f));
     float z = nrand(i.uv * 3 + float2(2.2f, 33.9f));
-    return float4(x - 0.5, y - 0.5, z - 0.5, 0);
+    float w = floor(nrand(i.uv * 4 + float2(23, 54)) * 10);
+    return float4(x - 0.5, y - 0.5, z - 0.5, w);
 	}
   ENDCG
 

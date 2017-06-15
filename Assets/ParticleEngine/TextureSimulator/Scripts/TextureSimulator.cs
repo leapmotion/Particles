@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using Leap.Unity.Query;
 
-public class NoWay : MonoBehaviour {
+public class TextureSimulator : MonoBehaviour {
 
   public Mesh mesh;
   public RenderTexture positions;
@@ -61,7 +59,7 @@ public class NoWay : MonoBehaviour {
         }
       }
     }
-    
+
     _mesh.hideFlags = HideFlags.HideAndDontSave;
     _mesh.SetVertices(pos);
     _mesh.SetTriangles(tri, 0);
@@ -70,9 +68,56 @@ public class NoWay : MonoBehaviour {
 
     Debug.Log("Supports RT: " + SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBFloat));
 
+    {
+      Color[] colors = new Color[10];
+      colors[0] = new Color(1.0f, 0.0f, 0.0f);
+      colors[1] = new Color(0.3f, 0.2f, 0.0f);
+      colors[2] = new Color(0.3f, 0.3f, 0.0f);
+      colors[3] = new Color(0.0f, 0.3f, 0.0f);
+      colors[4] = new Color(0.0f, 0.0f, 0.3f);
+      colors[5] = new Color(0.3f, 0.0f, 0.3f);
+      colors[6] = new Color(0.3f, 0.3f, 0.3f);
+      colors[7] = new Color(0.3f, 0.4f, 0.3f);
+      colors[8] = new Color(0.3f, 0.4f, 0.3f);
+      colors[9] = new Color(0.3f, 0.2f, 0.3f);
+
+      displayMat.SetColorArray("_Colors", colors);
+    }
+
+    {
+      const int MAX_SPECIES = 10;
+      const float MAX_SOCIAL_FORCE = 0.3f;
+      const float MAX_SOCIAL_RANGE =0.5f;
+
+      int redSpecies = 0;
+
+      float normalLove = MAX_SOCIAL_FORCE * 0.04f;
+      float fearOfRed = MAX_SOCIAL_FORCE * -1.0f;
+      float redLoveOfOthers = MAX_SOCIAL_FORCE * 2.0f;
+      float redLoveOfSelf = MAX_SOCIAL_FORCE * 0.3f;
+
+      float normalRange = MAX_SOCIAL_RANGE * 0.4f;
+      float fearRange = MAX_SOCIAL_RANGE * 0.7f;
+      float loveRange = MAX_SOCIAL_RANGE * 0.3f;
+      float redSelfRange = MAX_SOCIAL_RANGE * 0.4f;
+
+      Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+
+      for (int s = 0; s < MAX_SPECIES; s++) {
+        for (int o = 0; o < MAX_SPECIES; o++) {
+          _socialData[s * 10 + o] = new Vector2(normalLove, normalRange);
+        }
+        
+        _socialData[s * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
+        _socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
+        _socialData[redSpecies * 10 + s] = new Vector2(redLoveOfOthers, loveRange);
+      }
+
+      mat.SetVectorArray("_SocialData", _socialData);
+    }
   }
 
-  int count = 0;
+  int count = 1;
 
   public void SetCount(float value) {
     count = Mathf.RoundToInt(value * 10);
@@ -83,7 +128,7 @@ public class NoWay : MonoBehaviour {
   }
 
   void Update() {
-    for(int i=0; i< count; i++) {
+    for (int i = 0; i < count; i++) {
       Graphics.Blit(velocities, positions, mat, 0);
       Graphics.Blit(positions, velocities, mat, 1);
       Graphics.Blit(positions, velocities, mat, 2);

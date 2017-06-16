@@ -27,7 +27,7 @@ public class ParticleControl : MonoBehaviour {
 	public const int ECOSYSTEM_NULL			= -1;
 	public const int ECOSYSTEM_CHASE 		=  0;
 	public const int ECOSYSTEM_RED_MENACE	=  1;
-	public const int ECOSYSTEM_WTF			=  2;
+	public const int ECOSYSTEM_MITOSIS		=  2;
 	public const int NUM_ECOSYSTEMS			=  3;
 
 	private int BUTTON_MARGIN 		= 10;

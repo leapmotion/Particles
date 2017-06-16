@@ -118,6 +118,7 @@ public class ParticleEngineImplementation : ParticleEngine {
 
   public enum ParticleSystemPreset {
     EcosystemChase,
+    EcosystemMitosis,
     EcosystemRedMenace
   }
 
@@ -186,10 +187,48 @@ public class ParticleEngineImplementation : ParticleEngine {
       _socialData[8, 7].socialRange = range;
       _socialData[9, 8].socialRange = range;
     }
+
+
+
+    //-----------------------------------------
+    // Mitosis
+    //-----------------------------------------
+	else if ( preset == ParticleSystemPreset.EcosystemMitosis )
+	{
+		for (int s=0; s<MAX_SPECIES; s++) 
+		{
+			//_species[s].steps = MIN_FORCE_STEPS;     
+			_speciesData[s].collisionForce 	= MIN_COLLISION_FORCE + ( MAX_COLLISION_FORCE - MIN_COLLISION_FORCE ) * 0.05f;
+			_speciesData[s].drag = MIN_DRAG + ( MAX_DRAG - MIN_DRAG ) * 0.1f;
+
+            for (var o=0; o<MAX_SPECIES; o++)
+            {
+				float a = ( (float)o / (float)MAX_SPECIES * 0.9f ) * MAX_SOCIAL_FORCE * 1.0f;
+				float b = ( (float)s / (float)MAX_SPECIES * 1.2f ) * MAX_SOCIAL_FORCE * 0.4f;
+
+				_socialData[s, o].socialForce = a - b;
+                _socialData[s, o].socialRange = MAX_SOCIAL_RANGE * 0.7f;
+            }
+        }
+
+		_speciesData[9].color = new Color( 0.9f, 0.9f, 0.9f );
+		_speciesData[8].color = new Color( 0.9f, 0.7f, 0.3f );
+		_speciesData[7].color = new Color( 0.9f, 0.4f, 0.2f );
+		_speciesData[6].color = new Color( 0.9f, 0.3f, 0.3f );
+		_speciesData[5].color = new Color( 0.6f, 0.3f, 0.6f );
+		_speciesData[4].color = new Color( 0.5f, 0.3f, 0.7f );
+		_speciesData[3].color = new Color( 0.2f, 0.2f, 0.3f );
+		_speciesData[2].color = new Color( 0.1f, 0.1f, 0.3f );
+		_speciesData[1].color = new Color( 0.0f, 0.0f, 0.3f );
+		_speciesData[0].color = new Color( 0.0f, 0.0f, 0.0f );
+    }
+
+
+
     //-----------------------------------------------
     // Red Menace
     //-----------------------------------------------
-    if (preset == ParticleSystemPreset.EcosystemRedMenace) {
+    else if (preset == ParticleSystemPreset.EcosystemRedMenace) {
       _speciesData[0].color = new Color(1.0f, 0.0f, 0.0f);
       _speciesData[1].color = new Color(0.3f, 0.2f, 0.0f);
       _speciesData[2].color = new Color(0.3f, 0.3f, 0.0f);
@@ -251,7 +290,7 @@ public class ParticleEngineImplementation : ParticleEngine {
   /// </summary>
   protected override void OnInitializeSimulation() {
 
-    setPresetEcosystem(ParticleSystemPreset.EcosystemRedMenace);
+    setPresetEcosystem(ParticleSystemPreset.EcosystemMitosis);
 
     //randomizeSpecies();
   }

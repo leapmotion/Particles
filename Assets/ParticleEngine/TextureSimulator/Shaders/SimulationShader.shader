@@ -41,8 +41,8 @@
     //attraction towards the origin
     float3 toOrigin = -particle.xyz;
     float dist = length(toOrigin);
-    if (dist > 0) {
-      accel = normalize(toOrigin) * 0.00004;
+    if (dist > 1) {
+      accel = toOrigin * 0.0005;
     }
 
 		return float4(accel, 0);
@@ -73,10 +73,11 @@
         accel += fromOther * (collisionForce * zeroMult * 0.005);
 
         float2 socialData = _SocialData[(int)(socialOffset + other.w)];
-        float socialForce = socialData.x;
-        socialForce = distance > socialData.y ? 0 : socialForce;
+        float3 socialForce = socialData.x * fromOther * zeroMult;
 
-        totalSocialForce += float4(fromOther * socialForce, 1) * zeroMult;
+        if (distance < socialData.y) {
+          totalSocialForce += float4(socialForce, 1);
+        }
       }
     }
 

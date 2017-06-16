@@ -86,18 +86,18 @@ public class TextureSimulator : MonoBehaviour {
 
     {
       const int MAX_SPECIES = 10;
-      const float MAX_SOCIAL_FORCE = 0.3f;
-      const float MAX_SOCIAL_RANGE =0.5f;
+      const float MAX_SOCIAL_FORCE = 0.003f;
+      const float MAX_SOCIAL_RANGE = 0.5f;
 
       int redSpecies = 0;
 
       float normalLove = MAX_SOCIAL_FORCE * 0.04f;
       float fearOfRed = MAX_SOCIAL_FORCE * -1.0f;
       float redLoveOfOthers = MAX_SOCIAL_FORCE * 2.0f;
-      float redLoveOfSelf = MAX_SOCIAL_FORCE * 0.3f;
+      float redLoveOfSelf = MAX_SOCIAL_FORCE * 0.9f;
 
       float normalRange = MAX_SOCIAL_RANGE * 0.4f;
-      float fearRange = MAX_SOCIAL_RANGE * 0.7f;
+      float fearRange = MAX_SOCIAL_RANGE * 0.3f;
       float loveRange = MAX_SOCIAL_RANGE * 0.3f;
       float redSelfRange = MAX_SOCIAL_RANGE * 0.4f;
 
@@ -107,10 +107,23 @@ public class TextureSimulator : MonoBehaviour {
         for (int o = 0; o < MAX_SPECIES; o++) {
           _socialData[s * 10 + o] = new Vector2(normalLove, normalRange);
         }
-        
-        _socialData[s * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
+
+        _socialData[s * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)(s + 1) / (float)MAX_SPECIES));
         _socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
         _socialData[redSpecies * 10 + s] = new Vector2(redLoveOfOthers, loveRange);
+      }
+
+      for (var t = 0; t < MAX_SPECIES; t++) {
+        for (var f = 0; f < MAX_SPECIES; f++) {
+          _socialData[t * 10 + f] = new Vector2(-MAX_SOCIAL_FORCE * 0.1f, MAX_SOCIAL_RANGE);
+        }
+      }
+
+      for (var t = 2; t < MAX_SPECIES; t++) {
+        for (var f = 0; f < MAX_SPECIES; f++) {
+          _socialData[t * 10 + f] = new Vector2(f * MAX_SOCIAL_FORCE * 2.0f / MAX_SPECIES - t * MAX_SOCIAL_FORCE * 0.7f / MAX_SPECIES,
+                                                MAX_SOCIAL_RANGE * 0.5f);
+        }
       }
 
       mat.SetVectorArray("_SocialData", _socialData);
@@ -128,6 +141,28 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
+    if (Input.GetKeyDown(KeyCode.R)) {
+      const int MAX_SPECIES = 10;
+      const float MAX_SOCIAL_FORCE = 0.003f;
+      const float MAX_SOCIAL_RANGE = 0.5f;
+
+      Color[] colors = new Color[MAX_SPECIES];
+      for (int i = 0; i < colors.Length; i++) {
+        colors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.3f, 1));
+      }
+      displayMat.SetColorArray("_Colors", colors);
+
+      Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+
+      for (int s = 0; s < MAX_SPECIES; s++) {
+        for (int o = 0; o < MAX_SPECIES; o++) {
+          _socialData[s * 10 + o] = new Vector2(Random.Range(-MAX_SOCIAL_FORCE, MAX_SOCIAL_FORCE), Random.value * MAX_SOCIAL_RANGE);
+        }
+      }
+
+      mat.SetVectorArray("_SocialData", _socialData);
+    }
+
     for (int i = 0; i < count; i++) {
       Graphics.Blit(velocities, positions, mat, 0);
       Graphics.Blit(positions, velocities, mat, 1);
@@ -139,7 +174,5 @@ public class TextureSimulator : MonoBehaviour {
       Graphics.DrawMesh(mesh, Matrix4x4.identity, displayMat, 0);
     }
   }
-
-
 
 }

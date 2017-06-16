@@ -16,7 +16,7 @@ public class TextureSimulator : MonoBehaviour {
 
     var verts = mesh.vertices;
     for (int i = 0; i < verts.Length; i++) {
-      verts[i] = verts[i] * 0.02f;
+      verts[i] = verts[i] * 1;
     }
 
     var tris = mesh.triangles;
@@ -33,6 +33,7 @@ public class TextureSimulator : MonoBehaviour {
           _mesh.SetTriangles(tri, 0);
           _mesh.SetUVs(0, uv);
           _mesh.RecalculateNormals();
+          _mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
           _mesh = null;
 
           pos.Clear();
@@ -65,6 +66,7 @@ public class TextureSimulator : MonoBehaviour {
     _mesh.SetTriangles(tri, 0);
     _mesh.SetUVs(0, uv);
     _mesh.RecalculateNormals();
+    _mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
 
     Debug.Log("Supports RT: " + SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.ARGBFloat));
 
@@ -113,6 +115,7 @@ public class TextureSimulator : MonoBehaviour {
         _socialData[redSpecies * 10 + s] = new Vector2(redLoveOfOthers, loveRange);
       }
 
+      /*
       for (var t = 0; t < MAX_SPECIES; t++) {
         for (var f = 0; f < MAX_SPECIES; f++) {
           _socialData[t * 10 + f] = new Vector2(-MAX_SOCIAL_FORCE * 0.1f, MAX_SOCIAL_RANGE);
@@ -125,12 +128,13 @@ public class TextureSimulator : MonoBehaviour {
                                                 MAX_SOCIAL_RANGE * 0.5f);
         }
       }
+      */
 
       mat.SetVectorArray("_SocialData", _socialData);
     }
   }
 
-  int count = 1;
+  int count = 0;
 
   public void SetCount(float value) {
     count = Mathf.RoundToInt(value * 10);
@@ -141,7 +145,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
-    if (Input.GetKeyDown(KeyCode.R)) {
+    if (Input.GetKeyDown(KeyCode.Space)) {
       const int MAX_SPECIES = 10;
       const float MAX_SOCIAL_FORCE = 0.003f;
       const float MAX_SOCIAL_RANGE = 0.5f;
@@ -162,6 +166,8 @@ public class TextureSimulator : MonoBehaviour {
 
       mat.SetVectorArray("_SocialData", _socialData);
     }
+
+    mat.SetFloat("_Offset", (Time.frameCount % 2) / (float)velocities.width);
 
     for (int i = 0; i < count; i++) {
       Graphics.Blit(velocities, positions, mat, 0);

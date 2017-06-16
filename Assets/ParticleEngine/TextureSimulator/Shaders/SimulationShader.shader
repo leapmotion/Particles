@@ -53,6 +53,7 @@
     return float4(damp, damp, damp, 1);
 	}
 
+  float _Offset;
 	float4 updateCollisionVelocities (v2f i) : SV_Target {
     fixed3 accel = float3(0,0,0);
     float4 particle = tex2D(_MainTex, i.uv);
@@ -60,8 +61,8 @@
     float socialOffset = (int)(particle.w * 10);
     float4 totalSocialForce = float4(0, 0, 0, 0);
 
-    float side = 64.0;
-    for (float x = 0; x < 1; x += 1.0/ side) {
+    float side = 96.0;
+    for (float x = 0; x < 1; x += 1.0 / side) {
       for (float y = 0; y < 1; y += 1.0 / side) {
         float4 other = tex2D(_MainTex, float2(x, y));
         float3 fromOther = particle.xyz - other.xyz;

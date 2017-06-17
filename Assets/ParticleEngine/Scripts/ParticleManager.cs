@@ -14,19 +14,19 @@ public class ParticleManager : MonoBehaviour {
 	// particle physics constants
 	//---------------------------------------------
 	private	const int	NULL_PARTICLE			= -1;
-  	private const int 	NUM_PARTICLES 			= 200;
+  	private const int 	NUM_PARTICLES 			= 300;
 	private const int   MIN_FORCE_STEPS 		= 1;
 	private const int   MAX_FORCE_STEPS 		= 7;
 	private const int   MIN_SPECIES 			= 1;
 	private const int   MAX_SPECIES 			= 10;
-	private const float MAX_DELTA_TIME 			= ONE / 5.0f;
+	private const float MAX_DELTA_TIME 			= ONE / 8.0f;
 	private const float TEST_DELTA_TIME 		= MAX_DELTA_TIME;
 	private const float PARTICLE_RADIUS			= 0.02f; //meters
  	private const float BOUNDARY_FORCE			= 0.01f;
  	private const float GRAVITY_FORCE			= 0.0f;
  	private const float HAND_COLLISION_FORCE	= 0.01f;
  	private const float HAND_COLLISION_FRICTION = 0.1f;
-  	private const float ENVIRONMENT_RADIUS		= 1.3f;   //meters
+  	private const float ENVIRONMENT_RADIUS		= 1.0f;   //meters
   	private const float ENVIRONMENT_FRONT_OFFSET = ENVIRONMENT_RADIUS + 0.2f;
 
 	//---------------------------------------------------------
@@ -173,7 +173,7 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
 //randomizeSpecies();
 
-	setPresetEcosystem( ParticleControl.ECOSYSTEM_CHASE );
+setPresetEcosystem( ParticleControl.ECOSYSTEM_MITOSIS );
 
     //-----------------------------------------
     // randomize particles 
@@ -380,10 +380,43 @@ public class ParticleManager : MonoBehaviour {
 			_species[9].socialRange[8] = MAX_SOCIAL_RANGE * range;
 		}
 
+        //-----------------------------------------
+        // Mitosis
+        //-----------------------------------------
+		else if ( e == ParticleControl.ECOSYSTEM_MITOSIS )
+		{
+ 			for (int s=0; s<MAX_SPECIES; s++) 
+			{
+				_species[s].steps = MIN_FORCE_STEPS;     
+				_species[s].collisionForce 	= MIN_COLLISION_FORCE + ( MAX_COLLISION_FORCE - MIN_COLLISION_FORCE ) * 0.05f;
+				_species[s].drag = MIN_DRAG + ( MAX_DRAG - MIN_DRAG ) * 0.1f;
+
+                for (var o=0; o<MAX_SPECIES; o++)
+                {
+					float a = ( (float)o / (float)MAX_SPECIES * 0.9f ) * MAX_SOCIAL_FORCE * 1.0f;
+					float b = ( (float)s / (float)MAX_SPECIES * 1.2f ) * MAX_SOCIAL_FORCE * 0.4f;
+
+					_species[s].socialForce[o] = a - b;
+                    _species[s].socialRange[o] = MAX_SOCIAL_RANGE * 0.7f;
+                }
+            }
+
+			_species[9].color = new Color( 0.9f, 0.9f, 0.9f, ONE );
+			_species[8].color = new Color( 0.9f, 0.7f, 0.3f, ONE );
+			_species[7].color = new Color( 0.9f, 0.4f, 0.2f, ONE );
+			_species[6].color = new Color( 0.9f, 0.3f, 0.3f, ONE );
+			_species[5].color = new Color( 0.6f, 0.3f, 0.6f, ONE );
+			_species[4].color = new Color( 0.5f, 0.3f, 0.7f, ONE );
+			_species[3].color = new Color( 0.2f, 0.2f, 0.3f, ONE );
+			_species[2].color = new Color( 0.1f, 0.1f, 0.3f, ONE );
+			_species[1].color = new Color( 0.0f, 0.0f, 0.3f, ONE );
+			_species[0].color = new Color( 0.0f, 0.0f, 0.0f, ONE );
+        }
+
 		//-----------------------------------------------
 		// Red Menace
 		//-----------------------------------------------
-		if ( e == ParticleControl.ECOSYSTEM_RED_MENACE )
+		else if ( e == ParticleControl.ECOSYSTEM_RED_MENACE )
 		{
 			_species[0].color = new Color( 1.0f, 0.0f, 0.0f, ONE );
 			_species[1].color = new Color( 0.3f, 0.2f, 0.0f, ONE );

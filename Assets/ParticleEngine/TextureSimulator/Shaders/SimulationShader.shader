@@ -18,6 +18,14 @@
 
 	sampler2D _MainTex;
   float2 _SocialData[100];
+
+  float3 _CapsuleA[64];
+  float3 _CapsuleB[64];
+  int _CapsuleCount;
+
+  float4 _Spheres[2];
+  float3 _SphereVelocities[2];
+  int _SphereCount;
 			
   float nrand(float2 n){
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -33,10 +41,11 @@
   float4 integratePositions (v2f i) : SV_Target {
     return float4(tex2D(_MainTex, i.uv).xyz, 0);
 	}
-			
+
   float4 forceTowardsOrigin (v2f i) : SV_Target {
     fixed3 accel = float3(0,0,0);
     float4 particle = tex2D(_MainTex, i.uv);
+    float lerpAmount = 1;
 
     //attraction towards the origin
     float3 toOrigin = -particle.xyz;
@@ -45,7 +54,31 @@
       accel = toOrigin * 0.0005;
     }
 
-		return float4(accel, 0);
+    for (int i = 0; i < _SphereCount; i++) {
+      float3 toSphere = _Spheres[i] - particle.xyz;
+      if (length(toSphere) < _Spheres[i].w) {
+        lerpAmount = 0;
+        accel += _SphereVelocities[i];
+        accel += toSphere * 0.02;
+      }
+    }
+
+    for (int i = 0; i < _CapsuleCount; i++) {
+      float3 a = _CapsuleA[i];
+      float3 b = _CapsuleB[i];
+
+      float3 pa = particle.xyz - a;
+      float3 ba = b - a;
+      float h = saturate(dot(pa, ba) / dot(ba, ba));
+
+      float3 forceVector = pa - ba * h;
+      float dist = length(forceVector);
+      if (dist < 0.02) {
+        accel += forceVector / dist * 0.001;
+      }
+    }
+
+		return float4(accel, lerpAmount);
 	}
 
   float4 dampVelocities (v2f i) : SV_Target {
@@ -89,11 +122,11 @@
 	}
 
   float4 randomParticles (v2f i) : SV_Target {
-    float x = nrand(i.uv);
-    float y = nrand(i.uv * 2 + float2(0.2f, 0.9f));
-    float z = nrand(i.uv * 3 + float2(2.2f, 33.9f));
+    float x = 2 * nrand(i.uv);
+    float y = 2 * nrand(i.uv * 2 + float2(0.2f, 0.9f));
+    float z = 2 * nrand(i.uv * 3 + float2(2.2f, 33.9f));
     float w = floor(nrand(i.uv * 4 + float2(23, 54)) * 10);
-    return float4(x - 0.5, y - 0.5, z - 0.5, w);
+    return float4(x - 1, y - 1, z - 1, w);
 	}
   ENDCG
 
@@ -123,7 +156,7 @@
 
     //Pass 2: force towards origin
     Pass {
-      Blend One One
+      Blend One SrcAlpha
 
       CGPROGRAM
       #pragma vertex vert

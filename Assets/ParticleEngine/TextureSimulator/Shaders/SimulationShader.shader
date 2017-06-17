@@ -83,7 +83,7 @@
 
   float4 dampVelocities (v2f i) : SV_Target {
     float damp = 0.95;
-    return float4(damp, damp, damp, 1);
+    return float4(damp, damp, damp, 0.02);
 	}
 
   float _Offset;
@@ -156,7 +156,8 @@
 
     //Pass 2: force towards origin
     Pass {
-      Blend One SrcAlpha
+      BlendOp Add, Min
+      Blend One SrcAlpha, One One
 
       CGPROGRAM
       #pragma vertex vert
@@ -166,7 +167,7 @@
 
     //Pass 3: damp velocity
     Pass {
-      Blend Zero SrcColor
+      Blend Zero SrcColor, One One
 
       CGPROGRAM
       #pragma vertex vert

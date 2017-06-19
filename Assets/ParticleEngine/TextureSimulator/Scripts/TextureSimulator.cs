@@ -33,6 +33,18 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private float _influenceForwardOffset = 0.03f;
 
+  [Header("Field")]
+  [SerializeField]
+  private Transform _fieldCenter;
+
+  [Range(0, 2)]
+  [SerializeField]
+  private float _fieldRadius = 1;
+
+  [Range(0, 0.001f)]
+  [SerializeField]
+  private float _fieldForce = 0.0005f;
+
   [Header("Simulation")]
   [SerializeField]
   private string _seed;
@@ -346,6 +358,10 @@ public class TextureSimulator : MonoBehaviour {
       genWith(_seed);
     }
 
+    _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
+    _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
+    _simulationMat.SetFloat("_FieldForce", _fieldForce);
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     for (int i = 0; i < count; i++) {
       blitVel(2);
@@ -361,7 +377,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.mainTexture = _frontPos;
     _particleMat.SetTexture("_Velocity", _frontVel);
     foreach (var mesh in _meshes) {
-      Graphics.DrawMesh(mesh, Matrix4x4.identity, _particleMat, 0);
+      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
     }
 
     _positionDebug.material.mainTexture = _frontPos;
@@ -393,7 +409,7 @@ public class TextureSimulator : MonoBehaviour {
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
       Vector4 data = new Vector4();
-      data.x = Random.Range(0.95f, 0.95f);
+      data.x = Random.Range(0.95f, 0.99f);
       data.y = Random.Range(0, _maxSocialSteps);
       speciesData[i] = data;
     }

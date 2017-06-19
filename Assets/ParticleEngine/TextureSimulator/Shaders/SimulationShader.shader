@@ -4,6 +4,18 @@
   CGINCLUDE
   #include "UnityCG.cginc"
 
+  #define MAX_PARTICLES 4096
+  #define MAX_FORCE_STEPS 8
+  #define MAX_SPECIES 10
+  #define PARTICLE_RADIUS 0.02
+  #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
+  #define COLLISION_FORCE 0.04
+
+  #define SPHERE_ATTRACTION 0.02
+
+  #define CAPSULE_RADIUS 0.02
+  #define CAPSULE_FORCE 0.001
+
 	struct appdata {
 		float4 vertex : POSITION;
 		float2 uv : TEXCOORD0;
@@ -24,6 +36,10 @@
 
   sampler2D _SocialTemp;
   sampler2D _SocialForce;
+
+  float3 _FieldCenter;
+  float _FieldRadius;
+  float _FieldForce;
 
   float4 _SpeciesData[10];
   float2 _SocialData[100];
@@ -54,29 +70,29 @@
     return pos;
 	}
 
-  float4 forceTowardsOrigin (v2f i) : SV_Target {
+  float4 globalForces (v2f i) : SV_Target {
     float4 velocity = tex2D(_Velocity, i.uv);
     float4 particle = tex2D(_Position, i.uv);
-    float lerpAmount = 1;
 
-    //attraction towards the origin
-    float3 toOrigin = -particle.xyz;
-    float dist = length(toOrigin);
-    if (dist > 1) {
-      velocity.xyz += toOrigin * 0.0005;
+    //Attraction towards the origin
+    float3 toFieldCenter = _FieldCenter - particle.xyz;
+    float dist = length(toFieldCenter);
+    if (dist > _FieldRadius) {
+      velocity.xyz += toFieldCenter * _FieldForce;
     }
 
+    //Grasping by spheres
     {
       for (int i = 0; i < _SphereCount; i++) {
         float3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
-          lerpAmount = 0;
           velocity.xyz += _SphereVelocities[i];
-          velocity.xyz += toSphere * 0.02;
+          velocity.xyz += toSphere * SPHERE_ATTRACTION;
         }
       }
     }
 
+    //Collision with capsules
     {
       for (int i = 0; i < _CapsuleCount; i++) {
         float3 a = _CapsuleA[i];
@@ -88,8 +104,8 @@
 
         float3 forceVector = pa - ba * h;
         float dist = length(forceVector);
-        if (dist < 0.02) {
-          velocity.xyz += forceVector / dist * 0.001;
+        if (dist < CAPSULE_RADIUS) {
+          velocity.xyz += forceVector / dist * CAPSULE_FORCE;
         }
       }
     }
@@ -103,8 +119,7 @@
     float4 speciesData = _SpeciesData[(int)particle.w];
 
     //Step offset for social forces
-    float maxStep = 8;
-    i.uv.y = speciesData.y / maxStep;
+    i.uv.y = speciesData.y / MAX_FORCE_STEPS;
     float4 socialForce = tex2D(_SocialForce, i.uv);
     velocity.xyz += socialForce.xyz;
 
@@ -128,9 +143,9 @@
       float distance = length(toOther);
       toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
-      if (distance < 0.02) {
-        float collisionForce = 1 - distance / 0.02;
-        velocity.xyz -= toOther * (collisionForce * 0.005);
+      if (distance < PARTICLE_DIAMETER) {
+        float collisionForce = 1 - distance / PARTICLE_DIAMETER;
+        velocity.xyz -= toOther * collisionForce * COLLISION_FORCE;
       }
 
       float2 socialData = _SocialData[(int)(socialOffset + other.w)];
@@ -158,16 +173,14 @@
 	}
 
   float4 stepSocialQueue(v2f i) : SV_Target {
-    float maxSocialStep = 8;
-
-    float2 shiftedUv = i.uv  -float2(0, 1 / maxSocialStep);
+    float2 shiftedUv = i.uv  -float2(0, 1.0 / MAX_FORCE_STEPS);
 
     float4 newForce = tex2D(_SocialTemp, i.uv);
     float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
 
     float4 result;
 
-    if (i.uv.y <= 1.0 / maxSocialStep) {
+    if (i.uv.y <= 1.0 / MAX_FORCE_STEPS) {
       result = newForce;
     } else {
       result = shiftedForce;
@@ -201,11 +214,11 @@
 			ENDCG
 		}
 
-    //Pass 2: force towards origin
+    //Pass 2: global forces
     Pass {
       CGPROGRAM
       #pragma vertex vert
-      #pragma fragment forceTowardsOrigin
+      #pragma fragment globalForces
       ENDCG
     }
 

@@ -3,6 +3,7 @@ using UnityEngine;
 using Leap;
 using Leap.Unity;
 using Leap.Unity.Query;
+using Leap.Unity.Attributes;
 
 public class TextureSimulator : MonoBehaviour {
 
@@ -36,11 +37,16 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private string _seed;
 
+  [MinValue(8)]
   [SerializeField]
-  private RenderTexture _positionTex;
+  private int _maxParticles = 4096;
+
+  [Range(1, 32)]
+  [SerializeField]
+  private int _maxSocialSteps = 10;
 
   [SerializeField]
-  private RenderTexture _velocityTex;
+  private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
   [SerializeField]
   private Material _simulationMat;
@@ -52,10 +58,30 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private Material _particleMat;
 
+  [Header("Debug")]
+  [SerializeField]
+  private Renderer _positionDebug;
+
+  [SerializeField]
+  private Renderer _velocityDebug;
+
+  private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
+  private RenderTexture _frontSocial, _backSocial;
+
   private List<Mesh> _meshes = new List<Mesh>();
 
   void Start() {
-    Graphics.Blit(_positionTex, _positionTex, _simulationMat, 4);
+    _frontPos = createTexture();
+    _frontVel = createTexture();
+    _backPos = createTexture();
+    _backVel = createTexture();
+    _frontSocial = createTexture(_maxSocialSteps);
+    _backSocial = createTexture(_maxSocialSteps);
+
+    _simulationMat.SetTexture("_Position", _frontPos);
+    _simulationMat.SetTexture("_Velocity", _frontVel);
+
+    ResetTheSim();
 
     var verts = _particleMesh.vertices;
     for (int i = 0; i < verts.Length; i++) {
@@ -69,39 +95,38 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> uv = new List<Vector2>();
 
     Mesh _mesh = null;
-    for (int i = 0; i < _positionTex.width; i++) {
-      for (int j = 0; j < _positionTex.height; j++) {
-        if (pos.Count + verts.Length > 60000) {
-          _mesh.SetVertices(pos);
-          _mesh.SetTriangles(tri, 0);
-          _mesh.SetUVs(0, uv);
-          _mesh.RecalculateNormals();
-          _mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-          _mesh = null;
+    for (int i = 0; i < _maxParticles; i++) {
+      if (pos.Count + verts.Length > 60000) {
+        _mesh.SetVertices(pos);
+        _mesh.SetTriangles(tri, 0);
+        _mesh.SetUVs(0, uv);
+        _mesh.RecalculateNormals();
+        _mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+        _mesh = null;
 
-          pos.Clear();
-          tri.Clear();
-          uv.Clear();
-        }
-
-        if (_mesh == null) {
-          tris = _particleMesh.triangles;
-          _mesh = new Mesh();
-          _mesh.hideFlags = HideFlags.HideAndDontSave;
-          _meshes.Add(_mesh);
-        }
-
-        pos.AddRange(verts);
-        tri.AddRange(tris);
-
-        for (int k = 0; k < verts.Length; k++) {
-          uv.Add(new Vector2((i + 0.5f) / (float)_positionTex.width, (j + 0.5f) / (float)_positionTex.height));
-        }
-
-        for (int k = 0; k < tris.Length; k++) {
-          tris[k] += verts.Length;
-        }
+        pos.Clear();
+        tri.Clear();
+        uv.Clear();
       }
+
+      if (_mesh == null) {
+        tris = _particleMesh.triangles;
+        _mesh = new Mesh();
+        _mesh.hideFlags = HideFlags.HideAndDontSave;
+        _meshes.Add(_mesh);
+      }
+
+      pos.AddRange(verts);
+      tri.AddRange(tris);
+
+      for (int k = 0; k < verts.Length; k++) {
+        uv.Add(new Vector2((i + 0.5f) / _maxParticles, 0));
+      }
+
+      for (int k = 0; k < tris.Length; k++) {
+        tris[k] += verts.Length;
+      }
+
     }
 
     _mesh.hideFlags = HideFlags.HideAndDontSave;
@@ -219,16 +244,16 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.SetColorArray("_Colors", colors);
   }
 
-  int count = 1;
+  int count = 2;
 
   public void SetCount(float value) {
     count = Mathf.RoundToInt(value * 10);
   }
 
   public void ResetTheSim() {
-    Graphics.Blit(_positionTex, _positionTex, _simulationMat, 4);
+    GL.LoadPixelMatrix(0, 1, 1, 0);
+    blitPos(4);
   }
-
 
   private Vector4[] _capsuleA = new Vector4[64];
   private Vector4[] _capsuleB = new Vector4[64];
@@ -316,35 +341,22 @@ public class TextureSimulator : MonoBehaviour {
       genWith(_seed);
     }
 
-
-    _simulationMat.SetFloat("_Offset", (Time.frameCount % 2) / (float)_velocityTex.width);
-
+    GL.LoadPixelMatrix(0, 1, 1, 0);
     for (int i = 0; i < count; i++) {
-      using (new ProfilerSample("A")) {
-        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 2);
-      }
-
-      using (new ProfilerSample("B")) {
-        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 1);
-      }
-
-      using (new ProfilerSample("C")) {
-        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 3);
-      }
-
-      using (new ProfilerSample("D")) {
-        Graphics.Blit(_velocityTex, _positionTex, _simulationMat, 0);
-      }
-
-      using (new ProfilerSample("E")) {
-        GL.Flush();
-      }
+      blitVel(2);
+      blitVel(1);
+      blitVel(3);
+      blitPos(0);
     }
 
-    Graphics.DrawMeshInstanced(_particleMesh, 0, _particleMat, )
+    _particleMat.mainTexture = _frontPos;
+    _particleMat.SetTexture("_Velocity", _frontVel);
     foreach (var mesh in _meshes) {
       Graphics.DrawMesh(mesh, Matrix4x4.identity, _particleMat, 0);
     }
+
+    _positionDebug.material.mainTexture = _frontPos;
+    _velocityDebug.material.mainTexture = _frontVel;
   }
 
   private void genWith(string name) {
@@ -369,6 +381,48 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     _simulationMat.SetVectorArray("_SocialData", _socialData);
+  }
+
+  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, int height) {
+    RenderTexture.active = front;
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+
+    _simulationMat.SetPass(pass);
+
+    GL.Begin(GL.QUADS);
+
+    GL.TexCoord2(0, 0);
+    GL.Vertex3(0, 0, 0);
+
+    GL.TexCoord2(1, 0);
+    GL.Vertex3(1, 0, 0);
+
+    GL.TexCoord2(1, 1);
+    GL.Vertex3(1, height, 0);
+
+    GL.TexCoord2(0, 1);
+    GL.Vertex3(0, height, 0);
+
+    GL.End();
+
+    _simulationMat.SetTexture(propertyName, front);
+
+    Utils.Swap(ref front, ref back);
+  }
+
+  private void blitVel(int pass) {
+    blit("_Velocity", ref _frontVel, ref _backVel, pass, 1);
+  }
+
+  private void blitPos(int pass) {
+    blit("_Position", ref _frontPos, ref _backPos, pass, 1);
+  }
+
+  private RenderTexture createTexture(int height = 1) {
+    RenderTexture tex = new RenderTexture(_maxParticles, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    tex.wrapMode = TextureWrapMode.Clamp;
+    tex.filterMode = FilterMode.Point;
+    return tex;
   }
 
 }

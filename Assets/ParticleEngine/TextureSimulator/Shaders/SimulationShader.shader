@@ -83,13 +83,18 @@
 
     //Grasping by spheres
     {
+      float lerpDest = 1;
+      float lerpSpeed = 0.05;
       for (int i = 0; i < _SphereCount; i++) {
         float3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
           velocity.xyz += _SphereVelocities[i];
           velocity.xyz += toSphere * SPHERE_ATTRACTION;
+          lerpDest = 0;
+          lerpSpeed = 0.5;
         }
       }
+      velocity.w = lerp(velocity.w, lerpDest, lerpSpeed);
     }
 
     //Collision with capsules

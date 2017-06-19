@@ -13,8 +13,8 @@
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf Standard fullforwardshadows vertex:vert addshadow
-		#pragma target 3.0
+		#pragma surface surf Standard vertex:vert noforwardadd
+		#pragma target 2.0
 
 		sampler2D _MainTex;
     sampler2D _Velocity;

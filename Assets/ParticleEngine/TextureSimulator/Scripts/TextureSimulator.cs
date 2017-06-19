@@ -320,15 +320,28 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_Offset", (Time.frameCount % 2) / (float)_velocityTex.width);
 
     for (int i = 0; i < count; i++) {
-      Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 2);
+      using (new ProfilerSample("A")) {
+        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 2);
+      }
 
-      Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 1);
+      using (new ProfilerSample("B")) {
+        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 1);
+      }
 
-      Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 3);
+      using (new ProfilerSample("C")) {
+        Graphics.Blit(_positionTex, _velocityTex, _simulationMat, 3);
+      }
 
-      Graphics.Blit(_velocityTex, _positionTex, _simulationMat, 0);
+      using (new ProfilerSample("D")) {
+        Graphics.Blit(_velocityTex, _positionTex, _simulationMat, 0);
+      }
+
+      using (new ProfilerSample("E")) {
+        GL.Flush();
+      }
     }
 
+    Graphics.DrawMeshInstanced(_particleMesh, 0, _particleMat, )
     foreach (var mesh in _meshes) {
       Graphics.DrawMesh(mesh, Matrix4x4.identity, _particleMat, 0);
     }

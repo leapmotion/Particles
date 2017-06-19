@@ -54,27 +54,31 @@
       accel = toOrigin * 0.0005;
     }
 
-    for (int i = 0; i < _SphereCount; i++) {
-      float3 toSphere = _Spheres[i] - particle.xyz;
-      if (length(toSphere) < _Spheres[i].w) {
-        lerpAmount = 0;
-        accel += _SphereVelocities[i];
-        accel += toSphere * 0.02;
+    {
+      for (int i = 0; i < _SphereCount; i++) {
+        float3 toSphere = _Spheres[i] - particle.xyz;
+        if (length(toSphere) < _Spheres[i].w) {
+          lerpAmount = 0;
+          accel += _SphereVelocities[i];
+          accel += toSphere * 0.02;
+        }
       }
     }
 
-    for (int i = 0; i < _CapsuleCount; i++) {
-      float3 a = _CapsuleA[i];
-      float3 b = _CapsuleB[i];
+    {
+      for (int i = 0; i < _CapsuleCount; i++) {
+        float3 a = _CapsuleA[i];
+        float3 b = _CapsuleB[i];
 
-      float3 pa = particle.xyz - a;
-      float3 ba = b - a;
-      float h = saturate(dot(pa, ba) / dot(ba, ba));
+        float3 pa = particle.xyz - a;
+        float3 ba = b - a;
+        float h = saturate(dot(pa, ba) / dot(ba, ba));
 
-      float3 forceVector = pa - ba * h;
-      float dist = length(forceVector);
-      if (dist < 0.02) {
-        accel += forceVector / dist * 0.001;
+        float3 forceVector = pa - ba * h;
+        float dist = length(forceVector);
+        if (dist < 0.02) {
+          accel += forceVector / dist * 0.001;
+        }
       }
     }
 
@@ -94,24 +98,21 @@
     float socialOffset = (int)(particle.w * 10);
     float4 totalSocialForce = float4(0, 0, 0, 0);
 
-    float side = 96.0;
-    for (float x = 0; x < 1; x += 1.0 / side) {
-      for (float y = 0; y < 1; y += 1.0 / side) {
-        float4 other = tex2D(_MainTex, float2(x, y));
-        float3 fromOther = particle.xyz - other.xyz;
-        float distance = length(fromOther);
-        float zeroMult = distance < 0.0001 ? 0 : (1.0 / distance);
+    for (int i = 0; i < 4096; i++){
+      float4 other = tex2D(_MainTex, float2(i / 4096.0, 0));
+      float3 fromOther = particle.xyz - other.xyz;
+      float distance = length(fromOther);
+      float zeroMult = distance < 0.0001 ? 0 : (1.0 / distance);
 
-        float collisionForce = 1 - distance / 0.02;
-        collisionForce = distance > 0.02 ? 0 : collisionForce;
-        accel += fromOther * (collisionForce * zeroMult * 0.005);
+      float collisionForce = 1 - distance / 0.02;
+      collisionForce = distance > 0.02 ? 0 : collisionForce;
+      accel += fromOther * (collisionForce * zeroMult * 0.005);
 
-        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
-        float3 socialForce = socialData.x * fromOther * zeroMult;
+      float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+      float3 socialForce = socialData.x * fromOther * zeroMult;
 
-        if (distance < socialData.y) {
-          totalSocialForce += float4(socialForce, 1);
-        }
+      if (distance < socialData.y) {
+        totalSocialForce += float4(socialForce, 1);
       }
     }
 

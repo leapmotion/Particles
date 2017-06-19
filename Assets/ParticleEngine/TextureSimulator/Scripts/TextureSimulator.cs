@@ -41,9 +41,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private int _maxParticles = 4096;
 
-  [Range(1, 32)]
+  [Range(1, 8)]
   [SerializeField]
-  private int _maxSocialSteps = 10;
+  private int _maxSocialSteps = 8;
 
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
@@ -65,8 +65,12 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private Renderer _velocityDebug;
 
+  [SerializeField]
+  private Renderer _socialDebug;
+
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
+  private RenderTexture _socialTemp;
 
   private List<Mesh> _meshes = new List<Mesh>();
 
@@ -75,11 +79,14 @@ public class TextureSimulator : MonoBehaviour {
     _frontVel = createTexture();
     _backPos = createTexture();
     _backVel = createTexture();
+    _socialTemp = createTexture();
     _frontSocial = createTexture(_maxSocialSteps);
     _backSocial = createTexture(_maxSocialSteps);
 
+    _simulationMat.SetTexture("_SocialTemp", _socialTemp);
     _simulationMat.SetTexture("_Position", _frontPos);
     _simulationMat.SetTexture("_Velocity", _frontVel);
+    _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
     ResetTheSim();
 
@@ -244,7 +251,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.SetColorArray("_Colors", colors);
   }
 
-  int count = 2;
+  int count = 1;
 
   public void SetCount(float value) {
     count = Mathf.RoundToInt(value * 10);
@@ -325,8 +332,6 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_Spheres", _spheres);
     _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
 
-
-
     if (Input.GetKeyDown(KeyCode.Space)) {
       Random.InitState(Time.realtimeSinceStartup.GetHashCode());
 
@@ -344,7 +349,11 @@ public class TextureSimulator : MonoBehaviour {
     GL.LoadPixelMatrix(0, 1, 1, 0);
     for (int i = 0; i < count; i++) {
       blitVel(2);
-      blitVel(1);
+
+      doParticleInteraction();
+
+      blit("_SocialForce", ref _frontSocial, ref _backSocial, 5, 1);
+
       blitVel(3);
       blitPos(0);
     }
@@ -357,6 +366,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
+    _socialDebug.material.mainTexture = _backSocial;
   }
 
   private void genWith(string name) {
@@ -380,15 +390,71 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    Vector4[] speciesData = new Vector4[MAX_SPECIES];
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector4 data = new Vector4();
+      data.x = Random.Range(0.95f, 0.95f);
+      data.y = Random.Range(0, _maxSocialSteps);
+      speciesData[i] = data;
+    }
+
+    _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
   }
 
-  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, int height) {
+  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {
     RenderTexture.active = front;
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
 
     _simulationMat.SetPass(pass);
 
+    GL.Begin(GL.QUADS);
+
+    GL.TexCoord2(0, 1);
+    GL.Vertex3(0, 0, 0);
+
+    GL.TexCoord2(1, 1);
+    GL.Vertex3(1, 0, 0);
+
+    GL.TexCoord2(1, 0);
+    GL.Vertex3(1, height, 0);
+
+    GL.TexCoord2(0, 0);
+    GL.Vertex3(0, height, 0);
+
+    GL.End();
+
+    _simulationMat.SetTexture(propertyName, front);
+
+    Utils.Swap(ref front, ref back);
+  }
+
+  private RenderBuffer[] _colorBuffers = new RenderBuffer[2];
+  private void doParticleInteraction() {
+    _colorBuffers[0] = _frontVel.colorBuffer;
+    _colorBuffers[1] = _socialTemp.colorBuffer;
+
+    Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+
+    _simulationMat.SetPass(1);
+
+    quad();
+
+    _simulationMat.SetTexture("_Velocity", _frontVel);
+
+    Utils.Swap(ref _frontVel, ref _backVel);
+  }
+
+  private void blitVel(int pass) {
+    blit("_Velocity", ref _frontVel, ref _backVel, pass, 1);
+  }
+
+  private void blitPos(int pass) {
+    blit("_Position", ref _frontPos, ref _backPos, pass, 1);
+  }
+
+  private void quad(float height = 1) {
     GL.Begin(GL.QUADS);
 
     GL.TexCoord2(0, 0);
@@ -404,24 +470,16 @@ public class TextureSimulator : MonoBehaviour {
     GL.Vertex3(0, height, 0);
 
     GL.End();
-
-    _simulationMat.SetTexture(propertyName, front);
-
-    Utils.Swap(ref front, ref back);
-  }
-
-  private void blitVel(int pass) {
-    blit("_Velocity", ref _frontVel, ref _backVel, pass, 1);
-  }
-
-  private void blitPos(int pass) {
-    blit("_Position", ref _frontPos, ref _backPos, pass, 1);
   }
 
   private RenderTexture createTexture(int height = 1) {
     RenderTexture tex = new RenderTexture(_maxParticles, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
+
+    RenderTexture.active = tex;
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
+    RenderTexture.active = null;
     return tex;
   }
 

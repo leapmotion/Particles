@@ -14,15 +14,18 @@
 		float4 vertex : SV_POSITION;
 	};
 
-  struct frag2 {
-    float4 color0 : SV_Target0;
-    float4 color1 : SV_Target1;
+  struct FragmentOutput {
+    float4 dest0 : SV_Target0;
+    float4 dest1 : SV_Target1;
   };
 
   sampler2D _Velocity;
   sampler2D _Position;
+
+  sampler2D _SocialTemp;
   sampler2D _SocialForce;
 
+  float4 _SpeciesData[10];
   float2 _SocialData[100];
 
   float3 _CapsuleA[64];
@@ -96,15 +99,24 @@
 
   float4 dampVelocities (v2f i) : SV_Target {
     float4 velocity = tex2D(_Velocity, i.uv);
-    velocity *= 0.95;
+    float4 particle = tex2D(_Position, i.uv);
+    float4 speciesData = _SpeciesData[(int)particle.w];
+
+    //Step offset for social forces
+    float maxStep = 8;
+    i.uv.y = speciesData.y / maxStep;
+    float4 socialForce = tex2D(_SocialForce, i.uv);
+    velocity.xyz += socialForce.xyz;
+
+    //Damping
+    velocity.xyz *= speciesData.x;
+
     return velocity;
 	}
 
-  float _Offset;
-	float4 updateCollisionVelocities (v2f i) : SV_Target {
-    float4 velocity = tex2D(_Velocity, i.uv);
+  FragmentOutput updateCollisionVelocities (v2f i) {
     float4 particle = tex2D(_Position, i.uv);
-
+    float4 velocity = tex2D(_Velocity, i.uv);
     float socialOffset = (int)(particle.w * 10);
 
     //We are going to count our own social force, so start with -1
@@ -112,26 +124,29 @@
 
     for (int i = 0; i < 4096; i++){
       float4 other = tex2D(_Position, float2(i / 4096.0, 0));
-      float3 fromOther = particle.xyz - other.xyz;
-      float distance = length(fromOther);
-      fromOther = distance < 0.0001 ? float3(0, 0, 0) : fromOther / distance;
+      float3 toOther = other.xyz - particle.xyz;
+      float distance = length(toOther);
+      toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
       if (distance < 0.02) {
         float collisionForce = 1 - distance / 0.02;
-        velocity.xyz += fromOther * (collisionForce * 0.005);
+        velocity.xyz -= toOther * (collisionForce * 0.005);
       }
 
       float2 socialData = _SocialData[(int)(socialOffset + other.w)];
       if (distance < socialData.y) {
-        totalSocialForce += float4(socialData.x * fromOther, 1);
+        totalSocialForce += float4(socialData.x * toOther, 1);
       }
     }
 
+    FragmentOutput output;
+    output.dest0 = velocity;
+    output.dest1 = float4(0, 0, 0, 0);
     if (totalSocialForce.w > 0.5) {
-      velocity.xyz -= totalSocialForce.xyz / totalSocialForce.w;
+      output.dest1 = float4(totalSocialForce.xyz / totalSocialForce.w, 0);
     }
 
-		return velocity;
+		return output;
 	}
 
   float4 randomParticles (v2f i) : SV_Target {
@@ -143,15 +158,31 @@
 	}
 
   float4 stepSocialQueue(v2f i) : SV_Target {
-    float maxSocialForce = 8;
-    float4 force = tex2D(_SocialForce, i.uv - float2(1 / maxSocialForce, 0));
-    return force;
+    float maxSocialStep = 8;
+
+    float2 shiftedUv = i.uv  -float2(0, 1 / maxSocialStep);
+
+    float4 newForce = tex2D(_SocialTemp, i.uv);
+    float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
+
+    float4 result;
+
+    if (i.uv.y <= 1.0 / maxSocialStep) {
+      result = newForce;
+    } else {
+      result = shiftedForce;
+    }
+
+    return result;
   }
   ENDCG
 
 	SubShader {
 		Tags { "RenderType"="Opaque" }
 		LOD 100
+    Cull Off 
+    ZTest Off
+    ZWrite Off
     Blend One Zero
 
     //Pass 0: integrate velocities
@@ -178,7 +209,7 @@
       ENDCG
     }
 
-    //Pass 3: damp velocity
+    //Pass 3: damp velocity and add offset social forces
     Pass {
       CGPROGRAM
       #pragma vertex vert

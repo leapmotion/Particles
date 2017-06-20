@@ -40,9 +40,8 @@
       float4 velocity = tex2Dlod(_Velocity, v.texcoord);
       velocity.xyz *= velocity.w;
 
-      float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)));
+      float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
       v.vertex.xyz -= velocity.xyz * dir * _TrailLength;
-
 
       v.vertex.xyz *= _Size;
       v.vertex.xyz += particle.xyz;

@@ -7,13 +7,13 @@
   #define MAX_PARTICLES 4096
   #define MAX_FORCE_STEPS 8
   #define MAX_SPECIES 10
-  #define PARTICLE_RADIUS 0.02
+  #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
-  #define COLLISION_FORCE 0.04
+  #define COLLISION_FORCE 0.002
 
   #define SPHERE_ATTRACTION 0.02
 
-  #define CAPSULE_RADIUS 0.02
+  #define CAPSULE_RADIUS 0.04
   #define CAPSULE_FORCE 0.001
 
 	struct appdata {
@@ -83,18 +83,23 @@
 
     //Grasping by spheres
     {
-      float lerpDest = 1;
-      float lerpSpeed = 0.05;
+      float3 sphereForce = float3(0, 0, 0);
+      float spheres = 0;
       for (int i = 0; i < _SphereCount; i++) {
         float3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
-          velocity.xyz += _SphereVelocities[i];
-          velocity.xyz += toSphere * SPHERE_ATTRACTION;
-          lerpDest = 0;
-          lerpSpeed = 0.5;
+          sphereForce.xyz += _SphereVelocities[i];
+          sphereForce.xyz += toSphere * SPHERE_ATTRACTION;
+          spheres++;
         }
       }
-      velocity.w = lerp(velocity.w, lerpDest, lerpSpeed);
+
+      if (spheres > 0.5) {
+        velocity.xyz = sphereForce / spheres;
+        velocity.w *= 0.5;
+      } else {
+        velocity.w = lerp(velocity.w, 1, 0.05);
+      }
     }
 
     //Collision with capsules

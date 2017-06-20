@@ -248,13 +248,14 @@ public class TextureSimulator : MonoBehaviour {
 
   #region ECOSYSTEMS
   public const int MAX_SPECIES = 10;
-  public const float MAX_SOCIAL_FORCE = 0.003f;
+  public const float MAX_SOCIAL_FORCE = 0.001f;
   public const float MAX_SOCIAL_RANGE = 0.5f;
   private const float MIN_DRAG = 0.70f;
   private const float MAX_DRAG = 0.95f;
 
   public enum EcosystemPreset {
     RedMennace,
+    Mitosis,
     Fluidy
   }
 
@@ -315,6 +316,29 @@ public class TextureSimulator : MonoBehaviour {
           _socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
           _socialData[redSpecies * 10 + i] = new Vector2(redLoveOfOthers, loveRange);
         }
+        break;
+      case EcosystemPreset.Mitosis:
+        for (int i = 0; i < MAX_SPECIES; i++) {
+          _speciesData[i] = new Vector2(Mathf.Lerp(MIN_DRAG, MAX_DRAG, 0.1f), 0);
+
+          for (var j = 0; j < MAX_SPECIES; j++) {
+            float a = (j / (float)MAX_SPECIES * 0.9f) * MAX_SOCIAL_FORCE * 1.0f;
+            float b = (i / (float)MAX_SPECIES * 1.2f) * MAX_SOCIAL_FORCE * 0.4f;
+
+            _socialData[i * 10 + j] = new Vector2(a - b, MAX_SOCIAL_RANGE * 0.7f);
+          }
+        }
+
+        colors[9] = new Color(0.9f, 0.9f, 0.9f);
+        colors[8] = new Color(0.9f, 0.7f, 0.3f);
+        colors[7] = new Color(0.9f, 0.4f, 0.2f);
+        colors[6] = new Color(0.9f, 0.3f, 0.3f);
+        colors[5] = new Color(0.6f, 0.3f, 0.6f);
+        colors[4] = new Color(0.5f, 0.3f, 0.7f);
+        colors[3] = new Color(0.2f, 0.2f, 0.3f);
+        colors[2] = new Color(0.1f, 0.1f, 0.3f);
+        colors[1] = new Color(0.0f, 0.0f, 0.3f);
+        colors[0] = new Color(0.0f, 0.0f, 0.0f);
         break;
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < MAX_SPECIES; i++) {

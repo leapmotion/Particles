@@ -134,7 +134,7 @@
     velocity.xyz += socialForce.xyz;
 
     //Damping
-    velocity.xyz *= speciesData.x;
+    velocity.xyz *= lerp(1, speciesData.x, velocity.w);
 
     return velocity;
 	}
@@ -175,11 +175,15 @@
 	}
 
   float4 randomParticles (v2f i) : SV_Target {
-    float x = 2 * nrand(i.uv);
-    float y = 2 * nrand(i.uv * 2 + float2(0.2f, 0.9f));
-    float z = 2 * nrand(i.uv * 3 + float2(2.2f, 33.9f));
-    float w = floor(nrand(i.uv * 4 + float2(23, 54)) * 10);
-    return float4(x - 1, y - 1, z - 1, w);
+    float4 particle;
+    particle.x = nrand(i.uv) - 0.5;
+    particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
+    particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
+    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * 10);
+
+    particle.xyz *= 2;
+
+    return particle;
 	}
 
   float4 stepSocialQueue(v2f i) : SV_Target {

@@ -248,21 +248,22 @@ public class TextureSimulator : MonoBehaviour {
 
   #region ECOSYSTEMS
   public const int MAX_SPECIES = 10;
-  public const float MAX_SOCIAL_FORCE = 0.001f;
+  public const float MAX_SOCIAL_FORCE = 0.003f;
   public const float MAX_SOCIAL_RANGE = 0.5f;
-  private const float MIN_DRAG = 0.70f;
-  private const float MAX_DRAG = 0.95f;
+  private const float MIN_DRAG = 0.05f;
+  private const float MAX_DRAG = 0.3f;
 
   public enum EcosystemPreset {
     RedMennace,
+    Chase,
     Mitosis,
     Fluidy
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     Color[] colors = new Color[10];
-    Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
-    Vector4[] _speciesData = new Vector4[MAX_SPECIES];
+    Vector4[] socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+    Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
     //Default colors are greyscale 0 to 1
     for (int i = 0; i < MAX_SPECIES; i++) {
@@ -270,20 +271,31 @@ public class TextureSimulator : MonoBehaviour {
       colors[i] = new Color(p, p, p, 1);
     }
 
-    //Default social interactions are zero
+    //Default social interactions are zero force with max range
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
-        _socialData[i * 10 + j] = new Vector2(0, 0);
+        socialData[i * 10 + j] = new Vector2(0, MAX_SOCIAL_RANGE);
       }
     }
 
     //Default species always have max drag and 0 extra social steps
     for (int i = 0; i < MAX_SPECIES; i++) {
-      _speciesData[i] = new Vector2(MAX_DRAG, 0);
+      speciesData[i] = new Vector2(MIN_DRAG, 0);
     }
 
     switch (preset) {
       case EcosystemPreset.RedMennace:
+        colors[0] = new Color(1.0f, 0.0f, 0.0f);
+        colors[1] = new Color(0.3f, 0.2f, 0.0f);
+        colors[2] = new Color(0.3f, 0.3f, 0.0f);
+        colors[3] = new Color(0.0f, 0.3f, 0.0f);
+        colors[4] = new Color(0.0f, 0.0f, 0.3f);
+        colors[5] = new Color(0.3f, 0.0f, 0.3f);
+        colors[6] = new Color(0.3f, 0.3f, 0.3f);
+        colors[7] = new Color(0.3f, 0.4f, 0.3f);
+        colors[8] = new Color(0.3f, 0.4f, 0.3f);
+        colors[9] = new Color(0.3f, 0.2f, 0.3f);
+
         int redSpecies = 0;
 
         float normalLove = MAX_SOCIAL_FORCE * 0.04f;
@@ -296,36 +308,75 @@ public class TextureSimulator : MonoBehaviour {
         float loveRange = MAX_SOCIAL_RANGE * 0.3f;
         float redSelfRange = MAX_SOCIAL_RANGE * 0.4f;
 
-        colors[0] = new Color(1.0f, 0.0f, 0.0f);
-        colors[1] = new Color(0.3f, 0.2f, 0.0f);
-        colors[2] = new Color(0.3f, 0.3f, 0.0f);
-        colors[3] = new Color(0.0f, 0.3f, 0.0f);
-        colors[4] = new Color(0.0f, 0.0f, 0.3f);
-        colors[5] = new Color(0.3f, 0.0f, 0.3f);
-        colors[6] = new Color(0.3f, 0.3f, 0.3f);
-        colors[7] = new Color(0.3f, 0.4f, 0.3f);
-        colors[8] = new Color(0.3f, 0.4f, 0.3f);
-        colors[9] = new Color(0.3f, 0.2f, 0.3f);
+        for (int s = 0; s < MAX_SPECIES; s++) {
+          speciesData[s] = new Vector2(Mathf.Lerp(MIN_DRAG, MAX_DRAG, 0.1f), 0);
 
-        for (int i = 0; i < MAX_SPECIES; i++) {
           for (int o = 0; o < MAX_SPECIES; o++) {
-            _socialData[i * 10 + o] = new Vector2(normalLove, normalRange);
+            socialData[s * 10 + o] = new Vector2(normalLove, normalRange);
           }
 
-          _socialData[i * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)(i + 1) / (float)MAX_SPECIES));
-          _socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
-          _socialData[redSpecies * 10 + i] = new Vector2(redLoveOfOthers, loveRange);
+          //------------------------------------
+          // everyone fears red except for red
+          // and red loves everyone
+          //------------------------------------
+          socialData[s * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
+
+          socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
+
+          socialData[redSpecies * 10 + s] = new Vector2(redLoveOfOthers, loveRange);
         }
+        break;
+      case EcosystemPreset.Chase:
+        for (int i = 0; i < MAX_SPECIES; i++) {
+          speciesData[i] = new Vector2(MIN_DRAG, 0);
+          socialData[i * 10 + i] = new Vector2(MAX_SOCIAL_FORCE * 0.1f, MAX_SOCIAL_RANGE);
+        }
+
+        colors[0] = new Color(0.7f, 0.0f, 0.0f);
+        colors[1] = new Color(0.7f, 0.3f, 0.0f);
+        colors[2] = new Color(0.7f, 0.7f, 0.0f);
+        colors[3] = new Color(0.0f, 0.7f, 0.0f);
+        colors[4] = new Color(0.0f, 0.0f, 0.7f);
+        colors[5] = new Color(0.4f, 0.0f, 0.7f);
+        colors[6] = new Color(1.0f, 0.3f, 0.3f);
+        colors[7] = new Color(1.0f, 0.6f, 0.3f);
+        colors[8] = new Color(1.0f, 1.0f, 0.3f);
+        colors[9] = new Color(0.3f, 1.0f, 0.3f);
+
+        float chase = 0.9f;
+        socialData[0 * 10 + 1] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[1 * 10 + 2] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[2 * 10 + 3] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[3 * 10 + 4] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[4 * 10 + 5] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[5 * 10 + 6] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[6 * 10 + 7] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[7 * 10 + 8] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[8 * 10 + 9] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[9 * 10 + 0] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+
+        float flee = -0.6f;
+        float range = 0.8f * MAX_SOCIAL_RANGE;
+        socialData[0 * 10 + 9] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[1 * 10 + 0] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[2 * 10 + 1] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[3 * 10 + 2] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[4 * 10 + 3] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[5 * 10 + 4] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[6 * 10 + 5] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[7 * 10 + 6] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[8 * 10 + 7] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[9 * 10 + 8] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < MAX_SPECIES; i++) {
-          _speciesData[i] = new Vector2(Mathf.Lerp(MIN_DRAG, MAX_DRAG, 0.1f), 0);
+          speciesData[i] = new Vector2(Mathf.Lerp(MIN_DRAG, MAX_DRAG, 0.1f), 0);
 
           for (var j = 0; j < MAX_SPECIES; j++) {
             float a = (j / (float)MAX_SPECIES * 0.9f) * MAX_SOCIAL_FORCE * 1.0f;
             float b = (i / (float)MAX_SPECIES * 1.2f) * MAX_SOCIAL_FORCE * 0.4f;
 
-            _socialData[i * 10 + j] = new Vector2(a - b, MAX_SOCIAL_RANGE * 0.7f);
+            socialData[i * 10 + j] = new Vector2(a - b, MAX_SOCIAL_RANGE * 0.7f);
           }
         }
 
@@ -343,23 +394,30 @@ public class TextureSimulator : MonoBehaviour {
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < MAX_SPECIES; i++) {
           for (var j = 0; j < MAX_SPECIES; j++) {
-            _socialData[i * 10 + j] = new Vector2(0, 0);
+            socialData[i * 10 + j] = new Vector2(0, 0);
           }
 
-          _socialData[i * 10 + i] = new Vector2(0.2f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.1f);
+          socialData[i * 10 + i] = new Vector2(0.2f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.1f);
         }
 
         for (var i = 0; i < MAX_SPECIES; i++) {
           for (var j = i + 1; j < MAX_SPECIES; j++) {
-            _socialData[i * 10 + j] = new Vector2(0.15f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE);
-            _socialData[j * 10 + i] = new Vector2(-0.1f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.3f);
+            socialData[i * 10 + j] = new Vector2(0.15f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE);
+            socialData[j * 10 + i] = new Vector2(-0.1f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.3f);
           }
         }
         break;
     }
 
-    _simulationMat.SetVectorArray("_SocialData", _socialData);
-    _simulationMat.SetVectorArray("_SpeciesData", _speciesData);
+    //Invert drag before we upload to the GPU
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector2 species = speciesData[i];
+      species.x = 1 - species.x;
+      speciesData[i] = species;
+    }
+
+    _simulationMat.SetVectorArray("_SocialData", socialData);
+    _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
   }
 
@@ -370,7 +428,7 @@ public class TextureSimulator : MonoBehaviour {
     for (int i = 0; i < colors.Length; i++) {
       colors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.3f, 1));
     }
-    _particleMat.SetColorArray("_Colors", colors);
+    
 
     Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
 
@@ -383,11 +441,19 @@ public class TextureSimulator : MonoBehaviour {
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
       Vector4 data = new Vector4();
-      data.x = Random.Range(0.95f, 0.99f);
+      data.x = Random.Range(MIN_DRAG, MAX_DRAG);
       data.y = Random.Range(0, _maxSocialSteps);
       speciesData[i] = data;
     }
 
+    //Invert drag before we upload to the GPU
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector2 species = speciesData[i];
+      species.x = 1 - species.x;
+      speciesData[i] = species;
+    }
+
+    _particleMat.SetColorArray("_Colors", colors);
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
   }

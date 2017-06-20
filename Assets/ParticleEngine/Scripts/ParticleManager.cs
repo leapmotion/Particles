@@ -421,7 +421,6 @@ public class ParticleManager : MonoBehaviour {
       float drag = 0.1f;
       float collision = 0.3f;
 
-
       for (int s = 0; s < MAX_SPECIES; s++) {
         _species[s].steps = MIN_FORCE_STEPS;
         _species[s].collisionForce = MIN_COLLISION_FORCE + collision * (MAX_COLLISION_FORCE - MIN_COLLISION_FORCE);

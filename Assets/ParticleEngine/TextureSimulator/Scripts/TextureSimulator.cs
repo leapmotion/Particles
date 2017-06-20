@@ -372,11 +372,39 @@ public class TextureSimulator : MonoBehaviour {
   public void LoadRandomEcosystem(string seed) {
     Random.InitState(seed.GetHashCode());
 
-    Color[] colors = new Color[MAX_SPECIES];
-    for (int i = 0; i < colors.Length; i++) {
-      colors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.3f, 1));
-    }
+    List<Color> colors = new List<Color>();
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Color newColor;
+      int maxTries = 1000;
+      float threshold = 0.23f;
+      while (true) {
+        float h = Random.value;
+        float s = Random.Range(0.7f, 1f);
+        float v = Random.Range(0.8f, 1f);
 
+        bool alreadyExists = false;
+        foreach (var color in colors) {
+          float existingH, existingS, existingV;
+          Color.RGBToHSV(color, out existingH, out existingS, out existingV);
+
+          if (Mathf.Abs(h - existingH) < threshold && Mathf.Abs(s - existingS) < threshold) {
+            alreadyExists = true;
+            break;
+          }
+        }
+
+        maxTries--;
+        if (!alreadyExists || maxTries < 0) {
+          if (maxTries < 0) {
+            Debug.LogWarning("Timed out!");
+          }
+          newColor = Color.HSVToRGB(h, s, v);
+          break;
+        }
+      }
+
+      colors.Add(newColor);
+    }
 
     Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
 
@@ -401,7 +429,7 @@ public class TextureSimulator : MonoBehaviour {
       speciesData[i] = species;
     }
 
-    _particleMat.SetColorArray("_Colors", colors);
+    _particleMat.SetColorArray("_Colors", colors.ToArray());
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
   }

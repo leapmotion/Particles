@@ -5,7 +5,7 @@
   #include "UnityCG.cginc"
 
   #define MAX_PARTICLES 4096
-  #define MAX_FORCE_STEPS 64
+  #define MAX_FORCE_STEPS 20
   #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)

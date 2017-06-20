@@ -479,7 +479,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
 
-    if (Application.isPlaying && false) {
+    if (Application.isPlaying) {
       accumulateCounts(isCollision: true);
       drawer.color = Color.blue;
       foreach (var pair in _chunkCounts) {

@@ -143,9 +143,11 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
-    doHandCollision();
+    if (_provider != null) {
+      doHandCollision();
 
-    doHandInfluence();
+      doHandInfluence();
+    }
 
     if (Input.GetKeyDown(KeyCode.Space)) {
       Random.InitState(Time.realtimeSinceStartup.GetHashCode());

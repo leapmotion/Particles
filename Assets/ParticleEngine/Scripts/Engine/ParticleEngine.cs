@@ -234,7 +234,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
 
     if (useKMeans) {
-      int LEN = 12;
+      int LEN = 60;
       if (_means == null) {
         _means = new Vector3[LEN];
         _raddii = new float[LEN];

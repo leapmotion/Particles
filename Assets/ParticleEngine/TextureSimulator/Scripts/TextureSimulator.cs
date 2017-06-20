@@ -25,6 +25,10 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private float _grabThreshold = 0.35f;
 
+  [Range(1, 20)]
+  [SerializeField]
+  private int _grabDelay = 5;
+
   [Range(0, 0.2f)]
   [SerializeField]
   private float _influenceNormalOffset = 0.1f;
@@ -99,10 +103,7 @@ public class TextureSimulator : MonoBehaviour {
   private Vector4[] _spheres = new Vector4[2];
   private Vector4[] _sphereVels = new Vector4[2];
 
-  private Vector4 _leftSphere, _leftVel, _prevLeft;
-  private Vector4 _rightSphere, _rightVel, _prevRight;
-  private bool _hadLeft = false;
-  private bool _hadRight = false;
+  private HandActor[] _handActors = new HandActor[2];
 
   #region PUBLIC API
 
@@ -137,67 +138,14 @@ public class TextureSimulator : MonoBehaviour {
     LoadPresetEcosystem(_startingEcosystem);
 
     ResetPositions();
+
+    _handActors.Fill(() => new HandActor() { sim = this });
   }
 
   void Update() {
-    int capsuleCount = 0;
-    foreach (var hand in _provider.CurrentFrame.Hands) {
-      foreach (var finger in hand.Fingers) {
-        foreach (var bone in finger.bones) {
-          _capsuleA[capsuleCount] = bone.PrevJoint.ToVector3();
-          _capsuleB[capsuleCount] = bone.NextJoint.ToVector3();
-          capsuleCount++;
-        }
-      }
+    doHandCollision();
 
-      if (hand.GrabStrength > _grabThreshold) {
-        Vector4 pos = (hand.PalmPosition + hand.PalmNormal * _influenceNormalOffset).ToVector3() + hand.DistalAxis() * _influenceForwardOffset;
-        pos.w = _influenceRadius;
-        Graphics.DrawMesh(_influenceMesh, Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one * _influenceRadius * 2), _influenceMat, 0);
-
-        if (hand.IsLeft) {
-          _prevLeft = pos;
-          _leftVel = Vector3.zero;
-          if (_hadLeft) {
-            _leftVel = pos - _leftSphere;
-            _prevLeft = _leftSphere;
-          }
-          _leftSphere = pos;
-        } else {
-          _prevRight = pos;
-          _rightVel = Vector3.zero;
-          if (_hadRight) {
-            _prevRight = _rightSphere;
-            _rightVel = pos - _rightSphere;
-          }
-          _rightSphere = pos;
-        }
-      }
-    }
-
-    _hadLeft = _provider.CurrentFrame.Hands.Query().Any(h => h.IsLeft && h.GrabStrength > _grabThreshold);
-    _hadRight = _provider.CurrentFrame.Hands.Query().Any(h => h.IsRight && h.GrabStrength > _grabThreshold);
-
-    int sphereCount = 0;
-    if (_hadLeft) {
-      _spheres[sphereCount] = _prevLeft;
-      _sphereVels[sphereCount] = _leftVel;
-      sphereCount++;
-    }
-
-    if (_hadRight) {
-      _spheres[sphereCount] = _prevRight;
-      _sphereVels[sphereCount] = _rightVel;
-      sphereCount++;
-    }
-
-    _simulationMat.SetInt("_CapsuleCount", capsuleCount);
-    _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
-    _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);
-
-    _simulationMat.SetInt("_SphereCount", sphereCount);
-    _simulationMat.SetVectorArray("_Spheres", _spheres);
-    _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
+    doHandInfluence();
 
     if (Input.GetKeyDown(KeyCode.Space)) {
       Random.InitState(Time.realtimeSinceStartup.GetHashCode());
@@ -428,7 +376,7 @@ public class TextureSimulator : MonoBehaviour {
     for (int i = 0; i < colors.Length; i++) {
       colors[i] = Color.HSVToRGB(Random.value, Random.Range(0.5f, 1), Random.Range(0.3f, 1));
     }
-    
+
 
     Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
 
@@ -457,6 +405,95 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
   }
+  #endregion
+
+  #region HAND INTERACTION
+
+  private void doHandInfluence() {
+    _handActors[0].Update(Hands.Left);
+    _handActors[1].Update(Hands.Right);
+
+    int sphereCount = 0;
+    if (_handActors[0].active) {
+      _spheres[sphereCount] = _handActors[0].sphere;
+      _sphereVels[sphereCount] = _handActors[0].velocity;
+      sphereCount++;
+    }
+
+    if (_handActors[1].active) {
+      _spheres[sphereCount] = _handActors[1].sphere;
+      _sphereVels[sphereCount] = _handActors[1].velocity;
+      sphereCount++;
+    }
+
+    _simulationMat.SetInt("_SphereCount", sphereCount);
+    _simulationMat.SetVectorArray("_Spheres", _spheres);
+    _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
+  }
+
+  private void doHandCollision() {
+    int capsuleCount = 0;
+    foreach (var hand in _provider.CurrentFrame.Hands) {
+      foreach (var finger in hand.Fingers) {
+        foreach (var bone in finger.bones) {
+          _capsuleA[capsuleCount] = bone.PrevJoint.ToVector3();
+          _capsuleB[capsuleCount] = bone.NextJoint.ToVector3();
+          capsuleCount++;
+        }
+      }
+    }
+
+    _simulationMat.SetInt("_CapsuleCount", capsuleCount);
+    _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
+    _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);
+  }
+
+  private class HandActor {
+    public TextureSimulator sim;
+
+    public Vector3 position, prevPosition;
+    public int frameCount = 0;
+    public bool active;
+
+    public Vector4 sphere {
+      get {
+        Vector4 s = prevPosition;
+        s.w = sim._influenceRadius;
+        return s;
+      }
+    }
+
+    public Vector3 velocity {
+      get {
+        return position - prevPosition;
+      }
+    }
+
+    public void Update(Hand hand) {
+      if (hand != null && hand.GrabAngle > sim._grabThreshold) {
+        frameCount = Mathf.Min(sim._grabDelay, frameCount + 1);
+      } else {
+        frameCount = Mathf.Max(0, frameCount - 1);
+      }
+
+      if (hand != null) {
+        prevPosition = position;
+        position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * sim._influenceNormalOffset + hand.DistalAxis() * sim._influenceForwardOffset;
+      }
+
+      if (active && frameCount == 0) {
+        active = false;
+      } else if (!active && frameCount == sim._grabDelay) {
+        active = true;
+        prevPosition = position;
+      }
+
+      if (active) {
+        Graphics.DrawMesh(sim._influenceMesh, Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * sim._influenceRadius * 2), sim._influenceMat, 0);
+      }
+    }
+  }
+
   #endregion
 
   #region PRIVATE IMPLEMENTATION

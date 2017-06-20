@@ -155,7 +155,16 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     };
 
     ResetSimulation();
+
+    _randomColors = new Color[maxParticles];
+    for (int i = 0; i < maxParticles; i++) {
+      _randomColors[i] = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+    }
   }
+
+  private Vector3[] _means;
+  private float[] _raddii;
+  private bool useKMeans = false;
 
   protected virtual void Update() {
     _deltaTime = 1f / 5f;
@@ -218,6 +227,84 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
       using (new ProfilerSample("Apply Global Forces")) {
         applyGlobalForces(0, 0, _aliveParticles);
       }
+    }
+
+    if (Input.GetKeyDown(KeyCode.M)) {
+      useKMeans = true;
+    }
+
+    if (useKMeans) {
+      int LEN = 12;
+      if (_means == null) {
+        _means = new Vector3[LEN];
+        _raddii = new float[LEN];
+        for (int i = 0; i < LEN; i++) {
+          _means[i] = _particlesFront[UnityEngine.Random.Range(0, _aliveParticles)].position;
+        }
+      }
+
+      var newMeans = new Vector3[LEN];
+      var newCounts = new int[LEN];
+
+      _raddii = new float[LEN];
+
+      for (int i = 0; i < _aliveParticles; i++) {
+        Particle p = _particlesFront[i];
+
+        float closestDist = float.MaxValue;
+        int index = 0;
+        for (int j = 0; j < LEN; j++) {
+          float dist = Vector3.Distance(p.position, _means[j]);
+          if (dist < closestDist) {
+            closestDist = dist;
+            index = j;
+          }
+        }
+
+        drawer.color = _randomColors[index];
+        drawer.DrawWireSphere(p.position, 0.05f);
+
+        newMeans[index] += p.position;
+        newCounts[index] += 1;
+        _raddii[index] = Mathf.Max(_raddii[index], closestDist);
+      }
+
+      for (int i = 0; i < LEN; i++) {
+        if (newCounts[i] == 0) {
+          _means[i] = UnityEngine.Random.insideUnitSphere;
+        } else {
+          _means[i] = newMeans[i] / newCounts[i];
+        }
+
+        drawer.color = _randomColors[i];
+        drawer.DrawWireSphere(_means[i], _raddii[i]);
+      }
+
+      int totalInteractions = 0;
+      for (int i = 0; i < _aliveParticles; i++) {
+        Particle p = _particlesFront[i];
+
+        float closestDist = float.MaxValue;
+        int index = 0;
+        for (int j = 0; j < LEN; j++) {
+          float dist = Vector3.Distance(p.position, _means[j]);
+          if (dist < closestDist) {
+            closestDist = dist;
+            index = j;
+          }
+        }
+
+        totalInteractions += newCounts[index];
+        for (int j = 0; j < LEN; j++) {
+          if (j == index) continue;
+
+          if (Vector3.Distance(p.position, _means[j]) < (1 + _raddii[j])) {
+            totalInteractions += newCounts[j];
+          }
+        }
+      }
+
+      Debug.Log(totalInteractions + " : " + (512 * 512));
     }
   }
 
@@ -391,7 +478,8 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract bool ShouldKillParticle(ref Particle particle);
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-    if (Application.isPlaying) {
+
+    if (Application.isPlaying && false) {
       accumulateCounts(isCollision: true);
       drawer.color = Color.blue;
       foreach (var pair in _chunkCounts) {

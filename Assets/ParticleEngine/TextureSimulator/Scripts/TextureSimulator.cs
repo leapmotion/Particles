@@ -56,7 +56,7 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private int _maxParticles = 4096;
 
-  [Range(1, 8)]
+  [Range(1, 1024)]
   [SerializeField]
   private int _maxSocialSteps = 8;
 

@@ -211,7 +211,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
-    Color[] colors = new Color[10];
+    Color[] colors = new Color[MAX_SPECIES];
     Vector4[] socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
@@ -224,7 +224,7 @@ public class TextureSimulator : MonoBehaviour {
     //Default social interactions are zero force with max range
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
-        socialData[i * 10 + j] = new Vector2(0, MAX_SOCIAL_RANGE);
+        socialData[i * MAX_SPECIES + j] = new Vector2(0, MAX_SOCIAL_RANGE);
       }
     }
 
@@ -262,24 +262,24 @@ public class TextureSimulator : MonoBehaviour {
           speciesData[s] = new Vector2(Mathf.Lerp(MIN_DRAG, MAX_DRAG, 0.1f), 0);
 
           for (int o = 0; o < MAX_SPECIES; o++) {
-            socialData[s * 10 + o] = new Vector2(normalLove, normalRange);
+            socialData[s * MAX_SPECIES + o] = new Vector2(normalLove, normalRange);
           }
 
           //------------------------------------
           // everyone fears red except for red
           // and red loves everyone
           //------------------------------------
-          socialData[s * 10 + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
+          socialData[s * MAX_SPECIES + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
 
-          socialData[redSpecies * 10 + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
+          socialData[redSpecies * MAX_SPECIES + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
 
-          socialData[redSpecies * 10 + s] = new Vector2(redLoveOfOthers, loveRange);
+          socialData[redSpecies * MAX_SPECIES + s] = new Vector2(redLoveOfOthers, loveRange);
         }
         break;
       case EcosystemPreset.Chase:
         for (int i = 0; i < MAX_SPECIES; i++) {
           speciesData[i] = new Vector2(MIN_DRAG, 0);
-          socialData[i * 10 + i] = new Vector2(MAX_SOCIAL_FORCE * 0.1f, MAX_SOCIAL_RANGE);
+          socialData[i * MAX_SPECIES + i] = new Vector2(MAX_SOCIAL_FORCE * 0.1f, MAX_SOCIAL_RANGE);
         }
 
         colors[0] = new Color(0.7f, 0.0f, 0.0f);
@@ -294,29 +294,29 @@ public class TextureSimulator : MonoBehaviour {
         colors[9] = new Color(0.3f, 1.0f, 0.3f);
 
         float chase = 0.9f;
-        socialData[0 * 10 + 1] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[1 * 10 + 2] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[2 * 10 + 3] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[3 * 10 + 4] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[4 * 10 + 5] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[5 * 10 + 6] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[6 * 10 + 7] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[7 * 10 + 8] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[8 * 10 + 9] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
-        socialData[9 * 10 + 0] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[0 * MAX_SPECIES + 1] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[1 * MAX_SPECIES + 2] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[2 * MAX_SPECIES + 3] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[3 * MAX_SPECIES + 4] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[4 * MAX_SPECIES + 5] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[5 * MAX_SPECIES + 6] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[6 * MAX_SPECIES + 7] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[7 * MAX_SPECIES + 8] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[8 * MAX_SPECIES + 9] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
+        socialData[9 * MAX_SPECIES + 0] = new Vector2(MAX_SOCIAL_FORCE * chase, MAX_SOCIAL_RANGE);
 
         float flee = -0.6f;
         float range = 0.8f * MAX_SOCIAL_RANGE;
-        socialData[0 * 10 + 9] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[1 * 10 + 0] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[2 * 10 + 1] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[3 * 10 + 2] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[4 * 10 + 3] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[5 * 10 + 4] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[6 * 10 + 5] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[7 * 10 + 6] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[8 * 10 + 7] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
-        socialData[9 * 10 + 8] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[0 * MAX_SPECIES + 9] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[1 * MAX_SPECIES + 0] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[2 * MAX_SPECIES + 1] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[3 * MAX_SPECIES + 2] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[4 * MAX_SPECIES + 3] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[5 * MAX_SPECIES + 4] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[6 * MAX_SPECIES + 5] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[7 * MAX_SPECIES + 6] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[8 * MAX_SPECIES + 7] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
+        socialData[9 * MAX_SPECIES + 8] = new Vector2(MAX_SOCIAL_FORCE * flee, range);
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < MAX_SPECIES; i++) {
@@ -326,7 +326,7 @@ public class TextureSimulator : MonoBehaviour {
             float a = (j / (float)MAX_SPECIES * 0.9f) * MAX_SOCIAL_FORCE * 1.0f;
             float b = (i / (float)MAX_SPECIES * 1.2f) * MAX_SOCIAL_FORCE * 0.4f;
 
-            socialData[i * 10 + j] = new Vector2(a - b, MAX_SOCIAL_RANGE * 0.7f);
+            socialData[i * MAX_SPECIES + j] = new Vector2(a - b, MAX_SOCIAL_RANGE * 0.7f);
           }
         }
 
@@ -344,16 +344,16 @@ public class TextureSimulator : MonoBehaviour {
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < MAX_SPECIES; i++) {
           for (var j = 0; j < MAX_SPECIES; j++) {
-            socialData[i * 10 + j] = new Vector2(0, 0);
+            socialData[i * MAX_SPECIES + j] = new Vector2(0, 0);
           }
 
-          socialData[i * 10 + i] = new Vector2(0.2f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.1f);
+          socialData[i * MAX_SPECIES + i] = new Vector2(0.2f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.1f);
         }
 
         for (var i = 0; i < MAX_SPECIES; i++) {
           for (var j = i + 1; j < MAX_SPECIES; j++) {
-            socialData[i * 10 + j] = new Vector2(0.15f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE);
-            socialData[j * 10 + i] = new Vector2(-0.1f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.3f);
+            socialData[i * MAX_SPECIES + j] = new Vector2(0.15f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE);
+            socialData[j * MAX_SPECIES + i] = new Vector2(-0.1f * MAX_SOCIAL_FORCE, MAX_SOCIAL_RANGE * 0.3f);
           }
         }
         break;
@@ -412,7 +412,7 @@ public class TextureSimulator : MonoBehaviour {
 
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
-        _socialData[s * 10 + o] = new Vector2(Random.Range(-MAX_SOCIAL_FORCE, MAX_SOCIAL_FORCE), Random.value * MAX_SOCIAL_RANGE);
+        _socialData[s * MAX_SPECIES + o] = new Vector2(Random.Range(-MAX_SOCIAL_FORCE, MAX_SOCIAL_FORCE), Random.value * MAX_SOCIAL_RANGE);
       }
     }
 

@@ -7,6 +7,7 @@
 		_Metallic ("Metallic", Range(-2,2)) = 0.0
     _Size     ("Size", Range(0, 0.5)) = 0.01
     _TrailLength ("Trail Length", Range(0, 10000)) = 1000
+    _Brightness ("Brightness", Float) = 1
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
@@ -30,6 +31,7 @@
     float4 _Colors[10];
     float _Size;
     float _TrailLength;
+    float _Brightness;
 
     float nrand(float2 n) {
       return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -45,7 +47,10 @@
 
       v.vertex.xyz *= _Size;
       v.vertex.xyz += particle.xyz;
+
       v.color = _Colors[(int)particle.w];
+      //v.color.rgb = abs(velocity.xyz) * _Brightness;
+      //v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
     }
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {

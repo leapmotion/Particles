@@ -200,8 +200,11 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_SPECIES = 10;
   public const float MAX_SOCIAL_FORCE = 0.003f;
   public const float MAX_SOCIAL_RANGE = 0.5f;
-  private const float MIN_DRAG = 0.05f;
-  private const float MAX_DRAG = 0.3f;
+
+  [Range(0, 1)]
+  public float MIN_DRAG = 0.01f;
+  [Range(0, 1)]
+  public float MAX_DRAG = 0.1f;
 
   public enum EcosystemPreset {
     RedMennace,

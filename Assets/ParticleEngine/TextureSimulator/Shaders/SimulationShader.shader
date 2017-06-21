@@ -5,7 +5,7 @@
   #include "UnityCG.cginc"
 
   #define MAX_PARTICLES 4096
-  #define MAX_FORCE_STEPS 20
+  #define MAX_FORCE_STEPS 5
   #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
@@ -41,8 +41,8 @@
   float _FieldRadius;
   float _FieldForce;
 
-  float4 _SpeciesData[10];
-  float2 _SocialData[100];
+  float4 _SpeciesData[MAX_SPECIES];
+  float2 _SocialData[MAX_SPECIES * MAX_SPECIES];
 
   float3 _CapsuleA[64];
   float3 _CapsuleB[64];
@@ -142,7 +142,7 @@
   FragmentOutput updateCollisionVelocities (v2f i) {
     float4 particle = tex2D(_Position, i.uv);
     float4 velocity = tex2D(_Velocity, i.uv);
-    float socialOffset = (int)(particle.w * 10);
+    float socialOffset = (int)(particle.w * MAX_SPECIES);
 
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
@@ -179,7 +179,7 @@
     particle.x = nrand(i.uv) - 0.5;
     particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
     particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
-    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * 10);
+    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * MAX_SPECIES);
 
     particle.xyz *= 2;
 

@@ -298,13 +298,13 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         for (int j = 0; j < LEN; j++) {
           if (j == index) continue;
 
-          if (Vector3.Distance(p.position, _means[j]) < (1 + _raddii[j])) {
+          if (Vector3.Distance(p.position, _means[j]) < (0.5f + _raddii[j])) {
             totalInteractions += newCounts[j];
           }
         }
       }
 
-      Debug.Log(totalInteractions + " : " + (512 * 512));
+      Debug.Log(totalInteractions + " : " + (1024 * 1024));
     }
   }
 

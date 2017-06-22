@@ -743,6 +743,9 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
     _simulationMat.SetFloat("_HandCollisionRadius", _handCollisionRadius);
 
+    _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
+    _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
+
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
     _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);

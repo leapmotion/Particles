@@ -108,24 +108,6 @@
       }
     }
 
-    //Collision with capsules
-    {
-      for (int i = 0; i < _CapsuleCount; i++) {
-        float3 a = _CapsuleA[i];
-        float3 b = _CapsuleB[i];
-
-        float3 pa = particle.xyz - a;
-        float3 ba = b - a;
-        float h = saturate(dot(pa, ba) / dot(ba, ba));
-
-        float3 forceVector = pa - ba * h;
-        float dist = length(forceVector);
-        if (dist < _HandCollisionRadius) {
-          velocity.xyz += forceVector / dist * _HandCollisionForce;
-        }
-      }
-    }
-
     return velocity;
   }
 
@@ -167,6 +149,31 @@
       float2 socialData = _SocialData[(int)(socialOffset + other.w)];
       if (distance < socialData.y) {
         totalSocialForce += float4(socialData.x * toOther, 1);
+      }
+    }
+
+    //Collision with capsules and social hands
+    {
+      for (int i = 0; i < _CapsuleCount; i++) {
+        float3 a = _CapsuleA[i];
+        float3 b = _CapsuleB[i];
+
+        float3 pa = particle.xyz - a;
+        float3 ba = b - a;
+        float h = saturate(dot(pa, ba) / dot(ba, ba));
+
+        float3 forceVector = pa - ba * h;
+        float dist = length(forceVector);
+        forceVector /= dist;
+
+        if (dist < _HandCollisionRadius) {
+          velocity.xyz += forceVector * _HandCollisionForce;
+        }
+
+        float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
+        if (dist < socialData.y) {
+          totalSocialForce += float4(socialData.x * forceVector, 1) * _SocialHandSpecies;
+        }
       }
     }
 

@@ -115,7 +115,7 @@ public class TextureSimulator : MonoBehaviour {
     set { _socialHandSpecies = value; }
   }
 
-  [Range(0, 2)]
+  [Range(0, 100)]
   [SerializeField]
   private float _socialHandForceFactor = 0.5f;
   public float socialHandForceFactor {
@@ -720,8 +720,6 @@ public class TextureSimulator : MonoBehaviour {
       _sphereVels[sphereCount] = _handActors[1].velocity;
       sphereCount++;
     }
-
-
 
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);

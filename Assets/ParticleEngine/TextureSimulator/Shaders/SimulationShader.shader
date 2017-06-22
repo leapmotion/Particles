@@ -172,7 +172,7 @@
 
         float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
         if (dist < socialData.y) {
-          totalSocialForce += float4(socialData.x * forceVector, 1) * _SocialHandSpecies;
+          totalSocialForce += float4(-socialData.x * forceVector, 1) * _SocialHandForceFactor;
         }
       }
     }

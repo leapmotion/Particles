@@ -28,7 +28,7 @@
 
 		half _Glossiness;
 		half _Metallic;
-    float4 _Colors[10];
+    float4 _Colors[32];
     float _Size;
     float _TrailLength;
     float _Brightness;

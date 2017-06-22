@@ -1,17 +1,17 @@
 ﻿Shader "Unlit/Simulation" {
-  Properties{}
+  Properties { }
 
-    CGINCLUDE
-#include "UnityCG.cginc"
+  CGINCLUDE
+  #include "UnityCG.cginc"
 
-#define MAX_PARTICLES 4096
-#define MAX_FORCE_STEPS 64
-#define MAX_SPECIES 31
-#define PARTICLE_RADIUS 0.01
-#define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
-#define COLLISION_FORCE 0.002
+  #define MAX_PARTICLES 4096
+  #define MAX_FORCE_STEPS 64
+  #define MAX_SPECIES 31
+  #define PARTICLE_RADIUS 0.01
+  #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
+  #define COLLISION_FORCE 0.002
 
-#define SPHERE_ATTRACTION 0.02
+  #define SPHERE_ATTRACTION 0.02
 
   struct appdata {
     float4 vertex : POSITION;
@@ -44,6 +44,9 @@
   float _HandCollisionRadius;
   float _HandCollisionForce;
 
+  int _SocialHandSpecies;
+  float _SocialHandForceFactor;
+
   float4 _SpeciesData[MAX_SPECIES];
   float2 _SocialData[MAX_SPECIES * MAX_SPECIES];
 
@@ -73,76 +76,76 @@
     return pos;
   }
 
-    float4 globalForces(v2f i) : SV_Target{
-      float4 velocity = tex2D(_Velocity, i.uv);
-      float4 particle = tex2D(_Position, i.uv);
+  float4 globalForces(v2f i) : SV_Target{
+    float4 velocity = tex2D(_Velocity, i.uv);
+    float4 particle = tex2D(_Position, i.uv);
 
-      //Attraction towards the origin
-      float3 toFieldCenter = _FieldCenter - particle.xyz;
-      float dist = length(toFieldCenter);
-      if (dist > _FieldRadius) {
-        velocity.xyz += toFieldCenter * _FieldForce;
-      }
+    //Attraction towards the origin
+    float3 toFieldCenter = _FieldCenter - particle.xyz;
+    float dist = length(toFieldCenter);
+    if (dist > _FieldRadius) {
+      velocity.xyz += toFieldCenter * _FieldForce;
+    }
 
-      //Grasping by spheres
-      {
-        float3 sphereForce = float3(0, 0, 0);
-        float spheres = 0;
-        for (int i = 0; i < _SphereCount; i++) {
-          float3 toSphere = _Spheres[i] - particle.xyz;
-          if (length(toSphere) < _Spheres[i].w) {
-            sphereForce.xyz += _SphereVelocities[i];
-            sphereForce.xyz += toSphere * SPHERE_ATTRACTION;
-            spheres++;
-          }
-        }
-
-        if (spheres > 0.5) {
-          velocity.xyz = sphereForce / spheres;
-          velocity.w *= 0.5;
-        } else {
-           velocity.w = lerp(velocity.w, 1, 0.05);
+    //Grasping by spheres
+    {
+      float3 sphereForce = float3(0, 0, 0);
+      float spheres = 0;
+      for (int i = 0; i < _SphereCount; i++) {
+        float3 toSphere = _Spheres[i] - particle.xyz;
+        if (length(toSphere) < _Spheres[i].w) {
+          sphereForce.xyz += _SphereVelocities[i];
+          sphereForce.xyz += toSphere * SPHERE_ATTRACTION;
+          spheres++;
         }
       }
 
-      //Collision with capsules
-      {
-        for (int i = 0; i < _CapsuleCount; i++) {
-          float3 a = _CapsuleA[i];
-          float3 b = _CapsuleB[i];
+      if (spheres > 0.5) {
+        velocity.xyz = sphereForce / spheres;
+        velocity.w *= 0.5;
+      } else {
+        velocity.w = lerp(velocity.w, 1, 0.05);
+      }
+    }
 
-          float3 pa = particle.xyz - a;
-          float3 ba = b - a;
-          float h = saturate(dot(pa, ba) / dot(ba, ba));
+    //Collision with capsules
+    {
+      for (int i = 0; i < _CapsuleCount; i++) {
+        float3 a = _CapsuleA[i];
+        float3 b = _CapsuleB[i];
 
-          float3 forceVector = pa - ba * h;
-          float dist = length(forceVector);
-          if (dist < _HandCollisionRadius) {
-            velocity.xyz += forceVector / dist * _HandCollisionForce;
-          }
+        float3 pa = particle.xyz - a;
+        float3 ba = b - a;
+        float h = saturate(dot(pa, ba) / dot(ba, ba));
+
+        float3 forceVector = pa - ba * h;
+        float dist = length(forceVector);
+        if (dist < _HandCollisionRadius) {
+          velocity.xyz += forceVector / dist * _HandCollisionForce;
         }
       }
+    }
 
-      return velocity;
+    return velocity;
   }
 
-    float4 dampVelocities(v2f i) : SV_Target{
-      float4 velocity = tex2D(_Velocity, i.uv);
-      float4 particle = tex2D(_Position, i.uv);
-      float4 speciesData = _SpeciesData[(int)particle.w];
+  float4 dampVelocities(v2f i) : SV_Target{
+    float4 velocity = tex2D(_Velocity, i.uv);
+    float4 particle = tex2D(_Position, i.uv);
+    float4 speciesData = _SpeciesData[(int)particle.w];
 
-      //Step offset for social forces
-      i.uv.y = speciesData.y / MAX_FORCE_STEPS;
-      float4 socialForce = tex2D(_SocialForce, i.uv);
-      velocity.xyz += socialForce.xyz;
+    //Step offset for social forces
+    i.uv.y = speciesData.y / MAX_FORCE_STEPS;
+    float4 socialForce = tex2D(_SocialForce, i.uv);
+    velocity.xyz += socialForce.xyz;
 
-      //Damping
-      velocity.xyz *= lerp(1, speciesData.x, velocity.w);
+    //Damping
+    velocity.xyz *= lerp(1, speciesData.x, velocity.w);
 
-      return velocity;
+    return velocity;
   }
 
-    FragmentOutput updateCollisionVelocities(v2f i) {
+  FragmentOutput updateCollisionVelocities(v2f i) {
     float4 particle = tex2D(_Position, i.uv);
     float4 velocity = tex2D(_Velocity, i.uv);
     float socialOffset = (int)(particle.w * MAX_SPECIES);
@@ -189,79 +192,78 @@
     return particle;
   }
 
-    float4 stepSocialQueue(v2f i) : SV_Target{
-      float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
+  float4 stepSocialQueue(v2f i) : SV_Target{
+    float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
 
-      float4 newForce = tex2D(_SocialTemp, i.uv);
-      float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
+    float4 newForce = tex2D(_SocialTemp, i.uv);
+    float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
 
-      float4 result;
+    float4 result;
 
-      if (i.uv.y <= 1.0 / MAX_FORCE_STEPS) {
-        result = newForce;
-      }
-   else {
-  result = shiftedForce;
-}
+    if (i.uv.y <= 1.0 / MAX_FORCE_STEPS) {
+      result = newForce;
+    } else {
+      result = shiftedForce;
+    }
 
-return result;
+    return result;
   }
-    ENDCG
+  ENDCG
 
-    SubShader {
-    Tags{ "RenderType" = "Opaque" }
-      LOD 100
-      Cull Off
-      ZTest Off
-      ZWrite Off
-      Blend One Zero
+  SubShader {
+  Tags{ "RenderType" = "Opaque" }
+    LOD 100
+    Cull Off
+    ZTest Off
+    ZWrite Off
+    Blend One Zero
 
-      //Pass 0: integrate velocities
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment integratePositions
-        ENDCG
+    //Pass 0: integrate velocities
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment integratePositions
+      ENDCG
     }
 
-      //Pass 1: update collisions
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment updateCollisionVelocities
-        ENDCG
+    //Pass 1: update collisions
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment updateCollisionVelocities
+      ENDCG
     }
 
-      //Pass 2: global forces
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment globalForces
-        ENDCG
+    //Pass 2: global forces
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment globalForces
+      ENDCG
     }
 
-      //Pass 3: damp velocity and add offset social forces
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment dampVelocities
-        ENDCG
+    //Pass 3: damp velocity and add offset social forces
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment dampVelocities
+      ENDCG
     }
 
-      //Pass 4: random particles
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment randomParticles
-        ENDCG
+    //Pass 4: random particles
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment randomParticles
+      ENDCG
     }
 
-      //Pass 5: step social queue
-      Pass{
-        CGPROGRAM
-        #pragma vertex vert
-        #pragma fragment stepSocialQueue
-        ENDCG
+    //Pass 5: step social queue
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment stepSocialQueue
+      ENDCG
     }
   }
 }

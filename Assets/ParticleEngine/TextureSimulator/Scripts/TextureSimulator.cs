@@ -115,6 +115,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _socialHandSpecies = value; }
   }
 
+  [Range(0, 2)]
+  [SerializeField]
+  private float _socialHandForceFactor = 0.5f;
+  public float socialHandForceFactor {
+    get { return _socialHandForceFactor; }
+    set { _socialHandForceFactor = value; }
+  }
+
   [Header("Field")]
   [SerializeField]
   private Transform _fieldCenter;

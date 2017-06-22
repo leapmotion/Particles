@@ -7,6 +7,7 @@ using Leap.Unity.Attributes;
 
 public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
+  public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 31;
 
@@ -91,10 +92,6 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [Header("Simulation")]
-  [MinValue(8)]
-  [SerializeField]
-  private int _maxParticles = 4096;
-
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
@@ -772,7 +769,7 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < _maxParticles; i++) {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
       if (bakedVerts.Count + sourceVerts.Length > 60000) {
         bakedMesh.SetVertices(bakedVerts);
         bakedMesh.SetTriangles(bakedTris, 0);
@@ -797,7 +794,7 @@ public class TextureSimulator : MonoBehaviour {
       bakedTris.AddRange(sourceTris);
 
       for (int k = 0; k < sourceVerts.Length; k++) {
-        bakedUvs.Add(new Vector2((i + 0.5f) / _maxParticles, 0));
+        bakedUvs.Add(new Vector2((i + 0.5f) / MAX_PARTICLES, 0));
       }
 
       for (int k = 0; k < sourceTris.Length; k++) {
@@ -814,7 +811,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private RenderTexture createTexture(int height = 1) {
-    RenderTexture tex = new RenderTexture(_maxParticles, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
 

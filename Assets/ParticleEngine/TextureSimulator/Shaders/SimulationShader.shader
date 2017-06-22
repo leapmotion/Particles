@@ -13,10 +13,7 @@
 
 #define SPHERE_ATTRACTION 0.02
 
-#define CAPSULE_RADIUS 0.04
-#define CAPSULE_FORCE 0.001
-
-    struct appdata {
+  struct appdata {
     float4 vertex : POSITION;
     float2 uv : TEXCOORD0;
   };
@@ -43,6 +40,9 @@
 
   float _MaxSpecies;
   float _SpawnRadius;
+
+  float _HandCollisionRadius;
+  float _HandCollisionForce;
 
   float4 _SpeciesData[MAX_SPECIES];
   float2 _SocialData[MAX_SPECIES * MAX_SPECIES];
@@ -117,8 +117,8 @@
 
           float3 forceVector = pa - ba * h;
           float dist = length(forceVector);
-          if (dist < CAPSULE_RADIUS) {
-            velocity.xyz += forceVector / dist * CAPSULE_FORCE;
+          if (dist < _HandCollisionRadius) {
+            velocity.xyz += forceVector / dist * _HandCollisionForce;
           }
         }
       }

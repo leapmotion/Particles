@@ -18,7 +18,38 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   public LeapProvider _provider;
 
+  [Header("Hand Collision")]
+  [SerializeField]
+  private bool _handCollisionEnabled = true;
+  public bool handCollisionEnabled {
+    get { return _handCollisionEnabled; }
+    set { _handCollisionEnabled = value; }
+  }
+
+  [Range(0, 0.1f)]
+  [SerializeField]
+  private float _handCollisionRadius = 0.04f;
+  public float handCollisionRadius {
+    get { return _handCollisionRadius; }
+    set { _handCollisionRadius = value; }
+  }
+
+  [Range(0, 0.02f)]
+  [SerializeField]
+  private float _handCollisionForce = 0.001f;
+  public float handCollisionForce {
+    get { return _handCollisionForce; }
+    set { _handCollisionForce = value; }
+  }
+
   [Header("Hand Influence")]
+  [SerializeField]
+  private bool _handInfluenceEnabled = true;
+  public bool handInfluenceEnabled {
+    get { return _handInfluenceEnabled; }
+    set { _handInfluenceEnabled = value; }
+  }
+
   [SerializeField]
   private Material _influenceMat;
   public Material influenceMat {
@@ -66,6 +97,22 @@ public class TextureSimulator : MonoBehaviour {
   public float influenceForwardOffset {
     get { return _influenceForwardOffset; }
     set { _influenceForwardOffset = value; }
+  }
+
+  [Header("Social Hand")]
+  [SerializeField]
+  private bool _socialHandEnabled = false;
+  public bool socialHandEnabled {
+    get { return _socialHandEnabled; }
+    set { _socialHandEnabled = value; }
+  }
+
+  [Range(0, MAX_SPECIES)]
+  [SerializeField]
+  private int _socialHandSpecies = 0;
+  public int socialHandSpecies {
+    get { return _socialHandSpecies; }
+    set { _socialHandSpecies = value; }
   }
 
   [Header("Field")]
@@ -645,6 +692,11 @@ public class TextureSimulator : MonoBehaviour {
   #region HAND INTERACTION
 
   private void doHandInfluence() {
+    if (!_handInfluenceEnabled) {
+      _simulationMat.SetInt("_SphereCount", 0);
+      return;
+    }
+
     _handActors[0].Update(Hands.Left);
     _handActors[1].Update(Hands.Right);
 
@@ -660,6 +712,8 @@ public class TextureSimulator : MonoBehaviour {
       _sphereVels[sphereCount] = _handActors[1].velocity;
       sphereCount++;
     }
+
+
 
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);
@@ -677,6 +731,9 @@ public class TextureSimulator : MonoBehaviour {
         }
       }
     }
+
+    _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
+    _simulationMat.SetFloat("_HandCollisionRadius", _handCollisionRadius);
 
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);

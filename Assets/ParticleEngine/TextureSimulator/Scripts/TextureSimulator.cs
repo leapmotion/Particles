@@ -400,6 +400,8 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region ECOSYSTEMS
+  public const int SPECIES_CAP_FOR_PRESETS = 10;
+
   public enum EcosystemPreset {
     RedMennace,
     Chase,
@@ -455,10 +457,10 @@ public class TextureSimulator : MonoBehaviour {
         float loveRange = _maxSocialRange * 0.3f;
         float redSelfRange = _maxSocialRange * 0.4f;
 
-        for (int s = 0; s < MAX_SPECIES; s++) {
+        for (int s = 0; s < SPECIES_CAP_FOR_PRESETS; s++) {
           speciesData[s] = new Vector2(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f), 0);
 
-          for (int o = 0; o < MAX_SPECIES; o++) {
+          for (int o = 0; o < SPECIES_CAP_FOR_PRESETS; o++) {
             socialData[s * MAX_SPECIES + o] = new Vector2(normalLove, normalRange);
           }
 
@@ -466,7 +468,7 @@ public class TextureSimulator : MonoBehaviour {
           // everyone fears red except for red
           // and red loves everyone
           //------------------------------------
-          socialData[s * MAX_SPECIES + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)MAX_SPECIES));
+          socialData[s * MAX_SPECIES + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)SPECIES_CAP_FOR_PRESETS));
 
           socialData[redSpecies * MAX_SPECIES + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
 
@@ -474,7 +476,7 @@ public class TextureSimulator : MonoBehaviour {
         }
         break;
       case EcosystemPreset.Chase:
-        for (int i = 0; i < MAX_SPECIES; i++) {
+        for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector2(_dragRange.x, 0);
           socialData[i * MAX_SPECIES + i] = new Vector2(_maxSocialForce * 0.1f, _maxSocialRange);
         }
@@ -516,12 +518,12 @@ public class TextureSimulator : MonoBehaviour {
         socialData[9 * MAX_SPECIES + 8] = new Vector2(_maxSocialForce * flee, range);
         break;
       case EcosystemPreset.Mitosis:
-        for (int i = 0; i < MAX_SPECIES; i++) {
+        for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector2(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f), 0);
 
-          for (var j = 0; j < MAX_SPECIES; j++) {
-            float a = (j / (float)MAX_SPECIES * 0.9f) * _maxSocialForce * 1.0f;
-            float b = (i / (float)MAX_SPECIES * 1.2f) * _maxSocialForce * 0.4f;
+          for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
+            float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * _maxSocialForce * 1.0f;
+            float b = (i / (float)SPECIES_CAP_FOR_PRESETS * 1.2f) * _maxSocialForce * 0.4f;
 
             socialData[i * MAX_SPECIES + j] = new Vector2(a - b, _maxSocialRange * 0.7f);
           }
@@ -539,16 +541,16 @@ public class TextureSimulator : MonoBehaviour {
         colors[0] = new Color(0.0f, 0.0f, 0.0f);
         break;
       case EcosystemPreset.Fluidy:
-        for (var i = 0; i < MAX_SPECIES; i++) {
-          for (var j = 0; j < MAX_SPECIES; j++) {
+        for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+          for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
             socialData[i * MAX_SPECIES + j] = new Vector2(0, 0);
           }
 
           socialData[i * MAX_SPECIES + i] = new Vector2(0.2f * _maxSocialForce, _maxSocialRange * 0.1f);
         }
 
-        for (var i = 0; i < MAX_SPECIES; i++) {
-          for (var j = i + 1; j < MAX_SPECIES; j++) {
+        for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+          for (var j = i + 1; j < SPECIES_CAP_FOR_PRESETS; j++) {
             socialData[i * MAX_SPECIES + j] = new Vector2(0.15f * _maxSocialForce, _maxSocialRange);
             socialData[j * MAX_SPECIES + i] = new Vector2(-0.1f * _maxSocialForce, _maxSocialRange * 0.3f);
           }

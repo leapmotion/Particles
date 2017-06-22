@@ -15,6 +15,13 @@ public class TextureSimulator : MonoBehaviour {
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
   public const string BY_VELOCITY = "COLOR_VELOCITY";
 
+  public const int PASS_INTEGRATE_VELOCITIES = 0;
+  public const int PASS_UPDATE_COLLISIONS = 1;
+  public const int PASS_GLOBAL_FORCES = 2;
+  public const int PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES = 3;
+  public const int PASS_RANDOMIZE_PARTICLES = 4;
+  public const int PASS_STEP_SOCIAL_QUEUE = 5;
+
   #region INSPECTOR
   [SerializeField]
   public LeapProvider _provider;
@@ -391,7 +398,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void ResetPositions() {
     GL.LoadPixelMatrix(0, 1, 1, 0);
-    blitPos(4);
+    blitPos(PASS_RANDOMIZE_PARTICLES);
   }
 
   #endregion
@@ -435,14 +442,14 @@ public class TextureSimulator : MonoBehaviour {
 
     GL.LoadPixelMatrix(0, 1, 1, 0);
     for (int i = 0; i < stepsPerFrame; i++) {
-      blitVel(2);
+      blitVel(PASS_GLOBAL_FORCES);
 
       doParticleInteraction();
 
-      blit("_SocialForce", ref _frontSocial, ref _backSocial, 5, 1);
+      blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
 
-      blitVel(3);
-      blitPos(0);
+      blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+      blitPos(PASS_INTEGRATE_VELOCITIES);
     }
 
     _particleMat.mainTexture = _frontPos;

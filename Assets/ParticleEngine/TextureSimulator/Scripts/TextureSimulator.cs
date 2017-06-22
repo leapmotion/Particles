@@ -15,6 +15,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
   public const string BY_VELOCITY = "COLOR_VELOCITY";
 
+  #region INSPECTOR
   [SerializeField]
   public LeapProvider _provider;
 
@@ -356,6 +357,7 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Renderer _socialDebug;
+  #endregion
 
   //Simulation
   private int stepsPerFrame = 1;

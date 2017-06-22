@@ -14,6 +14,7 @@
 		LOD 200
 		
 		CGPROGRAM
+    #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
 		#pragma surface surf Standard vertex:vert noforwardadd
 		#pragma target 2.0
 
@@ -48,9 +49,17 @@
       v.vertex.xyz *= _Size;
       v.vertex.xyz += particle.xyz;
 
+#ifdef COLOR_SPECIES
       v.color = _Colors[(int)particle.w];
-      //v.color.rgb = abs(velocity.xyz) * _Brightness;
-      //v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
+#endif
+
+#ifdef COLOR_VELOCITY
+      v.color.rgb = abs(velocity.xyz) * _Brightness;
+#endif
+
+#ifdef COLOR_SPECIES_MAGNITUDE
+      v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
+#endif
     }
 
 		void surf (Input IN, inout SurfaceOutputStandard o) {

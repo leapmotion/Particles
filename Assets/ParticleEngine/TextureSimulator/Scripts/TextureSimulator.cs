@@ -8,7 +8,11 @@ using Leap.Unity.Attributes;
 public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
   public const int MAX_FORCE_STEPS = 64;
-  public const int MAX_SPECIES = 32;
+  public const int MAX_SPECIES = 31;
+
+  public const string BY_SPECIES = "COLOR_SPECIES";
+  public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
+  public const string BY_VELOCITY = "COLOR_VELOCITY";
 
   [SerializeField]
   public LeapProvider _provider;
@@ -113,6 +117,31 @@ public class TextureSimulator : MonoBehaviour {
     get { return _particleMat; }
   }
 
+  [OnEditorChange("colorMode")]
+  [SerializeField]
+  private ColorMode _colorMode = ColorMode.BySpecies;
+  public ColorMode colorMode {
+    get { return _colorMode; }
+    set {
+      _particleMat.DisableKeyword(BY_SPECIES);
+      _particleMat.DisableKeyword(BY_SPECIES_WITH_VELOCITY);
+      _particleMat.DisableKeyword(BY_VELOCITY);
+
+      switch (value) {
+        case ColorMode.BySpecies:
+          _particleMat.EnableKeyword(BY_SPECIES);
+          break;
+        case ColorMode.BySpeciesWithMagnitude:
+          _particleMat.EnableKeyword(BY_SPECIES_WITH_VELOCITY);
+          break;
+        case ColorMode.ByVelocity:
+          _particleMat.EnableKeyword(BY_VELOCITY);
+          break;
+      }
+      _colorMode = value;
+    }
+  }
+
   [Header("Preset Ecosystems")]
   [SerializeField]
   private EcosystemPreset _ecosystemPreset = EcosystemPreset.Fluidy;
@@ -125,7 +154,7 @@ public class TextureSimulator : MonoBehaviour {
   private string _ecosystemSeed;
 
   [SerializeField]
-  private KeyCode _loadStartingEcosystemKey = KeyCode.R;
+  private KeyCode _loadPresetEcosystemKey = KeyCode.R;
 
   [SerializeField]
   private KeyCode _randomizeEcosystemKey = KeyCode.Space;
@@ -258,6 +287,13 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  [SerializeField]
+  private float _randomColorThreshold = 0.15f;
+  public float randomColorThreshold {
+    get { return _randomColorThreshold; }
+    set { _randomColorThreshold = value; }
+  }
+
   [Header("Debug")]
   [SerializeField]
   private Renderer _positionDebug;
@@ -287,6 +323,12 @@ public class TextureSimulator : MonoBehaviour {
   private HandActor[] _handActors = new HandActor[2];
 
   #region PUBLIC API
+
+  public enum ColorMode {
+    BySpecies,
+    BySpeciesWithMagnitude,
+    ByVelocity,
+  }
 
   public void SetStepsPerFrame(float value) {
     stepsPerFrame = Mathf.RoundToInt(value * 10);
@@ -318,45 +360,23 @@ public class TextureSimulator : MonoBehaviour {
 
     LoadPresetEcosystem(_ecosystemPreset);
 
+    updateShaderData();
+
     ResetPositions();
 
     _handActors.Fill(() => new HandActor() { sim = this });
   }
 
   void Update() {
-    _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
-    _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
-    _simulationMat.SetFloat("_FieldForce", _fieldForce);
+    updateShaderData();
 
-    _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
-    _simulationMat.SetInt("_MaxSpecies", _maxSpecies);
+    handleUserInput();
 
     if (_provider != null) {
       doHandCollision();
 
       doHandInfluence();
     }
-
-    if (Input.GetKeyDown(KeyCode.Space)) {
-      Random.InitState(Time.realtimeSinceStartup.GetHashCode());
-
-      var gen = GetComponent<NameGenerator>();
-      string name;
-      if (gen == null) {
-        name = Random.Range(0, 1000).ToString();
-      } else {
-        name = gen.GenerateName();
-      }
-      Debug.Log(name);
-
-      LoadRandomEcosystem(name);
-    }
-
-    if (Input.GetKeyDown(KeyCode.L)) {
-      LoadRandomEcosystem(_ecosystemSeed);
-    }
-
-
 
     GL.LoadPixelMatrix(0, 1, 1, 0);
     for (int i = 0; i < stepsPerFrame; i++) {
@@ -396,8 +416,8 @@ public class TextureSimulator : MonoBehaviour {
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
     //Default colors are greyscale 0 to 1
-    for (int i = 0; i < MAX_SPECIES; i++) {
-      float p = i / (MAX_SPECIES - 1.0f);
+    for (int i = 0; i < _maxSpecies; i++) {
+      float p = i / (_maxSpecies - 1.0f);
       colors[i] = new Color(p, p, p, 1);
     }
 
@@ -558,7 +578,6 @@ public class TextureSimulator : MonoBehaviour {
     for (int i = 0; i < MAX_SPECIES; i++) {
       Color newColor;
       int maxTries = 1000;
-      float threshold = 0.23f;
       while (true) {
         float h = Random.value;
         float s = Random.Range(0.7f, 1f);
@@ -569,7 +588,8 @@ public class TextureSimulator : MonoBehaviour {
           float existingH, existingS, existingV;
           Color.RGBToHSV(color, out existingH, out existingS, out existingV);
 
-          if (Mathf.Abs(h - existingH) < threshold && Mathf.Abs(s - existingS) < threshold) {
+          if (Mathf.Abs(h - existingH) < _randomColorThreshold &&
+              Mathf.Abs(s - existingS) < _randomColorThreshold) {
             alreadyExists = true;
             break;
           }
@@ -577,9 +597,6 @@ public class TextureSimulator : MonoBehaviour {
 
         maxTries--;
         if (!alreadyExists || maxTries < 0) {
-          if (maxTries < 0) {
-            Debug.LogWarning("Timed out!");
-          }
           newColor = Color.HSVToRGB(h, s, v);
           break;
         }
@@ -707,6 +724,44 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region PRIVATE IMPLEMENTATION
+  private void updateShaderData() {
+    _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
+    _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
+    _simulationMat.SetFloat("_FieldForce", _fieldForce);
+
+    _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
+    _simulationMat.SetInt("_MaxSpecies", _maxSpecies);
+  }
+
+  private void handleUserInput() {
+    if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
+      LoadPresetEcosystem(_ecosystemPreset);
+    }
+
+    if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
+      LoadRandomEcosystem(_ecosystemSeed);
+    }
+
+    if (Input.GetKeyDown(_randomizeEcosystemKey)) {
+      Random.InitState(Time.realtimeSinceStartup.GetHashCode());
+
+      var gen = GetComponent<NameGenerator>();
+      string name;
+      if (gen == null) {
+        name = Random.Range(0, 1000).ToString();
+      } else {
+        name = gen.GenerateName();
+      }
+      Debug.Log(name);
+
+      LoadRandomEcosystem(name);
+    }
+
+    if (Input.GetKeyDown(_resetParticlePositionsKey)) {
+      ResetPositions();
+    }
+  }
+
   private void generateMeshes() {
     var sourceVerts = _particleMesh.vertices;
     var sourceTris = _particleMesh.triangles;

@@ -744,10 +744,12 @@ public class TextureSimulator : MonoBehaviour {
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
       LoadPresetEcosystem(_ecosystemPreset);
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
       LoadRandomEcosystem(_ecosystemSeed);
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
@@ -763,6 +765,8 @@ public class TextureSimulator : MonoBehaviour {
       Debug.Log(name);
 
       LoadRandomEcosystem(name);
+
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
@@ -833,7 +837,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {
     RenderTexture.active = front;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+    front.DiscardContents();
 
     _simulationMat.SetPass(pass);
 
@@ -864,7 +868,8 @@ public class TextureSimulator : MonoBehaviour {
     _colorBuffers[1] = _socialTemp.colorBuffer;
 
     Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+    _frontVel.DiscardContents();
+    _socialTemp.DiscardContents();
 
     _simulationMat.SetPass(1);
 

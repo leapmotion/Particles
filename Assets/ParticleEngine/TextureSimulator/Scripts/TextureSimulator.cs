@@ -284,6 +284,7 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  [Range(0, 1)]
   [SerializeField]
   private float _randomColorThreshold = 0.15f;
   public float randomColorThreshold {

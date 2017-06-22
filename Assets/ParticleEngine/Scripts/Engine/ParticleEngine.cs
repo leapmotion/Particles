@@ -52,8 +52,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private ParallelForeach _resolveCollisionsForeach;
 
   //Collision acceleration structures
-  private float _collisionChunkInverseScale;
-  private float _socialChunkInverseScale;
   private Dictionary<ChunkKey, int> _chunkCounts = new Dictionary<ChunkKey, int>();
   private Dictionary<ChunkKey, ChunkLocation> _chunkLocations = new Dictionary<ChunkKey, ChunkLocation>();
 
@@ -67,7 +65,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   //Timing
   private long[] integrationTimes = new long[32];
   private long[] collisionTimes = new long[32];
-  private long[] sortingTimes = new long[32];
   private long[] socialForceTimes = new long[32];
   private System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
 
@@ -438,9 +435,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     _workerData = new PerWorkerData[SystemInfo.processorCount];
     _workerData.Fill(() => new PerWorkerData());
 
-    _collisionChunkInverseScale = 1.0f / PARTICLE_DIAMETER;
-    _socialChunkInverseScale = 1.0f / 0.5f;
-
     OnInitializeSimulation();
   }
 
@@ -479,7 +473,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
 
-    if (Application.isPlaying) {
+    if (Application.isPlaying && false) {
       accumulateCounts(isCollision: true);
       drawer.color = Color.blue;
       foreach (var pair in _chunkCounts) {

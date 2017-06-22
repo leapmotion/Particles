@@ -15,10 +15,42 @@ public class TextureSimulator : MonoBehaviour {
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
   public const string BY_VELOCITY = "COLOR_VELOCITY";
 
+  #region INSPECTOR
   [SerializeField]
   public LeapProvider _provider;
 
+  [Header("Hand Collision")]
+  [SerializeField]
+  private bool _handCollisionEnabled = true;
+  public bool handCollisionEnabled {
+    get { return _handCollisionEnabled; }
+    set { _handCollisionEnabled = value; }
+  }
+
+  [Range(0, 0.1f)]
+  [SerializeField]
+  private float _handCollisionRadius = 0.04f;
+  public float handCollisionRadius {
+    get { return _handCollisionRadius; }
+    set { _handCollisionRadius = value; }
+  }
+
+  [Range(0, 0.02f)]
+  [SerializeField]
+  private float _handCollisionForce = 0.001f;
+  public float handCollisionForce {
+    get { return _handCollisionForce; }
+    set { _handCollisionForce = value; }
+  }
+
   [Header("Hand Influence")]
+  [SerializeField]
+  private bool _handInfluenceEnabled = true;
+  public bool handInfluenceEnabled {
+    get { return _handInfluenceEnabled; }
+    set { _handInfluenceEnabled = value; }
+  }
+
   [SerializeField]
   private Material _influenceMat;
   public Material influenceMat {
@@ -66,6 +98,30 @@ public class TextureSimulator : MonoBehaviour {
   public float influenceForwardOffset {
     get { return _influenceForwardOffset; }
     set { _influenceForwardOffset = value; }
+  }
+
+  [Header("Social Hand")]
+  [SerializeField]
+  private bool _socialHandEnabled = false;
+  public bool socialHandEnabled {
+    get { return _socialHandEnabled; }
+    set { _socialHandEnabled = value; }
+  }
+
+  [Range(0, MAX_SPECIES)]
+  [SerializeField]
+  private int _socialHandSpecies = 0;
+  public int socialHandSpecies {
+    get { return _socialHandSpecies; }
+    set { _socialHandSpecies = value; }
+  }
+
+  [Range(0, 100)]
+  [SerializeField]
+  private float _socialHandForceFactor = 0.5f;
+  public float socialHandForceFactor {
+    get { return _socialHandForceFactor; }
+    set { _socialHandForceFactor = value; }
   }
 
   [Header("Field")]
@@ -301,6 +357,7 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Renderer _socialDebug;
+  #endregion
 
   //Simulation
   private int stepsPerFrame = 1;
@@ -645,6 +702,11 @@ public class TextureSimulator : MonoBehaviour {
   #region HAND INTERACTION
 
   private void doHandInfluence() {
+    if (!_handInfluenceEnabled) {
+      _simulationMat.SetInt("_SphereCount", 0);
+      return;
+    }
+
     _handActors[0].Update(Hands.Left);
     _handActors[1].Update(Hands.Right);
 
@@ -677,6 +739,12 @@ public class TextureSimulator : MonoBehaviour {
         }
       }
     }
+
+    _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
+    _simulationMat.SetFloat("_HandCollisionRadius", _handCollisionRadius);
+
+    _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
+    _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
@@ -744,10 +812,12 @@ public class TextureSimulator : MonoBehaviour {
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
       LoadPresetEcosystem(_ecosystemPreset);
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
       LoadRandomEcosystem(_ecosystemSeed);
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
@@ -763,6 +833,8 @@ public class TextureSimulator : MonoBehaviour {
       Debug.Log(name);
 
       LoadRandomEcosystem(name);
+
+      ResetPositions();
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
@@ -833,7 +905,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {
     RenderTexture.active = front;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+    front.DiscardContents();
 
     _simulationMat.SetPass(pass);
 
@@ -864,7 +936,8 @@ public class TextureSimulator : MonoBehaviour {
     _colorBuffers[1] = _socialTemp.colorBuffer;
 
     Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
+    _frontVel.DiscardContents();
+    _socialTemp.DiscardContents();
 
     _simulationMat.SetPass(1);
 

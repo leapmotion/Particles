@@ -370,30 +370,6 @@ public class ParticleEngineImplementation : ParticleEngine {
   }
 
   #region GLOBAL COLLISIONS
-
-  public struct Capsule {
-    public Vector3 v0, v1;
-    public float radius;
-
-    public void CollideWith(ref Particle particle) {
-      //TODO
-    }
-  }
-
-  public struct Sphere {
-    public Vector3 center;
-    public float radius;
-
-    public void CollideWith(ref Particle particle) {
-      //TODO
-    }
-  }
-
-  private Capsule[] _collisionCapsules = new Capsule[1024];
-  private int _numCollisionCapsules = 0;
-  private Sphere[] _spheres = new Sphere[1024];
-  private int _numCollisionSpheres = 0;
-
   /// <summary>
   /// Use this method to apply global particle constraints.
   /// </summary>

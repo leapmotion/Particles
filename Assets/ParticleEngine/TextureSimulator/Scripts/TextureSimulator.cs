@@ -596,9 +596,9 @@ public class TextureSimulator : MonoBehaviour {
       Color newColor;
       int maxTries = 1000;
       while (true) {
-        float h = Random.value;
-        float s = Random.Range(0.7f, 1f);
-        float v = Random.Range(0.8f, 1f);
+        float h = Random.Range(_hueRange.x, _hueRange.y);
+        float s = Random.Range(_saturationRange.x, _saturationRange.y);
+        float v = Random.Range(_valueRange.x, _valueRange.y);
 
         bool alreadyExists = false;
         foreach (var color in colors) {

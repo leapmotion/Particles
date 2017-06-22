@@ -574,6 +574,23 @@ public class TextureSimulator : MonoBehaviour {
   public void LoadRandomEcosystem(string seed) {
     Random.InitState(seed.GetHashCode());
 
+    Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+
+    for (int s = 0; s < MAX_SPECIES; s++) {
+      for (int o = 0; o < MAX_SPECIES; o++) {
+        _socialData[s * MAX_SPECIES + o] = new Vector2(Random.Range(-_maxSocialForce, _maxSocialForce), Random.value * _maxSocialRange);
+      }
+    }
+
+    Vector4[] speciesData = new Vector4[MAX_SPECIES];
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector4 data = new Vector4();
+      data.x = Random.Range(_dragRange.x, _dragRange.y);
+      data.y = Random.Range(0, _maxForceSteps);
+      speciesData[i] = data;
+    }
+
+    //Perform color randomization last so that it has no effect on particle interaction
     List<Color> colors = new List<Color>();
     for (int i = 0; i < MAX_SPECIES; i++) {
       Color newColor;
@@ -603,22 +620,6 @@ public class TextureSimulator : MonoBehaviour {
       }
 
       colors.Add(newColor);
-    }
-
-    Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
-
-    for (int s = 0; s < MAX_SPECIES; s++) {
-      for (int o = 0; o < MAX_SPECIES; o++) {
-        _socialData[s * MAX_SPECIES + o] = new Vector2(Random.Range(-_maxSocialForce, _maxSocialForce), Random.value * _maxSocialRange);
-      }
-    }
-
-    Vector4[] speciesData = new Vector4[MAX_SPECIES];
-    for (int i = 0; i < MAX_SPECIES; i++) {
-      Vector4 data = new Vector4();
-      data.x = Random.Range(_dragRange.x, _dragRange.y);
-      data.y = Random.Range(0, _maxForceSteps);
-      speciesData[i] = data;
     }
 
     //Invert drag before we upload to the GPU

@@ -468,7 +468,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int SPECIES_CAP_FOR_PRESETS = 10;
 
   public enum EcosystemPreset {
-    RedMennace,
+    RedMenace,
     Chase,
     Mitosis,
     Fluidy
@@ -498,7 +498,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     switch (preset) {
-      case EcosystemPreset.RedMennace:
+      case EcosystemPreset.RedMenace:
         colors[0] = new Color(1.0f, 0.0f, 0.0f);
         colors[1] = new Color(0.3f, 0.2f, 0.0f);
         colors[2] = new Color(0.3f, 0.3f, 0.0f);

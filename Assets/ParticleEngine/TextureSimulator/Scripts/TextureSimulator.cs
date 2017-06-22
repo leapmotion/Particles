@@ -411,7 +411,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     Color[] colors = new Color[MAX_SPECIES];
-    Vector4[] socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+    Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
     //Default colors are greyscale 0 to 1
@@ -423,7 +423,7 @@ public class TextureSimulator : MonoBehaviour {
     //Default social interactions are zero force with max range
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
-        socialData[i * MAX_SPECIES + j] = new Vector2(0, _maxSocialRange);
+        socialData[i, j] = new Vector2(0, _maxSocialRange);
       }
     }
 
@@ -461,24 +461,24 @@ public class TextureSimulator : MonoBehaviour {
           speciesData[s] = new Vector2(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f), 0);
 
           for (int o = 0; o < SPECIES_CAP_FOR_PRESETS; o++) {
-            socialData[s * MAX_SPECIES + o] = new Vector2(normalLove, normalRange);
+            socialData[s, o] = new Vector2(normalLove, normalRange);
           }
 
           //------------------------------------
           // everyone fears red except for red
           // and red loves everyone
           //------------------------------------
-          socialData[s * MAX_SPECIES + redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)SPECIES_CAP_FOR_PRESETS));
+          socialData[s, redSpecies] = new Vector2(fearOfRed, fearRange * ((float)s / (float)SPECIES_CAP_FOR_PRESETS));
 
-          socialData[redSpecies * MAX_SPECIES + redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
+          socialData[redSpecies, redSpecies] = new Vector2(redLoveOfSelf, redSelfRange);
 
-          socialData[redSpecies * MAX_SPECIES + s] = new Vector2(redLoveOfOthers, loveRange);
+          socialData[redSpecies, s] = new Vector2(redLoveOfOthers, loveRange);
         }
         break;
       case EcosystemPreset.Chase:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector2(_dragRange.x, 0);
-          socialData[i * MAX_SPECIES + i] = new Vector2(_maxSocialForce * 0.1f, _maxSocialRange);
+          socialData[i, i] = new Vector2(_maxSocialForce * 0.1f, _maxSocialRange);
         }
 
         colors[0] = new Color(0.7f, 0.0f, 0.0f);
@@ -493,29 +493,29 @@ public class TextureSimulator : MonoBehaviour {
         colors[9] = new Color(0.3f, 1.0f, 0.3f);
 
         float chase = 0.9f;
-        socialData[0 * MAX_SPECIES + 1] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[1 * MAX_SPECIES + 2] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[2 * MAX_SPECIES + 3] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[3 * MAX_SPECIES + 4] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[4 * MAX_SPECIES + 5] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[5 * MAX_SPECIES + 6] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[6 * MAX_SPECIES + 7] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[7 * MAX_SPECIES + 8] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[8 * MAX_SPECIES + 9] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[9 * MAX_SPECIES + 0] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[0, 1] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[1, 2] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[2, 3] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[3, 4] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[4, 5] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[5, 6] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[6, 7] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[7, 8] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[8, 9] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        socialData[9, 0] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
 
         float flee = -0.6f;
         float range = 0.8f * _maxSocialRange;
-        socialData[0 * MAX_SPECIES + 9] = new Vector2(_maxSocialForce * flee, range);
-        socialData[1 * MAX_SPECIES + 0] = new Vector2(_maxSocialForce * flee, range);
-        socialData[2 * MAX_SPECIES + 1] = new Vector2(_maxSocialForce * flee, range);
-        socialData[3 * MAX_SPECIES + 2] = new Vector2(_maxSocialForce * flee, range);
-        socialData[4 * MAX_SPECIES + 3] = new Vector2(_maxSocialForce * flee, range);
-        socialData[5 * MAX_SPECIES + 4] = new Vector2(_maxSocialForce * flee, range);
-        socialData[6 * MAX_SPECIES + 5] = new Vector2(_maxSocialForce * flee, range);
-        socialData[7 * MAX_SPECIES + 6] = new Vector2(_maxSocialForce * flee, range);
-        socialData[8 * MAX_SPECIES + 7] = new Vector2(_maxSocialForce * flee, range);
-        socialData[9 * MAX_SPECIES + 8] = new Vector2(_maxSocialForce * flee, range);
+        socialData[0, 9] = new Vector2(_maxSocialForce * flee, range);
+        socialData[1, 0] = new Vector2(_maxSocialForce * flee, range);
+        socialData[2, 1] = new Vector2(_maxSocialForce * flee, range);
+        socialData[3, 2] = new Vector2(_maxSocialForce * flee, range);
+        socialData[4, 3] = new Vector2(_maxSocialForce * flee, range);
+        socialData[5, 4] = new Vector2(_maxSocialForce * flee, range);
+        socialData[6, 5] = new Vector2(_maxSocialForce * flee, range);
+        socialData[7, 6] = new Vector2(_maxSocialForce * flee, range);
+        socialData[8, 7] = new Vector2(_maxSocialForce * flee, range);
+        socialData[9, 8] = new Vector2(_maxSocialForce * flee, range);
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -525,7 +525,7 @@ public class TextureSimulator : MonoBehaviour {
             float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * _maxSocialForce * 1.0f;
             float b = (i / (float)SPECIES_CAP_FOR_PRESETS * 1.2f) * _maxSocialForce * 0.4f;
 
-            socialData[i * MAX_SPECIES + j] = new Vector2(a - b, _maxSocialRange * 0.7f);
+            socialData[i, j] = new Vector2(a - b, _maxSocialRange * 0.7f);
           }
         }
 
@@ -543,16 +543,16 @@ public class TextureSimulator : MonoBehaviour {
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
-            socialData[i * MAX_SPECIES + j] = new Vector2(0, 0);
+            socialData[i, j] = new Vector2(0, 0);
           }
 
-          socialData[i * MAX_SPECIES + i] = new Vector2(0.2f * _maxSocialForce, _maxSocialRange * 0.1f);
+          socialData[i, i] = new Vector2(0.2f * _maxSocialForce, _maxSocialRange * 0.1f);
         }
 
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = i + 1; j < SPECIES_CAP_FOR_PRESETS; j++) {
-            socialData[i * MAX_SPECIES + j] = new Vector2(0.15f * _maxSocialForce, _maxSocialRange);
-            socialData[j * MAX_SPECIES + i] = new Vector2(-0.1f * _maxSocialForce, _maxSocialRange * 0.3f);
+            socialData[i, j] = new Vector2(0.15f * _maxSocialForce, _maxSocialRange);
+            socialData[j, i] = new Vector2(-0.1f * _maxSocialForce, _maxSocialRange * 0.3f);
           }
         }
         break;
@@ -565,7 +565,14 @@ public class TextureSimulator : MonoBehaviour {
       speciesData[i] = species;
     }
 
-    _simulationMat.SetVectorArray("_SocialData", socialData);
+    var packedSocialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      for (int j = 0; j < MAX_SPECIES; j++) {
+        packedSocialData[i * MAX_SPECIES + j] = socialData[i, j];
+      }
+    }
+
+    _simulationMat.SetVectorArray("_SocialData", packedSocialData);
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
   }

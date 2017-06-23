@@ -52,8 +52,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   private ParallelForeach _resolveCollisionsForeach;
 
   //Collision acceleration structures
-  private float _collisionChunkInverseScale;
-  private float _socialChunkInverseScale;
   private Dictionary<ChunkKey, int> _chunkCounts = new Dictionary<ChunkKey, int>();
   private Dictionary<ChunkKey, ChunkLocation> _chunkLocations = new Dictionary<ChunkKey, ChunkLocation>();
 
@@ -67,7 +65,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   //Timing
   private long[] integrationTimes = new long[32];
   private long[] collisionTimes = new long[32];
-  private long[] sortingTimes = new long[32];
   private long[] socialForceTimes = new long[32];
   private System.Diagnostics.Stopwatch _stopwatch = new System.Diagnostics.Stopwatch();
 
@@ -234,7 +231,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
 
     if (useKMeans) {
-      int LEN = 60;
+      int LEN = 20;
       if (_means == null) {
         _means = new Vector3[LEN];
         _raddii = new float[LEN];
@@ -298,13 +295,13 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         for (int j = 0; j < LEN; j++) {
           if (j == index) continue;
 
-          if (Vector3.Distance(p.position, _means[j]) < (1 + _raddii[j])) {
+          if (Vector3.Distance(p.position, _means[j]) < (0.5f + _raddii[j])) {
             totalInteractions += newCounts[j];
           }
         }
       }
 
-      Debug.Log(totalInteractions + " : " + (512 * 512));
+      Debug.Log(totalInteractions + " : " + (1024 * 1024));
     }
   }
 
@@ -438,9 +435,6 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     _workerData = new PerWorkerData[SystemInfo.processorCount];
     _workerData.Fill(() => new PerWorkerData());
 
-    _collisionChunkInverseScale = 1.0f / PARTICLE_DIAMETER;
-    _socialChunkInverseScale = 1.0f / 0.5f;
-
     OnInitializeSimulation();
   }
 
@@ -478,7 +472,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract bool ShouldKillParticle(ref Particle particle);
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-
+    /*
     if (Application.isPlaying) {
       accumulateCounts(isCollision: true);
       drawer.color = Color.blue;
@@ -500,6 +494,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * MAX_SOCIAL_RANGE);
       }
     }
+    */
   }
   #endregion
 

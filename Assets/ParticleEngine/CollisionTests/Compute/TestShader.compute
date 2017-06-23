@@ -6,7 +6,7 @@
 #pragma kernel Copy
 #pragma kernel Sort
 
-#include "Assets/Shaders/ParticleData.cginc"
+#include "Assets/ParticleEngine/Shaders/ParticleData.cginc"
 
 #define COLLISION_CHUNK_SIDE 64
 #define COLLISION_CHUNK_SIZE (1.0 / 28.0)

@@ -743,6 +743,20 @@ public class TextureSimulator : MonoBehaviour {
       sphereCount++;
     }
 
+    //Transform into local space
+    for (int i = 0; i < sphereCount; i++) {
+      Vector4 sphere = _spheres[i];
+      float w = sphere.w;
+
+      sphere = transform.InverseTransformPoint(sphere);
+      sphere.w = w / transform.lossyScale.magnitude;
+      _spheres[i] = sphere;
+
+      Vector3 velocity = _sphereVels[i];
+      velocity = transform.InverseTransformVector(velocity);
+      _sphereVels[i] = velocity;
+    }
+
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);
     _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
@@ -760,11 +774,19 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    float scale = 1.0f / transform.lossyScale.magnitude;
+
     _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
-    _simulationMat.SetFloat("_HandCollisionRadius", _handCollisionRadius);
+    _simulationMat.SetFloat("_HandCollisionRadius", scale * _handCollisionRadius);
 
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
+
+    //Transform capsules into local space
+    for (int i = 0; i < capsuleCount; i++) {
+      _capsuleA[i] = transform.InverseTransformPoint(_capsuleA[i]);
+      _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
+    }
 
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);

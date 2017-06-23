@@ -231,7 +231,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
     }
 
     if (useKMeans) {
-      int LEN = 60;
+      int LEN = 20;
       if (_means == null) {
         _means = new Vector3[LEN];
         _raddii = new float[LEN];
@@ -472,8 +472,8 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
   protected abstract bool ShouldKillParticle(ref Particle particle);
 
   public virtual void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-
-    if (Application.isPlaying && false) {
+    /*
+    if (Application.isPlaying) {
       accumulateCounts(isCollision: true);
       drawer.color = Color.blue;
       foreach (var pair in _chunkCounts) {
@@ -494,6 +494,7 @@ public abstract partial class ParticleEngine : MonoBehaviour, IRuntimeGizmoCompo
         drawer.DrawWireCube(new Vector3(x, y, z), Vector3.one * MAX_SOCIAL_RANGE);
       }
     }
+    */
   }
   #endregion
 

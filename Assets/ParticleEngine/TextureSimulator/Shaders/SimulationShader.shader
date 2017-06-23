@@ -131,6 +131,7 @@
     float4 particle = tex2D(_Position, i.uv);
     float4 velocity = tex2D(_Velocity, i.uv);
     float socialOffset = (int)(particle.w * MAX_SPECIES);
+    float collisionForce = _SpeciesData[0].z;
 
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
@@ -141,9 +142,12 @@
       float distance = length(toOther);
       toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
+      float otherCollisionForce = _SpeciesData[(int)other.w].z;
+      float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
+
       if (distance < PARTICLE_DIAMETER) {
-        float collisionForce = 1 - distance / PARTICLE_DIAMETER;
-        velocity.xyz -= toOther * collisionForce * COLLISION_FORCE;
+        float penetration = 1 - distance / PARTICLE_DIAMETER;
+        velocity.xyz -= toOther * penetration * totalCollisionForce;
       }
 
       float2 socialData = _SocialData[(int)(socialOffset + other.w)];

@@ -14,7 +14,7 @@
 		#pragma target 5.0
     #pragma multi_compile_instancing
     #pragma instancing_options procedural:setup
-    #include "Assets/Shaders/ParticleData.cginc"
+    #include "Assets/ParticleEngine/Shaders/ParticleData.cginc"
 
 #ifdef UNITY_COMPILER_HLSL
     StructuredBuffer<Particle> _Particles;

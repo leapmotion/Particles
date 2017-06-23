@@ -502,7 +502,7 @@ public class TextureSimulator : MonoBehaviour {
 
     //Default species always have max drag, 0 extra social steps, and max collision force
     for (int i = 0; i < MAX_SPECIES; i++) {
-      speciesData[i] = new Vector2(_dragRange.x, _collisionForceRange.y);
+      speciesData[i] = new Vector3(_dragRange.x, 0, _collisionForceRange.y);
     }
 
     switch (preset) {

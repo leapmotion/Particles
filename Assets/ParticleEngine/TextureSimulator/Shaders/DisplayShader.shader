@@ -3,6 +3,8 @@
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
     _Velocity ("Velocity", 2D) = "white" {}
+    _ToonRamp ("Toon Ramp", 2D) = "white" {}
+
 		_Glossiness ("Smoothness", Range(-2,2)) = 0.5
 		_Metallic ("Metallic", Range(-2,2)) = 0.0
     _Size     ("Size", Range(0, 0.5)) = 0.01
@@ -15,11 +17,12 @@
 		
 		CGPROGRAM
     #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
-		#pragma surface surf Standard vertex:vert noforwardadd
+		#pragma surface surf CelShadingForward vertex:vert noforwardadd
 		#pragma target 2.0
 
 		sampler2D _MainTex;
     sampler2D _Velocity;
+    sampler2D _ToonRamp;
 
 		struct Input {
 			float2 uv_MainTex;
@@ -36,6 +39,17 @@
 
     float nrand(float2 n) {
       return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+    }
+
+    half4 LightingCelShadingForward(SurfaceOutput  s, half3 lightDir, half atten) {
+      half NdotL = dot(s.Normal, lightDir);
+
+      NdotL = tex2D(_ToonRamp, float2(NdotL * 0.5 + 0.5, 0));
+
+      half4 c;
+      c.rgb = s.Albedo * _LightColor0.rgb * (NdotL * atten * 2);
+      c.a = s.Alpha;
+      return c;
     }
 
     void vert(inout appdata_full v) {
@@ -62,11 +76,9 @@
 #endif
     }
 
-		void surf (Input IN, inout SurfaceOutputStandard o) {
+		void surf (Input IN, inout SurfaceOutput  o) {
       o.Albedo = IN.color.rgb;
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-      o.Normal = IN.viewDir;
+      //o.Normal = IN.viewDir;
 		}
 		ENDCG
 	}

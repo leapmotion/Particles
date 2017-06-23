@@ -26,6 +26,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   public LeapProvider _provider;
 
+  //###########################//
+  ///      Hand Collision      //
+  //###########################//
   [Header("Hand Collision")]
   [SerializeField]
   private bool _handCollisionEnabled = true;
@@ -50,6 +53,9 @@ public class TextureSimulator : MonoBehaviour {
     set { _handCollisionForce = value; }
   }
 
+  //###########################//
+  ///      Hand Influence      //
+  //###########################//
   [Header("Hand Influence")]
   [SerializeField]
   private bool _handInfluenceEnabled = true;
@@ -107,6 +113,9 @@ public class TextureSimulator : MonoBehaviour {
     set { _influenceForwardOffset = value; }
   }
 
+  //########################//
+  ///      Social Hand      //
+  //########################//
   [Header("Social Hand")]
   [SerializeField]
   private bool _socialHandEnabled = false;
@@ -131,6 +140,9 @@ public class TextureSimulator : MonoBehaviour {
     set { _socialHandForceFactor = value; }
   }
 
+  //##################//
+  ///      Field      //
+  //##################//
   [Header("Field")]
   [SerializeField]
   private Transform _fieldCenter;
@@ -154,6 +166,9 @@ public class TextureSimulator : MonoBehaviour {
     set { _fieldForce = value; }
   }
 
+  //#######################//
+  ///      Simulation      //
+  //#######################//
   [Header("Simulation")]
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
@@ -167,6 +182,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private KeyCode _resetParticlePositionsKey = KeyCode.P;
 
+  //####################//
+  ///      Display      //
+  //####################//
   [Header("Display")]
   [SerializeField]
   private Mesh _particleMesh;
@@ -202,6 +220,9 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  //##############################//
+  ///      Preset Ecosystems      //
+  //##############################//
   [Header("Preset Ecosystems")]
   [SerializeField]
   private EcosystemPreset _ecosystemPreset = EcosystemPreset.Fluidy;
@@ -222,6 +243,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private KeyCode _loadEcosystemSeedKey = KeyCode.L;
 
+  //##############################//
+  ///      Random Ecosystems      //
+  //##############################//
   [Header("Random Ecosystems")]
   [Range(1, MAX_SPECIES)]
   [SerializeField]
@@ -267,84 +291,65 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
   public float minDrag {
-    get {
-      return _dragRange.x;
-    }
-    set {
-      _dragRange.x = value;
-    }
+    get { return _dragRange.x; }
+    set { _dragRange.x = value; }
   }
 
   public float maxDrag {
-    get {
-      return _dragRange.y;
-    }
-    set {
-      _dragRange.y = value;
-    }
+    get { return _dragRange.y; }
+    set { _dragRange.y = value; }
+  }
+
+  [MinMax(0, 0.05f)]
+  [SerializeField]
+  private Vector2 _collisionForceRange = new Vector2(0.002f, 0.009f);
+  public float collisionForceMin {
+    get { return _collisionForceRange.x; }
+    set { _collisionForceRange.x = value; }
+  }
+
+  public float collisionForceMax {
+    get { return _collisionForceRange.y; }
+    set { _collisionForceRange.y = value; }
   }
 
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _hueRange = new Vector2(0, 1);
   public float randomHueMin {
-    get {
-      return _hueRange.x;
-    }
-    set {
-      _hueRange.x = value;
-    }
+    get { return _hueRange.x; }
+    set { _hueRange.x = value; }
   }
 
   public float randomHueMax {
-    get {
-      return _hueRange.y;
-    }
-    set {
-      _hueRange.y = value;
-    }
+    get { return _hueRange.y; }
+    set { _hueRange.y = value; }
   }
 
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _valueRange = new Vector2(0, 1);
   public float randomValueMin {
-    get {
-      return _valueRange.x;
-    }
-    set {
-      _valueRange.x = value;
-    }
+    get { return _valueRange.x; }
+    set { _valueRange.x = value; }
   }
 
   public float randomValueMax {
-    get {
-      return _valueRange.y;
-    }
-    set {
-      _valueRange.y = value;
-    }
+    get { return _valueRange.y; }
+    set { _valueRange.y = value; }
   }
 
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _saturationRange = new Vector2(0, 1);
   public float randomSaturationMin {
-    get {
-      return _saturationRange.x;
-    }
-    set {
-      _saturationRange.x = value;
-    }
+    get { return _saturationRange.x; }
+    set { _saturationRange.x = value; }
   }
 
   public float randomSaturationMax {
-    get {
-      return _saturationRange.y;
-    }
-    set {
-      _saturationRange.y = value;
-    }
+    get { return _saturationRange.y; }
+    set { _saturationRange.y = value; }
   }
 
   [Range(0, 1)]
@@ -355,6 +360,9 @@ public class TextureSimulator : MonoBehaviour {
     set { _randomColorThreshold = value; }
   }
 
+  //##################//
+  ///      Debug      //
+  //##################//
   [Header("Debug")]
   [SerializeField]
   private Renderer _positionDebug;
@@ -492,9 +500,9 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    //Default species always have max drag and 0 extra social steps
+    //Default species always have max drag, 0 extra social steps, and max collision force
     for (int i = 0; i < MAX_SPECIES; i++) {
-      speciesData[i] = new Vector2(_dragRange.x, 0);
+      speciesData[i] = new Vector2(_dragRange.x, _collisionForceRange.y);
     }
 
     switch (preset) {
@@ -523,7 +531,9 @@ public class TextureSimulator : MonoBehaviour {
         float redSelfRange = _maxSocialRange * 0.4f;
 
         for (int s = 0; s < SPECIES_CAP_FOR_PRESETS; s++) {
-          speciesData[s] = new Vector2(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f), 0);
+          speciesData[s] = new Vector3(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f),
+                                       0,
+                                       Mathf.Lerp(_collisionForceRange.x, _collisionForceRange.y, 0.3f));
 
           for (int o = 0; o < SPECIES_CAP_FOR_PRESETS; o++) {
             socialData[s, o] = new Vector2(normalLove, normalRange);
@@ -542,7 +552,7 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case EcosystemPreset.Chase:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-          speciesData[i] = new Vector2(_dragRange.x, 0);
+          speciesData[i] = new Vector3(_dragRange.x, 0, _collisionForceRange.x);
           socialData[i, i] = new Vector2(_maxSocialForce * 0.1f, _maxSocialRange);
         }
 
@@ -584,7 +594,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-          speciesData[i] = new Vector2(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f), 0);
+          speciesData[i] = new Vector3(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f),
+                                       0,
+                                       Mathf.Lerp(_collisionForceRange.x, _collisionForceRange.y, 0.1f));
 
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
             float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * _maxSocialForce * 1.0f;
@@ -625,7 +637,7 @@ public class TextureSimulator : MonoBehaviour {
 
     //Invert drag before we upload to the GPU
     for (int i = 0; i < MAX_SPECIES; i++) {
-      Vector2 species = speciesData[i];
+      Vector4 species = speciesData[i];
       species.x = 1 - species.x;
       speciesData[i] = species;
     }
@@ -658,6 +670,7 @@ public class TextureSimulator : MonoBehaviour {
       Vector4 data = new Vector4();
       data.x = Random.Range(_dragRange.x, _dragRange.y);
       data.y = Random.Range(0, _maxForceSteps);
+      data.z = Random.Range(_collisionForceRange.x, _collisionForceRange.y);
       speciesData[i] = data;
     }
 
@@ -695,7 +708,7 @@ public class TextureSimulator : MonoBehaviour {
 
     //Invert drag before we upload to the GPU
     for (int i = 0; i < MAX_SPECIES; i++) {
-      Vector2 species = speciesData[i];
+      Vector4 species = speciesData[i];
       species.x = 1 - species.x;
       speciesData[i] = species;
     }

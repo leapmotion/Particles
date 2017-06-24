@@ -4,6 +4,7 @@ using Leap;
 using Leap.Unity;
 using Leap.Unity.Query;
 using Leap.Unity.Attributes;
+using Leap.Unity.RuntimeGizmos;
 
 public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
@@ -45,12 +46,20 @@ public class TextureSimulator : MonoBehaviour {
     set { _handCollisionRadius = value; }
   }
 
-  [Range(0, 0.02f)]
+  [Range(1, 5)]
   [SerializeField]
-  private float _handCollisionForce = 0.001f;
-  public float handCollisionForce {
-    get { return _handCollisionForce; }
-    set { _handCollisionForce = value; }
+  private int _spheresPerBone = 1;
+  public int spheresPerBone {
+    get { return _spheresPerBone; }
+    set { _spheresPerBone = value; }
+  }
+
+  [Range(1, 5)]
+  [SerializeField]
+  private int _spheresPerMetacarpal = 3;
+  public int spheresPerMetacarpal {
+    get { return _spheresPerMetacarpal; }
+    set { _spheresPerMetacarpal = value; }
   }
 
   //###########################//
@@ -220,15 +229,16 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  //##############################//
-  ///      Preset Ecosystems      //
-  //##############################//
-  [Header("Preset Ecosystems")]
+  //#######################//
+  ///      Ecosystems      //
+  //#######################//
+  [Header("Ecosystems")]
+  [Range(0, 2)]
   [SerializeField]
-  private EcosystemPreset _ecosystemPreset = EcosystemPreset.Fluidy;
-  public EcosystemPreset ecosystemPreset {
-    get { return _ecosystemPreset; }
-    set { _ecosystemPreset = value; }
+  private float _spawnRadius = 1;
+  public float spawnRadius {
+    get { return _spawnRadius; }
+    set { _spawnRadius = value; }
   }
 
   [SerializeField]
@@ -243,121 +253,186 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private KeyCode _loadEcosystemSeedKey = KeyCode.L;
 
-  //##############################//
-  ///      Random Ecosystems      //
-  //##############################//
-  [Header("Random Ecosystems")]
-  [Range(1, MAX_SPECIES)]
+  [Space]
   [SerializeField]
-  private int _maxSpecies = MAX_SPECIES;
-  public int maxSpecies {
-    get { return _maxSpecies; }
-    set { _maxSpecies = value; }
+  private PresetSettings _presetEcosystemSettings;
+  public PresetSettings presetEcosystemSettings {
+    get { return _presetEcosystemSettings; }
   }
 
-  [Range(1, MAX_FORCE_STEPS)]
+  [System.Serializable]
+  public class PresetSettings {
+    [SerializeField]
+    private EcosystemPreset _ecosystemPreset = EcosystemPreset.Fluidy;
+    public EcosystemPreset ecosystemPreset {
+      get { return _ecosystemPreset; }
+      set { _ecosystemPreset = value; }
+    }
+
+    [Range(1, MAX_FORCE_STEPS)]
+    [SerializeField]
+    private int _maxForceSteps = 7;
+    public int maxForceSteps {
+      get { return _maxForceSteps; }
+      set { _maxForceSteps = value; }
+    }
+
+    [Range(0, 0.01f)]
+    [SerializeField]
+    private float _maxSocialForce = 0.003f;
+    public float maxSocialForce {
+      get { return _maxSocialForce; }
+      set { _maxSocialForce = value; }
+    }
+
+    [Range(0, 1f)]
+    [SerializeField]
+    private float _maxSocialRange = 0.5f;
+    public float maxSocialRange {
+      get { return _maxSocialRange; }
+      set { _maxSocialRange = value; }
+    }
+
+    [MinMax(0, 1)]
+    [SerializeField]
+    private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
+    public float minDrag {
+      get { return _dragRange.x; }
+      set { _dragRange.x = value; }
+    }
+
+    public float maxDrag {
+      get { return _dragRange.y; }
+      set { _dragRange.y = value; }
+    }
+
+    [MinMax(0, 0.05f)]
+    [SerializeField]
+    private Vector2 _collisionForceRange = new Vector2(0.002f, 0.009f);
+    public float minCollision {
+      get { return _collisionForceRange.x; }
+      set { _collisionForceRange.x = value; }
+    }
+
+    public float maxCollision {
+      get { return _collisionForceRange.y; }
+      set { _collisionForceRange.y = value; }
+    }
+  }
+
+  [Space]
   [SerializeField]
-  private int _maxForceSteps = MAX_FORCE_STEPS;
-  public int maxForceSteps {
-    get { return _maxForceSteps; }
-    set { _maxForceSteps = value; }
+  private RandomEcosystemSettings _randomEcosystemSettings;
+  public RandomEcosystemSettings randomEcosystemSettings {
+    get { return _randomEcosystemSettings; }
   }
 
-  [Range(0, 2)]
-  [SerializeField]
-  private float _spawnRadius = 1;
-  public float spawnRadius {
-    get { return _spawnRadius; }
-    set { _spawnRadius = value; }
-  }
+  [System.Serializable]
+  public class RandomEcosystemSettings {
+    [Range(1, MAX_SPECIES)]
+    [SerializeField]
+    private int _speciesCount = 10;
+    public int speciesCount {
+      get { return _speciesCount; }
+      set { _speciesCount = value; }
+    }
 
-  [Range(0, 0.01f)]
-  [SerializeField]
-  private float _maxSocialForce = 0.003f;
-  public float maxSocialForce {
-    get { return _maxSocialForce; }
-    set { _maxSocialForce = value; }
-  }
+    [Range(1, MAX_FORCE_STEPS)]
+    [SerializeField]
+    private int _maxForceSteps = MAX_FORCE_STEPS;
+    public int maxForceSteps {
+      get { return _maxForceSteps; }
+      set { _maxForceSteps = value; }
+    }
 
-  [Range(0, 1f)]
-  [SerializeField]
-  private float _maxSocialRange = 0.5f;
-  public float maxSocialRange {
-    get { return _maxSocialRange; }
-    set { _maxSocialRange = value; }
-  }
+    [Range(0, 0.01f)]
+    [SerializeField]
+    private float _maxSocialForce = 0.003f;
+    public float maxSocialForce {
+      get { return _maxSocialForce; }
+      set { _maxSocialForce = value; }
+    }
 
-  [MinMax(0, 1)]
-  [SerializeField]
-  private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-  public float minDrag {
-    get { return _dragRange.x; }
-    set { _dragRange.x = value; }
-  }
+    [Range(0, 1f)]
+    [SerializeField]
+    private float _maxSocialRange = 0.5f;
+    public float maxSocialRange {
+      get { return _maxSocialRange; }
+      set { _maxSocialRange = value; }
+    }
 
-  public float maxDrag {
-    get { return _dragRange.y; }
-    set { _dragRange.y = value; }
-  }
+    [MinMax(0, 1)]
+    [SerializeField]
+    private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
+    public float minDrag {
+      get { return _dragRange.x; }
+      set { _dragRange.x = value; }
+    }
 
-  [MinMax(0, 0.05f)]
-  [SerializeField]
-  private Vector2 _collisionForceRange = new Vector2(0.002f, 0.009f);
-  public float collisionForceMin {
-    get { return _collisionForceRange.x; }
-    set { _collisionForceRange.x = value; }
-  }
+    public float maxDrag {
+      get { return _dragRange.y; }
+      set { _dragRange.y = value; }
+    }
 
-  public float collisionForceMax {
-    get { return _collisionForceRange.y; }
-    set { _collisionForceRange.y = value; }
-  }
+    [MinMax(0, 0.05f)]
+    [SerializeField]
+    private Vector2 _collisionForceRange = new Vector2(0.002f, 0.009f);
+    public float minCollision {
+      get { return _collisionForceRange.x; }
+      set { _collisionForceRange.x = value; }
+    }
 
-  [MinMax(0, 1)]
-  [SerializeField]
-  private Vector2 _hueRange = new Vector2(0, 1);
-  public float randomHueMin {
-    get { return _hueRange.x; }
-    set { _hueRange.x = value; }
-  }
+    public float maxCollision {
+      get { return _collisionForceRange.y; }
+      set { _collisionForceRange.y = value; }
+    }
 
-  public float randomHueMax {
-    get { return _hueRange.y; }
-    set { _hueRange.y = value; }
-  }
+    [MinMax(0, 1)]
+    [SerializeField]
+    private Vector2 _hueRange = new Vector2(0, 1);
+    public float minHue {
+      get { return _hueRange.x; }
+      set { _hueRange.x = value; }
+    }
 
-  [MinMax(0, 1)]
-  [SerializeField]
-  private Vector2 _valueRange = new Vector2(0, 1);
-  public float randomValueMin {
-    get { return _valueRange.x; }
-    set { _valueRange.x = value; }
-  }
+    public float maxHue {
+      get { return _hueRange.y; }
+      set { _hueRange.y = value; }
+    }
 
-  public float randomValueMax {
-    get { return _valueRange.y; }
-    set { _valueRange.y = value; }
-  }
+    [MinMax(0, 1)]
+    [SerializeField]
+    private Vector2 _valueRange = new Vector2(0, 1);
+    public float minValue {
+      get { return _valueRange.x; }
+      set { _valueRange.x = value; }
+    }
 
-  [MinMax(0, 1)]
-  [SerializeField]
-  private Vector2 _saturationRange = new Vector2(0, 1);
-  public float randomSaturationMin {
-    get { return _saturationRange.x; }
-    set { _saturationRange.x = value; }
-  }
+    public float maxValue {
+      get { return _valueRange.y; }
+      set { _valueRange.y = value; }
+    }
 
-  public float randomSaturationMax {
-    get { return _saturationRange.y; }
-    set { _saturationRange.y = value; }
-  }
+    [MinMax(0, 1)]
+    [SerializeField]
+    private Vector2 _saturationRange = new Vector2(0, 1);
+    public float minSaturation {
+      get { return _saturationRange.x; }
+      set { _saturationRange.x = value; }
+    }
 
-  [Range(0, 1)]
-  [SerializeField]
-  private float _randomColorThreshold = 0.15f;
-  public float randomColorThreshold {
-    get { return _randomColorThreshold; }
-    set { _randomColorThreshold = value; }
+    public float maxSaturation {
+      get { return _saturationRange.y; }
+      set { _saturationRange.y = value; }
+    }
+
+    [Range(0, 1)]
+    [SerializeField]
+    private float _randomColorThreshold = 0.15f;
+    public float randomColorThreshold {
+      get { return _randomColorThreshold; }
+      set { _randomColorThreshold = value; }
+    }
   }
 
   //##################//
@@ -372,9 +447,16 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Renderer _socialDebug;
+
+  [SerializeField]
+  private bool _drawHandColliders = true;
+
+  [SerializeField]
+  private Color _handColliderColor = Color.black;
   #endregion
 
   //Simulation
+  private int _currentSimulationSpeciesCount;
   private int stepsPerFrame = 1;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
@@ -384,13 +466,14 @@ public class TextureSimulator : MonoBehaviour {
   private List<Mesh> _meshes = new List<Mesh>();
 
   //Hand interaction
-  private Vector4[] _capsuleA = new Vector4[64];
-  private Vector4[] _capsuleB = new Vector4[64];
+  private Vector4[] _capsuleA = new Vector4[128];
+  private Vector4[] _capsuleB = new Vector4[128];
 
   private Vector4[] _spheres = new Vector4[2];
   private Vector4[] _sphereVels = new Vector4[2];
 
   private HandActor[] _handActors = new HandActor[2];
+  private Hand _prevLeft, _prevRight;
 
   #region PUBLIC API
 
@@ -444,7 +527,7 @@ public class TextureSimulator : MonoBehaviour {
 
     generateMeshes();
 
-    LoadPresetEcosystem(_ecosystemPreset);
+    LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
 
@@ -501,26 +584,29 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
+    var setting = _presetEcosystemSettings;
+
+    _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     Color[] colors = new Color[MAX_SPECIES];
     Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
     //Default colors are greyscale 0 to 1
-    for (int i = 0; i < _maxSpecies; i++) {
-      float p = i / (_maxSpecies - 1.0f);
+    for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+      float p = i / (SPECIES_CAP_FOR_PRESETS - 1.0f);
       colors[i] = new Color(p, p, p, 1);
     }
 
     //Default social interactions are zero force with max range
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
-        socialData[i, j] = new Vector2(0, _maxSocialRange);
+        socialData[i, j] = new Vector2(0, setting.maxSocialRange);
       }
     }
 
     //Default species always have max drag, 0 extra social steps, and max collision force
     for (int i = 0; i < MAX_SPECIES; i++) {
-      speciesData[i] = new Vector2(_dragRange.x, _collisionForceRange.y);
+      speciesData[i] = new Vector3(setting.minDrag, 0, setting.maxCollision);
     }
 
     switch (preset) {
@@ -538,20 +624,20 @@ public class TextureSimulator : MonoBehaviour {
 
         int redSpecies = 0;
 
-        float normalLove = _maxSocialForce * 0.04f;
-        float fearOfRed = _maxSocialForce * -1.0f;
-        float redLoveOfOthers = _maxSocialForce * 2.0f;
-        float redLoveOfSelf = _maxSocialForce * 0.9f;
+        float normalLove = setting.maxSocialForce * 0.04f;
+        float fearOfRed = setting.maxSocialForce * -1.0f;
+        float redLoveOfOthers = setting.maxSocialForce * 2.0f;
+        float redLoveOfSelf = setting.maxSocialForce * 0.9f;
 
-        float normalRange = _maxSocialRange * 0.4f;
-        float fearRange = _maxSocialRange * 0.3f;
-        float loveRange = _maxSocialRange * 0.3f;
-        float redSelfRange = _maxSocialRange * 0.4f;
+        float normalRange = setting.maxSocialRange * 0.4f;
+        float fearRange = setting.maxSocialRange * 0.3f;
+        float loveRange = setting.maxSocialRange * 0.3f;
+        float redSelfRange = setting.maxSocialRange * 0.4f;
 
         for (int s = 0; s < SPECIES_CAP_FOR_PRESETS; s++) {
-          speciesData[s] = new Vector3(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f),
+          speciesData[s] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.1f),
                                        0,
-                                       Mathf.Lerp(_collisionForceRange.x, _collisionForceRange.y, 0.3f));
+                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.3f));
 
           for (int o = 0; o < SPECIES_CAP_FOR_PRESETS; o++) {
             socialData[s, o] = new Vector2(normalLove, normalRange);
@@ -570,8 +656,8 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case EcosystemPreset.Chase:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-          speciesData[i] = new Vector3(_dragRange.x, 0, _collisionForceRange.x);
-          socialData[i, i] = new Vector2(_maxSocialForce * 0.1f, _maxSocialRange);
+          speciesData[i] = new Vector3(setting.minDrag, 0, setting.minCollision);
+          socialData[i, i] = new Vector2(setting.maxSocialForce * 0.1f, setting.maxSocialRange);
         }
 
         colors[0] = new Color(0.7f, 0.0f, 0.0f);
@@ -585,42 +671,42 @@ public class TextureSimulator : MonoBehaviour {
         colors[8] = new Color(1.0f, 1.0f, 0.3f);
         colors[9] = new Color(0.3f, 1.0f, 0.3f);
 
-        float chase = 0.9f;
-        socialData[0, 1] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[1, 2] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[2, 3] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[3, 4] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[4, 5] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[5, 6] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[6, 7] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[7, 8] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[8, 9] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
-        socialData[9, 0] = new Vector2(_maxSocialForce * chase, _maxSocialRange);
+        float chase = 0.9f * setting.maxSocialForce;
+        socialData[0, 1] = new Vector2(chase, setting.maxSocialRange);
+        socialData[1, 2] = new Vector2(chase, setting.maxSocialRange);
+        socialData[2, 3] = new Vector2(chase, setting.maxSocialRange);
+        socialData[3, 4] = new Vector2(chase, setting.maxSocialRange);
+        socialData[4, 5] = new Vector2(chase, setting.maxSocialRange);
+        socialData[5, 6] = new Vector2(chase, setting.maxSocialRange);
+        socialData[6, 7] = new Vector2(chase, setting.maxSocialRange);
+        socialData[7, 8] = new Vector2(chase, setting.maxSocialRange);
+        socialData[8, 9] = new Vector2(chase, setting.maxSocialRange);
+        socialData[9, 0] = new Vector2(chase, setting.maxSocialRange);
 
-        float flee = -0.6f;
-        float range = 0.8f * _maxSocialRange;
-        socialData[0, 9] = new Vector2(_maxSocialForce * flee, range);
-        socialData[1, 0] = new Vector2(_maxSocialForce * flee, range);
-        socialData[2, 1] = new Vector2(_maxSocialForce * flee, range);
-        socialData[3, 2] = new Vector2(_maxSocialForce * flee, range);
-        socialData[4, 3] = new Vector2(_maxSocialForce * flee, range);
-        socialData[5, 4] = new Vector2(_maxSocialForce * flee, range);
-        socialData[6, 5] = new Vector2(_maxSocialForce * flee, range);
-        socialData[7, 6] = new Vector2(_maxSocialForce * flee, range);
-        socialData[8, 7] = new Vector2(_maxSocialForce * flee, range);
-        socialData[9, 8] = new Vector2(_maxSocialForce * flee, range);
+        float flee = -0.6f * setting.maxSocialForce;
+        float range = 0.8f * setting.maxSocialRange;
+        socialData[0, 9] = new Vector2(flee, range);
+        socialData[1, 0] = new Vector2(flee, range);
+        socialData[2, 1] = new Vector2(flee, range);
+        socialData[3, 2] = new Vector2(flee, range);
+        socialData[4, 3] = new Vector2(flee, range);
+        socialData[5, 4] = new Vector2(flee, range);
+        socialData[6, 5] = new Vector2(flee, range);
+        socialData[7, 6] = new Vector2(flee, range);
+        socialData[8, 7] = new Vector2(flee, range);
+        socialData[9, 8] = new Vector2(flee, range);
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-          speciesData[i] = new Vector3(Mathf.Lerp(_dragRange.x, _dragRange.y, 0.1f),
+          speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.1f),
                                        0,
-                                       Mathf.Lerp(_collisionForceRange.x, _collisionForceRange.y, 0.1f));
+                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.1f));
 
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
-            float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * _maxSocialForce * 1.0f;
-            float b = (i / (float)SPECIES_CAP_FOR_PRESETS * 1.2f) * _maxSocialForce * 0.4f;
+            float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * setting.maxSocialForce * 1.0f;
+            float b = (i / (float)SPECIES_CAP_FOR_PRESETS * 1.2f) * setting.maxSocialForce * 0.4f;
 
-            socialData[i, j] = new Vector2(a - b, _maxSocialRange * 0.7f);
+            socialData[i, j] = new Vector2(a - b, setting.maxSocialRange * 0.7f);
           }
         }
 
@@ -641,13 +727,13 @@ public class TextureSimulator : MonoBehaviour {
             socialData[i, j] = new Vector2(0, 0);
           }
 
-          socialData[i, i] = new Vector2(0.2f * _maxSocialForce, _maxSocialRange * 0.1f);
+          socialData[i, i] = new Vector2(0.2f * setting.maxSocialForce, setting.maxSocialRange * 0.1f);
         }
 
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = i + 1; j < SPECIES_CAP_FOR_PRESETS; j++) {
-            socialData[i, j] = new Vector2(0.15f * _maxSocialForce, _maxSocialRange);
-            socialData[j, i] = new Vector2(-0.1f * _maxSocialForce, _maxSocialRange * 0.3f);
+            socialData[i, j] = new Vector2(0.15f * setting.maxSocialForce, setting.maxSocialRange);
+            socialData[j, i] = new Vector2(-0.1f * setting.maxSocialForce, setting.maxSocialRange * 0.3f);
           }
         }
         break;
@@ -694,22 +780,26 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadRandomEcosystem(string seed) {
+    var setting = _randomEcosystemSettings;
+
+    _currentSimulationSpeciesCount = setting.speciesCount;
     Random.InitState(seed.GetHashCode());
 
     Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
 
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
-        _socialData[s * MAX_SPECIES + o] = new Vector2(Random.Range(-_maxSocialForce, _maxSocialForce), Random.value * _maxSocialRange);
+        _socialData[s * MAX_SPECIES + o] = new Vector2(Random.Range(-setting.maxSocialForce, setting.maxSocialForce),
+                                                       Random.value * setting.maxSocialRange);
       }
     }
 
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
       Vector4 data = new Vector4();
-      data.x = Random.Range(_dragRange.x, _dragRange.y);
-      data.y = Random.Range(0, _maxForceSteps);
-      data.z = Random.Range(_collisionForceRange.x, _collisionForceRange.y);
+      data.x = Random.Range(setting.minDrag, setting.maxDrag);
+      data.y = Random.Range(0, setting.maxForceSteps);
+      data.z = Random.Range(setting.minCollision, setting.maxCollision);
       speciesData[i] = data;
     }
 
@@ -719,17 +809,17 @@ public class TextureSimulator : MonoBehaviour {
       Color newColor;
       int maxTries = 1000;
       while (true) {
-        float h = Random.Range(_hueRange.x, _hueRange.y);
-        float s = Random.Range(_saturationRange.x, _saturationRange.y);
-        float v = Random.Range(_valueRange.x, _valueRange.y);
+        float h = Random.Range(setting.minHue, setting.maxHue);
+        float s = Random.Range(setting.minSaturation, setting.maxSaturation);
+        float v = Random.Range(setting.minValue, setting.maxValue);
 
         bool alreadyExists = false;
         foreach (var color in colors) {
           float existingH, existingS, existingV;
           Color.RGBToHSV(color, out existingH, out existingS, out existingV);
 
-          if (Mathf.Abs(h - existingH) < _randomColorThreshold &&
-              Mathf.Abs(s - existingS) < _randomColorThreshold) {
+          if (Mathf.Abs(h - existingH) < setting.randomColorThreshold &&
+              Mathf.Abs(s - existingS) < setting.randomColorThreshold) {
             alreadyExists = true;
             break;
           }
@@ -805,21 +895,21 @@ public class TextureSimulator : MonoBehaviour {
 
   private void doHandCollision() {
     int capsuleCount = 0;
-    foreach (var hand in _provider.CurrentFrame.Hands) {
-      foreach (var finger in hand.Fingers) {
-        foreach (var bone in finger.bones) {
-          _capsuleA[capsuleCount] = bone.PrevJoint.ToVector3();
-          _capsuleB[capsuleCount] = bone.NextJoint.ToVector3();
-          capsuleCount++;
-        }
+
+    generateCapsulesForHand(Hands.Left, ref _prevLeft, ref capsuleCount);
+    generateCapsulesForHand(Hands.Right, ref _prevRight, ref capsuleCount);
+
+    RuntimeGizmoDrawer drawer;
+    if (_handCollisionEnabled && _drawHandColliders && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+      drawer.color = _handColliderColor;
+      for (int i = 0; i < capsuleCount; i++) {
+        drawer.DrawWireCapsule(_capsuleA[i], _capsuleB[i], _handCollisionRadius);
       }
     }
 
-    float scale = 1.0f / transform.lossyScale.magnitude;
+    float scale = 1.0f / transform.lossyScale.x;
 
-    _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
-    _simulationMat.SetFloat("_HandCollisionRadius", scale * _handCollisionRadius);
-
+    _simulationMat.SetFloat("_HandCollisionRadius", scale * (_handCollisionEnabled ? _handCollisionRadius : 0));
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
@@ -832,6 +922,38 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
     _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);
+  }
+
+  private void generateCapsulesForHand(Hand source, ref Hand prev, ref int count) {
+    if (source != null) {
+      if (prev == null) {
+        prev = new Hand().CopyFrom(source);
+      }
+      for (int i = 0; i < 5; i++) {
+        Finger finger = source.Fingers[i];
+        Finger prevFinger = prev.Fingers[i];
+        for (int j = 0; j < 4; j++) {
+          Bone bone = finger.bones[j];
+          Bone prevBone = prevFinger.bones[j];
+
+          Vector3 joint0 = bone.NextJoint.ToVector3();
+          Vector3 joint1 = bone.PrevJoint.ToVector3();
+          Vector3 prevJoint0 = prevBone.NextJoint.ToVector3();
+          Vector3 prevJoint1 = prevBone.PrevJoint.ToVector3();
+
+          int spheres = j == 0 ? _spheresPerMetacarpal : _spheresPerBone;
+          for (int k = 0; k < spheres; k++) {
+            float percent = k / (float)spheresPerBone;
+            _capsuleA[count] = Vector3.Lerp(joint0, joint1, percent);
+            _capsuleB[count] = Vector3.Lerp(prevJoint0, prevJoint1, percent);
+            count++;
+          }
+        }
+      }
+      prev.CopyFrom(Hands.Right);
+    } else {
+      prev = null;
+    }
   }
 
   private class HandActor {
@@ -889,12 +1011,12 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
-    _simulationMat.SetInt("_MaxSpecies", _maxSpecies);
+    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
   }
 
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
-      LoadPresetEcosystem(_ecosystemPreset);
+      LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
       ResetPositions();
     }
 

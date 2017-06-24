@@ -38,11 +38,10 @@
   float _FieldRadius;
   float _FieldForce;
 
-  float _MaxSpecies;
+  float _SpeciesCount;
   float _SpawnRadius;
 
   float _HandCollisionRadius;
-  float _HandCollisionForce;
 
   int _SocialHandSpecies;
   float _SocialHandForceFactor;
@@ -50,8 +49,8 @@
   float4 _SpeciesData[MAX_SPECIES];
   float2 _SocialData[MAX_SPECIES * MAX_SPECIES];
 
-  float3 _CapsuleA[64];
-  float3 _CapsuleB[64];
+  float3 _CapsuleA[128];
+  float3 _CapsuleB[128];
   int _CapsuleCount;
 
   float4 _Spheres[2];
@@ -136,8 +135,8 @@
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
 
-    for (int i = 0; i < 4096; i++) {
-      float4 other = tex2D(_Position, float2(i / 4096.0, 0));
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+      float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
       float3 toOther = other.xyz - particle.xyz;
       float distance = length(toOther);
       toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
@@ -171,7 +170,12 @@
         forceVector /= dist;
 
         if (dist < _HandCollisionRadius) {
-          velocity.xyz += forceVector * _HandCollisionForce;
+          float3 normal = normalize(particle.xyz - b);
+          float mag = max(0, dot(normal, a - b));
+
+          float3 relativeVel = velocity.xyz - normal * mag;
+          float3 reflectedVel = relativeVel - 2 * dot(relativeVel, normal) * normal;
+          velocity.xyz = reflectedVel + normal * mag;
         }
 
         float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
@@ -196,7 +200,7 @@
     particle.x = nrand(i.uv) - 0.5;
     particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
     particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
-    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _MaxSpecies);
+    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _SpeciesCount);
 
     particle.xyz *= _SpawnRadius;
 

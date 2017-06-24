@@ -4,6 +4,7 @@ using Leap;
 using Leap.Unity;
 using Leap.Unity.Query;
 using Leap.Unity.Attributes;
+using Leap.Unity.RuntimeGizmos;
 
 public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
@@ -45,12 +46,20 @@ public class TextureSimulator : MonoBehaviour {
     set { _handCollisionRadius = value; }
   }
 
-  [Range(0, 0.02f)]
+  [Range(1, 5)]
   [SerializeField]
-  private float _handCollisionForce = 0.001f;
-  public float handCollisionForce {
-    get { return _handCollisionForce; }
-    set { _handCollisionForce = value; }
+  private int _spheresPerBone = 1;
+  public int spheresPerBone {
+    get { return _spheresPerBone; }
+    set { _spheresPerBone = value; }
+  }
+
+  [Range(1, 5)]
+  [SerializeField]
+  private int _spheresPerMetacarpal = 3;
+  public int spheresPerMetacarpal {
+    get { return _spheresPerMetacarpal; }
+    set { _spheresPerMetacarpal = value; }
   }
 
   //###########################//
@@ -372,6 +381,12 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Renderer _socialDebug;
+
+  [SerializeField]
+  private bool _drawHandColliders = true;
+
+  [SerializeField]
+  private Color _handColliderColor = Color.black;
   #endregion
 
   //Simulation
@@ -384,13 +399,14 @@ public class TextureSimulator : MonoBehaviour {
   private List<Mesh> _meshes = new List<Mesh>();
 
   //Hand interaction
-  private Vector4[] _capsuleA = new Vector4[64];
-  private Vector4[] _capsuleB = new Vector4[64];
+  private Vector4[] _capsuleA = new Vector4[128];
+  private Vector4[] _capsuleB = new Vector4[128];
 
   private Vector4[] _spheres = new Vector4[2];
   private Vector4[] _sphereVels = new Vector4[2];
 
   private HandActor[] _handActors = new HandActor[2];
+  private Hand _prevLeft, _prevRight;
 
   #region PUBLIC API
 
@@ -764,21 +780,21 @@ public class TextureSimulator : MonoBehaviour {
 
   private void doHandCollision() {
     int capsuleCount = 0;
-    foreach (var hand in _provider.CurrentFrame.Hands) {
-      foreach (var finger in hand.Fingers) {
-        foreach (var bone in finger.bones) {
-          _capsuleA[capsuleCount] = bone.PrevJoint.ToVector3();
-          _capsuleB[capsuleCount] = bone.NextJoint.ToVector3();
-          capsuleCount++;
-        }
+
+    generateCapsulesForHand(Hands.Left, ref _prevLeft, ref capsuleCount);
+    generateCapsulesForHand(Hands.Right, ref _prevRight, ref capsuleCount);
+
+    RuntimeGizmoDrawer drawer;
+    if (_handCollisionEnabled && _drawHandColliders && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+      drawer.color = _handColliderColor;
+      for (int i = 0; i < capsuleCount; i++) {
+        drawer.DrawWireCapsule(_capsuleA[i], _capsuleB[i], _handCollisionRadius);
       }
     }
 
     float scale = 1.0f / transform.lossyScale.magnitude;
 
-    _simulationMat.SetFloat("_HandCollisionForce", _handCollisionEnabled ? _handCollisionForce : 0);
-    _simulationMat.SetFloat("_HandCollisionRadius", scale * _handCollisionRadius);
-
+    _simulationMat.SetFloat("_HandCollisionRadius", scale * (_handCollisionEnabled ? _handCollisionRadius : 0));
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
@@ -791,6 +807,38 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);
     _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);
+  }
+
+  private void generateCapsulesForHand(Hand source, ref Hand prev, ref int count) {
+    if (source != null) {
+      if (prev == null) {
+        prev = new Hand().CopyFrom(source);
+      }
+      for (int i = 0; i < 5; i++) {
+        Finger finger = source.Fingers[i];
+        Finger prevFinger = prev.Fingers[i];
+        for (int j = 0; j < 4; j++) {
+          Bone bone = finger.bones[j];
+          Bone prevBone = prevFinger.bones[j];
+
+          Vector3 joint0 = bone.NextJoint.ToVector3();
+          Vector3 joint1 = bone.PrevJoint.ToVector3();
+          Vector3 prevJoint0 = prevBone.NextJoint.ToVector3();
+          Vector3 prevJoint1 = prevBone.PrevJoint.ToVector3();
+
+          int spheres = j == 0 ? _spheresPerMetacarpal : _spheresPerBone;
+          for (int k = 0; k < spheres; k++) {
+            float percent = k / (float)spheresPerBone;
+            _capsuleA[count] = Vector3.Lerp(joint0, joint1, percent);
+            _capsuleB[count] = Vector3.Lerp(prevJoint0, prevJoint1, percent);
+            count++;
+          }
+        }
+      }
+      prev.CopyFrom(Hands.Right);
+    } else {
+      prev = null;
+    }
   }
 
   private class HandActor {

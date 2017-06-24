@@ -52,6 +52,8 @@ namespace Leap.Unity.Examples {
 
     public TransformTweenBehaviour workstationModeTween;
 
+    public bool flipTargetFacing = false;
+
     private InteractionBehaviour _intObj;
     private AnchorableBehaviour _anchObj;
 
@@ -297,7 +299,7 @@ namespace Leap.Unity.Examples {
     // Called on Awake(); possible to override the default functions in a MonoBehaviour's Start().
     private void initWorkstationPoseFunctions() {
       workstationPositionFunc = DefaultDetermineWorkstationPosition;
-      workstationRotationFunc = DefaultDetermineWorkstationRotation;
+      workstationRotationFunc = DetermineWorkstationRotation;
     }
 
     private Vector3 determineWorkstationPosition() {
@@ -361,10 +363,14 @@ namespace Leap.Unity.Examples {
       return placementPosition;
     }
 
-    public static Quaternion DefaultDetermineWorkstationRotation(Vector3 userEyePos, Vector3 workstationPosition) {
+    public Quaternion DetermineWorkstationRotation(Vector3 userEyePos, Vector3 workstationPosition) {
+      return DefaultDetermineWorkstationRotation(userEyePos, workstationPosition, this.flipTargetFacing);
+    }
+
+    public static Quaternion DefaultDetermineWorkstationRotation(Vector3 userEyePos, Vector3 workstationPosition, bool flipTargetFacing = false) {
       Vector3 toCamera = userEyePos - workstationPosition;
       toCamera.y = 0F;
-      Quaternion placementRotation = Quaternion.LookRotation(toCamera.normalized, Vector3.up);
+      Quaternion placementRotation = Quaternion.LookRotation(toCamera.normalized * (flipTargetFacing ? -1F : 1F), Vector3.up);
 
       return placementRotation;
     }

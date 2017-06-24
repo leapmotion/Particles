@@ -407,6 +407,22 @@ public class TextureSimulator : MonoBehaviour {
   public void ResetPositions() {
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitPos(PASS_RANDOMIZE_PARTICLES);
+
+    _simulationAge = 0;
+  }
+
+  private string _currentSpecies = "";
+  public string currentSpecies {
+    get {
+      return _currentSpecies;
+    }
+  }
+
+  private long _simulationAge = 0;
+  public long simulationAge {
+    get {
+      return _simulationAge;
+    }
   }
 
   #endregion
@@ -458,6 +474,8 @@ public class TextureSimulator : MonoBehaviour {
 
       blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
       blitPos(PASS_INTEGRATE_VELOCITIES);
+
+      _simulationAge += 1;
     }
 
     _particleMat.mainTexture = _frontPos;
@@ -649,9 +667,30 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    _currentSpecies = preset.ToString();
+
     _simulationMat.SetVectorArray("_SocialData", packedSocialData);
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
+  }
+
+  public void LoadRandomEcosystem() {
+    Random.InitState(Time.realtimeSinceStartup.GetHashCode());
+
+    var gen = GetComponent<NameGenerator>();
+    string name;
+    if (gen == null) {
+      name = Random.Range(0, 1000).ToString();
+    }
+    else {
+      name = gen.GenerateName();
+    }
+    _currentSpecies = name;
+    Debug.Log(name);
+
+    LoadRandomEcosystem(name);
+
+    ResetPositions();
   }
 
   public void LoadRandomEcosystem(string seed) {
@@ -712,6 +751,8 @@ public class TextureSimulator : MonoBehaviour {
       species.x = 1 - species.x;
       speciesData[i] = species;
     }
+
+    _currentSpecies = seed;
 
     _particleMat.SetColorArray("_Colors", colors.ToArray());
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
@@ -863,20 +904,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
-      Random.InitState(Time.realtimeSinceStartup.GetHashCode());
-
-      var gen = GetComponent<NameGenerator>();
-      string name;
-      if (gen == null) {
-        name = Random.Range(0, 1000).ToString();
-      } else {
-        name = gen.GenerateName();
-      }
-      Debug.Log(name);
-
-      LoadRandomEcosystem(name);
-
-      ResetPositions();
+      LoadRandomEcosystem();
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {

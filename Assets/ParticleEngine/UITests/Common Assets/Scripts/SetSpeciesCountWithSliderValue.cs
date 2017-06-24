@@ -28,7 +28,7 @@ public class SetSpeciesCountWithSliderValue : MonoBehaviour {
       currentValueTextGraphic.text = finalValue.ToString();
     }
 
-    particleSimulator.maxSpecies = finalValue;
+    particleSimulator.randomEcosystemSettings.speciesCount = finalValue;
   }
 
 }

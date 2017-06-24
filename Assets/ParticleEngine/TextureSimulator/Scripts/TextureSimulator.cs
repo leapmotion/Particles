@@ -488,6 +488,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void ResetPositions() {
+    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitPos(PASS_RANDOMIZE_PARTICLES);
 
@@ -767,8 +769,7 @@ public class TextureSimulator : MonoBehaviour {
     string name;
     if (gen == null) {
       name = Random.Range(0, 1000).ToString();
-    }
-    else {
+    } else {
       name = gen.GenerateName();
     }
     _currentSpecies = name;

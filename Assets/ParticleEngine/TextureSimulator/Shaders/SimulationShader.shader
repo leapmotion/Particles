@@ -176,6 +176,7 @@
           float3 relativeVel = velocity.xyz - normal * mag;
           float3 reflectedVel = relativeVel - 2 * dot(relativeVel, normal) * normal;
           velocity.xyz = reflectedVel + normal * mag;
+          velocity.w = 0;
         }
 
         float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];

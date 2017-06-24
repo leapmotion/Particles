@@ -951,7 +951,7 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
       }
-      prev.CopyFrom(Hands.Right);
+      prev.CopyFrom(source);
     } else {
       prev = null;
     }

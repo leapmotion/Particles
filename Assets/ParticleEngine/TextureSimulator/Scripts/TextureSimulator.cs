@@ -792,7 +792,7 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    float scale = 1.0f / transform.lossyScale.magnitude;
+    float scale = 1.0f / transform.lossyScale.x;
 
     _simulationMat.SetFloat("_HandCollisionRadius", scale * (_handCollisionEnabled ? _handCollisionRadius : 0));
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);

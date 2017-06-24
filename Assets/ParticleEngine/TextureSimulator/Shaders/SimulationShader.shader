@@ -38,7 +38,7 @@
   float _FieldRadius;
   float _FieldForce;
 
-  float _MaxSpecies;
+  float _SpeciesCount;
   float _SpawnRadius;
 
   float _HandCollisionRadius;
@@ -200,7 +200,7 @@
     particle.x = nrand(i.uv) - 0.5;
     particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
     particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
-    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _MaxSpecies);
+    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _SpeciesCount);
 
     particle.xyz *= _SpawnRadius;
 

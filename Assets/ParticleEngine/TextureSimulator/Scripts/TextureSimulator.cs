@@ -453,6 +453,13 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Color _handColliderColor = Color.black;
+
+  [SerializeField]
+  private bool _enableSpeciesDebugColors = false;
+
+  [Range(0, MAX_SPECIES - 1)]
+  [SerializeField]
+  private int _debugSpeciesNumber = 0;
   #endregion
 
   //Simulation
@@ -539,6 +546,13 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
+    if (_enableSpeciesDebugColors) {
+      Color[] colors = new Color[MAX_SPECIES];
+      colors.Fill(Color.black);
+      colors[_debugSpeciesNumber] = Color.white;
+      _particleMat.SetColorArray("_Colors", colors);
+    }
+
     updateShaderData();
 
     handleUserInput();

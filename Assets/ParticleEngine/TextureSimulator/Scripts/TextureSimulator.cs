@@ -519,6 +519,20 @@ public class TextureSimulator : MonoBehaviour {
     stepsPerFrame = Mathf.RoundToInt(value * 10);
   }
 
+  private string _currentSpecies = "";
+  public string currentSpecies {
+    get {
+      return _currentSpecies;
+    }
+  }
+
+  private long _simulationAge = 0;
+  public long simulationAge {
+    get {
+      return _simulationAge;
+    }
+  }
+
   public void ResetPositions() {
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
 
@@ -532,20 +546,6 @@ public class TextureSimulator : MonoBehaviour {
   public void ReloadRandomEcosystem() {
     LoadRandomEcosystem(_lastSeed);
     ResetPositions();
-  }
-
-  private string _currentSpecies = "";
-  public string currentSpecies {
-    get {
-      return _currentSpecies;
-    }
-  }
-
-  private long _simulationAge = 0;
-  public long simulationAge {
-    get {
-      return _simulationAge;
-    }
   }
 
   #endregion
@@ -852,8 +852,39 @@ public class TextureSimulator : MonoBehaviour {
       speciesData[i] = data;
     }
 
-    //Perform color randomization last so that it has no effect on particle interaction
-    List<Color> colors = new List<Color>();
+    // Perform color randomization last so that it has no effect on particle interaction.
+    RandomizeEcosystemColors();
+
+    //Invert drag before we upload to the GPU
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector4 species = speciesData[i];
+      species.x = 1 - species.x;
+      speciesData[i] = species;
+    }
+
+    _currentSpecies = seed;
+
+    _simulationMat.SetVectorArray("_SpeciesData", speciesData);
+    _simulationMat.SetVectorArray("_SocialData", _socialData);
+  }
+
+  public void RandomizeEcosystemColors() {
+    List<Color> colors;
+    colors = Pool<List<Color>>.Spawn();
+    try {
+      GetRandomizedEcosystemColors(colors);
+      _particleMat.SetColorArray("_Colors", colors.ToArray());
+    }
+    finally {
+      colors.Clear();
+      Pool<List<Color>>.Recycle(colors);
+    }
+  }
+
+  public void GetRandomizedEcosystemColors(List<Color> colors) {
+    var setting = _randomEcosystemSettings;
+
+    colors.Clear();
     for (int i = 0; i < MAX_SPECIES; i++) {
       Color newColor;
       int maxTries = 1000;
@@ -883,19 +914,6 @@ public class TextureSimulator : MonoBehaviour {
 
       colors.Add(newColor);
     }
-
-    //Invert drag before we upload to the GPU
-    for (int i = 0; i < MAX_SPECIES; i++) {
-      Vector4 species = speciesData[i];
-      species.x = 1 - species.x;
-      speciesData[i] = species;
-    }
-
-    _currentSpecies = seed;
-
-    _particleMat.SetColorArray("_Colors", colors.ToArray());
-    _simulationMat.SetVectorArray("_SpeciesData", speciesData);
-    _simulationMat.SetVectorArray("_SocialData", _socialData);
   }
   #endregion
 

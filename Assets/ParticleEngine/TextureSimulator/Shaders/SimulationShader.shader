@@ -258,28 +258,27 @@
 
 
   float4 debugOutput(v2f i) : SV_Target {
-    float4 values = float4(0,0,0,0);
-    float4 particle = tex2D(_Position, _DebugData.xy);
-    float4 particle2 = tex2D(_Position, _DebugData.zw);
+    float4 values = _DebugData;
+    float4 particle = tex2D(_Position, _DebugData.xx);
+    float4 particle2 = tex2D(_Position, _DebugData.yy);
 
-    if (_DebugMode == 0) {
-      values = _DebugData;
-    } else if (_DebugMode == 1) {
+    if (_DebugMode == 10) {
       values = particle;
-    } else if (_DebugMode == 2) {
+    } else if (_DebugMode == 11) {
       float socialOffset = (int)(particle.w * MAX_SPECIES);
       values.x = socialOffset;
       values.y = (int)(socialOffset + particle2.w);
-    } else if (_DebugMode == 3) {
-      values.x = _SocialData[(int)_DebugData.x];
+    } else if (_DebugMode == 12) {
+      values.xy = _SocialData[(int)_DebugData.x];
+      values.zw = _SpeciesData[(int)_DebugData.y].xy;
     }
 
     float color = 0;
-    color += printValue(i.uv, float2(0, 0), float2(0.1, 0.1), values.x, 2, 4);
-    color += printValue(i.uv, float2(0, 0.25), float2(0.1, 0.1), values.y, 2, 4);
-    color += printValue(i.uv, float2(0, 0.5), float2(0.1, 0.1), values.z, 2, 4);
-    color += printValue(i.uv, float2(0, 0.75), float2(0.1, 0.1), values.w, 2, 4);
-    return velocity;
+    color += printValue(i.uv, float2(0, 0.1), float2(0.1, 0.1), values.w, 2, 6);
+    color += printValue(i.uv, float2(0, 0.35), float2(0.1, 0.1), values.z, 2, 6);
+    color += printValue(i.uv, float2(0, 0.6), float2(0.1, 0.1), values.y, 2, 6);
+    color += printValue(i.uv, float2(0, 0.85), float2(0.1, 0.1), values.x, 2, 6);
+    return color;
   }
   ENDCG
 

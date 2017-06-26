@@ -22,6 +22,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES = 3;
   public const int PASS_RANDOMIZE_PARTICLES = 4;
   public const int PASS_STEP_SOCIAL_QUEUE = 5;
+  public const int PASS_SHADER_DEBUG = 6;
 
   #region INSPECTOR
   [SerializeField]
@@ -449,6 +450,9 @@ public class TextureSimulator : MonoBehaviour {
   private Renderer _socialDebug;
 
   [SerializeField]
+  private Renderer _shaderDataDebug;
+
+  [SerializeField]
   private bool _drawHandColliders = true;
 
   [SerializeField]
@@ -460,6 +464,15 @@ public class TextureSimulator : MonoBehaviour {
   [Range(0, MAX_SPECIES - 1)]
   [SerializeField]
   private int _debugSpeciesNumber = 0;
+
+  [SerializeField]
+  private ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;
+
+  [SerializeField]
+  private int _shaderDebugData0;
+
+  [SerializeField]
+  private int _shaderDebugData1;
   #endregion
 
   //Simulation
@@ -482,12 +495,24 @@ public class TextureSimulator : MonoBehaviour {
   private HandActor[] _handActors = new HandActor[2];
   private Hand _prevLeft, _prevRight;
 
+  //Shader debug
+  private RenderTexture _shaderDebugTexture;
+
   #region PUBLIC API
 
   public enum ColorMode {
     BySpecies,
     BySpeciesWithMagnitude,
     ByVelocity,
+  }
+
+  public enum ShaderDebugMode {
+    None = -1,
+    Raw = 0,
+    RawScaled = 1,
+    Particle = 10,
+    SocialIndices = 11,
+    SocialData = 12
   }
 
   public void SetStepsPerFrame(float value) {
@@ -562,6 +587,8 @@ public class TextureSimulator : MonoBehaviour {
     updateShaderData();
 
     handleUserInput();
+
+    updateShaderDebug();
 
     if (_provider != null) {
       doHandCollision();
@@ -1027,6 +1054,35 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region PRIVATE IMPLEMENTATION
+  private void updateShaderDebug() {
+    if (_shaderDebugMode == ShaderDebugMode.None) {
+      return;
+    }
+
+    if (_shaderDebugTexture == null) {
+      _shaderDebugTexture = new RenderTexture(512, 512, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+      _shaderDebugTexture.filterMode = FilterMode.Point;
+      _shaderDataDebug.material.mainTexture = _shaderDebugTexture;
+    }
+
+    Vector4 data = Vector4.zero;
+    switch (_shaderDebugMode) {
+      case ShaderDebugMode.Raw:
+      case ShaderDebugMode.SocialData:
+        data.x = _shaderDebugData0;
+        data.y = _shaderDebugData1;
+        break;
+      default:
+        data.x = _shaderDebugData0 / (float)MAX_PARTICLES;
+        data.y = _shaderDebugData1 / (float)MAX_PARTICLES;
+        break;
+    }
+
+    _simulationMat.SetInt("_DebugMode", (int)_shaderDebugMode);
+    _simulationMat.SetVector("_DebugData", data);
+    Graphics.Blit(null, _shaderDebugTexture, _simulationMat, PASS_SHADER_DEBUG);
+  }
+
   private void updateShaderData() {
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);

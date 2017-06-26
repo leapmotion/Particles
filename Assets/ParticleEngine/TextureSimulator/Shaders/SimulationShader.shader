@@ -57,8 +57,38 @@
   float3 _SphereVelocities[2];
   int _SphereCount;
 
+  int _DebugMode;
+  float4 _DebugData;
+
   float nrand(float2 n) {
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+  }
+
+  float digitBin(const in int x) {
+    return x == 0 ? 480599.0 : x == 1 ? 139810.0 : x == 2 ? 476951.0 : x == 3 ? 476999.0 : x == 4 ? 350020.0 : x == 5 ? 464711.0 : x == 6 ? 464727.0 : x == 7 ? 476228.0 : x == 8 ? 481111.0 : x == 9 ? 481095.0 : 0.0;
+  }
+
+  float printValue(float2 fragCoord, float2 pixelCoord, float2 fontSize, float value, float digits, float decimals) {
+    float2 charCoord = (fragCoord - pixelCoord) / fontSize;
+    if (charCoord.y < 0.0 || charCoord.y >= 1.0) return 0.0;
+    float bits = 0.0;
+    float digitIndex1 = digits - floor(charCoord.x) + 1.0;
+    if (-digitIndex1 <= decimals) {
+      float pow1 = pow(10.0, digitIndex1);
+      float absValue = abs(value);
+      float pivot = max(absValue, 1.5) * 10.0;
+      if (pivot < pow1) {
+        if (value < 0.0 && pivot >= pow1 * 0.1) bits = 1792.0;
+      }
+      else if (digitIndex1 == 0.0) {
+        if (decimals > 0.0) bits = 2.0;
+      }
+      else {
+        value = digitIndex1 < 0.0 ? frac(absValue) : absValue * 10.0;
+        bits = digitBin(int(fmod(value / pow1, 10.0)));
+      }
+    }
+    return floor(fmod(bits / pow(2.0, floor(frac(charCoord.x) * 4.0) + floor(charCoord.y * 5.0) * 4.0), 2.0));
   }
 
   v2f vert(appdata v) {
@@ -225,6 +255,32 @@
 
     return result;
   }
+
+
+  float4 debugOutput(v2f i) : SV_Target {
+    float4 values = float4(0,0,0,0);
+    float4 particle = tex2D(_Position, _DebugData.xy);
+    float4 particle2 = tex2D(_Position, _DebugData.zw);
+
+    if (_DebugMode == 0) {
+      values = _DebugData;
+    } else if (_DebugMode == 1) {
+      values = particle;
+    } else if (_DebugMode == 2) {
+      float socialOffset = (int)(particle.w * MAX_SPECIES);
+      values.x = socialOffset;
+      values.y = (int)(socialOffset + particle2.w);
+    } else if (_DebugMode == 3) {
+      values.x = _SocialData[(int)_DebugData.x];
+    }
+
+    float color = 0;
+    color += printValue(i.uv, float2(0, 0), float2(0.1, 0.1), values.x, 2, 4);
+    color += printValue(i.uv, float2(0, 0.25), float2(0.1, 0.1), values.y, 2, 4);
+    color += printValue(i.uv, float2(0, 0.5), float2(0.1, 0.1), values.z, 2, 4);
+    color += printValue(i.uv, float2(0, 0.75), float2(0.1, 0.1), values.w, 2, 4);
+    return velocity;
+  }
   ENDCG
 
   SubShader {
@@ -280,6 +336,14 @@
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment stepSocialQueue
+      ENDCG
+    }
+
+    //Pass 6: debug output
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment debugOutput
       ENDCG
     }
   }

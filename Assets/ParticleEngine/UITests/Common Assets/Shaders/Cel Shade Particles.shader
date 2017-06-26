@@ -49,7 +49,7 @@
           velocity.xyz *= velocity.w;
 
           float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.pos.xyz)) - 0.2);
-          v.pos.xyz -= velocity.xyz * dir * _TrailLength;
+          v.pos.xyz -= velocity.xyz * dir * _TrailLength * (1/max(_Size, 0.001)) * 0.001;
 
           v.pos.xyz *= _Size;
           v.pos.xyz += particle.xyz;

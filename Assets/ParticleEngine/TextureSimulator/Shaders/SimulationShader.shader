@@ -6,7 +6,7 @@
 
   #define MAX_PARTICLES 4096
   #define MAX_FORCE_STEPS 64
-  #define MAX_SPECIES 31
+  #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
@@ -150,6 +150,7 @@
       }
 
       float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+
       if (distance < socialData.y) {
         totalSocialForce += float4(socialData.x * toOther, 1);
       }

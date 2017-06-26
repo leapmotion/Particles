@@ -496,6 +496,12 @@ public class TextureSimulator : MonoBehaviour {
     _simulationAge = 0;
   }
 
+  private string _lastSeed = "";
+  public void ReloadRandomEcosystem() {
+    LoadRandomEcosystem(_lastSeed);
+    ResetPositions();
+  }
+
   private string _currentSpecies = "";
   public string currentSpecies {
     get {
@@ -785,6 +791,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _currentSimulationSpeciesCount = setting.speciesCount;
     Random.InitState(seed.GetHashCode());
+    _lastSeed = seed;
 
     Vector4[] _socialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
 

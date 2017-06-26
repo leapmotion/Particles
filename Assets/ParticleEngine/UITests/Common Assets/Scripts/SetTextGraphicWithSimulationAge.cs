@@ -3,21 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SetTextGraphicWithSimulationAge : MonoBehaviour {
+public class SetTextGraphicWithSimulationAge : TextGraphicSetter {
 
   public TextureSimulator particleSimulator;
-  public LeapTextGraphic textGraphic;
 
-  void OnValidate() {
-    if (textGraphic == null) {
-      textGraphic = GetComponent<LeapTextGraphic>();
-    }
+  public override string GetTextValue() {
+    if (particleSimulator == null) return "0";
+
+    return particleSimulator.simulationAge.ToString();
   }
-
-  void Update() {
-    if (particleSimulator != null && textGraphic != null) {
-      textGraphic.text = particleSimulator.simulationAge + " ticks";
-    }
-  }
-
 }

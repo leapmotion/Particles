@@ -12,9 +12,10 @@ public class SetSpeciesCountWithSliderValue : MonoBehaviour {
 
   [Header("Optional")]
   public LeapTextGraphic currentValueTextGraphic;
+  public string prefix;
+  public string postfix;
 
   void Update() {
-
     float sliderValue = slider.HorizontalSliderValue.Map(slider.horizontalValueRange.x,
                                                          slider.horizontalValueRange.y,
                                                          0F, 1F);
@@ -25,7 +26,7 @@ public class SetSpeciesCountWithSliderValue : MonoBehaviour {
     int finalValue = discretizedSliderValue + minSpeciesCount;
 
     if (currentValueTextGraphic != null) {
-      currentValueTextGraphic.text = finalValue.ToString();
+      currentValueTextGraphic.text = prefix + finalValue.ToString() + postfix;
     }
 
     particleSimulator.randomEcosystemSettings.speciesCount = finalValue;

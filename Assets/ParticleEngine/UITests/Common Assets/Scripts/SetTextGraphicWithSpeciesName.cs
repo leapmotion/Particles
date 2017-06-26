@@ -2,22 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class SetTextGraphicWithSpeciesName : MonoBehaviour {
+public class SetTextGraphicWithSpeciesName : TextGraphicSetter {
 
   public TextureSimulator particleSimulator;
-  public LeapTextGraphic textGraphic;
 
-  void OnValidate() {
-    if (textGraphic == null) {
-      textGraphic = GetComponent<LeapTextGraphic>();
-    }
+  public override string GetTextValue() {
+    if (particleSimulator == null) return "(Simulation not configured)";
+
+    return particleSimulator.currentSpecies;
   }
-
-  void Update() {
-    if (particleSimulator != null && textGraphic != null) {
-      textGraphic.text = particleSimulator.currentSpecies;
-    }
-  }
-
 }

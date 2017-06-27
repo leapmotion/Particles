@@ -556,6 +556,7 @@ public class TextureSimulator : MonoBehaviour {
 
   //Display
   private List<Mesh> _meshes = new List<Mesh>();
+  private MaterialPropertyBlock _displayBlock;
 
   //Hand interaction
   private Vector4[] _capsuleA = new Vector4[128];
@@ -630,6 +631,8 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   void Start() {
+    _displayBlock = new MaterialPropertyBlock();
+
     _frontPos = createTexture();
     _frontVel = createTexture();
     _backPos = createTexture();
@@ -683,7 +686,7 @@ public class TextureSimulator : MonoBehaviour {
       _currSimulationTime += 1.0f / _simulationFPS;
     }
 
-    _particleMat.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+    _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
     displaySimulation();
   }
   #endregion
@@ -1370,11 +1373,11 @@ public class TextureSimulator : MonoBehaviour {
       _simulationAge += 1;
     }
 
-    _particleMat.SetTexture("_CurrPos", _frontPos);
-    _particleMat.SetTexture("_PrevPos", _backPos);
+    _displayBlock.SetTexture("_CurrPos", _frontPos);
+    _displayBlock.SetTexture("_PrevPos", _backPos);
 
-    _particleMat.SetTexture("_CurrVel", _frontVel);
-    _particleMat.SetTexture("_PrevVel", _backVel);
+    _displayBlock.SetTexture("_CurrVel", _frontVel);
+    _displayBlock.SetTexture("_PrevVel", _backVel);
 
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
@@ -1383,7 +1386,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private void displaySimulation() {
     foreach (var mesh in _meshes) {
-      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
+      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
   }
 

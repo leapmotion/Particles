@@ -514,17 +514,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _provider: {fileID: 0}
-  _handCollisionEnabled: 1
+  _handCollisionEnabled: 0
   _handCollisionRadius: 0.0244
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4
-  _handInfluenceEnabled: 0
+  _handInfluenceEnabled: 1
   _influenceMat: {fileID: 2100000, guid: ec01a910a66df34448d586402c4b6db4, type: 2}
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  _influenceRadius: 0.116
+  _influenceRadius: 0.14
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
-  _handInfluenceMode: 0
+  _influenceGrabSmoothing: 0.01
+  _handInfluenceMode: 2
   _influenceBinarySettings:
     _grabStrengthTransition: {x: 0.25, y: 0.3}
   _influenceRadiusSettings:
@@ -538,14 +539,14 @@ MonoBehaviour:
         outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
-        time: 0.19999999
+        time: 0.25
         value: 0
         inSlope: 0
         outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
-        time: 0.35
-        value: 0.80389106
+        time: 0.5
+        value: 0.8000001
         inSlope: 2.0796216
         outSlope: 2.0796216
         tangentMode: 0
@@ -553,8 +554,8 @@ MonoBehaviour:
         time: 0.65
         value: 0.99999857
         inSlope: 0.05942102
-        outSlope: 0.05942102
-        tangentMode: 0
+        outSlope: 0.0000040871755
+        tangentMode: 65
       - serializedVersion: 2
         time: 1
         value: 1
@@ -567,24 +568,6 @@ MonoBehaviour:
     grabStrengthToInfluence:
       serializedVersion: 2
       m_Curve:
-      - serializedVersion: 2
-        time: 0
-        value: -0.0004902405
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 0.24499999
-        value: 0
-        inSlope: 0.0020009817
-        outSlope: 0
-        tangentMode: 5
-      - serializedVersion: 2
-        time: 0.35
-        value: 0.999997
-        inSlope: -0.05184148
-        outSlope: 0.000004584973
-        tangentMode: 65
       - serializedVersion: 2
         time: 1
         value: 1
@@ -605,16 +588,16 @@ MonoBehaviour:
         outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
-        time: 0.19999999
-        value: 0
-        inSlope: 0.0024512028
+        time: 0.14999999
+        value: 0.000027742935
+        inSlope: 0.0034532233
         outSlope: 0
         tangentMode: 5
       - serializedVersion: 2
-        time: 0.35
+        time: 0.55
         value: 0.99999833
         inSlope: -0.37130445
-        outSlope: 0.0000025675847
+        outSlope: 0.0000037087336
         tangentMode: 65
       - serializedVersion: 2
         time: 1
@@ -630,22 +613,16 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 2
         time: 0
-        value: -0.0004902405
+        value: -0.0000019592699
         inSlope: 0
         outSlope: 0
         tangentMode: 0
       - serializedVersion: 2
-        time: 0.19999999
-        value: 0
-        inSlope: 0.0024512028
-        outSlope: 0
-        tangentMode: 5
-      - serializedVersion: 2
-        time: 0.35
-        value: 0.99999833
-        inSlope: -0.37130445
-        outSlope: 0.0000025675847
-        tangentMode: 65
+        time: 0.049999997
+        value: 1.0000008
+        inSlope: 20.000057
+        outSlope: -0.00000087838424
+        tangentMode: 69
       - serializedVersion: 2
         time: 1
         value: 1
@@ -673,7 +650,7 @@ MonoBehaviour:
   _randomizeEcosystemKey: 32
   _loadEcosystemSeedKey: 108
   _presetEcosystemSettings:
-    _ecosystemPreset: 1
+    _ecosystemPreset: 0
     _maxForceSteps: 7
     _maxSocialForce: 0.003
     _maxSocialRange: 0.5

@@ -47,7 +47,7 @@
   float _SocialHandForceFactor;
 
   float4 _SpeciesData[MAX_SPECIES];
-  float2 _SocialData[MAX_SPECIES * MAX_SPECIES];
+  float4 _SocialData[MAX_SPECIES * MAX_SPECIES];
 
   float3 _CapsuleA[128];
   float3 _CapsuleB[128];

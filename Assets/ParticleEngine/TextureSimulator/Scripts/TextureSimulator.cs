@@ -839,7 +839,7 @@ public class TextureSimulator : MonoBehaviour {
 		float f = setting.maxSocialForce * 0.6f;
 		float r = setting.maxSocialRange * 0.8f;
 
-		socialData[ 0, 0 ] = new Vector2(f, r);
+		socialData[ 1, 1 ] = new Vector2(f, r);
 
         colors[0] = new Color(0.0f, 0.9f, 0.0f);
         colors[1] = new Color(0.9f, 0.0f, 0.0f);

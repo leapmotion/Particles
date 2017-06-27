@@ -657,6 +657,8 @@ public class TextureSimulator : MonoBehaviour {
     if (_simulationEnabled) {
       stepSimulation();
     }
+
+    displaySimulation();
   }
   #endregion
 
@@ -1344,13 +1346,16 @@ public class TextureSimulator : MonoBehaviour {
 
     _particleMat.mainTexture = _frontPos;
     _particleMat.SetTexture("_Velocity", _frontVel);
-    foreach (var mesh in _meshes) {
-      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
-    }
 
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
     _socialDebug.material.mainTexture = _backSocial;
+  }
+
+  private void displaySimulation() {
+    foreach (var mesh in _meshes) {
+      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
+    }
   }
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {

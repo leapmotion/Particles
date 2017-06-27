@@ -49,8 +49,8 @@
   float4 _SpeciesData[MAX_SPECIES];
   float4 _SocialData[MAX_SPECIES * MAX_SPECIES];
 
-  float3 _CapsuleA[128];
-  float3 _CapsuleB[128];
+  float4 _CapsuleA[128];
+  float4 _CapsuleB[128];
   int _CapsuleCount;
 
   float4 _Spheres[2];

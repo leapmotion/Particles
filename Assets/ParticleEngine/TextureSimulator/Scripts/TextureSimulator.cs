@@ -232,6 +232,22 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationEnabled = value; }
   }
 
+  [Range(0, 120)]
+  [SerializeField]
+  private float _simulationFPS = 60;
+  public float simulationFPS {
+    get { return _simulationFPS; }
+    set { _simulationFPS = value; }
+  }
+
+  [Range(0, 2)]
+  [SerializeField]
+  private float _simulationTimescale = 1;
+  public float simulationTimescale {
+    get { return _simulationTimescale; }
+    set { _simulationTimescale = value; }
+  }
+
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
@@ -534,6 +550,10 @@ public class TextureSimulator : MonoBehaviour {
   private RenderTexture _frontSocial, _backSocial;
   private RenderTexture _socialTemp;
 
+  private float _currScaledTime = 0;
+  private float _currSimulationTime = 0;
+  private float _prevSimulationTime = 0;
+
   //Display
   private List<Mesh> _meshes = new List<Mesh>();
 
@@ -654,10 +674,16 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluence();
     }
 
-    if (_simulationEnabled) {
+    _currScaledTime += Time.deltaTime * _simulationTimescale;
+
+    while (_currSimulationTime < _currScaledTime) {
       stepSimulation();
+
+      _prevSimulationTime = _currSimulationTime;
+      _currSimulationTime += 1.0f / _simulationFPS;
     }
 
+    _particleMat.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
     displaySimulation();
   }
   #endregion
@@ -1344,8 +1370,11 @@ public class TextureSimulator : MonoBehaviour {
       _simulationAge += 1;
     }
 
-    _particleMat.mainTexture = _frontPos;
-    _particleMat.SetTexture("_Velocity", _frontVel);
+    _particleMat.SetTexture("_CurrPos", _frontPos);
+    _particleMat.SetTexture("_PrevPos", _backPos);
+
+    _particleMat.SetTexture("_CurrVel", _frontVel);
+    _particleMat.SetTexture("_PrevVel", _backVel);
 
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;

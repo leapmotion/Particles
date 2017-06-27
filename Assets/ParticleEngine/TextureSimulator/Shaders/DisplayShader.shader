@@ -1,37 +1,35 @@
 ﻿Shader "Custom/DisplayShader" {
-	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-    _Velocity ("Velocity", 2D) = "white" {}
+  Properties {
+    _Lerp     ("Prev to Curr", Range(0, 1)) = 1
     _ToonRamp ("Toon Ramp", 2D) = "white" {}
-
-		_Glossiness ("Smoothness", Range(-2,2)) = 0.5
-		_Metallic ("Metallic", Range(-2,2)) = 0.0
     _Size     ("Size", Range(0, 0.5)) = 0.01
     _TrailLength ("Trail Length", Range(0, 10000)) = 1000
     _Brightness ("Brightness", Float) = 1
-	}
-	SubShader {
-		Tags { "RenderType"="Opaque" }
-		LOD 200
-		
-		CGPROGRAM
+  }
+  SubShader {
+    Tags { "RenderType"="Opaque" }
+    LOD 200
+    
+    CGPROGRAM
     #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
-		#pragma surface surf CelShadingForward vertex:vert noforwardadd
-		#pragma target 2.0
+    #pragma surface surf CelShadingForward vertex:vert noforwardadd
+    #pragma target 2.0
 
-		sampler2D _MainTex;
-    sampler2D _Velocity;
+    sampler2D _PrevPos;
+    sampler2D _CurrPos;
+    sampler2D _PrevVel;
+    sampler2D _CurrVel;
+
     sampler2D _ToonRamp;
 
-		struct Input {
-			float2 uv_MainTex;
+    struct Input {
       float4 color : COLOR;
       float3 viewDir;
-		};
+    };
 
-		half _Glossiness;
-		half _Metallic;
+    half _Lerp;
+    half _Glossiness;
+    half _Metallic;
     float4 _Colors[32];
     float _Size;
     float _TrailLength;
@@ -53,8 +51,8 @@
     }
 
     void vert(inout appdata_full v) {
-      float4 particle = tex2Dlod(_MainTex, v.texcoord);
-      float4 velocity = tex2Dlod(_Velocity, v.texcoord);
+      float4 particle = lerp(tex2Dlod(_PrevPos, v.texcoord), tex2Dlod(_CurrPos, v.texcoord), _Lerp);
+      float4 velocity = tex2Dlod(_CurrVel, v.texcoord);
       velocity.xyz *= velocity.w;
 
       float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
@@ -76,11 +74,10 @@
 #endif
     }
 
-		void surf (Input IN, inout SurfaceOutput  o) {
+    void surf (Input IN, inout SurfaceOutput  o) {
       o.Albedo = IN.color.rgb;
-      //o.Normal = IN.viewDir;
-		}
-		ENDCG
-	}
-	FallBack "Diffuse"
+    }
+    ENDCG
+  }
+  FallBack "Diffuse"
 }

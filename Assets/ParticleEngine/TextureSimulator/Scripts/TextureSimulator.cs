@@ -245,6 +245,13 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  [SerializeField]
+  private bool _limitStepsPerFrame = true;
+  public bool limitStepsPerFrame {
+    get { return _limitStepsPerFrame; }
+    set { _limitStepsPerFrame = value; }
+  }
+
   [Range(10, 120)]
   [SerializeField]
   private float _simulationFPS = 60;
@@ -682,6 +689,10 @@ public class TextureSimulator : MonoBehaviour {
 
           _prevSimulationTime = _currSimulationTime;
           _currSimulationTime += 1.0f / _simulationFPS;
+
+          if (_limitStepsPerFrame) {
+            break;
+          }
         }
 
         _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));

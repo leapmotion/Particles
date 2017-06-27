@@ -54,7 +54,7 @@
   int _CapsuleCount;
 
   float4 _Spheres[2];
-  float3 _SphereVelocities[2];
+  float4 _SphereVelocities[2];
   int _SphereCount;
 
   int _DebugMode;
@@ -118,20 +118,21 @@
 
     //Grasping by spheres
     {
-      float3 sphereForce = float3(0, 0, 0);
+      float4 sphereForce = float4(0, 0, 0, 0);
       float spheres = 0;
       for (int i = 0; i < _SphereCount; i++) {
         float3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
-          sphereForce.xyz += _SphereVelocities[i];
+          sphereForce += _SphereVelocities[i];
           sphereForce.xyz += toSphere * SPHERE_ATTRACTION;
           spheres++;
         }
       }
 
       if (spheres > 0.5) {
-        velocity.xyz = sphereForce / spheres;
-        velocity.w *= 0.5;
+        sphereForce /= spheres;
+        velocity.xyz = sphereForce.xyz * sphereForce.w;
+        velocity.w *= lerp(1, 0.5, sphereForce.w);
       } else {
         velocity.w = lerp(velocity.w, 1, 0.05);
       }

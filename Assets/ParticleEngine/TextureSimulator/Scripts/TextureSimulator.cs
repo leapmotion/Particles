@@ -544,7 +544,6 @@ public class TextureSimulator : MonoBehaviour {
 
   //Simulation
   private int _currentSimulationSpeciesCount;
-  private int stepsPerFrame = 1;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
   private RenderTexture _socialTemp;
@@ -593,21 +592,16 @@ public class TextureSimulator : MonoBehaviour {
     Fade
   }
 
-  public void SetStepsPerFrame(float value) {
-    stepsPerFrame = Mathf.RoundToInt(value * 10);
-  }
-
   private string _currentSpecies = "";
   public string currentSpecies {
     get {
       return _currentSpecies;
     }
   }
-
-  private long _simulationAge = 0;
-  public long simulationAge {
+  
+  public float simulationAge {
     get {
-      return _simulationAge;
+      return _currSimulationTime;
     }
   }
 
@@ -617,7 +611,9 @@ public class TextureSimulator : MonoBehaviour {
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitPos(PASS_RANDOMIZE_PARTICLES);
 
-    _simulationAge = 0;
+    _currScaledTime = 0;
+    _currSimulationTime = 0;
+    _prevSimulationTime = 0;
   }
 
   private string _lastSeed = "";
@@ -1404,18 +1400,14 @@ public class TextureSimulator : MonoBehaviour {
 
   private void stepSimulation() {
     GL.LoadPixelMatrix(0, 1, 1, 0);
-    for (int i = 0; i < stepsPerFrame; i++) {
-      blitVel(PASS_GLOBAL_FORCES);
+    blitVel(PASS_GLOBAL_FORCES);
 
-      doParticleInteraction();
+    doParticleInteraction();
 
-      blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
+    blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
 
-      blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
-      blitPos(PASS_INTEGRATE_VELOCITIES);
-
-      _simulationAge += 1;
-    }
+    blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+    blitPos(PASS_INTEGRATE_VELOCITIES);
 
     _displayBlock.SetTexture("_CurrPos", _frontPos);
     _displayBlock.SetTexture("_PrevPos", _backPos);

@@ -257,7 +257,6 @@
     return result;
   }
 
-
   float4 debugOutput(v2f i) : SV_Target {
     float4 values = _DebugData;
     float4 particle = tex2D(_Position, _DebugData.xx);

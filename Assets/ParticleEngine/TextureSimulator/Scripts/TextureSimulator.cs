@@ -87,14 +87,6 @@ public class TextureSimulator : MonoBehaviour {
 
   [Range(0, 0.2f)]
   [SerializeField]
-  private float _influenceRadius = 0.1f;
-  public float influenceRadius {
-    get { return _influenceRadius; }
-    set { _influenceRadius = value; }
-  }
-
-  [Range(0, 0.2f)]
-  [SerializeField]
   private float _influenceNormalOffset = 0.1f;
   public float influenceNormalOffset {
     get { return _influenceNormalOffset; }
@@ -115,6 +107,61 @@ public class TextureSimulator : MonoBehaviour {
   public float influenceGrabSmoothing {
     get { return _influenceGrabSmoothing; }
     set { _influenceGrabSmoothing = value; }
+  }
+
+  [SerializeField]
+  private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
+  public HandInfluenceType handInfluenceType {
+    get { return _handInfluenceType; }
+    set { _handInfluenceType = value; }
+  }
+
+  [SerializeField]
+  private StatisInfluenceSettings _statisInfluenceSettings;
+  public StatisInfluenceSettings statisInfluenceSettings {
+    get { return _statisInfluenceSettings; }
+  }
+
+  [System.Serializable]
+  public class StatisInfluenceSettings {
+    [Range(0, 1)]
+    [SerializeField]
+    private float _maxRadius;
+    public float maxRadius {
+      get { return _maxRadius; }
+      set { _maxRadius = value; }
+    }
+
+    [SerializeField]
+    private float _force;
+    public float force {
+      get { return _force; }
+      set { _force = value; }
+    }
+  }
+
+  [SerializeField]
+  private ForceInfluenceSettings _forceInfluenceSettings;
+  public ForceInfluenceSettings forceInfluenceSettings {
+    get { return _forceInfluenceSettings; }
+  }
+
+  [System.Serializable]
+  public class ForceInfluenceSettings {
+    [Range(0, 1)]
+    [SerializeField]
+    private float _maxRadius;
+    public float maxRadius {
+      get { return _maxRadius; }
+      set { _maxRadius = value; }
+    }
+
+    [SerializeField]
+    private float _force;
+    public float force {
+      get { return _force; }
+      set { _force = value; }
+    }
   }
 
   [SerializeField]
@@ -593,6 +640,11 @@ public class TextureSimulator : MonoBehaviour {
     SocialData = 12
   }
 
+  public enum HandInfluenceType {
+    Statis,
+    Force
+  }
+
   public enum HandInfluenceMode {
     Binary,
     Radius,
@@ -609,6 +661,32 @@ public class TextureSimulator : MonoBehaviour {
   public float simulationAge {
     get {
       return _currSimulationTime;
+    }
+  }
+
+  public float maxInfluenceRadius {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.maxRadius;
+        case HandInfluenceType.Statis:
+          return _statisInfluenceSettings.maxRadius;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
+  public float influenceForce {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.force;
+        case HandInfluenceType.Statis:
+          return _statisInfluenceSettings.force;
+        default:
+          throw new System.Exception();
+      }
     }
   }
 
@@ -1226,7 +1304,7 @@ public class TextureSimulator : MonoBehaviour {
     public Vector4 sphere {
       get {
         Vector4 s = prevPosition;
-        s.w = _sim._influenceRadius * _radiusMultiplier;
+        s.w = _sim.maxInfluenceRadius * _radiusMultiplier;
         return s;
       }
     }
@@ -1280,7 +1358,7 @@ public class TextureSimulator : MonoBehaviour {
       }
 
       if (active) {
-        var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _sim._influenceRadius * _radiusMultiplier);
+        var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
         _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
         Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }

@@ -226,6 +226,13 @@ public class TextureSimulator : MonoBehaviour {
   //#######################//
   [Header("Simulation")]
   [SerializeField]
+  private bool _simulationEnabled = true;
+  public bool simulationEnabled {
+    get { return _simulationEnabled; }
+    set { _simulationEnabled = value; }
+  }
+
+  [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
   [SerializeField]
@@ -647,29 +654,9 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluence();
     }
 
-    GL.LoadPixelMatrix(0, 1, 1, 0);
-    for (int i = 0; i < stepsPerFrame; i++) {
-      blitVel(PASS_GLOBAL_FORCES);
-
-      doParticleInteraction();
-
-      blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
-
-      blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
-      blitPos(PASS_INTEGRATE_VELOCITIES);
-
-      _simulationAge += 1;
+    if (_simulationEnabled) {
+      stepSimulation();
     }
-
-    _particleMat.mainTexture = _frontPos;
-    _particleMat.SetTexture("_Velocity", _frontVel);
-    foreach (var mesh in _meshes) {
-      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
-    }
-
-    _positionDebug.material.mainTexture = _frontPos;
-    _velocityDebug.material.mainTexture = _frontVel;
-    _socialDebug.material.mainTexture = _backSocial;
   }
   #endregion
 
@@ -1338,6 +1325,32 @@ public class TextureSimulator : MonoBehaviour {
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
     RenderTexture.active = null;
     return tex;
+  }
+
+  private void stepSimulation() {
+    GL.LoadPixelMatrix(0, 1, 1, 0);
+    for (int i = 0; i < stepsPerFrame; i++) {
+      blitVel(PASS_GLOBAL_FORCES);
+
+      doParticleInteraction();
+
+      blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
+
+      blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+      blitPos(PASS_INTEGRATE_VELOCITIES);
+
+      _simulationAge += 1;
+    }
+
+    _particleMat.mainTexture = _frontPos;
+    _particleMat.SetTexture("_Velocity", _frontVel);
+    foreach (var mesh in _meshes) {
+      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0);
+    }
+
+    _positionDebug.material.mainTexture = _frontPos;
+    _velocityDebug.material.mainTexture = _frontVel;
+    _socialDebug.material.mainTexture = _backSocial;
   }
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {

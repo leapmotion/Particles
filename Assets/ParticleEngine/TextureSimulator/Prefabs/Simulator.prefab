@@ -525,7 +525,7 @@ MonoBehaviour:
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
   _influenceGrabSmoothing: 0.01
-  _handInfluenceMode: 2
+  _handInfluenceMode: 1
   _influenceBinarySettings:
     _grabStrengthTransition: {x: 0.25, y: 0.3}
   _influenceRadiusSettings:

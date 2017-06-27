@@ -105,6 +105,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [SerializeField]
+  [OnEditorChange("handInfluenceType")]
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
   public HandInfluenceType handInfluenceType {
     get { return _handInfluenceType; }

@@ -824,11 +824,11 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case EcosystemPreset.Planets:
 
-		_currentSimulationSpeciesCount = 2;
+		_currentSimulationSpeciesCount = 9;
 
        for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-          speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.5f),
-                                       0,
+          speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.2f),
+                                       3,
                                        Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.2f));
 
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
@@ -836,13 +836,34 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
-		float f = setting.maxSocialForce * 0.6f;
-		float r = setting.maxSocialRange * 0.8f;
+		float f  = setting.maxSocialForce * 0.6f;
+		float r  = setting.maxSocialRange * 0.8f;
 
-		socialData[ 1, 1 ] = new Vector2(f, r);
+		socialData[ 0, 0 ] = new Vector2(f, r); socialData[ 0, 1 ] = new Vector2(f, r); socialData[ 0, 2 ] = new Vector2(f, r);
+		socialData[ 1, 1 ] = new Vector2(f, r); socialData[ 1, 0 ] = new Vector2(f, r); socialData[ 1, 2 ] = new Vector2(f, r);
+		socialData[ 2, 2 ] = new Vector2(f, r); socialData[ 2, 0 ] = new Vector2(f, r); socialData[ 2, 1 ] = new Vector2(f, r);
 
-        colors[0] = new Color(0.0f, 0.9f, 0.0f);
-        colors[1] = new Color(0.9f, 0.0f, 0.0f);
+		socialData[ 3, 3 ] = new Vector2(f, r); socialData[ 3, 4 ] = new Vector2(f, r); socialData[ 3, 5 ] = new Vector2(f, r);
+		socialData[ 4, 4 ] = new Vector2(f, r); socialData[ 4, 3 ] = new Vector2(f, r); socialData[ 4, 5 ] = new Vector2(f, r);
+		socialData[ 5, 5 ] = new Vector2(f, r); socialData[ 5, 3 ] = new Vector2(f, r); socialData[ 5, 4 ] = new Vector2(f, r);
+
+		socialData[ 6, 6 ] = new Vector2(f, r); socialData[ 6, 7 ] = new Vector2(f, r); socialData[ 6, 8 ] = new Vector2(f, r);
+		socialData[ 7, 7 ] = new Vector2(f, r); socialData[ 7, 8 ] = new Vector2(f, r); socialData[ 7, 6 ] = new Vector2(f, r);
+		socialData[ 8, 8 ] = new Vector2(f, r); socialData[ 8, 6 ] = new Vector2(f, r); socialData[ 8, 7 ] = new Vector2(f, r);
+
+        colors[0] = new Color(0.9f, 0.0f, 0.0f);
+        colors[1] = new Color(0.9f, 0.5f, 0.0f);
+        colors[2] = new Color(0.4f, 0.2f, 0.1f);
+
+        colors[3] = new Color(0.8f, 0.8f, 0.1f);
+        colors[4] = new Color(0.1f, 0.8f, 0.1f);
+        colors[5] = new Color(0.4f, 0.3f, 0.1f);
+
+        colors[6] = new Color(0.0f, 0.0f, 0.9f);
+        colors[7] = new Color(0.4f, 0.0f, 0.9f);
+        colors[8] = new Color(0.2f, 0.1f, 0.5f);
+
+
        break;
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {

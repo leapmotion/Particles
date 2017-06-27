@@ -2,7 +2,6 @@
   Properties { }
 
   CGINCLUDE
-  #pragma multi_compile SPHERE_MODE_STASIS SPHERE_MODE_FORCE
   #include "UnityCG.cginc"
 
   #define MAX_PARTICLES 4096
@@ -317,6 +316,7 @@
     //Pass 2: global forces
     Pass{
       CGPROGRAM
+      #pragma multi_compile SPHERE_MODE_STASIS SPHERE_MODE_FORCE
       #pragma vertex vert
       #pragma fragment globalForces
       ENDCG

@@ -104,14 +104,6 @@ public class TextureSimulator : MonoBehaviour {
     set { _influenceForwardOffset = value; }
   }
 
-  [MinValue(0)]
-  [SerializeField]
-  private float _influenceGrabSmoothing = 0.2f;
-  public float influenceGrabSmoothing {
-    get { return _influenceGrabSmoothing; }
-    set { _influenceGrabSmoothing = value; }
-  }
-
   [SerializeField]
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
   public HandInfluenceType handInfluenceType {
@@ -144,6 +136,14 @@ public class TextureSimulator : MonoBehaviour {
       get { return _force; }
       set { _force = value; }
     }
+
+    [MinValue(0.01f)]
+    [SerializeField]
+    private float _grabStrengthSmoothing = 0.01f;
+    public float grabStrengthSmoothing {
+      get { return _grabStrengthSmoothing; }
+      set { _grabStrengthSmoothing = value; }
+    }
   }
 
   [SerializeField]
@@ -167,6 +167,14 @@ public class TextureSimulator : MonoBehaviour {
     public float force {
       get { return _force; }
       set { _force = value; }
+    }
+
+    [MinValue(0.01f)]
+    [SerializeField]
+    private float _grabStrengthSmoothing = 0.01f;
+    public float grabStrengthSmoothing {
+      get { return _grabStrengthSmoothing; }
+      set { _grabStrengthSmoothing = value; }
     }
   }
 
@@ -690,6 +698,19 @@ public class TextureSimulator : MonoBehaviour {
           return _forceInfluenceSettings.force;
         case HandInfluenceType.Statis:
           return _statisInfluenceSettings.force;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
+  public float influenceGrabSmoothing {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.grabStrengthSmoothing;
+        case HandInfluenceType.Statis:
+          return _statisInfluenceSettings.grabStrengthSmoothing;
         default:
           throw new System.Exception();
       }
@@ -1330,6 +1351,7 @@ public class TextureSimulator : MonoBehaviour {
         position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
       }
 
+      _smoothedGrab.delay = _sim.influenceGrabSmoothing;
       _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
       float grab = _smoothedGrab.value;
 
@@ -1539,15 +1561,15 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
     }
 
-    _particleMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
-    _particleMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
+    _simulationMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
+    _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
 
     switch (_handInfluenceType) {
       case HandInfluenceType.Force:
-        _particleMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
+        _simulationMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
         break;
       case HandInfluenceType.Statis:
-        _particleMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
+        _simulationMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
         break;
       default:
         throw new System.Exception();

@@ -18,6 +18,9 @@ public class TextureSimulator : MonoBehaviour {
 
   public const string INTERPOLATION_KEYWORD = "ENABLE_INTERPOLATION";
 
+  public const string INFLUENCE_STASIS_KEYWORD = "SPHERE_MODE_STASIS";
+  public const string INFLUENCE_FORCE_KEYWORD = "SPHERE_MODE_FORCE";
+
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
   public const int PASS_GLOBAL_FORCES = 2;
@@ -113,7 +116,10 @@ public class TextureSimulator : MonoBehaviour {
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
   public HandInfluenceType handInfluenceType {
     get { return _handInfluenceType; }
-    set { _handInfluenceType = value; }
+    set {
+      _handInfluenceType = value;
+      updateKeywords();
+    }
   }
 
   [SerializeField]
@@ -126,14 +132,14 @@ public class TextureSimulator : MonoBehaviour {
   public class StatisInfluenceSettings {
     [Range(0, 1)]
     [SerializeField]
-    private float _maxRadius;
+    private float _maxRadius = 0.07f;
     public float maxRadius {
       get { return _maxRadius; }
       set { _maxRadius = value; }
     }
 
     [SerializeField]
-    private float _force;
+    private float _force = 0.02f;
     public float force {
       get { return _force; }
       set { _force = value; }
@@ -150,14 +156,14 @@ public class TextureSimulator : MonoBehaviour {
   public class ForceInfluenceSettings {
     [Range(0, 1)]
     [SerializeField]
-    private float _maxRadius;
+    private float _maxRadius = 0.3f;
     public float maxRadius {
       get { return _maxRadius; }
       set { _maxRadius = value; }
     }
 
     [SerializeField]
-    private float _force;
+    private float _force = 0.02f;
     public float force {
       get { return _force; }
       set { _force = value; }
@@ -1217,6 +1223,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);
     _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
+    _simulationMat.SetFloat("_SphereForce", influenceForce);
   }
 
   private void doHandCollision() {
@@ -1530,6 +1537,20 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.EnableKeyword(INTERPOLATION_KEYWORD);
     } else {
       _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
+    }
+
+    _particleMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
+    _particleMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
+
+    switch (_handInfluenceType) {
+      case HandInfluenceType.Force:
+        _particleMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
+        break;
+      case HandInfluenceType.Statis:
+        _particleMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
+        break;
+      default:
+        throw new System.Exception();
     }
   }
 

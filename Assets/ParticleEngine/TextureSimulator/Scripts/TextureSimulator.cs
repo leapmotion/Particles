@@ -1367,22 +1367,18 @@ public class TextureSimulator : MonoBehaviour {
           _alpha = 1;
           break;
         case HandInfluenceMode.Radius:
-          if (hand != null) {
-            _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
-            _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
+          _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
+          _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
 
-            _alpha = 1;
-            active = _radiusMultiplier > 0;
-          }
+          _alpha = 1;
+          active = _radiusMultiplier > 0;
           break;
         case HandInfluenceMode.Fade:
-          if (hand != null) {
-            _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
-            _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
+          _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
+          _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
 
-            _radiusMultiplier = 1;
-            active = _alpha > 0.05f;
-          }
+          _radiusMultiplier = 1;
+          active = _alpha > 0.05f;
           break;
       }
 

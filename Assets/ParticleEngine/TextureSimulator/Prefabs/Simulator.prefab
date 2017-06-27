@@ -523,14 +523,15 @@ MonoBehaviour:
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
-  _influenceGrabSmoothing: 0.01
   _handInfluenceType: 1
   _statisInfluenceSettings:
     _maxRadius: 0.14
     _force: 0.02
+    _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:
     _maxRadius: 0.8
     _force: 0.02
+    _grabStrengthSmoothing: 0.3
   _handInfluenceMode: 1
   _influenceBinarySettings:
     _grabStrengthTransition: {x: 0.25, y: 0.3}

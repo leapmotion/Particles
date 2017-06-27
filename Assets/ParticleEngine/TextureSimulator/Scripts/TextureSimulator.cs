@@ -678,19 +678,21 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluence();
     }
 
-    _currScaledTime += Time.deltaTime * _simulationTimescale;
-    if (_dynamicTimestepEnabled) {
-      while (_currSimulationTime < _currScaledTime) {
+    if (_simulationEnabled) {
+      _currScaledTime += Time.deltaTime * _simulationTimescale;
+      if (_dynamicTimestepEnabled) {
+        while (_currSimulationTime < _currScaledTime) {
+          stepSimulation();
+
+          _prevSimulationTime = _currSimulationTime;
+          _currSimulationTime += 1.0f / _simulationFPS;
+        }
+
+        _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+      } else {
+        _currSimulationTime = _prevSimulationTime = _currScaledTime;
         stepSimulation();
-
-        _prevSimulationTime = _currSimulationTime;
-        _currSimulationTime += 1.0f / _simulationFPS;
       }
-
-      _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
-    } else {
-      _currSimulationTime = _prevSimulationTime = _currScaledTime;
-      stepSimulation();
     }
 
     displaySimulation();

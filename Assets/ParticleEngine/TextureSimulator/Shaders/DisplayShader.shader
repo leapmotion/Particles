@@ -12,6 +12,7 @@
     
     CGPROGRAM
     #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
+    #pragma multi_compile _ ENABLE_INTERPOLATION
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
     #pragma target 2.0
 
@@ -51,7 +52,12 @@
     }
 
     void vert(inout appdata_full v) {
+#ifdef ENABLE_INTERPOLATION
       float4 particle = lerp(tex2Dlod(_PrevPos, v.texcoord), tex2Dlod(_CurrPos, v.texcoord), _Lerp);
+#else
+      float4 particle = tex2Dlod(_CurrPos, v.texcoord);
+#endif
+
       float4 velocity = tex2Dlod(_CurrVel, v.texcoord);
       velocity.xyz *= velocity.w;
 

@@ -16,6 +16,8 @@ public class TextureSimulator : MonoBehaviour {
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
   public const string BY_VELOCITY = "COLOR_VELOCITY";
 
+  public const string INTERPOLATION_KEYWORD = "ENABLE_INTERPOLATION";
+
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
   public const int PASS_GLOBAL_FORCES = 2;
@@ -232,6 +234,17 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationEnabled = value; }
   }
 
+  [SerializeField]
+  [OnEditorChange("dynamicTimestepEnabled")]
+  private bool _dynamicTimestepEnabled = true;
+  public bool dynamicTimestepEnabled {
+    get { return _dynamicTimestepEnabled; }
+    set {
+      _dynamicTimestepEnabled = value;
+      updateKeywords();
+    }
+  }
+
   [Range(10, 120)]
   [SerializeField]
   private float _simulationFPS = 60;
@@ -279,22 +292,8 @@ public class TextureSimulator : MonoBehaviour {
   public ColorMode colorMode {
     get { return _colorMode; }
     set {
-      _particleMat.DisableKeyword(BY_SPECIES);
-      _particleMat.DisableKeyword(BY_SPECIES_WITH_VELOCITY);
-      _particleMat.DisableKeyword(BY_VELOCITY);
-
-      switch (value) {
-        case ColorMode.BySpecies:
-          _particleMat.EnableKeyword(BY_SPECIES);
-          break;
-        case ColorMode.BySpeciesWithMagnitude:
-          _particleMat.EnableKeyword(BY_SPECIES_WITH_VELOCITY);
-          break;
-        case ColorMode.ByVelocity:
-          _particleMat.EnableKeyword(BY_VELOCITY);
-          break;
-      }
       _colorMode = value;
+      updateKeywords();
     }
   }
 
@@ -655,6 +654,8 @@ public class TextureSimulator : MonoBehaviour {
     ResetPositions();
 
     _handActors.Fill(() => new HandActor(this));
+
+    updateKeywords();
   }
 
   void Update() {
@@ -678,15 +679,20 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     _currScaledTime += Time.deltaTime * _simulationTimescale;
+    if (_dynamicTimestepEnabled) {
+      while (_currSimulationTime < _currScaledTime) {
+        stepSimulation();
 
-    while (_currSimulationTime < _currScaledTime) {
+        _prevSimulationTime = _currSimulationTime;
+        _currSimulationTime += 1.0f / _simulationFPS;
+      }
+
+      _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+    } else {
+      _currSimulationTime = _prevSimulationTime = _currScaledTime;
       stepSimulation();
-
-      _prevSimulationTime = _currSimulationTime;
-      _currSimulationTime += 1.0f / _simulationFPS;
     }
 
-    _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
     displaySimulation();
   }
   #endregion
@@ -1382,6 +1388,30 @@ public class TextureSimulator : MonoBehaviour {
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
     _socialDebug.material.mainTexture = _backSocial;
+  }
+
+  private void updateKeywords() {
+    _particleMat.DisableKeyword(BY_SPECIES);
+    _particleMat.DisableKeyword(BY_SPECIES_WITH_VELOCITY);
+    _particleMat.DisableKeyword(BY_VELOCITY);
+
+    switch (_colorMode) {
+      case ColorMode.BySpecies:
+        _particleMat.EnableKeyword(BY_SPECIES);
+        break;
+      case ColorMode.BySpeciesWithMagnitude:
+        _particleMat.EnableKeyword(BY_SPECIES_WITH_VELOCITY);
+        break;
+      case ColorMode.ByVelocity:
+        _particleMat.EnableKeyword(BY_VELOCITY);
+        break;
+    }
+
+    if (_dynamicTimestepEnabled) {
+      _particleMat.EnableKeyword(INTERPOLATION_KEYWORD);
+    } else {
+      _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
+    }
   }
 
   private void displaySimulation() {

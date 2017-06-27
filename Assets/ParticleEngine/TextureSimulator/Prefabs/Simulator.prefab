@@ -522,10 +522,139 @@ MonoBehaviour:
   _influenceMat: {fileID: 2100000, guid: ec01a910a66df34448d586402c4b6db4, type: 2}
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceRadius: 0.116
-  _grabThreshold: 0.259
-  _grabDelay: 3
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
+  _handInfluenceMode: 0
+  _influenceBinarySettings:
+    _grabStrengthTransition: {x: 0.25, y: 0.3}
+  _influenceRadiusSettings:
+    grabStrengthToRadius:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: -0.0004902405
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.19999999
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.35
+        value: 0.80389106
+        inSlope: 2.0796216
+        outSlope: 2.0796216
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.65
+        value: 0.99999857
+        inSlope: 0.05942102
+        outSlope: 0.05942102
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+    grabStrengthToInfluence:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: -0.0004902405
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.24499999
+        value: 0
+        inSlope: 0.0020009817
+        outSlope: 0
+        tangentMode: 5
+      - serializedVersion: 2
+        time: 0.35
+        value: 0.999997
+        inSlope: -0.05184148
+        outSlope: 0.000004584973
+        tangentMode: 65
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+  _influenceFadeSettings:
+    grabStrengthToAlpha:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: -0.0004902405
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.19999999
+        value: 0
+        inSlope: 0.0024512028
+        outSlope: 0
+        tangentMode: 5
+      - serializedVersion: 2
+        time: 0.35
+        value: 0.99999833
+        inSlope: -0.37130445
+        outSlope: 0.0000025675847
+        tangentMode: 65
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
+    grabStrengthToInfluence:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 2
+        time: 0
+        value: -0.0004902405
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      - serializedVersion: 2
+        time: 0.19999999
+        value: 0
+        inSlope: 0.0024512028
+        outSlope: 0
+        tangentMode: 5
+      - serializedVersion: 2
+        time: 0.35
+        value: 0.99999833
+        inSlope: -0.37130445
+        outSlope: 0.0000025675847
+        tangentMode: 65
+      - serializedVersion: 2
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 0
   _socialHandEnabled: 0
   _socialHandSpecies: 0
   _socialHandForceFactor: 25

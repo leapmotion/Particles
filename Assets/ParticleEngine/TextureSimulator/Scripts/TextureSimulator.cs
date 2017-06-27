@@ -107,6 +107,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _influenceForwardOffset = value; }
   }
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _influenceGrabSmoothing = 0.2f;
+  public float influenceGrabSmoothing {
+    get { return _influenceGrabSmoothing; }
+    set { _influenceGrabSmoothing = value; }
+  }
+
   [SerializeField]
   private HandInfluenceMode _handInfluenceMode = HandInfluenceMode.Binary;
   public HandInfluenceMode handInfluenceMode {
@@ -616,7 +624,7 @@ public class TextureSimulator : MonoBehaviour {
 
     ResetPositions();
 
-    _handActors.Fill(() => new HandActor() { sim = this });
+    _handActors.Fill(() => new HandActor(this));
   }
 
   void Update() {
@@ -992,8 +1000,9 @@ public class TextureSimulator : MonoBehaviour {
       sphere.w = w / transform.lossyScale.magnitude;
       _spheres[i] = sphere;
 
-      Vector3 velocity = _sphereVels[i];
+      Vector4 velocity = _sphereVels[i];
       velocity = transform.InverseTransformVector(velocity);
+      velocity.w = _sphereVels[i].w;
       _sphereVels[i] = velocity;
     }
 
@@ -1066,23 +1075,28 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private class HandActor {
-    public TextureSimulator sim;
-
     public Vector3 position, prevPosition;
     public bool active;
 
+    private SmoothedFloat _smoothedGrab = new SmoothedFloat();
+    private TextureSimulator _sim;
     private float _influence;
+    private float _radiusMultiplier;
     private float _alpha;
+    private float _startingAlpha;
     private MaterialPropertyBlock _block;
 
-    public HandActor() {
+    public HandActor(TextureSimulator sim) {
+      _sim = sim;
       _block = new MaterialPropertyBlock();
+      _startingAlpha = sim._influenceMat.GetFloat("_Glossiness");
+      _smoothedGrab.delay = sim.influenceGrabSmoothing;
     }
 
     public Vector4 sphere {
       get {
         Vector4 s = prevPosition;
-        s.w = sim._influenceRadius;
+        s.w = _sim._influenceRadius * _radiusMultiplier;
         return s;
       }
     }
@@ -1098,46 +1112,47 @@ public class TextureSimulator : MonoBehaviour {
     public void Update(Hand hand) {
       if (hand != null) {
         prevPosition = position;
-        position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * sim._influenceNormalOffset + hand.DistalAxis() * sim._influenceForwardOffset;
+        position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
       }
 
-      var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * sim._influenceRadius * 2);
+      _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
+      float grab = _smoothedGrab.value;
 
-      float grab = hand == null ? 0 : hand.GrabAngle;
-
-      switch (sim.handInfluenceMode) {
+      switch (_sim.handInfluenceMode) {
         case HandInfluenceMode.Binary:
           if (active) {
-            active = hand != null && grab > sim.influenceBinarySettings.endGrabStrength;
+            active = hand != null && grab > _sim.influenceBinarySettings.endGrabStrength;
           } else {
-            active = hand != null && grab > sim.influenceBinarySettings.startGrabStrength;
+            active = hand != null && grab > _sim.influenceBinarySettings.startGrabStrength;
           }
           _influence = 1;
+          _radiusMultiplier = 1;
           _alpha = 1;
           break;
         case HandInfluenceMode.Radius:
           if (hand != null) {
-            float radius = sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
-            _influence = sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
+            _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
+            _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
 
             _alpha = 1;
-            active = radius > 0;
-            meshMat = meshMat * Matrix4x4.Scale(Vector3.one * radius);
+            active = _radiusMultiplier > 0;
           }
           break;
         case HandInfluenceMode.Fade:
           if (hand != null) {
-            _alpha = sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
-            _influence = sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
+            _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
+            _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
 
-            active = _alpha > 0;
+            _radiusMultiplier = 1;
+            active = _alpha > 0.05f;
           }
           break;
       }
 
       if (active) {
-        _block.SetColor("_Color", sim._influenceMat.color.WithAlpha(_alpha));
-        Graphics.DrawMesh(sim._influenceMesh, meshMat, sim._influenceMat, 0, null, 0, _block);
+        var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _sim._influenceRadius * _radiusMultiplier);
+        _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
+        Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }
     }
   }

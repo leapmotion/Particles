@@ -232,7 +232,7 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationEnabled = value; }
   }
 
-  [Range(0, 120)]
+  [Range(10, 120)]
   [SerializeField]
   private float _simulationFPS = 60;
   public float simulationFPS {

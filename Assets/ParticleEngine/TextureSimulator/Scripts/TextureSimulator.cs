@@ -792,7 +792,7 @@ public class TextureSimulator : MonoBehaviour {
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.1f),
                                        0,
-                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.1f));
+                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.05f));
 
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
             float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * setting.maxSocialForce * 1.0f;

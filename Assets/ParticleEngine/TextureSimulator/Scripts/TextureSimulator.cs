@@ -681,6 +681,7 @@ public class TextureSimulator : MonoBehaviour {
     Chase,
     Mitosis,
 	Planets,
+    Globules,
     Fluidy
   }
 
@@ -862,10 +863,45 @@ public class TextureSimulator : MonoBehaviour {
         colors[6] = new Color(0.0f, 0.0f, 0.9f);
         colors[7] = new Color(0.4f, 0.0f, 0.9f);
         colors[8] = new Color(0.2f, 0.1f, 0.5f);
-
-
        break;
-      case EcosystemPreset.Fluidy:
+      case EcosystemPreset.Globules:
+	
+		_currentSimulationSpeciesCount = 3;
+
+       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+          speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.2f),
+                                       1,
+                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.2f));
+
+        }
+		
+		float globuleChaseForce =  setting.maxSocialForce * 0.2f;
+		float globuleChaseRange =  setting.maxSocialRange * 0.8f;
+
+		float globuleFleeForce  = -setting.maxSocialForce * 0.3f;
+		float globuleFleeRange  =  setting.maxSocialRange * 0.4f;
+
+		float globuleAvoidForce = -setting.maxSocialForce * 0.2f;
+		float globuleAvoidRange =  setting.maxSocialRange * 0.1f;
+
+
+		socialData[ 0, 1 ] = new Vector2( globuleChaseForce * 1.5f, globuleChaseRange );
+		socialData[ 1, 2 ] = new Vector2( globuleChaseForce, globuleChaseRange );
+		socialData[ 2, 0 ] = new Vector2( globuleChaseForce, globuleChaseRange );
+
+		socialData[ 1, 0 ] = new Vector2( globuleFleeForce, globuleFleeRange );
+		socialData[ 2, 1 ] = new Vector2( globuleFleeForce, globuleFleeRange );
+		socialData[ 0, 2 ] = new Vector2( globuleFleeForce, globuleFleeRange );
+
+		socialData[ 0, 0 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
+		socialData[ 1, 1 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
+		socialData[ 2, 2 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
+
+        colors[0] = new Color(0.1f, 0.1f, 0.3f);
+        colors[1] = new Color(0.3f, 0.2f, 0.5f);
+        colors[2] = new Color(0.4f, 0.1f, 0.1f);
+
+       break;      case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
             socialData[i, j] = new Vector2(0, 0);

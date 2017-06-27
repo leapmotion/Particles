@@ -629,6 +629,7 @@ public class TextureSimulator : MonoBehaviour {
     RedMenace,
     Chase,
     Mitosis,
+	Planets,
     Fluidy
   }
 
@@ -770,6 +771,28 @@ public class TextureSimulator : MonoBehaviour {
         colors[1] = new Color(0.0f, 0.0f, 0.3f);
         colors[0] = new Color(0.0f, 0.0f, 0.0f);
         break;
+      case EcosystemPreset.Planets:
+
+		_currentSimulationSpeciesCount = 2;
+
+       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+          speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.5f),
+                                       0,
+                                       Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.2f));
+
+          for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
+            socialData[i, j] = new Vector2( -setting.maxSocialForce, setting.maxSocialRange * 0.5f);
+          }
+        }
+
+		float f = setting.maxSocialForce * 0.6f;
+		float r = setting.maxSocialRange * 0.8f;
+
+		socialData[ 0, 0 ] = new Vector2(f, r);
+
+        colors[0] = new Color(0.0f, 0.9f, 0.0f);
+        colors[1] = new Color(0.9f, 0.0f, 0.0f);
+       break;
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
@@ -808,6 +831,23 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
   }
+
+
+  private void setPlanetValues( int i, int j, float f, float r ) {
+
+	/*
+	type[i].force [i] = f;    type[i].radius[i] = r;
+
+	type[i].force [j] = f;    type[i].radius[j] = r;
+
+	type[j].force [i] = f;    type[j].radius[i] = r;
+
+	type[j].force [j] = f;    type[j].radius[j] = r;
+*/
+
+    }
+
+
 
   public void LoadRandomEcosystem() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());

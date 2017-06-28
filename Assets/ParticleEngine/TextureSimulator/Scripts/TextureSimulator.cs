@@ -116,13 +116,13 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [SerializeField]
-  private StatisInfluenceSettings _statisInfluenceSettings;
-  public StatisInfluenceSettings statisInfluenceSettings {
-    get { return _statisInfluenceSettings; }
+  private StasisInfluenceSettings _stasisInfluenceSettings;
+  public StasisInfluenceSettings stasisInfluenceSettings {
+    get { return _stasisInfluenceSettings; }
   }
 
   [System.Serializable]
-  public class StatisInfluenceSettings {
+  public class StasisInfluenceSettings {
     [Range(0, 1)]
     [SerializeField]
     private float _maxRadius = 0.07f;
@@ -656,7 +656,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public enum HandInfluenceType {
-    Statis,
+    Stasis,
     Force
   }
 
@@ -684,8 +684,8 @@ public class TextureSimulator : MonoBehaviour {
       switch (_handInfluenceType) {
         case HandInfluenceType.Force:
           return _forceInfluenceSettings.maxRadius;
-        case HandInfluenceType.Statis:
-          return _statisInfluenceSettings.maxRadius;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.maxRadius;
         default:
           throw new System.Exception();
       }
@@ -697,8 +697,8 @@ public class TextureSimulator : MonoBehaviour {
       switch (_handInfluenceType) {
         case HandInfluenceType.Force:
           return _forceInfluenceSettings.force;
-        case HandInfluenceType.Statis:
-          return _statisInfluenceSettings.force;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.force;
         default:
           throw new System.Exception();
       }
@@ -710,8 +710,8 @@ public class TextureSimulator : MonoBehaviour {
       switch (_handInfluenceType) {
         case HandInfluenceType.Force:
           return _forceInfluenceSettings.grabStrengthSmoothing;
-        case HandInfluenceType.Statis:
-          return _statisInfluenceSettings.grabStrengthSmoothing;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.grabStrengthSmoothing;
         default:
           throw new System.Exception();
       }
@@ -1583,7 +1583,7 @@ public class TextureSimulator : MonoBehaviour {
       case HandInfluenceType.Force:
         _simulationMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
         break;
-      case HandInfluenceType.Statis:
+      case HandInfluenceType.Stasis:
         _simulationMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
         break;
       default:

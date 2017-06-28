@@ -523,7 +523,7 @@ MonoBehaviour:
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
-  _handInfluenceType: 1
+  _handInfluenceType: 0
   _statisInfluenceSettings:
     _maxRadius: 0.2
     _force: 0.02

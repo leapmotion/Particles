@@ -781,14 +781,19 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderDebug();
 
+    if(_provider != null && _handInfluenceEnabled) {
+      _handActors[0].UpdateHand(Hands.Left);
+      _handActors[1].UpdateHand(Hands.Right);
+    }
+
     if (_simulationEnabled) {
       _currScaledTime += Time.deltaTime * _simulationTimescale;
       if (_dynamicTimestepEnabled) {
         while (_currSimulationTime < _currScaledTime) {
-          stepSimulation();
-
           _prevSimulationTime = _currSimulationTime;
           _currSimulationTime += 1.0f / _simulationFPS;
+
+          stepSimulation(Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
 
           if (_limitStepsPerFrame) {
             break;
@@ -798,15 +803,11 @@ public class TextureSimulator : MonoBehaviour {
         _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
       } else {
         _currSimulationTime = _prevSimulationTime = _currScaledTime;
-        stepSimulation();
+        stepSimulation(1);
       }
     }
 
     displaySimulation();
-
-    if(_provider != null) {
-      drawHandInfluence();
-    }
   }
   #endregion
 
@@ -1203,14 +1204,14 @@ public class TextureSimulator : MonoBehaviour {
 
   #region HAND INTERACTION
 
-  private void doHandInfluence() {
+  private void doHandInfluenceStateUpdate(float framePercent) {
     if (!_handInfluenceEnabled) {
       _simulationMat.SetInt("_SphereCount", 0);
       return;
     }
 
-    _handActors[0].Update(Hands.Left);
-    _handActors[1].Update(Hands.Right);
+    _handActors[0].UpdateState(Hands.Left, framePercent);
+    _handActors[1].UpdateState(Hands.Right, framePercent);
 
     int sphereCount = 0;
     if (_handActors[0].active) {
@@ -1244,15 +1245,6 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_Spheres", _spheres);
     _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
     _simulationMat.SetFloat("_SphereForce", influenceForce);
-  }
-
-  private void drawHandInfluence() {
-    if (!_handInfluenceEnabled) {
-      return;
-    }
-
-    _handActors[0].Draw(Hands.Left);
-    _handActors[1].Draw(Hands.Right);
   }
 
   private void doHandCollision() {
@@ -1330,6 +1322,9 @@ public class TextureSimulator : MonoBehaviour {
     private float _startingAlpha;
     private MaterialPropertyBlock _block;
 
+    private Vector3 _prevTrackedPosition;
+    private Vector3 _currTrackedPosition;
+
     public HandActor(TextureSimulator sim) {
       _sim = sim;
       _block = new MaterialPropertyBlock();
@@ -1357,11 +1352,23 @@ public class TextureSimulator : MonoBehaviour {
       return hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
     }
 
-    public void Update(Hand hand) {
-      if (hand != null) {
-        prevPosition = position;
-        position = getPositionFromHand(hand);
+    public void UpdateHand(Hand hand) {
+      _prevTrackedPosition = _currTrackedPosition;
+
+      if(hand != null) {
+        _currTrackedPosition = getPositionFromHand(hand);
       }
+
+      if (active) {
+        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
+        _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
+        Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
+      }
+    }
+
+    public void UpdateState(Hand hand, float framePercent) {
+      prevPosition = position;
+      position = Vector3.Lerp(_prevTrackedPosition, _currTrackedPosition, framePercent);
 
       _smoothedGrab.delay = _sim.influenceGrabSmoothing;
       _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
@@ -1392,19 +1399,6 @@ public class TextureSimulator : MonoBehaviour {
           _radiusMultiplier = 1;
           active = _alpha > 0.05f;
           break;
-      }
-    }
-
-    public void Draw(Hand hand) {
-      Vector3 drawPosition = position;
-      if (hand != null) {
-        drawPosition = getPositionFromHand(hand);
-      }
-
-      if (active) {
-        var meshMat = Matrix4x4.TRS(drawPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
-        _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
-        Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }
     }
   }
@@ -1531,11 +1525,11 @@ public class TextureSimulator : MonoBehaviour {
     return tex;
   }
 
-  private void stepSimulation() {
+  private void stepSimulation(float framePercent) {
     if (_provider != null) {
       doHandCollision();
 
-      doHandInfluence();
+      doHandInfluenceStateUpdate(framePercent);
     }
 
     GL.LoadPixelMatrix(0, 1, 1, 0);

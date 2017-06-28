@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: Cel Shade (Particles)
   m_Shader: {fileID: 4800000, guid: c4457eee86e414747b8f86ac99e08676, type: 3}
-  m_ShaderKeywords: COLOR_SPECIES
+  m_ShaderKeywords: COLOR_SPECIES ENABLE_INTERPOLATION
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_CustomRenderQueue: -1
@@ -66,15 +66,16 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
+    - _Lerp: 1
     - _Metallic: 0
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Size: 0.0011092052
+    - _Size: 0.008602531
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TrailLength: 3413.6155
+    - _TrailLength: 10000
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

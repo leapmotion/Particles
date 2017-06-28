@@ -525,7 +525,7 @@ MonoBehaviour:
   _influenceForwardOffset: 0.036
   _handInfluenceType: 1
   _statisInfluenceSettings:
-    _maxRadius: 0.14
+    _maxRadius: 0.2
     _force: 0.02
     _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:

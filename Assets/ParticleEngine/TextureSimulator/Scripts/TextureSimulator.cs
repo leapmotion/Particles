@@ -781,12 +781,6 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderDebug();
 
-    if (_provider != null) {
-      doHandCollision();
-
-      doHandInfluence();
-    }
-
     if (_simulationEnabled) {
       _currScaledTime += Time.deltaTime * _simulationTimescale;
       if (_dynamicTimestepEnabled) {
@@ -809,6 +803,10 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     displaySimulation();
+
+    if(_provider != null) {
+      drawHandInfluence();
+    }
   }
   #endregion
 
@@ -1248,6 +1246,15 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_SphereForce", influenceForce);
   }
 
+  private void drawHandInfluence() {
+    if (!_handInfluenceEnabled) {
+      return;
+    }
+
+    _handActors[0].Draw(Hands.Left);
+    _handActors[1].Draw(Hands.Right);
+  }
+
   private void doHandCollision() {
     int capsuleCount = 0;
 
@@ -1346,10 +1353,14 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    private Vector3 getPositionFromHand(Hand hand) {
+      return hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
+    }
+
     public void Update(Hand hand) {
       if (hand != null) {
         prevPosition = position;
-        position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
+        position = getPositionFromHand(hand);
       }
 
       _smoothedGrab.delay = _sim.influenceGrabSmoothing;
@@ -1382,9 +1393,16 @@ public class TextureSimulator : MonoBehaviour {
           active = _alpha > 0.05f;
           break;
       }
+    }
+
+    public void Draw(Hand hand) {
+      Vector3 drawPosition = position;
+      if (hand != null) {
+        drawPosition = getPositionFromHand(hand);
+      }
 
       if (active) {
-        var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
+        var meshMat = Matrix4x4.TRS(drawPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
         _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
         Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }
@@ -1514,6 +1532,12 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void stepSimulation() {
+    if (_provider != null) {
+      doHandCollision();
+
+      doHandInfluence();
+    }
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
 

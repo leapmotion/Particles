@@ -1377,9 +1377,9 @@ public class TextureSimulator : MonoBehaviour {
       switch (_sim.handInfluenceMode) {
         case HandInfluenceMode.Binary:
           if (active) {
-            active = hand != null && grab > _sim.influenceBinarySettings.endGrabStrength;
+            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.endGrabStrength;
           } else {
-            active = hand != null && grab > _sim.influenceBinarySettings.startGrabStrength;
+            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.startGrabStrength;
           }
           _influence = 1;
           _radiusMultiplier = 1;

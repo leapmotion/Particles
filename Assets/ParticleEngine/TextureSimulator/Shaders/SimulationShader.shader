@@ -11,8 +11,6 @@
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
-  #define SPHERE_ATTRACTION 0.02
-
   struct appdata {
     float4 vertex : POSITION;
     float2 uv : TEXCOORD0;
@@ -56,6 +54,7 @@
   float4 _Spheres[2];
   float4 _SphereVelocities[2];
   int _SphereCount;
+  float _SphereForce;
 
   int _DebugMode;
   float4 _DebugData;
@@ -123,16 +122,24 @@
       for (int i = 0; i < _SphereCount; i++) {
         float3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
+#ifdef SPHERE_MODE_STASIS
           sphereForce += _SphereVelocities[i];
-          sphereForce.xyz += toSphere * SPHERE_ATTRACTION;
+#else
+          sphereForce.w += _SphereVelocities[i].w;
+#endif
+          sphereForce.xyz += toSphere * _SphereForce;
           spheres++;
         }
       }
 
       if (spheres > 0.5) {
         sphereForce /= spheres;
+#ifdef SPHERE_MODE_STASIS
         velocity.xyz = sphereForce.xyz * sphereForce.w;
         velocity.w *= lerp(1, 0.5, sphereForce.w);
+#else
+        velocity.xyz += sphereForce.xyz * sphereForce.w;
+#endif
       } else {
         velocity.w = lerp(velocity.w, 1, 0.05);
       }
@@ -309,6 +316,7 @@
     //Pass 2: global forces
     Pass{
       CGPROGRAM
+      #pragma multi_compile SPHERE_MODE_STASIS SPHERE_MODE_FORCE
       #pragma vertex vert
       #pragma fragment globalForces
       ENDCG

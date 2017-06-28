@@ -521,10 +521,17 @@ MonoBehaviour:
   _handInfluenceEnabled: 1
   _influenceMat: {fileID: 2100000, guid: ec01a910a66df34448d586402c4b6db4, type: 2}
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  _influenceRadius: 0.14
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.036
-  _influenceGrabSmoothing: 0.01
+  _handInfluenceType: 0
+  _stasisInfluenceSettings:
+    _maxRadius: 0.2
+    _force: 0.02
+    _grabStrengthSmoothing: 0.01
+  _forceInfluenceSettings:
+    _maxRadius: 0.8
+    _force: 0.02
+    _grabStrengthSmoothing: 0.3
   _handInfluenceMode: 1
   _influenceBinarySettings:
     _grabStrengthTransition: {x: 0.25, y: 0.3}
@@ -640,6 +647,7 @@ MonoBehaviour:
   _fieldForce: 0.0005
   _simulationEnabled: 1
   _dynamicTimestepEnabled: 1
+  _limitStepsPerFrame: 1
   _simulationFPS: 60
   _simulationTimescale: 1
   _textureFormat: 11

@@ -18,6 +18,9 @@ public class TextureSimulator : MonoBehaviour {
 
   public const string INTERPOLATION_KEYWORD = "ENABLE_INTERPOLATION";
 
+  public const string INFLUENCE_STASIS_KEYWORD = "SPHERE_MODE_STASIS";
+  public const string INFLUENCE_FORCE_KEYWORD = "SPHERE_MODE_FORCE";
+
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
   public const int PASS_GLOBAL_FORCES = 2;
@@ -87,14 +90,6 @@ public class TextureSimulator : MonoBehaviour {
 
   [Range(0, 0.2f)]
   [SerializeField]
-  private float _influenceRadius = 0.1f;
-  public float influenceRadius {
-    get { return _influenceRadius; }
-    set { _influenceRadius = value; }
-  }
-
-  [Range(0, 0.2f)]
-  [SerializeField]
   private float _influenceNormalOffset = 0.1f;
   public float influenceNormalOffset {
     get { return _influenceNormalOffset; }
@@ -109,12 +104,79 @@ public class TextureSimulator : MonoBehaviour {
     set { _influenceForwardOffset = value; }
   }
 
-  [MinValue(0)]
   [SerializeField]
-  private float _influenceGrabSmoothing = 0.2f;
-  public float influenceGrabSmoothing {
-    get { return _influenceGrabSmoothing; }
-    set { _influenceGrabSmoothing = value; }
+  [OnEditorChange("handInfluenceType")]
+  private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
+  public HandInfluenceType handInfluenceType {
+    get { return _handInfluenceType; }
+    set {
+      _handInfluenceType = value;
+      updateKeywords();
+    }
+  }
+
+  [SerializeField]
+  private StasisInfluenceSettings _stasisInfluenceSettings;
+  public StasisInfluenceSettings stasisInfluenceSettings {
+    get { return _stasisInfluenceSettings; }
+  }
+
+  [System.Serializable]
+  public class StasisInfluenceSettings {
+    [Range(0, 1)]
+    [SerializeField]
+    private float _maxRadius = 0.07f;
+    public float maxRadius {
+      get { return _maxRadius; }
+      set { _maxRadius = value; }
+    }
+
+    [SerializeField]
+    private float _force = 0.02f;
+    public float force {
+      get { return _force; }
+      set { _force = value; }
+    }
+
+    [MinValue(0.01f)]
+    [SerializeField]
+    private float _grabStrengthSmoothing = 0.01f;
+    public float grabStrengthSmoothing {
+      get { return _grabStrengthSmoothing; }
+      set { _grabStrengthSmoothing = value; }
+    }
+  }
+
+  [SerializeField]
+  private ForceInfluenceSettings _forceInfluenceSettings;
+  public ForceInfluenceSettings forceInfluenceSettings {
+    get { return _forceInfluenceSettings; }
+  }
+
+  [System.Serializable]
+  public class ForceInfluenceSettings {
+    [Range(0, 1)]
+    [SerializeField]
+    private float _maxRadius = 0.3f;
+    public float maxRadius {
+      get { return _maxRadius; }
+      set { _maxRadius = value; }
+    }
+
+    [SerializeField]
+    private float _force = 0.02f;
+    public float force {
+      get { return _force; }
+      set { _force = value; }
+    }
+
+    [MinValue(0.01f)]
+    [SerializeField]
+    private float _grabStrengthSmoothing = 0.01f;
+    public float grabStrengthSmoothing {
+      get { return _grabStrengthSmoothing; }
+      set { _grabStrengthSmoothing = value; }
+    }
   }
 
   [SerializeField]
@@ -243,6 +305,13 @@ public class TextureSimulator : MonoBehaviour {
       _dynamicTimestepEnabled = value;
       updateKeywords();
     }
+  }
+
+  [SerializeField]
+  private bool _limitStepsPerFrame = true;
+  public bool limitStepsPerFrame {
+    get { return _limitStepsPerFrame; }
+    set { _limitStepsPerFrame = value; }
   }
 
   [Range(10, 120)]
@@ -586,6 +655,11 @@ public class TextureSimulator : MonoBehaviour {
     SocialData = 12
   }
 
+  public enum HandInfluenceType {
+    Stasis,
+    Force
+  }
+
   public enum HandInfluenceMode {
     Binary,
     Radius,
@@ -602,6 +676,45 @@ public class TextureSimulator : MonoBehaviour {
   public float simulationAge {
     get {
       return _currSimulationTime;
+    }
+  }
+
+  public float maxInfluenceRadius {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.maxRadius;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.maxRadius;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
+  public float influenceForce {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.force;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.force;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
+  public float influenceGrabSmoothing {
+    get {
+      switch (_handInfluenceType) {
+        case HandInfluenceType.Force:
+          return _forceInfluenceSettings.grabStrengthSmoothing;
+        case HandInfluenceType.Stasis:
+          return _stasisInfluenceSettings.grabStrengthSmoothing;
+        default:
+          throw new System.Exception();
+      }
     }
   }
 
@@ -668,26 +781,29 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderDebug();
 
-    if (_provider != null) {
-      doHandCollision();
-
-      doHandInfluence();
+    if(_provider != null && _handInfluenceEnabled) {
+      _handActors[0].UpdateHand(Hands.Left);
+      _handActors[1].UpdateHand(Hands.Right);
     }
 
     if (_simulationEnabled) {
       _currScaledTime += Time.deltaTime * _simulationTimescale;
       if (_dynamicTimestepEnabled) {
         while (_currSimulationTime < _currScaledTime) {
-          stepSimulation();
-
           _prevSimulationTime = _currSimulationTime;
           _currSimulationTime += 1.0f / _simulationFPS;
+
+          stepSimulation(Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+
+          if (_limitStepsPerFrame) {
+            break;
+          }
         }
 
         _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
       } else {
         _currSimulationTime = _prevSimulationTime = _currScaledTime;
-        stepSimulation();
+        stepSimulation(1);
       }
     }
 
@@ -1088,14 +1204,14 @@ public class TextureSimulator : MonoBehaviour {
 
   #region HAND INTERACTION
 
-  private void doHandInfluence() {
+  private void doHandInfluenceStateUpdate(float framePercent) {
     if (!_handInfluenceEnabled) {
       _simulationMat.SetInt("_SphereCount", 0);
       return;
     }
 
-    _handActors[0].Update(Hands.Left);
-    _handActors[1].Update(Hands.Right);
+    _handActors[0].UpdateState(Hands.Left, framePercent);
+    _handActors[1].UpdateState(Hands.Right, framePercent);
 
     int sphereCount = 0;
     if (_handActors[0].active) {
@@ -1128,6 +1244,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);
     _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
+    _simulationMat.SetFloat("_SphereForce", influenceForce);
   }
 
   private void doHandCollision() {
@@ -1205,6 +1322,9 @@ public class TextureSimulator : MonoBehaviour {
     private float _startingAlpha;
     private MaterialPropertyBlock _block;
 
+    private Vector3 _prevTrackedPosition;
+    private Vector3 _currTrackedPosition;
+
     public HandActor(TextureSimulator sim) {
       _sim = sim;
       _block = new MaterialPropertyBlock();
@@ -1215,7 +1335,7 @@ public class TextureSimulator : MonoBehaviour {
     public Vector4 sphere {
       get {
         Vector4 s = prevPosition;
-        s.w = _sim._influenceRadius * _radiusMultiplier;
+        s.w = _sim.maxInfluenceRadius * _radiusMultiplier;
         return s;
       }
     }
@@ -1228,50 +1348,57 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    public void Update(Hand hand) {
-      if (hand != null) {
-        prevPosition = position;
-        position = hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
+    private Vector3 getPositionFromHand(Hand hand) {
+      return hand.PalmPosition.ToVector3() + hand.PalmarAxis() * _sim._influenceNormalOffset + hand.DistalAxis() * _sim._influenceForwardOffset;
+    }
+
+    public void UpdateHand(Hand hand) {
+      _prevTrackedPosition = _currTrackedPosition;
+
+      if(hand != null) {
+        _currTrackedPosition = getPositionFromHand(hand);
       }
 
+      if (active) {
+        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
+        _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
+        Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
+      }
+    }
+
+    public void UpdateState(Hand hand, float framePercent) {
+      prevPosition = position;
+      position = Vector3.Lerp(_prevTrackedPosition, _currTrackedPosition, framePercent);
+
+      _smoothedGrab.delay = _sim.influenceGrabSmoothing;
       _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
       float grab = _smoothedGrab.value;
 
       switch (_sim.handInfluenceMode) {
         case HandInfluenceMode.Binary:
           if (active) {
-            active = hand != null && grab > _sim.influenceBinarySettings.endGrabStrength;
+            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.endGrabStrength;
           } else {
-            active = hand != null && grab > _sim.influenceBinarySettings.startGrabStrength;
+            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.startGrabStrength;
           }
           _influence = 1;
           _radiusMultiplier = 1;
           _alpha = 1;
           break;
         case HandInfluenceMode.Radius:
-          if (hand != null) {
-            _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
-            _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
+          _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
+          _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
 
-            _alpha = 1;
-            active = _radiusMultiplier > 0;
-          }
+          _alpha = 1;
+          active = _radiusMultiplier > 0;
           break;
         case HandInfluenceMode.Fade:
-          if (hand != null) {
-            _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
-            _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
+          _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
+          _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
 
-            _radiusMultiplier = 1;
-            active = _alpha > 0.05f;
-          }
+          _radiusMultiplier = 1;
+          active = _alpha > 0.05f;
           break;
-      }
-
-      if (active) {
-        var meshMat = Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _sim._influenceRadius * _radiusMultiplier);
-        _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
-        Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }
     }
   }
@@ -1398,7 +1525,13 @@ public class TextureSimulator : MonoBehaviour {
     return tex;
   }
 
-  private void stepSimulation() {
+  private void stepSimulation(float framePercent) {
+    if (_provider != null) {
+      doHandCollision();
+
+      doHandInfluenceStateUpdate(framePercent);
+    }
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
@@ -1441,6 +1574,20 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.EnableKeyword(INTERPOLATION_KEYWORD);
     } else {
       _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
+    }
+
+    _simulationMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
+    _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
+
+    switch (_handInfluenceType) {
+      case HandInfluenceType.Force:
+        _simulationMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
+        break;
+      case HandInfluenceType.Stasis:
+        _simulationMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
+        break;
+      default:
+        throw new System.Exception();
     }
   }
 

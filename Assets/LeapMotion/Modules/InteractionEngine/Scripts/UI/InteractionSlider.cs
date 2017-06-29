@@ -20,6 +20,14 @@ namespace Leap.Unity.Interaction {
   ///</summary>
   public class InteractionSlider : InteractionButton {
 
+    public enum SliderType {
+      Vertical,
+      Horizonal,
+      TwoDimensional
+    }
+
+    public SliderType sliderType = SliderType.Horizonal;
+
     [Space, Space]
     [Tooltip("The minimum and maximum values that the slider reports on the horizontal axis.")]
     public Vector2 horizontalValueRange = new Vector2(0f, 1f);
@@ -121,6 +129,15 @@ namespace Leap.Unity.Interaction {
         }
       }
 
+      switch (sliderType) {
+        case SliderType.Horizonal:
+          verticalSlideLimits = new Vector2(0, 0);
+          break;
+        case SliderType.Vertical:
+          horizontalSlideLimits = new Vector2(0, 0);
+          break;
+      }
+
       base.Start();
     }
 
@@ -156,7 +173,7 @@ namespace Leap.Unity.Interaction {
     }
 
     protected override Vector3 getDepressedConstrainedLocalPosition(Vector3 desiredOffset) {
-      Vector3 unSnappedPosition = 
+      Vector3 unSnappedPosition =
         new Vector3(Mathf.Clamp((localPhysicsPosition.x + desiredOffset.x), initialLocalPosition.x + horizontalSlideLimits.x, initialLocalPosition.x + horizontalSlideLimits.y),
                     Mathf.Clamp((localPhysicsPosition.y + desiredOffset.y), initialLocalPosition.y + verticalSlideLimits.x, initialLocalPosition.y + verticalSlideLimits.y),
                                 (localPhysicsPosition.z + desiredOffset.z));
@@ -188,7 +205,7 @@ namespace Leap.Unity.Interaction {
         }
 
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(originPosition + 
+        Gizmos.DrawWireCube(originPosition +
           new Vector3((horizontalSlideLimits.x + horizontalSlideLimits.y) * 0.5f, (verticalSlideLimits.x + verticalSlideLimits.y) * 0.5f, 0f),
           new Vector3(horizontalSlideLimits.y - horizontalSlideLimits.x, verticalSlideLimits.y - verticalSlideLimits.x, 0f));
       }

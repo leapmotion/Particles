@@ -718,6 +718,12 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public MaterialPropertyBlock displayProperties {
+    get {
+      return _displayBlock;
+    }
+  }
+
   public void ResetPositions() {
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
 

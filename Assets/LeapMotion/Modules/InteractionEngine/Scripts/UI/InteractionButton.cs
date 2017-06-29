@@ -112,6 +112,10 @@ namespace Leap.Unity.Interaction {
             rigidbody.Sleep();
             //Else, reset the body's position to where it was last time PhysX looked at it...
           } else {
+            if (_physicsVelocity.ContainsNaN()) {
+              _physicsVelocity = Vector3.zero;
+            }
+
             rigidbody.position = physicsPosition;
             rigidbody.velocity = _physicsVelocity;
           }

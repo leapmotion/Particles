@@ -71,11 +71,11 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
-    - _Size: 0.008602531
+    - _Size: 0.008564147
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TrailLength: 10000
+    - _TrailLength: 2850.9937
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

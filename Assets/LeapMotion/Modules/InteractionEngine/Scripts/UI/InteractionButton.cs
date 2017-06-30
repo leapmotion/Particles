@@ -29,6 +29,9 @@ namespace Leap.Unity.Interaction {
            + "of disabling the component itself when you want to disable the user's "
            + "ability to affect this UI control.")]
     public bool controlEnabled = true;
+    public void SetControlEnabled(bool enableControl) {
+      controlEnabled = enableControl;
+    }
 
     public enum StartingPositionMode {
       Depressed,

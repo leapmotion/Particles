@@ -172,10 +172,10 @@ namespace Leap.Unity.Interaction {
               if (horizontalSlideLimits.x > horizontalSlideLimits.y) {
                 horizontalSlideLimits = new Vector2(0F, 0F);
               }
-              if (horizontalSlideLimits.x < 0.00001F) {
+              if (horizontalSlideLimits.x < 0.0001F) {
                 horizontalSlideLimits.x = 0F;
               }
-              if (horizontalSlideLimits.y < 0.00001F) {
+              if (horizontalSlideLimits.y < 0.0001F) {
                 horizontalSlideLimits.y = 0F;
               }
 
@@ -183,10 +183,10 @@ namespace Leap.Unity.Interaction {
               if (verticalSlideLimits.x > verticalSlideLimits.y) {
                 verticalSlideLimits = new Vector2(0F, 0F);
               }
-              if (verticalSlideLimits.x < 0.00001F) {
+              if (verticalSlideLimits.x < 0.0001F) {
                 verticalSlideLimits.x = 0F;
               }
-              if (verticalSlideLimits.y < 0.00001F) {
+              if (verticalSlideLimits.y < 0.0001F) {
                 verticalSlideLimits.y = 0F;
               }
             }
@@ -241,6 +241,22 @@ namespace Leap.Unity.Interaction {
     public float normalizedVerticalValue {
       get {
         return _verticalSliderPercent;
+      }
+    }
+
+    /// <summary>
+    /// Returns the number of horizontal steps past the minimum value of the slider, for
+    /// sliders with a non-zero number of horizontal steps. This value is independent of
+    /// the horizontal value range of the slider. For example a slider with a
+    /// horizontalSteps value of 9 could have horizontalStepValues of 0-9.
+    /// </summary>
+    public int horizontalStepValue {
+      get {
+        float range = horizontalValueRange.y - horizontalValueRange.x;
+        if (range == 0F) return 0;
+        else {
+          return (int)(_horizontalSliderPercent * horizontalSteps * 1.001F);
+        }
       }
     }
 

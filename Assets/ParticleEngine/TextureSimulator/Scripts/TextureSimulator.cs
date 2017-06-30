@@ -75,8 +75,16 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private bool _handInfluenceEnabled = true;
   public bool handInfluenceEnabled {
-    get { return _handInfluenceEnabled; }
+    get { return _handInfluenceEnabled && !_overrideDisableHandInfluence; }
     set { _handInfluenceEnabled = value; }
+  }
+
+  [SerializeField, Disable]
+  [Tooltip("Interfaces set this to true when the user is interacting with them. This "
+         + "prevents hand influence from actually enabling even if the user is grabbing.")]
+  private bool _overrideDisableHandInfluence = false;
+  public void SetOverrideDisableHandInfluence(bool forceHandInfluenceOff) {
+    _overrideDisableHandInfluence = forceHandInfluenceOff;
   }
 
   [SerializeField]
@@ -113,6 +121,27 @@ public class TextureSimulator : MonoBehaviour {
       _handInfluenceType = value;
       updateKeywords();
     }
+  }
+  public void SetHandInfluenceType(HandInfluenceType influenceType) {
+    handInfluenceType = influenceType;
+  }
+  public void SetHandInfluenceType(int typeIdx) {
+    handInfluenceType = (HandInfluenceType)typeIdx;
+  }
+
+  public void SetMaxInfluenceRadius(float radius) {
+    stasisInfluenceSettings.maxRadius = radius;
+    forceInfluenceSettings.maxRadius = radius;
+  }
+
+  public void SetMaxInfluenceForce(float force) {
+    stasisInfluenceSettings.force = force;
+    forceInfluenceSettings.force = force;
+  }
+
+  public void SetInfluenceRadiusSmoothing(float smoothing) {
+    forceInfluenceSettings.grabStrengthSmoothing = smoothing;
+    stasisInfluenceSettings.grabStrengthSmoothing = smoothing;
   }
 
   [SerializeField]
@@ -184,6 +213,12 @@ public class TextureSimulator : MonoBehaviour {
   public HandInfluenceMode handInfluenceMode {
     get { return _handInfluenceMode; }
     set { _handInfluenceMode = value; }
+  }
+  public void SetHandInfluenceMode(HandInfluenceMode influenceMode) {
+    handInfluenceMode = influenceMode;
+  }
+  public void SetHandInfluenceMode(int modeIdx) {
+    handInfluenceMode = (HandInfluenceMode)modeIdx;
   }
 
   [SerializeField]
@@ -743,6 +778,23 @@ public class TextureSimulator : MonoBehaviour {
     LoadRandomEcosystem(_lastSeed);
     ResetPositions();
   }
+  
+  public Color GetSpeciesColor(int speciesIdx) {
+    var colors = Pool<List<Color>>.Spawn();
+    try {
+      _particleMat.GetColorArray("_Colors", colors);
+      if (speciesIdx > colors.Count - 1) {
+        return Color.black;
+      }
+      else {
+        return colors[speciesIdx];
+      }
+    }
+    finally {
+      colors.Clear();
+      Pool<List<Color>>.Recycle(colors);
+    }
+  }
 
   #endregion
 
@@ -792,7 +844,7 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderDebug();
 
-    if(_provider != null && _handInfluenceEnabled) {
+    if(_provider != null && handInfluenceEnabled) {
       _handActors[0].UpdateHand(Hands.Left);
       _handActors[1].UpdateHand(Hands.Right);
     }
@@ -1335,7 +1387,7 @@ public class TextureSimulator : MonoBehaviour {
   #region HAND INTERACTION
 
   private void doHandInfluenceStateUpdate(float framePercent) {
-    if (!_handInfluenceEnabled) {
+    if (!handInfluenceEnabled) {
       _simulationMat.SetInt("_SphereCount", 0);
       return;
     }

@@ -54,6 +54,7 @@ public class InteractionSliderGraphicController : MonoBehaviour {
       
       if (panelGraphic != null) {
         Color targetPanelColor = panelGraphicColor;
+        if (slider.isDepressed) targetPanelColor = panelDepressedColor;
         if (!sliderEnabled) targetPanelColor = panelDisabledColor;
         targetPanelColor = targetPanelColor.Multiply(panelTint);
         if (!sliderEnabled) targetPanelColor = Color.Lerp(targetPanelColor, panelDisabledColor, 0.5F);
@@ -63,6 +64,7 @@ public class InteractionSliderGraphicController : MonoBehaviour {
       
       if (sliderGraphic != null) {
         Color targetSliderColor = sliderGraphicColor;
+        if (slider.isDepressed) targetSliderColor = sliderDepressedColor;
         if (!sliderEnabled) targetSliderColor = sliderDisabledColor;
         targetSliderColor = targetSliderColor.Multiply(sliderTint);
         if (!sliderEnabled) targetSliderColor = Color.Lerp(targetSliderColor, sliderDisabledColor, 0.5F);

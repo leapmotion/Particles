@@ -37,7 +37,7 @@ namespace Leap.Unity.Interaction {
     [Header("Motion Configuration")]
 
     [EditTimeOnly]
-    public StartingPositionMode startingPositionMode = StartingPositionMode.Relaxed;
+    public StartingPositionMode startingPositionMode = StartingPositionMode.Depressed;
 
     ///<summary> The minimum and maximum heights the button can exist at. </summary>
     [Tooltip("The minimum and maximum heights the button can exist at.")]
@@ -351,6 +351,8 @@ namespace Leap.Unity.Interaction {
     void Reset() {
       contactForceMode = ContactForceMode.UI;
       graspedMovementType = GraspedMovementType.Nonkinematic;
+
+      startingPositionMode = StartingPositionMode.Relaxed;
 
       rigidbody = GetComponent<Rigidbody>();
       if (rigidbody != null) {

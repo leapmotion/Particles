@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using Leap.Unity.Attributes;
 using System.Collections.Generic;
+using System;
 
 namespace Leap.Unity.Interaction {
 
@@ -55,9 +56,14 @@ namespace Leap.Unity.Interaction {
     [System.Serializable]
     public class FloatEvent : UnityEvent<float> { }
     ///<summary> Triggered while this slider is depressed. </summary>
-    public FloatEvent horizontalSlideEvent = new FloatEvent();
+    [SerializeField]
+    private FloatEvent _horizontalSlideEvent = new FloatEvent();
     ///<summary> Triggered while this slider is depressed. </summary>
-    public FloatEvent verticalSlideEvent = new FloatEvent();
+    [SerializeField]
+    private FloatEvent _verticalSlideEvent = new FloatEvent();
+
+    public Action<float> HorizontalSlideEvent = (f) => { };
+    public Action<float> VerticalSlideEvent = (f) => { };
 
     public float HorizontalSliderPercent {
       get {
@@ -119,18 +125,7 @@ namespace Leap.Unity.Interaction {
 
       _started = true;
 
-      if (transform.parent != null) {
-        parent = transform.parent.GetComponent<RectTransform>();
-        if (parent != null) {
-          if (parent.rect.width < 0f || parent.rect.height < 0f) {
-            Debug.LogError("Parent Rectangle dimensions negative; can't set slider boundaries!", parent.gameObject);
-            enabled = false;
-          } else {
-            horizontalSlideLimits = new Vector2(parent.rect.xMin - transform.localPosition.x, parent.rect.xMax - transform.localPosition.x);
-            verticalSlideLimits = new Vector2(parent.rect.yMin - transform.localPosition.y, parent.rect.yMax - transform.localPosition.y);
-          }
-        }
-      }
+      calculateSliderLimits();
 
       switch (sliderType) {
         case SliderType.Horizonal:
@@ -140,17 +135,64 @@ namespace Leap.Unity.Interaction {
           horizontalSlideLimits = new Vector2(0, 0);
           break;
       }
-      
-
 
       base.Start();
+
+      HorizontalSlideEvent += _horizontalSlideEvent.Invoke;
+      VerticalSlideEvent += _verticalSlideEvent.Invoke;
 
       HorizontalSliderValue = defaultHorizontalValue;
       VerticalSliderValue = defaultVerticalValue;
 
       if (dispatchSlideValueOnStart) {
-        horizontalSlideEvent.Invoke(HorizontalSliderValue);
-        verticalSlideEvent.Invoke(VerticalSliderValue);
+        HorizontalSlideEvent(HorizontalSliderValue);
+        VerticalSlideEvent(VerticalSliderValue);
+      }
+    }
+
+    public void RecalculateSliderLimits() {
+      calculateSliderLimits();
+    }
+
+    private void calculateSliderLimits() {
+      if (transform.parent != null) {
+        parent = transform.parent.GetComponent<RectTransform>();
+        if (parent != null) {
+          if (parent.rect.width < 0f || parent.rect.height < 0f) {
+            Debug.LogError("Parent Rectangle dimensions negative; can't set slider boundaries!", parent.gameObject);
+            enabled = false;
+          }
+          else {
+            var self = transform.GetComponent<RectTransform>();
+            if (self != null) {
+              horizontalSlideLimits = new Vector2(parent.rect.xMin - transform.localPosition.x + self.rect.width / 2F, parent.rect.xMax - transform.localPosition.x - self.rect.width / 2F);
+              if (horizontalSlideLimits.x > horizontalSlideLimits.y) {
+                horizontalSlideLimits = new Vector2(0F, 0F);
+              }
+              if (horizontalSlideLimits.x < 0.00001F) {
+                horizontalSlideLimits.x = 0F;
+              }
+              if (horizontalSlideLimits.y < 0.00001F) {
+                horizontalSlideLimits.y = 0F;
+              }
+
+              verticalSlideLimits = new Vector2(parent.rect.yMin - transform.localPosition.y + self.rect.height / 2F, parent.rect.yMax - transform.localPosition.y - self.rect.width / 2F);
+              if (verticalSlideLimits.x > verticalSlideLimits.y) {
+                verticalSlideLimits = new Vector2(0F, 0F);
+              }
+              if (verticalSlideLimits.x < 0.00001F) {
+                verticalSlideLimits.x = 0F;
+              }
+              if (verticalSlideLimits.y < 0.00001F) {
+                verticalSlideLimits.y = 0F;
+              }
+            }
+            else {
+              horizontalSlideLimits = new Vector2(parent.rect.xMin - transform.localPosition.x, parent.rect.xMax - transform.localPosition.x);
+              verticalSlideLimits = new Vector2(parent.rect.yMin - transform.localPosition.y, parent.rect.yMax - transform.localPosition.y);
+            }
+          }
+        }
       }
     }
 
@@ -164,24 +206,38 @@ namespace Leap.Unity.Interaction {
 
     protected override void OnEnable() {
       base.OnEnable();
+
       OnContactStay += calculateSliderValues;
     }
 
     protected override void OnDisable() {
       OnContactStay -= calculateSliderValues;
+
       base.OnDisable();
     }
 
     private void calculateSliderValues() {
-      //Calculate the Renormalized Slider Values
+      // Calculate renormalized slider values.
       if (horizontalSlideLimits.x != horizontalSlideLimits.y) {
         _horizontalSliderPercent = Mathf.InverseLerp(initialLocalPosition.x + horizontalSlideLimits.x, initialLocalPosition.x + horizontalSlideLimits.y, localPhysicsPosition.x);
-        horizontalSlideEvent.Invoke(HorizontalSliderValue);
+        HorizontalSlideEvent(HorizontalSliderValue);
       }
 
       if (verticalSlideLimits.x != verticalSlideLimits.y) {
         _verticalSliderPercent = Mathf.InverseLerp(initialLocalPosition.y + verticalSlideLimits.x, initialLocalPosition.y + verticalSlideLimits.y, localPhysicsPosition.y);
-        verticalSlideEvent.Invoke(VerticalSliderValue);
+        VerticalSlideEvent(VerticalSliderValue);
+      }
+    }
+
+    public float normalizedHorizontalValue {
+      get {
+        return _horizontalSliderPercent;
+      }
+    }
+
+    public float normalizedVerticalValue {
+      get {
+        return _verticalSliderPercent;
       }
     }
 
@@ -208,19 +264,42 @@ namespace Leap.Unity.Interaction {
 
     protected override void OnDrawGizmosSelected() {
       base.OnDrawGizmosSelected();
+
       if (transform.parent != null) {
         Vector3 originPosition = Application.isPlaying ? initialLocalPosition : transform.localPosition;
-
-        parent = transform.parent.GetComponent<RectTransform>();
-        if (parent != null) {
-          horizontalSlideLimits = new Vector2(parent.rect.xMin - originPosition.x, parent.rect.xMax - originPosition.x);
-          verticalSlideLimits = new Vector2(parent.rect.yMin - originPosition.y, parent.rect.yMax - originPosition.y);
+        if (Application.isPlaying && startingPositionMode == StartingPositionMode.Relaxed) {
+          originPosition = originPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
         }
 
+        // Actual slider slide limits
         Gizmos.color = Color.blue;
         Gizmos.DrawWireCube(originPosition +
           new Vector3((horizontalSlideLimits.x + horizontalSlideLimits.y) * 0.5f, (verticalSlideLimits.x + verticalSlideLimits.y) * 0.5f, 0f),
           new Vector3(horizontalSlideLimits.y - horizontalSlideLimits.x, verticalSlideLimits.y - verticalSlideLimits.x, 0f));
+        
+        var self = GetComponent<RectTransform>();
+        if (self != null) {
+          // Apparent slide limits (against own rect limits)
+          parent = transform.parent.GetComponent<RectTransform>();
+          if (parent != null) {
+            var parentRectHorizontal = new Vector2(parent.rect.xMin - originPosition.x, parent.rect.xMax - originPosition.x);
+            var parentRectVertical = new Vector2(parent.rect.yMin - originPosition.y, parent.rect.yMax - originPosition.y);
+            Gizmos.color = Color.Lerp(Color.blue, Color.cyan, 0.5F);
+            Gizmos.DrawWireCube(originPosition +
+              new Vector3((parentRectHorizontal.x + parentRectHorizontal.y) * 0.5f,
+                          (parentRectVertical.x + parentRectVertical.y) * 0.5f,
+                          (startingPositionMode == StartingPositionMode.Relaxed ? 
+                            Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, 0.5F) - Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, 1 - restingHeight)
+                          : -1F * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, 0.5F))),
+              new Vector3(parentRectHorizontal.y - parentRectHorizontal.x, parentRectVertical.y - parentRectVertical.x, (minMaxHeight.y - minMaxHeight.x)));
+
+            // Own rect width/height
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireCube(originPosition,
+              self.rect.width * Vector3.right
+            + self.rect.height * Vector3.up);
+          }
+        }
       }
     }
   }

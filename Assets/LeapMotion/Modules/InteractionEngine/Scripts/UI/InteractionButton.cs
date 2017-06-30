@@ -7,8 +7,10 @@
  * between Leap Motion and you, your company or other organization.           *
  ******************************************************************************/
 
-﻿using Leap.Unity.Interaction.Internal;
+using Leap.Unity.Attributes;
+using Leap.Unity.Interaction.Internal;
 using Leap.Unity.Query;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,7 +23,16 @@ namespace Leap.Unity.Interaction {
   ///</summary>
   public class InteractionButton : InteractionBehaviour {
 
+
+    public enum StartingPositionMode {
+      Depressed,
+      Relaxed
+    }
+
     [Header("Motion Configuration")]
+
+    [EditTimeOnly]
+    public StartingPositionMode startingPositionMode = StartingPositionMode.Relaxed;
 
     ///<summary> The minimum and maximum heights the button can exist at. </summary>
     [Tooltip("The minimum and maximum heights the button can exist at.")]
@@ -37,8 +48,13 @@ namespace Leap.Unity.Interaction {
     private float _springForce = 0.1f;
 
     // State Events
-    public UnityEvent OnPress = new UnityEvent();
-    public UnityEvent OnUnpress = new UnityEvent();
+    [SerializeField]
+    private UnityEvent _OnPress = new UnityEvent();
+    [SerializeField]
+    private UnityEvent _OnUnpress = new UnityEvent();
+
+    public Action OnPress = () => { };
+    public Action OnUnpress = () => { };
 
     public float springForce {
       get {
@@ -86,6 +102,10 @@ namespace Leap.Unity.Interaction {
 
       // Initialize Positions
       initialLocalPosition = transform.localPosition;
+      if (startingPositionMode == StartingPositionMode.Relaxed) {
+        initialLocalPosition = transform.localPosition + Vector3.forward * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
+      }
+
       transform.localPosition = initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
       localPhysicsPosition = transform.localPosition;
       physicsPosition = transform.position;
@@ -96,6 +116,9 @@ namespace Leap.Unity.Interaction {
       //Add a custom grasp controller
       OnGraspBegin += onGraspBegin;
       OnGraspEnd += onGraspEnd;
+
+      OnPress += _OnPress.Invoke;
+      OnUnpress += _OnUnpress.Invoke;
 
       base.Start();
     }
@@ -228,7 +251,7 @@ namespace Leap.Unity.Interaction {
 
         // If our depression state has changed since last time...
         if (isDepressed && !oldDepressed) {
-          OnPress.Invoke();
+          OnPress();
           depressedThisFrame = true;
 
           primaryHoveringController.primaryHoverLocked = true;
@@ -236,7 +259,7 @@ namespace Leap.Unity.Interaction {
 
         } else if (!isDepressed && oldDepressed) {
           unDepressedThisFrame = true;
-          OnUnpress.Invoke();
+          OnUnpress();
 
           if (!(isGrasped && graspingController == _lockedInteractingController)) {
             _lockedInteractingController.primaryHoverLocked = false;
@@ -296,7 +319,7 @@ namespace Leap.Unity.Interaction {
     protected override void OnDisable() {
       if (isDepressed) {
         unDepressedThisFrame = true;
-        OnUnpress.Invoke();
+        OnUnpress();
 
         _lockedInteractingController.primaryHoverLocked = false;
       }
@@ -309,6 +332,9 @@ namespace Leap.Unity.Interaction {
         Gizmos.matrix = transform.parent.localToWorldMatrix;
         Vector2 heights = minMaxHeight;
         Vector3 originPosition = Application.isPlaying ? initialLocalPosition : transform.localPosition;
+        if (!Application.isPlaying && startingPositionMode == StartingPositionMode.Relaxed) {
+          originPosition = transform.localPosition + Vector3.forward * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
+        }
 
         Gizmos.color = Color.red;
         Gizmos.DrawLine(originPosition + (Vector3.back * heights.x), originPosition + (Vector3.back * heights.y));
@@ -321,6 +347,7 @@ namespace Leap.Unity.Interaction {
       contactForceMode = ContactForceMode.UI;
       graspedMovementType = GraspedMovementType.Nonkinematic;
 
+      rigidbody = GetComponent<Rigidbody>();
       if (rigidbody != null) {
         rigidbody.useGravity = false;
       }

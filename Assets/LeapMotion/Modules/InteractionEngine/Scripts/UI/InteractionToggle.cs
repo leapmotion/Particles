@@ -64,13 +64,13 @@ namespace Leap.Unity.Interaction {
     }
 
     protected override void OnEnable() {
-      OnPress.AddListener(OnPressed);
+      OnPress += OnPressed;
       base.OnEnable();
     }
 
     protected override void OnDisable() {
       base.OnDisable();
-      OnPress.RemoveListener(OnPressed);
+      OnPress -= OnPressed;
     }
 
     private void OnPressed() {

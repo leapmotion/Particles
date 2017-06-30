@@ -9,6 +9,7 @@
 
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using Leap.Unity.Attributes;
 using System.Collections.Generic;
 using System;
@@ -57,9 +58,11 @@ namespace Leap.Unity.Interaction {
     public class FloatEvent : UnityEvent<float> { }
     ///<summary> Triggered while this slider is depressed. </summary>
     [SerializeField]
+    [FormerlySerializedAs("horizontalSlideEvent")]
     private FloatEvent _horizontalSlideEvent = new FloatEvent();
     ///<summary> Triggered while this slider is depressed. </summary>
     [SerializeField]
+    [FormerlySerializedAs("verticalSlideEvent")]
     private FloatEvent _verticalSlideEvent = new FloatEvent();
 
     public Action<float> HorizontalSlideEvent = (f) => { };

@@ -106,8 +106,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
   }
 
   private void setSkyColor(Color c) {
-    _skybox.SetColor("_TopColor", c * 1.05f);
+    _skybox.SetColor("_TopColor", c * 1.1f);
     _skybox.SetColor("_MiddleColor", c);
-    _skybox.SetColor("_BottomColor", c * 0.95f);
+    _skybox.SetColor("_BottomColor", c * 0.9f);
   }
 }

@@ -744,9 +744,11 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region UNITY MESSAGES
-  void Start() {
+  private void Awake() {
     _displayBlock = new MaterialPropertyBlock();
+  }
 
+  void Start() {
     _frontPos = createTexture();
     _frontVel = createTexture();
     _backPos = createTexture();

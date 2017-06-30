@@ -27,6 +27,9 @@ namespace Leap.Unity.Interaction {
     }
 
     public SliderType sliderType = SliderType.Horizonal;
+    public float defaultHorizontalValue;
+    public float defaultVerticalValue;
+    public bool dispatchSlideValueOnStart = true;
 
     [Space, Space]
     [Tooltip("The minimum and maximum values that the slider reports on the horizontal axis.")]
@@ -137,8 +140,18 @@ namespace Leap.Unity.Interaction {
           horizontalSlideLimits = new Vector2(0, 0);
           break;
       }
+      
+
 
       base.Start();
+
+      HorizontalSliderValue = defaultHorizontalValue;
+      VerticalSliderValue = defaultVerticalValue;
+
+      if (dispatchSlideValueOnStart) {
+        horizontalSlideEvent.Invoke(HorizontalSliderValue);
+        verticalSlideEvent.Invoke(VerticalSliderValue);
+      }
     }
 
     protected override void Update() {

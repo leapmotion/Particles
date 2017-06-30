@@ -26,6 +26,9 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "mitosis":
         _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Mitosis);
         break;
+      case "bodymind":
+        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.BodyMind);
+        break;
       case "fluidy":
         _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Fluidy);
         break;

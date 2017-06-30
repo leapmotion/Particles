@@ -824,6 +824,7 @@ public class TextureSimulator : MonoBehaviour {
     RedMenace,
     Chase,
     Mitosis,
+    BodyMind,
 	Planets,
     Globules,
     Fluidy
@@ -1008,6 +1009,124 @@ public class TextureSimulator : MonoBehaviour {
         colors[7] = new Color(0.4f, 0.0f, 0.9f);
         colors[8] = new Color(0.2f, 0.1f, 0.5f);
        break;
+
+     case EcosystemPreset.BodyMind:
+
+
+
+ 		_currentSimulationSpeciesCount = 3;
+
+		int blue   = 0;
+		int purple = 1;
+		int black  = 2;
+
+		float blueDrag   = 0.0f;
+		float purpleDrag = 0.0f;
+		float blackDrag  = 0.0f;
+
+		float blueCollision   = 0.0f;
+		float purpleCollision = 0.0f;
+		float blackCollision  = 0.0f;
+
+		int blueSteps   = 0;
+		int purpleSteps = 0;
+		int blackSteps  = 0;
+
+		float blueToBlueForce     = 0.1f;
+		float blueToBlueRange     = 1.0f;
+
+		float purpleToPurpleForce = 0.2f;		
+		float purpleToPurpleRange = 1.0f;		
+
+		float blackToBlackForce   = 0.0f;		
+		float blackToBlackRange   = 1.0f;		
+
+		float blueToPurpleForce   = 1.0f;
+		float blueToPurpleRange   = 1.0f;
+
+		float purpleToBlueForce   = -1.0f;		
+		float purpleToBlueRange   = 0.4f;
+
+		float blackToBlueForce    = 0.2f;		
+		float blackToBlueRange    = 1.0f;
+
+		float blackToPurpleForce  = 0.2f;		
+		float blackToPurpleRange  = 1.0f;
+
+        colors[ blue   ] = new Color( 0.2f, 0.2f, 0.8f );
+        colors[ purple ] = new Color( 0.3f, 0.2f, 0.8f );
+		colors[ black  ] = new Color( 0.1f, 0.0f, 0.4f );
+
+		float bd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blueDrag   );
+		float pd = Mathf.Lerp( setting.minDrag, setting.maxDrag, purpleDrag );
+		float gd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blackDrag  );
+
+		float bc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blueCollision   );
+		float pc = Mathf.Lerp(setting.minCollision, setting.maxCollision, purpleCollision );
+		float gc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blackCollision  );
+      	
+		speciesData[ blue   ] = new Vector3( bd, blueSteps,   bc );
+     	speciesData[ purple ] = new Vector3( pd, purpleSteps, pc );
+		speciesData[ black  ] = new Vector3( gd, blackSteps,  gc );
+
+		socialData[ blue,   blue   ] = new Vector2( setting.maxSocialForce * blueToBlueForce,     setting.maxSocialRange * blueToBlueRange     );
+		socialData[ purple, purple ] = new Vector2( setting.maxSocialForce * purpleToPurpleForce, setting.maxSocialRange * purpleToPurpleRange );
+		socialData[ blue,   purple ] = new Vector2( setting.maxSocialForce * blueToPurpleForce,   setting.maxSocialRange * blueToPurpleRange   );
+		socialData[ purple, blue   ] = new Vector2( setting.maxSocialForce * purpleToBlueForce,   setting.maxSocialRange * purpleToBlueRange   );
+		socialData[ black,  blue   ] = new Vector2( setting.maxSocialForce * blackToBlueForce,    setting.maxSocialRange * blackToBlueRange    );
+		socialData[ black,  purple ] = new Vector2( setting.maxSocialForce * blackToPurpleForce,  setting.maxSocialRange * blackToPurpleRange  );
+
+
+
+
+
+		/*
+ 		_currentSimulationSpeciesCount = 2;
+
+		int blue   = 0;
+		int purple = 1;
+
+		float blueDrag   = 0.0f;
+		float purpleDrag = 0.0f;
+
+		float blueCollision   = 0.0f;
+		float purpleCollision = 0.0f;
+
+		int blueSteps   = 0;
+		int purpleSteps = 0;
+
+		float blueToBlueForce     = 0.2f;
+		float blueToBlueRange     = 1.0f;
+
+		float purpleToPurpleForce = 0.2f;		
+		float purpleToPurpleRange = 1.0f;		
+
+		float blueToPurpleForce   = 1.0f;
+		float blueToPurpleRange   = 1.0f;
+
+		float purpleToBlueForce   = -1.0f;		
+		float purpleToBlueRange   = 0.4f;
+
+        colors[ blue   ] = new Color( 0.2f, 0.2f, 0.8f );
+        colors[ purple ] = new Color( 0.3f, 0.2f, 0.8f );
+
+		float bd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blueDrag   );
+		float pd = Mathf.Lerp( setting.minDrag, setting.maxDrag, purpleDrag );
+
+		float bc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blueCollision   );
+		float pc = Mathf.Lerp(setting.minCollision, setting.maxCollision, purpleCollision );
+      	
+		speciesData[ blue   ] = new Vector3( bd, blueSteps,   bc );
+     	speciesData[ purple ] = new Vector3( pd, purpleSteps, pc );
+
+		socialData[ blue,   blue   ] = new Vector2( setting.maxSocialForce * blueToBlueForce,     setting.maxSocialRange * blueToBlueRange     );
+		socialData[ purple, purple ] = new Vector2( setting.maxSocialForce * purpleToPurpleForce, setting.maxSocialRange * purpleToPurpleRange );
+		socialData[ blue,   purple ] = new Vector2( setting.maxSocialForce * blueToPurpleForce,   setting.maxSocialRange * blueToPurpleRange   );
+		socialData[ purple, blue   ] = new Vector2( setting.maxSocialForce * purpleToBlueForce,   setting.maxSocialRange * purpleToBlueRange   );
+		*/
+
+       break;
+
       case EcosystemPreset.Globules:
 	
 		_currentSimulationSpeciesCount = 3;

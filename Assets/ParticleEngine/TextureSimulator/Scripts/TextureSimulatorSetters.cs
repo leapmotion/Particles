@@ -39,6 +39,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
         Debug.LogError("No ecosystem with name " + name);
         break;
     }
+
+    _sim.ResetPositions();
   }
 
   public void SetSpeciesCount(float count) {
@@ -59,8 +61,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
 
   public void SetDrag(float drag) {
     float diff = _sim.randomEcosystemSettings.maxDrag - _sim.randomEcosystemSettings.minDrag;
-    _sim.randomEcosystemSettings.minDrag = drag - diff * 0.5f;
-    _sim.randomEcosystemSettings.maxDrag = drag + diff * 0.5f;
+    _sim.randomEcosystemSettings.minDrag = Mathf.Clamp01(drag - diff * 0.5f);
+    _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + diff * 0.5f);
   }
 
   public void SetParticleSize(float particleSize) {
@@ -89,20 +91,26 @@ public class TextureSimulatorSetters : MonoBehaviour {
   }
 
   public void SetSkyGreen(float green) {
-    Color c = _skybox.color;
+    Color c = _skybox.GetColor("_MiddleColor");
     c.g = green;
     setSkyColor(c);
   }
 
   public void SetSkyBlue(float blue) {
-    Color c = _skybox.color;
-    c.g = blue;
+    Color c = _skybox.GetColor("_MiddleColor");
+    c.b = blue;
     setSkyColor(c);
   }
 
+  public void LoadRandomEcosystem(LabelController controller) {
+    var name = _sim.GetComponent<NameGenerator>().GenerateName();
+    controller.SetLabel(name);
+    _sim.LoadRandomEcosystem(name);
+  }
+
   private void setSkyColor(Color c) {
-    _skybox.SetColor("_TopColor", c * 1.05f);
+    _skybox.SetColor("_TopColor", c * 1.1f);
     _skybox.SetColor("_MiddleColor", c);
-    _skybox.SetColor("_BottomColor", c * 0.95f);
+    _skybox.SetColor("_BottomColor", c * 0.9f);
   }
 }

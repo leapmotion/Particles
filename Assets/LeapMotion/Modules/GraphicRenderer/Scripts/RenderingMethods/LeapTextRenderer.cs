@@ -77,13 +77,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     public override void OnUpdateRenderer() {
-      for (int i = 0; i < group.graphics.Count; i++) {
-        var graphic = group.graphics[i] as LeapTextGraphic;
-
-        if (graphic.isRepresentationDirtyOrEditTime) {
-          prepareFontWithGraphic(graphic);
-        }
-      }
+      ensureFontIsUpToDate();
 
       for (int i = 0; i < group.graphics.Count; i++) {
         var graphic = group.graphics[i] as LeapTextGraphic;
@@ -213,12 +207,43 @@ namespace Leap.Unity.GraphicalRenderer {
       }
     }
 
-    private void prepareFontWithGraphic(LeapTextGraphic graphic) {
-      int scaledFontSize = Mathf.RoundToInt(graphic.fontSize * _dynamicPixelsPerUnit);
+    private void ensureFontIsUpToDate() {
+      CharacterInfo info;
+      bool doesNeedRebuild = false;
 
-      _font.RequestCharactersInTexture(graphic.text,
-                                       scaledFontSize,
-                                       graphic.fontStyle);
+      for (int i = 0; i < group.graphics.Count; i++) {
+        var graphic = group.graphics[i] as LeapTextGraphic;
+        int scaledFontSize = Mathf.RoundToInt(graphic.fontSize * _dynamicPixelsPerUnit);
+
+        if (graphic.isRepresentationDirtyOrEditTime) {
+          for (int j = 0; j < graphic.text.Length; j++) {
+            char character = graphic.text[j];
+
+            if (!_font.GetCharacterInfo(character, out info, scaledFontSize, graphic.fontStyle)) {
+              doesNeedRebuild = true;
+              break;
+            }
+          }
+
+          if (doesNeedRebuild) {
+            break;
+          }
+        }
+      }
+
+      if (!doesNeedRebuild) {
+        return;
+      }
+
+      for (int i = 0; i < group.graphics.Count; i++) {
+        var graphic = group.graphics[i] as LeapTextGraphic;
+        int scaledFontSize = Mathf.RoundToInt(graphic.fontSize * _dynamicPixelsPerUnit);
+
+        graphic.isRepresentationDirty = true;
+        _font.RequestCharactersInTexture(graphic.text,
+                                         scaledFontSize,
+                                         graphic.fontStyle);
+      }
     }
 
     private List<TextWrapper.Line> _tempLines = new List<TextWrapper.Line>();

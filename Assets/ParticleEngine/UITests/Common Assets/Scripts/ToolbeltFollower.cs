@@ -23,15 +23,17 @@ public class ToolbeltFollower : MonoBehaviour {
       float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? 0.2F : 1F);
       _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec, targetLerpCoeffPerSec, 20F * Time.deltaTime);
 
-      Vector3 delta = target.transform.position - this.transform.position;
-      this.transform.position = Vector3.Lerp(this.transform.position, target.transform.position + (delta * 1F), _effLerpCoeffPerSec * Time.deltaTime);
-
       float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? 0.2F : 1F);
       _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec, targetSlerpCoeffPerSec, 20F * Time.deltaTime);
-      
-      Quaternion targetRotation = Quaternion.LookRotation(target.transform.forward.ProjectOnPlane(Vector3.up));
-      this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRotation, _effSlerpCoeffPerSec * Time.deltaTime);
     }
+  }
+
+  void FixedUpdate() {
+    Vector3 delta = target.transform.position - this.transform.position;
+    this.transform.position = Vector3.Lerp(this.transform.position, target.transform.position + (delta * 1F), _effLerpCoeffPerSec * Time.fixedDeltaTime);
+
+    Quaternion targetRotation = Quaternion.LookRotation(target.transform.forward.ProjectOnPlane(Vector3.up));
+    this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRotation, _effSlerpCoeffPerSec * Time.fixedDeltaTime);
   }
 
   public void StiffenPosition() {

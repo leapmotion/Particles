@@ -50,7 +50,7 @@ public class InteractionSliderGraphicController : MonoBehaviour {
 
   void Update() {
     if (slider != null) {
-      bool sliderEnabled = slider.isActiveAndEnabled;
+      bool sliderEnabled = slider.controlEnabled;
       
       if (panelGraphic != null) {
         Color targetPanelColor = panelGraphicColor;
@@ -70,6 +70,22 @@ public class InteractionSliderGraphicController : MonoBehaviour {
         sliderGraphic.SetRuntimeTint(targetSliderColor);
       }
     }
+  }
+
+  public void SetPanelTint(string htmlString) {
+    panelTint = parseColorString(htmlString);
+  }
+
+  public void SetSliderTint(string htmlString) {
+    sliderTint = parseColorString(htmlString);
+  }
+
+  private Color parseColorString(string htmlString) {
+    Color c = Color.white;
+    if (!ColorUtility.TryParseHtmlString(htmlString, out c)) {
+      Debug.LogError("Couldn't parse html string for color: " + htmlString, this);
+    }
+    return c;
   }
 
 }

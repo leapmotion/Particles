@@ -23,6 +23,11 @@ namespace Leap.Unity.Interaction {
   ///</summary>
   public class InteractionButton : InteractionBehaviour {
 
+    [Header("UI Control")]
+    [Tooltip("When set to false, this UI control will not be functional. Use this instead "
+           + "of disabling the component itself when you want to disable the user's "
+           + "ability to affect this UI control.")]
+    public bool controlEnabled = true;
 
     public enum StartingPositionMode {
       Depressed,
@@ -156,7 +161,7 @@ namespace Leap.Unity.Interaction {
 
       //Disable collision on this button if it is not the primary hover
       ignoreGrasping = _initialIgnoreGrasping ? true : !isPrimaryHovered && !isGrasped;
-      ignoreContact = !isPrimaryHovered || isGrasped;
+      ignoreContact = (!isPrimaryHovered || isGrasped) || !controlEnabled;
 
       //Enforce local rotation (if button is child of non-kinematic rigidbody, this is necessary)
       transform.localRotation = _initialLocalRotation; 

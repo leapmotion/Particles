@@ -590,6 +590,9 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private bool _drawHandColliders = true;
+  public void SetDrawHandColliders(bool shouldDraw) {
+    _drawHandColliders = shouldDraw;
+  }
 
   [SerializeField]
   private Color _handColliderColor = Color.black;

@@ -59,13 +59,6 @@
 #endif
 
       float4 velocity = tex2Dlod(_CurrVel, v.texcoord);
-      velocity.xyz *= velocity.w;
-
-      float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
-      v.vertex.xyz -= velocity.xyz * dir * _TrailLength;
-
-      v.vertex.xyz *= _Size;
-      v.vertex.xyz += particle.xyz;
 
 #ifdef COLOR_SPECIES
       v.color = _Colors[(int)particle.w];
@@ -78,6 +71,14 @@
 #ifdef COLOR_SPECIES_MAGNITUDE
       v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
 #endif
+
+      velocity.xyz *= velocity.w;
+
+      float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
+      v.vertex.xyz -= velocity.xyz * dir * _TrailLength;
+
+      v.vertex.xyz *= _Size;
+      v.vertex.xyz += particle.xyz;
     }
 
     void surf (Input IN, inout SurfaceOutput  o) {

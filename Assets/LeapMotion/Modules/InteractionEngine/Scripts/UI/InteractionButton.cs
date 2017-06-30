@@ -14,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace Leap.Unity.Interaction {
 
@@ -49,8 +50,10 @@ namespace Leap.Unity.Interaction {
 
     // State Events
     [SerializeField]
+    [FormerlySerializedAs("OnPress")]
     private UnityEvent _OnPress = new UnityEvent();
     [SerializeField]
+    [FormerlySerializedAs("OnUnpress")]
     private UnityEvent _OnUnpress = new UnityEvent();
 
     public Action OnPress = () => { };

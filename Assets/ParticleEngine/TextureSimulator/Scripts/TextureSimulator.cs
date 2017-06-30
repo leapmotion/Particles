@@ -1043,8 +1043,8 @@ public class TextureSimulator : MonoBehaviour {
 		float purpleToPurpleForce = 0.2f;		
 		float purpleToPurpleRange = 1.0f;		
 
-		float blackToBlackForce   = 0.0f;		
-		float blackToBlackRange   = 1.0f;		
+		//float blackToBlackForce   = 0.0f;		
+		//float blackToBlackRange   = 1.0f;		
 
 		float blueToPurpleForce   = 1.0f;
 		float blueToPurpleRange   = 1.0f;

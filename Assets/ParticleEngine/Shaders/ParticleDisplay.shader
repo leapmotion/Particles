@@ -10,7 +10,7 @@
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf Standard fullforwardshadows vertex:vert addshadow
+		#pragma surface surf Standard vertex:vert noforwardadd
 		#pragma target 5.0
     #pragma multi_compile_instancing
     #pragma instancing_options procedural:setup

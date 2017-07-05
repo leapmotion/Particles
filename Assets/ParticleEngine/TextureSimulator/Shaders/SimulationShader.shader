@@ -1,5 +1,10 @@
 ﻿Shader "Unlit/Simulation" {
-  Properties { }
+  Properties {
+    _SoftInnerRadius ("Soft Inner Radius", Float) = 0
+    _SoftOuterRadius ("Soft Outer Radius", Float) = 1
+    _SoftThresh ("Soft Threshold", Float) = 0
+    _SoftFactor ("Soft Factor", Float) = 1
+  }
 
   CGINCLUDE
   #include "UnityCG.cginc"
@@ -40,6 +45,10 @@
   float _SpawnRadius;
 
   float _HandCollisionRadius;
+  float _SoftInnerRadius;
+  float _SoftOuterRadius;
+  float _SoftThresh;
+  float _SoftFactor;
 
   int _SocialHandSpecies;
   float _SocialHandForceFactor;
@@ -200,14 +209,19 @@
         float3 a = _CapsuleA[i];
         float3 b = _CapsuleB[i];
 
+        b = a + (b - a) * _SoftFactor;
+
         float3 pa = particle.xyz - a;
         float3 ba = b - a;
         float h = saturate(dot(pa, ba) / dot(ba, ba));
 
         float3 forceVector = pa - ba * h;
+        float3 vel = -ba;
+
         float dist = length(forceVector);
         forceVector /= dist;
 
+        /*
         if (dist < _HandCollisionRadius) {
           float3 normal = normalize(particle.xyz - b);
           float mag = max(0, dot(normal, a - b));
@@ -217,6 +231,15 @@
           velocity.xyz = reflectedVel + normal * mag;
           velocity.w = 0;
         }
+        */
+
+        float soft = 1 - saturate((dist - _SoftInnerRadius) / (_SoftOuterRadius - _SoftInnerRadius));
+
+        float3 relVel = vel + velocity.xyz;
+        float dir = saturate(dot(normalize(relVel), normalize(pa)));
+        velocity.xyz = lerp(velocity.xyz, vel, soft * dir);
+        velocity.xyz += forceVector * _SoftThresh * soft;
+
 
         float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
         if (dist < socialData.y) {

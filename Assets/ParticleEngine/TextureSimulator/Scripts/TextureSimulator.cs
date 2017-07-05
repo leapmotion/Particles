@@ -21,6 +21,9 @@ public class TextureSimulator : MonoBehaviour {
   public const string INFLUENCE_STASIS_KEYWORD = "SPHERE_MODE_STASIS";
   public const string INFLUENCE_FORCE_KEYWORD = "SPHERE_MODE_FORCE";
 
+  public const string TAIL_FISH_KEYWORD = "FISH_TAIL";
+  public const string TAIL_SQUASH_KEYWORD = "SQUASH_TAIL";
+
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
   public const int PASS_GLOBAL_FORCES = 2;
@@ -401,6 +404,17 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  [OnEditorChange("trailMode")]
+  [SerializeField]
+  private TrailMode _trailMode = TrailMode.Fish;
+  public TrailMode trailMode {
+    get { return _trailMode; }
+    set {
+      _trailMode = value;
+      updateKeywords();
+    }
+  }
+
   //#######################//
   ///      Ecosystems      //
   //#######################//
@@ -702,6 +716,11 @@ public class TextureSimulator : MonoBehaviour {
     Binary,
     Radius,
     Fade
+  }
+
+  public enum TrailMode {
+    Fish,
+    Squash
   }
 
   private string _currentSpecies = "";
@@ -1770,6 +1789,18 @@ public class TextureSimulator : MonoBehaviour {
         break;
       default:
         throw new System.Exception();
+    }
+
+    _particleMat.DisableKeyword(TAIL_FISH_KEYWORD);
+    _particleMat.DisableKeyword(TAIL_SQUASH_KEYWORD);
+
+    switch (_trailMode) {
+      case TrailMode.Fish:
+        _particleMat.EnableKeyword(TAIL_FISH_KEYWORD);
+        break;
+      case TrailMode.Squash:
+        _particleMat.EnableKeyword(TAIL_SQUASH_KEYWORD);
+        break;
     }
   }
 

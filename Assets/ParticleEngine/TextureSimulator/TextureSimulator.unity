@@ -184,6 +184,11 @@ Prefab:
       propertyPath: _provider
       value: 
       objectReference: {fileID: 616576973}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _presetEcosystemSettings._ecosystemPreset
+      value: 4
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 293126bede65632468a25da3a2d80e96, type: 2}
   m_IsPrefabParent: 0

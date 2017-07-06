@@ -1337,8 +1337,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadRandomEcosystem() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
-    _currentSpawnPreset = SpawnPreset.Spherical;
-
+ 
     var gen = GetComponent<NameGenerator>();
     string name;
     if (gen == null) {
@@ -1356,6 +1355,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadRandomEcosystem(string seed) {
     var setting = _randomEcosystemSettings;
+    _currentSpawnPreset = setting.spawnMode;
 
     _currentSimulationSpeciesCount = setting.speciesCount;
     Random.InitState(seed.GetHashCode());
@@ -1393,6 +1393,8 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
+
+    ResetPositions();
   }
 
   public void RandomizeEcosystemColors() {

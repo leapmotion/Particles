@@ -1330,6 +1330,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadRandomEcosystem() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
+    _currentSpawnPreset = SpawnPreset.Spherical;
 
     var gen = GetComponent<NameGenerator>();
     string name;

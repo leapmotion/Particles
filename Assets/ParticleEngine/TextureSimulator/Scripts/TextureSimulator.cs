@@ -1308,7 +1308,19 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void ResetPositions(Vector3[] positions, Vector3[] velocities, int[] species) {
-    Texture2D tex = new Texture2D(MAX_PARTICLES, 1, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+    TextureFormat format;
+    switch (_textureFormat) {
+      case RenderTextureFormat.ARGBFloat:
+        format = TextureFormat.RGBAFloat;
+        break;
+      case RenderTextureFormat.ARGBHalf:
+        format = TextureFormat.RGBAHalf;
+        break;
+      default:
+        throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
+    }
+
+    Texture2D tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
       Color c = (Vector4)p;

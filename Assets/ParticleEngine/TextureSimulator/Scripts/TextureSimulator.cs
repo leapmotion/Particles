@@ -671,7 +671,7 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
-  private int _currentSimulationSpeciesCount;
+  private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
@@ -1233,6 +1233,14 @@ public class TextureSimulator : MonoBehaviour {
             socialData[j, i] = new Vector2(-0.1f * setting.maxSocialForce, setting.maxSocialRange * 0.3f);
           }
         }
+
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+          float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
+          float percent2 = percent * 12.123123f + Random.value;
+          particlePositions[i] = new Vector3(Mathf.Lerp(-1, 1, percent2 - (int)percent2), Mathf.Lerp(-1, 1, percent), Random.Range(-0.01f, 0.01f));
+          particleSpecies[i] = Mathf.FloorToInt(percent * _currentSimulationSpeciesCount);
+        }
+        ResetPositions(particlePositions, particleVelocities, particleSpecies);
         break;
     }
 
@@ -1668,7 +1676,6 @@ public class TextureSimulator : MonoBehaviour {
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
       LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
-      ResetPositions();
     }
 
     if (Input.GetKeyDown(_loadEcosystemSeedKey)) {

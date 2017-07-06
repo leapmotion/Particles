@@ -737,7 +737,7 @@ public class TextureSimulator : MonoBehaviour {
       return _currentSpecies;
     }
   }
-  
+
   public float simulationAge {
     get {
       return _currSimulationTime;
@@ -794,19 +794,17 @@ public class TextureSimulator : MonoBehaviour {
     LoadRandomEcosystem(_lastSeed);
     ResetPositions();
   }
-  
+
   public Color GetSpeciesColor(int speciesIdx) {
     var colors = Pool<List<Color>>.Spawn();
     try {
       _particleMat.GetColorArray("_Colors", colors);
       if (speciesIdx > colors.Count - 1) {
         return Color.black;
-      }
-      else {
+      } else {
         return colors[speciesIdx];
       }
-    }
-    finally {
+    } finally {
       colors.Clear();
       Pool<List<Color>>.Recycle(colors);
     }
@@ -860,7 +858,7 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderDebug();
 
-    if(_provider != null && handInfluenceEnabled) {
+    if (_provider != null && handInfluenceEnabled) {
       _handActors[0].UpdateHand(Hands.Left);
       _handActors[1].UpdateHand(Hands.Right);
     }
@@ -898,9 +896,9 @@ public class TextureSimulator : MonoBehaviour {
     Chase,
     Mitosis,
     BodyMind,
-	Planets,
+    Planets,
     Globules,
-	Test,
+    Test,
     Fluidy
   }
 
@@ -1053,32 +1051,32 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case EcosystemPreset.Planets:
 
-		_currentSimulationSpeciesCount = 9;
+        _currentSimulationSpeciesCount = 9;
 
-       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+        for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.2f),
                                        3,
                                        Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.2f));
 
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
-            socialData[i, j] = new Vector2( -setting.maxSocialForce, setting.maxSocialRange * 0.5f);
+            socialData[i, j] = new Vector2(-setting.maxSocialForce, setting.maxSocialRange * 0.5f);
           }
         }
 
-		float f  = setting.maxSocialForce * 0.6f;
-		float r  = setting.maxSocialRange * 0.8f;
+        float f = setting.maxSocialForce * 0.6f;
+        float r = setting.maxSocialRange * 0.8f;
 
-		socialData[ 0, 0 ] = new Vector2(f, r); socialData[ 0, 1 ] = new Vector2(f, r); socialData[ 0, 2 ] = new Vector2(f, r);
-		socialData[ 1, 1 ] = new Vector2(f, r); socialData[ 1, 0 ] = new Vector2(f, r); socialData[ 1, 2 ] = new Vector2(f, r);
-		socialData[ 2, 2 ] = new Vector2(f, r); socialData[ 2, 0 ] = new Vector2(f, r); socialData[ 2, 1 ] = new Vector2(f, r);
+        socialData[0, 0] = new Vector2(f, r); socialData[0, 1] = new Vector2(f, r); socialData[0, 2] = new Vector2(f, r);
+        socialData[1, 1] = new Vector2(f, r); socialData[1, 0] = new Vector2(f, r); socialData[1, 2] = new Vector2(f, r);
+        socialData[2, 2] = new Vector2(f, r); socialData[2, 0] = new Vector2(f, r); socialData[2, 1] = new Vector2(f, r);
 
-		socialData[ 3, 3 ] = new Vector2(f, r); socialData[ 3, 4 ] = new Vector2(f, r); socialData[ 3, 5 ] = new Vector2(f, r);
-		socialData[ 4, 4 ] = new Vector2(f, r); socialData[ 4, 3 ] = new Vector2(f, r); socialData[ 4, 5 ] = new Vector2(f, r);
-		socialData[ 5, 5 ] = new Vector2(f, r); socialData[ 5, 3 ] = new Vector2(f, r); socialData[ 5, 4 ] = new Vector2(f, r);
+        socialData[3, 3] = new Vector2(f, r); socialData[3, 4] = new Vector2(f, r); socialData[3, 5] = new Vector2(f, r);
+        socialData[4, 4] = new Vector2(f, r); socialData[4, 3] = new Vector2(f, r); socialData[4, 5] = new Vector2(f, r);
+        socialData[5, 5] = new Vector2(f, r); socialData[5, 3] = new Vector2(f, r); socialData[5, 4] = new Vector2(f, r);
 
-		socialData[ 6, 6 ] = new Vector2(f, r); socialData[ 6, 7 ] = new Vector2(f, r); socialData[ 6, 8 ] = new Vector2(f, r);
-		socialData[ 7, 7 ] = new Vector2(f, r); socialData[ 7, 8 ] = new Vector2(f, r); socialData[ 7, 6 ] = new Vector2(f, r);
-		socialData[ 8, 8 ] = new Vector2(f, r); socialData[ 8, 6 ] = new Vector2(f, r); socialData[ 8, 7 ] = new Vector2(f, r);
+        socialData[6, 6] = new Vector2(f, r); socialData[6, 7] = new Vector2(f, r); socialData[6, 8] = new Vector2(f, r);
+        socialData[7, 7] = new Vector2(f, r); socialData[7, 8] = new Vector2(f, r); socialData[7, 6] = new Vector2(f, r);
+        socialData[8, 8] = new Vector2(f, r); socialData[8, 6] = new Vector2(f, r); socialData[8, 7] = new Vector2(f, r);
 
         colors[0] = new Color(0.9f, 0.0f, 0.0f);
         colors[1] = new Color(0.9f, 0.5f, 0.0f);
@@ -1091,138 +1089,139 @@ public class TextureSimulator : MonoBehaviour {
         colors[6] = new Color(0.0f, 0.0f, 0.9f);
         colors[7] = new Color(0.4f, 0.0f, 0.9f);
         colors[8] = new Color(0.2f, 0.1f, 0.5f);
-       break;
+        break;
 
-     case EcosystemPreset.Test:
+      case EcosystemPreset.Test:
 
- 		_currentSimulationSpeciesCount = 2;
-	
-		int tBlack = 0;
-		int tWhite = 1;
+        _currentSimulationSpeciesCount = 2;
 
-        colors[ tBlack ] = new Color( 0.0f, 0.0f, 0.0f );
-        colors[ tWhite ] = new Color( 1.0f, 1.0f, 1.0f );
+        int tBlack = 0;
+        int tWhite = 1;
 
-		float tBlackDrag = 0.0f;
-		float tWhiteDrag = 1.0f;
+        colors[tBlack] = new Color(0.0f, 0.0f, 0.0f);
+        colors[tWhite] = new Color(1.0f, 1.0f, 1.0f);
 
-		float tBlackCollision = 0.0f;
-		float tWhiteCollision = 0.0f;
+        float tBlackDrag = 0.0f;
+        float tWhiteDrag = 1.0f;
 
-		int tBlackSteps = 0;
-		int tWhiteSteps = 0;
+        float tBlackCollision = 0.0f;
+        float tWhiteCollision = 0.0f;
 
-		float tbd = Mathf.Lerp( setting.minDrag, setting.maxDrag, tBlackDrag );
-		float twd = Mathf.Lerp( setting.minDrag, setting.maxDrag, tWhiteDrag );
+        int tBlackSteps = 0;
+        int tWhiteSteps = 0;
 
-		float tbc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tBlackCollision   );
-		float twc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tWhiteCollision   );
+        float tbd = Mathf.Lerp(setting.minDrag, setting.maxDrag, tBlackDrag);
+        float twd = Mathf.Lerp(setting.minDrag, setting.maxDrag, tWhiteDrag);
 
-		speciesData[ tBlack ] = new Vector3( tbd, tBlackSteps, tbc );
-		speciesData[ tWhite ] = new Vector3( twd, tWhiteSteps, twc );
-	
-       break;
+        float tbc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tBlackCollision);
+        float twc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tWhiteCollision);
 
-     case EcosystemPreset.BodyMind:
- 		_currentSimulationSpeciesCount = 3;
+        speciesData[tBlack] = new Vector3(tbd, tBlackSteps, tbc);
+        speciesData[tWhite] = new Vector3(twd, tWhiteSteps, twc);
 
-		int blue   = 0;
-		int purple = 1;
-		int black  = 2;
+        break;
 
-		float blueDrag   = 0.0f;
-		float purpleDrag = 0.0f;
-		float blackDrag  = 0.0f;
+      case EcosystemPreset.BodyMind:
+        _currentSimulationSpeciesCount = 3;
 
-		float blueCollision   = 0.0f;
-		float purpleCollision = 0.0f;
-		float blackCollision  = 0.0f;
+        int blue = 0;
+        int purple = 1;
+        int black = 2;
 
-		int blueSteps   = 0;
-		int purpleSteps = 0;
-		int blackSteps  = 0;
+        float blueDrag = 0.0f;
+        float purpleDrag = 0.0f;
+        float blackDrag = 0.0f;
 
-		float blueToBlueForce     = 0.1f;
-		float blueToBlueRange     = 1.0f;
+        float blueCollision = 0.0f;
+        float purpleCollision = 0.0f;
+        float blackCollision = 0.0f;
 
-		float purpleToPurpleForce = 0.2f;		
-		float purpleToPurpleRange = 1.0f;		
+        int blueSteps = 0;
+        int purpleSteps = 0;
+        int blackSteps = 0;
 
-		float blueToPurpleForce   = 1.0f;
-		float blueToPurpleRange   = 1.0f;
+        float blueToBlueForce = 0.1f;
+        float blueToBlueRange = 1.0f;
 
-		float purpleToBlueForce   = -1.0f;		
-		float purpleToBlueRange   = 0.4f;
+        float purpleToPurpleForce = 0.2f;
+        float purpleToPurpleRange = 1.0f;
 
-		float blackToBlueForce    = 0.2f;		
-		float blackToBlueRange    = 1.0f;
+        float blueToPurpleForce = 1.0f;
+        float blueToPurpleRange = 1.0f;
 
-		float blackToPurpleForce  = 0.2f;		
-		float blackToPurpleRange  = 1.0f;
+        float purpleToBlueForce = -1.0f;
+        float purpleToBlueRange = 0.4f;
 
-        colors[ blue   ] = new Color( 0.2f, 0.2f, 0.8f );
-        colors[ purple ] = new Color( 0.3f, 0.2f, 0.8f );
-		colors[ black  ] = new Color( 0.1f, 0.0f, 0.4f );
+        float blackToBlueForce = 0.2f;
+        float blackToBlueRange = 1.0f;
 
-		float bd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blueDrag   );
-		float pd = Mathf.Lerp( setting.minDrag, setting.maxDrag, purpleDrag );
-		float gd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blackDrag  );
+        float blackToPurpleForce = 0.2f;
+        float blackToPurpleRange = 1.0f;
 
-		float bc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blueCollision   );
-		float pc = Mathf.Lerp(setting.minCollision, setting.maxCollision, purpleCollision );
-		float gc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blackCollision  );
-      	
-		speciesData[ blue   ] = new Vector3( bd, blueSteps,   bc );
-     	speciesData[ purple ] = new Vector3( pd, purpleSteps, pc );
-		speciesData[ black  ] = new Vector3( gd, blackSteps,  gc );
+        colors[blue] = new Color(0.2f, 0.2f, 0.8f);
+        colors[purple] = new Color(0.3f, 0.2f, 0.8f);
+        colors[black] = new Color(0.1f, 0.0f, 0.4f);
 
-		socialData[ blue,   blue   ] = new Vector2( setting.maxSocialForce * blueToBlueForce,     setting.maxSocialRange * blueToBlueRange     );
-		socialData[ purple, purple ] = new Vector2( setting.maxSocialForce * purpleToPurpleForce, setting.maxSocialRange * purpleToPurpleRange );
-		socialData[ blue,   purple ] = new Vector2( setting.maxSocialForce * blueToPurpleForce,   setting.maxSocialRange * blueToPurpleRange   );
-		socialData[ purple, blue   ] = new Vector2( setting.maxSocialForce * purpleToBlueForce,   setting.maxSocialRange * purpleToBlueRange   );
-		socialData[ black,  blue   ] = new Vector2( setting.maxSocialForce * blackToBlueForce,    setting.maxSocialRange * blackToBlueRange    );
-		socialData[ black,  purple ] = new Vector2( setting.maxSocialForce * blackToPurpleForce,  setting.maxSocialRange * blackToPurpleRange  );
+        float bd = Mathf.Lerp(setting.minDrag, setting.maxDrag, blueDrag);
+        float pd = Mathf.Lerp(setting.minDrag, setting.maxDrag, purpleDrag);
+        float gd = Mathf.Lerp(setting.minDrag, setting.maxDrag, blackDrag);
 
-       break;
+        float bc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blueCollision);
+        float pc = Mathf.Lerp(setting.minCollision, setting.maxCollision, purpleCollision);
+        float gc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blackCollision);
+
+        speciesData[blue] = new Vector3(bd, blueSteps, bc);
+        speciesData[purple] = new Vector3(pd, purpleSteps, pc);
+        speciesData[black] = new Vector3(gd, blackSteps, gc);
+
+        socialData[blue, blue] = new Vector2(setting.maxSocialForce * blueToBlueForce, setting.maxSocialRange * blueToBlueRange);
+        socialData[purple, purple] = new Vector2(setting.maxSocialForce * purpleToPurpleForce, setting.maxSocialRange * purpleToPurpleRange);
+        socialData[blue, purple] = new Vector2(setting.maxSocialForce * blueToPurpleForce, setting.maxSocialRange * blueToPurpleRange);
+        socialData[purple, blue] = new Vector2(setting.maxSocialForce * purpleToBlueForce, setting.maxSocialRange * purpleToBlueRange);
+        socialData[black, blue] = new Vector2(setting.maxSocialForce * blackToBlueForce, setting.maxSocialRange * blackToBlueRange);
+        socialData[black, purple] = new Vector2(setting.maxSocialForce * blackToPurpleForce, setting.maxSocialRange * blackToPurpleRange);
+
+        break;
 
       case EcosystemPreset.Globules:
-	
-		_currentSimulationSpeciesCount = 3;
 
-       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
+        _currentSimulationSpeciesCount = 3;
+
+        for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.2f),
                                        1,
                                        Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.2f));
 
         }
-		
-		float globuleChaseForce =  setting.maxSocialForce * 0.2f;
-		float globuleChaseRange =  setting.maxSocialRange * 0.8f;
 
-		float globuleFleeForce  = -setting.maxSocialForce * 0.3f;
-		float globuleFleeRange  =  setting.maxSocialRange * 0.4f;
+        float globuleChaseForce = setting.maxSocialForce * 0.2f;
+        float globuleChaseRange = setting.maxSocialRange * 0.8f;
 
-		float globuleAvoidForce = -setting.maxSocialForce * 0.2f;
-		float globuleAvoidRange =  setting.maxSocialRange * 0.1f;
+        float globuleFleeForce = -setting.maxSocialForce * 0.3f;
+        float globuleFleeRange = setting.maxSocialRange * 0.4f;
+
+        float globuleAvoidForce = -setting.maxSocialForce * 0.2f;
+        float globuleAvoidRange = setting.maxSocialRange * 0.1f;
 
 
-		socialData[ 0, 1 ] = new Vector2( globuleChaseForce * 1.5f, globuleChaseRange );
-		socialData[ 1, 2 ] = new Vector2( globuleChaseForce, globuleChaseRange );
-		socialData[ 2, 0 ] = new Vector2( globuleChaseForce, globuleChaseRange );
+        socialData[0, 1] = new Vector2(globuleChaseForce * 1.5f, globuleChaseRange);
+        socialData[1, 2] = new Vector2(globuleChaseForce, globuleChaseRange);
+        socialData[2, 0] = new Vector2(globuleChaseForce, globuleChaseRange);
 
-		socialData[ 1, 0 ] = new Vector2( globuleFleeForce, globuleFleeRange );
-		socialData[ 2, 1 ] = new Vector2( globuleFleeForce, globuleFleeRange );
-		socialData[ 0, 2 ] = new Vector2( globuleFleeForce, globuleFleeRange );
+        socialData[1, 0] = new Vector2(globuleFleeForce, globuleFleeRange);
+        socialData[2, 1] = new Vector2(globuleFleeForce, globuleFleeRange);
+        socialData[0, 2] = new Vector2(globuleFleeForce, globuleFleeRange);
 
-		socialData[ 0, 0 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
-		socialData[ 1, 1 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
-		socialData[ 2, 2 ] = new Vector2( globuleAvoidForce, globuleAvoidRange );
+        socialData[0, 0] = new Vector2(globuleAvoidForce, globuleAvoidRange);
+        socialData[1, 1] = new Vector2(globuleAvoidForce, globuleAvoidRange);
+        socialData[2, 2] = new Vector2(globuleAvoidForce, globuleAvoidRange);
 
         colors[0] = new Color(0.1f, 0.1f, 0.3f);
         colors[1] = new Color(0.3f, 0.2f, 0.5f);
         colors[2] = new Color(0.4f, 0.1f, 0.1f);
 
-       break;      case EcosystemPreset.Fluidy:
+        break;
+      case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
           for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
             socialData[i, j] = new Vector2(0, 0);
@@ -1301,25 +1300,25 @@ public class TextureSimulator : MonoBehaviour {
     _prevSimulationTime = 0;
   }
 
-  private void setPlanetValues( int i, int j, float f, float r ) {
+  private void setPlanetValues(int i, int j, float f, float r) {
 
-	/*
-	type[i].force [i] = f;    type[i].radius[i] = r;
+    /*
+    type[i].force [i] = f;    type[i].radius[i] = r;
 
-	type[i].force [j] = f;    type[i].radius[j] = r;
+    type[i].force [j] = f;    type[i].radius[j] = r;
 
-	type[j].force [i] = f;    type[j].radius[i] = r;
+    type[j].force [i] = f;    type[j].radius[i] = r;
 
-	type[j].force [j] = f;    type[j].radius[j] = r;
-*/
+    type[j].force [j] = f;    type[j].radius[j] = r;
+  */
 
-    }
+  }
 
 
 
   public void LoadRandomEcosystem() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
- 
+
     var gen = GetComponent<NameGenerator>();
     string name;
     if (gen == null) {
@@ -1580,7 +1579,7 @@ public class TextureSimulator : MonoBehaviour {
     public void UpdateHand(Hand hand) {
       _prevTrackedPosition = _currTrackedPosition;
 
-      if(hand != null) {
+      if (hand != null) {
         _currTrackedPosition = getPositionFromHand(hand);
       }
 

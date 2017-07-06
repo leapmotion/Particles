@@ -35,6 +35,9 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "globules":
         _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Globules);
         break;
+      case "test":
+        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Test);
+        break;
       case "body mind":
         _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.BodyMind);
         break;

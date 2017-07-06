@@ -47,13 +47,29 @@ public class TextureSimulator : MonoBehaviour {
     get { return _handCollisionEnabled; }
     set { _handCollisionEnabled = value; }
   }
-
-  [Range(0, 0.1f)]
   [SerializeField]
-  private float _handCollisionRadius = 0.04f;
-  public float handCollisionRadius {
-    get { return _handCollisionRadius; }
-    set { _handCollisionRadius = value; }
+  private Vector2 _handCollisionRadius = new Vector2(0.02f, 0.04f);
+  public float minHandCollisionRadius {
+    get { return _handCollisionRadius.x; }
+    set { _handCollisionRadius.x = value; }
+  }
+
+  public float maxHandCollisionRadius {
+    get { return _handCollisionRadius.y; }
+    set { _handCollisionRadius.y = value; }
+  }
+
+  [SerializeField]
+  private float _handCollisionThickness = 0.01f;
+  public float handCollisionThickness {
+    get { return _handCollisionThickness; }
+    set { _handCollisionThickness = value; }
+  }
+
+  [SerializeField]
+  private AnimationCurve _handCollisionVelocityCurve;
+  public AnimationCurve handCollisionVelocityCurve {
+    get { return _handCollisionVelocityCurve; }
   }
 
   [Range(1, 5)]
@@ -1522,6 +1538,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void doHandCollision() {
+    if (!_handCollisionEnabled) {
+      return;
+    }
+
     int capsuleCount = 0;
 
     generateCapsulesForHand(Hands.Left, ref _prevLeft, ref capsuleCount);

@@ -1313,11 +1313,17 @@ public class TextureSimulator : MonoBehaviour {
       return c;
     }).ToArray());
     tex.Apply();
-    Graphics.CopyTexture(tex, _backPos);
+
+    RenderTexture.active = _backPos;
+    _backPos.DiscardContents();
+    Graphics.Blit(tex, _backPos);
 
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
     tex.Apply();
-    Graphics.CopyTexture(tex, _backVel);
+
+    RenderTexture.active = _backVel;
+    _backVel.DiscardContents();
+    Graphics.Blit(tex, _backVel);
 
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
     _currScaledTime = 0;

@@ -900,6 +900,7 @@ public class TextureSimulator : MonoBehaviour {
     BodyMind,
 	Planets,
     Globules,
+	Test,
     Fluidy
   }
 
@@ -1092,10 +1093,37 @@ public class TextureSimulator : MonoBehaviour {
         colors[8] = new Color(0.2f, 0.1f, 0.5f);
        break;
 
+     case EcosystemPreset.Test:
+
+ 		_currentSimulationSpeciesCount = 2;
+	
+		int tBlack = 0;
+		int tWhite = 1;
+
+        colors[ tBlack ] = new Color( 0.0f, 0.0f, 0.0f );
+        colors[ tWhite ] = new Color( 1.0f, 1.0f, 1.0f );
+
+		float tBlackDrag = 0.0f;
+		float tWhiteDrag = 1.0f;
+
+		float tBlackCollision = 0.0f;
+		float tWhiteCollision = 0.0f;
+
+		int tBlackSteps = 0;
+		int tWhiteSteps = 0;
+
+		float tbd = Mathf.Lerp( setting.minDrag, setting.maxDrag, tBlackDrag );
+		float twd = Mathf.Lerp( setting.minDrag, setting.maxDrag, tWhiteDrag );
+
+		float tbc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tBlackCollision   );
+		float twc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tWhiteCollision   );
+
+		speciesData[ tBlack ] = new Vector3( tbd, tBlackSteps, tbc );
+		speciesData[ tWhite ] = new Vector3( twd, tWhiteSteps, twc );
+	
+       break;
+
      case EcosystemPreset.BodyMind:
-
-
-
  		_currentSimulationSpeciesCount = 3;
 
 		int blue   = 0;
@@ -1119,9 +1147,6 @@ public class TextureSimulator : MonoBehaviour {
 
 		float purpleToPurpleForce = 0.2f;		
 		float purpleToPurpleRange = 1.0f;		
-
-		//float blackToBlackForce   = 0.0f;		
-		//float blackToBlackRange   = 1.0f;		
 
 		float blueToPurpleForce   = 1.0f;
 		float blueToPurpleRange   = 1.0f;
@@ -1157,55 +1182,6 @@ public class TextureSimulator : MonoBehaviour {
 		socialData[ purple, blue   ] = new Vector2( setting.maxSocialForce * purpleToBlueForce,   setting.maxSocialRange * purpleToBlueRange   );
 		socialData[ black,  blue   ] = new Vector2( setting.maxSocialForce * blackToBlueForce,    setting.maxSocialRange * blackToBlueRange    );
 		socialData[ black,  purple ] = new Vector2( setting.maxSocialForce * blackToPurpleForce,  setting.maxSocialRange * blackToPurpleRange  );
-
-
-
-
-
-		/*
- 		_currentSimulationSpeciesCount = 2;
-
-		int blue   = 0;
-		int purple = 1;
-
-		float blueDrag   = 0.0f;
-		float purpleDrag = 0.0f;
-
-		float blueCollision   = 0.0f;
-		float purpleCollision = 0.0f;
-
-		int blueSteps   = 0;
-		int purpleSteps = 0;
-
-		float blueToBlueForce     = 0.2f;
-		float blueToBlueRange     = 1.0f;
-
-		float purpleToPurpleForce = 0.2f;		
-		float purpleToPurpleRange = 1.0f;		
-
-		float blueToPurpleForce   = 1.0f;
-		float blueToPurpleRange   = 1.0f;
-
-		float purpleToBlueForce   = -1.0f;		
-		float purpleToBlueRange   = 0.4f;
-
-        colors[ blue   ] = new Color( 0.2f, 0.2f, 0.8f );
-        colors[ purple ] = new Color( 0.3f, 0.2f, 0.8f );
-
-		float bd = Mathf.Lerp( setting.minDrag, setting.maxDrag, blueDrag   );
-		float pd = Mathf.Lerp( setting.minDrag, setting.maxDrag, purpleDrag );
-
-		float bc = Mathf.Lerp(setting.minCollision, setting.maxCollision, blueCollision   );
-		float pc = Mathf.Lerp(setting.minCollision, setting.maxCollision, purpleCollision );
-      	
-		speciesData[ blue   ] = new Vector3( bd, blueSteps,   bc );
-     	speciesData[ purple ] = new Vector3( pd, purpleSteps, pc );
-
-		socialData[ blue,   blue   ] = new Vector2( setting.maxSocialForce * blueToBlueForce,     setting.maxSocialRange * blueToBlueRange     );
-		socialData[ purple, purple ] = new Vector2( setting.maxSocialForce * purpleToPurpleForce, setting.maxSocialRange * purpleToPurpleRange );
-		socialData[ blue,   purple ] = new Vector2( setting.maxSocialForce * blueToPurpleForce,   setting.maxSocialRange * blueToPurpleRange   );
-		socialData[ purple, blue   ] = new Vector2( setting.maxSocialForce * purpleToBlueForce,   setting.maxSocialRange * purpleToBlueRange   );
-		*/
 
        break;
 

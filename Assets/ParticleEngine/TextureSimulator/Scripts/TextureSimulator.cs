@@ -31,6 +31,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int PASS_RANDOMIZE_PARTICLES = 4;
   public const int PASS_STEP_SOCIAL_QUEUE = 5;
   public const int PASS_SHADER_DEBUG = 6;
+  public const int PASS_COPY = 7;
 
   #region INSPECTOR
   [SerializeField]
@@ -832,9 +833,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
     generateMeshes();
-
-    blit("", ref _frontPos, ref _backPos, 0, 1);
-    blit("", ref _frontVel, ref _backVel, 0, 1);
+    
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
@@ -1320,7 +1319,10 @@ public class TextureSimulator : MonoBehaviour {
         throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
     }
 
+    GL.LoadPixelMatrix(0, 1, 1, 0);
+
     Texture2D tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
+    _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
       Color c = (Vector4)p;
@@ -1328,17 +1330,13 @@ public class TextureSimulator : MonoBehaviour {
       return c;
     }).ToArray());
     tex.Apply();
-
-    RenderTexture.active = _backPos;
-    _backPos.DiscardContents();
-    Graphics.Blit(tex, _backPos);
+    
+    blitPos(PASS_COPY);
 
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
     tex.Apply();
 
-    RenderTexture.active = _backVel;
-    _backVel.DiscardContents();
-    Graphics.Blit(tex, _backVel);
+    blitVel(PASS_COPY);
 
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
     _currScaledTime = 0;

@@ -31,6 +31,7 @@
     float4 dest1 : SV_Target1;
   };
 
+  sampler2D _CopySource;
   sampler2D _Velocity;
   sampler2D _Position;
 
@@ -317,6 +318,10 @@
     color += printValue(i.uv, float2(0, 0.85), float2(0.1, 0.1), values.x, 2, 6);
     return color;
   }
+
+  float4 copy(v2f i) : SV_Target{
+    return tex2D(_CopySource, i.uv);
+  }
   ENDCG
 
   SubShader {
@@ -381,6 +386,14 @@
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment debugOutput
+      ENDCG
+    }
+
+    //Pass 7: copy positions
+    Pass{
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment copy
       ENDCG
     }
   }

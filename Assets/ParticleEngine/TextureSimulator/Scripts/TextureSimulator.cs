@@ -1321,7 +1321,8 @@ public class TextureSimulator : MonoBehaviour {
 
     GL.LoadPixelMatrix(0, 1, 1, 0);
 
-    Texture2D tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
+    Texture2D tex;
+    tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
@@ -1332,11 +1333,16 @@ public class TextureSimulator : MonoBehaviour {
     tex.Apply();
     
     blitPos(PASS_COPY);
+    DestroyImmediate(tex);
+
+    tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
+    _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
     tex.Apply();
 
     blitVel(PASS_COPY);
+    DestroyImmediate(tex);
 
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
     _currScaledTime = 0;

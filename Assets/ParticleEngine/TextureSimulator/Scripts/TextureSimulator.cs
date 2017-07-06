@@ -523,6 +523,13 @@ public class TextureSimulator : MonoBehaviour {
       set { _speciesCount = value; }
     }
 
+    [SerializeField]
+    private SpawnPreset _spawnMode = SpawnPreset.Spherical;
+    public SpawnPreset spawnMode {
+      get { return _spawnMode; }
+      set { _spawnMode = value; }
+    }
+
     [Range(1, MAX_FORCE_STEPS)]
     [SerializeField]
     private int _maxForceSteps = MAX_FORCE_STEPS;

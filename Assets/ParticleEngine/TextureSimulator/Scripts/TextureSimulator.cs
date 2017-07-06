@@ -1181,9 +1181,7 @@ public class TextureSimulator : MonoBehaviour {
         socialData[black, purple] = new Vector2(setting.maxSocialForce * blackToPurpleForce, setting.maxSocialRange * blackToPurpleRange);
 
         break;
-
       case EcosystemPreset.Globules:
-
         _currentSimulationSpeciesCount = 3;
 
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {

@@ -833,11 +833,11 @@ public class TextureSimulator : MonoBehaviour {
 
     generateMeshes();
 
+    blit("", ref _frontPos, ref _backPos, 0, 1);
+    blit("", ref _frontVel, ref _backVel, 0, 1);
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
-
-    ResetPositions();
 
     _handActors.Fill(() => new HandActor(this));
 
@@ -908,8 +908,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     var setting = _presetEcosystemSettings;
-    ResetPositions(SpawnPreset.Spherical);
-
+    _currentSpawnPreset = SpawnPreset.Spherical;
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     Color[] colors = new Color[MAX_SPECIES];
     Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];
@@ -981,6 +980,8 @@ public class TextureSimulator : MonoBehaviour {
 
           socialData[redSpecies, s] = new Vector2(redLoveOfOthers, loveRange);
         }
+
+        ResetPositions();
         break;
       case EcosystemPreset.Chase:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1023,6 +1024,8 @@ public class TextureSimulator : MonoBehaviour {
         socialData[7, 6] = new Vector2(flee, range);
         socialData[8, 7] = new Vector2(flee, range);
         socialData[9, 8] = new Vector2(flee, range);
+
+        ResetPositions();
         break;
       case EcosystemPreset.Mitosis:
         for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1048,6 +1051,8 @@ public class TextureSimulator : MonoBehaviour {
         colors[2] = new Color(0.1f, 0.1f, 0.3f);
         colors[1] = new Color(0.0f, 0.0f, 0.3f);
         colors[0] = new Color(0.0f, 0.0f, 0.0f);
+
+        ResetPositions();
         break;
       case EcosystemPreset.Planets:
 
@@ -1089,8 +1094,9 @@ public class TextureSimulator : MonoBehaviour {
         colors[6] = new Color(0.0f, 0.0f, 0.9f);
         colors[7] = new Color(0.4f, 0.0f, 0.9f);
         colors[8] = new Color(0.2f, 0.1f, 0.5f);
-        break;
 
+        ResetPositions();
+        break;
       case EcosystemPreset.Test:
         _currentSimulationSpeciesCount = 2;
 
@@ -1118,8 +1124,8 @@ public class TextureSimulator : MonoBehaviour {
         speciesData[tBlack] = new Vector3(tbd, tBlackSteps, tbc);
         speciesData[tWhite] = new Vector3(twd, tWhiteSteps, twc);
 
+        ResetPositions();
         break;
-
       case EcosystemPreset.BodyMind:
         _currentSimulationSpeciesCount = 3;
 
@@ -1180,6 +1186,7 @@ public class TextureSimulator : MonoBehaviour {
         socialData[black, blue] = new Vector2(setting.maxSocialForce * blackToBlueForce, setting.maxSocialRange * blackToBlueRange);
         socialData[black, purple] = new Vector2(setting.maxSocialForce * blackToPurpleForce, setting.maxSocialRange * blackToPurpleRange);
 
+        ResetPositions();
         break;
       case EcosystemPreset.Globules:
         _currentSimulationSpeciesCount = 3;
@@ -1217,6 +1224,7 @@ public class TextureSimulator : MonoBehaviour {
         colors[1] = new Color(0.3f, 0.2f, 0.5f);
         colors[2] = new Color(0.4f, 0.1f, 0.1f);
 
+        ResetPositions();
         break;
       case EcosystemPreset.Fluidy:
         for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {

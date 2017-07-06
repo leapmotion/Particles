@@ -916,6 +916,10 @@ public class TextureSimulator : MonoBehaviour {
     Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
+    Vector3[] particlePositions = new Vector3[MAX_PARTICLES].Fill(() => Random.insideUnitSphere);
+    Vector3[] particleVelocities = new Vector3[MAX_PARTICLES];
+    int[] particleSpecies = new int[MAX_PARTICLES].Fill(() => Random.Range(0, int.MaxValue));
+
     //Default colors are greyscale 0 to 1
     for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
       float p = i / (SPECIES_CAP_FOR_PRESETS - 1.0f);
@@ -1279,8 +1283,6 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SocialData", packedSocialData);
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
-
-    ResetPositions();
   }
 
   public void ResetPositions() {
@@ -1291,7 +1293,7 @@ public class TextureSimulator : MonoBehaviour {
     _currentSpawnPreset = preset;
     Vector3[] positions = new Vector3[MAX_PARTICLES].Fill(() => Random.insideUnitSphere);
     Vector3[] velocities = new Vector3[MAX_PARTICLES];
-    int[] species = new int[MAX_PARTICLES].Fill(() => Random.Range(0, _currentSimulationSpeciesCount));
+    int[] species = new int[MAX_PARTICLES].Fill(() => Random.Range(0, int.MaxValue));
 
     switch (preset) {
       case SpawnPreset.Spherical:
@@ -1307,7 +1309,7 @@ public class TextureSimulator : MonoBehaviour {
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
       Color c = (Vector4)p;
-      c.a = s;
+      c.a = (s % _currentSimulationSpeciesCount);
       return c;
     }).ToArray());
     tex.Apply();

@@ -182,6 +182,12 @@
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
 
+    //float4 neighborA = tex2D(_Position, i.uv - float2(1.0 / MAX_PARTICLES, 0));
+    //float4 neighborB = tex2D(_Position, i.uv + float2(1.0 / MAX_PARTICLES, 0));
+
+    //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
+    //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
+
     for (int i = 0; i < MAX_PARTICLES; i++) {
       float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
       float3 toOther = other.xyz - particle.xyz;
@@ -264,6 +270,7 @@
     particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
     particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
     particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _SpeciesCount);
+    //particle.w = i.uv.x * _SpeciesCount;
 
     particle.xyz *= _SpawnRadius;
 

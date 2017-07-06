@@ -1124,7 +1124,21 @@ public class TextureSimulator : MonoBehaviour {
         speciesData[tBlack] = new Vector3(tbd, tBlackSteps, tbc);
         speciesData[tWhite] = new Vector3(twd, tWhiteSteps, twc);
 
+		/*
+        for (int i = 0; i < MAX_PARTICLES; i++) {
+          float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
+          float percent2 = percent * 12.123123f + Random.value;
+          particlePositions[i] = new Vector3(Mathf.Lerp(-1, 1, percent2 - (int)percent2), Mathf.Lerp(-1, 1, percent), Random.Range(-0.01f, 0.01f));
+          particleSpecies[i] = Mathf.FloorToInt(percent * _currentSimulationSpeciesCount);
+        }
+        ResetPositions(particlePositions, particleVelocities, particleSpecies);
+
+        */
+
+
+		//default
         ResetPositions();
+		
         break;
       case EcosystemPreset.BodyMind:
         _currentSimulationSpeciesCount = 3;
@@ -1242,6 +1256,7 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
+//Alex added this
         for (int i = 0; i < MAX_PARTICLES; i++) {
           float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
           float percent2 = percent * 12.123123f + Random.value;

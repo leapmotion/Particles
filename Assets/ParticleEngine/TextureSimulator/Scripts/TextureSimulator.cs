@@ -908,7 +908,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     var setting = _presetEcosystemSettings;
-    _currentSpawnPreset = SpawnPreset.Spherical;
+    ResetPositions(SpawnPreset.Spherical);
 
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     Color[] colors = new Color[MAX_SPECIES];
@@ -1092,7 +1092,6 @@ public class TextureSimulator : MonoBehaviour {
         break;
 
       case EcosystemPreset.Test:
-
         _currentSimulationSpeciesCount = 2;
 
         int tBlack = 0;

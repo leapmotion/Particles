@@ -1299,6 +1299,10 @@ public class TextureSimulator : MonoBehaviour {
         break;
     }
 
+    ResetPositions(positions, velocities, species);
+  }
+
+  public void ResetPositions(Vector3[] positions, Vector3[] velocities, int[] species) {
     Texture2D tex = new Texture2D(MAX_PARTICLES, 1, TextureFormat.RGBAFloat, mipmap: false, linear: true);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {

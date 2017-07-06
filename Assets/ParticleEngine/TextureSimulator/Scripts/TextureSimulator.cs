@@ -1106,7 +1106,7 @@ public class TextureSimulator : MonoBehaviour {
         colors[tWhite] = new Color(1.0f, 1.0f, 1.0f);
 
         float tBlackDrag = 0.0f;
-        float tWhiteDrag = 1.0f;
+        float tWhiteDrag = 0.0f;
 
         float tBlackCollision = 0.0f;
         float tWhiteCollision = 0.0f;
@@ -1123,20 +1123,37 @@ public class TextureSimulator : MonoBehaviour {
         speciesData[tBlack] = new Vector3(tbd, tBlackSteps, tbc);
         speciesData[tWhite] = new Vector3(twd, tWhiteSteps, twc);
 
-		/*
-        for (int i = 0; i < MAX_PARTICLES; i++) {
-          float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
-          float percent2 = percent * 12.123123f + Random.value;
-          particlePositions[i] = new Vector3(Mathf.Lerp(-1, 1, percent2 - (int)percent2), Mathf.Lerp(-1, 1, percent), Random.Range(-0.01f, 0.01f));
-          particleSpecies[i] = Mathf.FloorToInt(percent * _currentSimulationSpeciesCount);
+		int half = (int)( MAX_PARTICLES / 2.0f );
+        for (int i = 0; i < MAX_PARTICLES; i++) 
+		{
+			float rr = 1.0f;
+			float xx = 0.0f;
+			float yy = 0.0f;
+			float zz = 0.0f;
+			float ff = 0.0f;
+
+			if ( i < half )
+			{
+				particleSpecies[i] = tBlack;
+				ff = -0.5f + (float)i/ (float)half;
+				yy -= 0.1f;
+			} 
+			else 
+			{
+				particleSpecies[i] = tWhite;	
+				ff = -0.5f + (float)( i - half ) / (float)half;
+				yy += 0.1f;
+			}
+
+			xx = ff * rr;
+
+			particlePositions[i] = new Vector3( xx, yy, zz );
         }
+
         ResetPositions(particlePositions, particleVelocities, particleSpecies);
 
-        */
-
-
 		//default
-        ResetPositions();
+        //ResetPositions();
 		
         break;
       case EcosystemPreset.BodyMind:

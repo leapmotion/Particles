@@ -665,6 +665,7 @@ public class TextureSimulator : MonoBehaviour {
 
   //Simulation
   private int _currentSimulationSpeciesCount;
+  private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
   private RenderTexture _socialTemp;
@@ -781,17 +782,6 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  public void ResetPositions() {
-    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
-
-    GL.LoadPixelMatrix(0, 1, 1, 0);
-    blitPos(PASS_RANDOMIZE_PARTICLES);
-
-    _currScaledTime = 0;
-    _currSimulationTime = 0;
-    _prevSimulationTime = 0;
-  }
-
   private string _lastSeed = "";
   public void ReloadRandomEcosystem() {
     LoadRandomEcosystem(_lastSeed);
@@ -906,8 +896,13 @@ public class TextureSimulator : MonoBehaviour {
     Fluidy
   }
 
+  public enum SpawnPreset {
+    Spherical
+  }
+
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     var setting = _presetEcosystemSettings;
+    _currentSpawnPreset = SpawnPreset.Spherical;
 
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     Color[] colors = new Color[MAX_SPECIES];
@@ -1277,8 +1272,45 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SocialData", packedSocialData);
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
+
+    ResetPositions();
   }
 
+  public void ResetPositions() {
+    ResetPositions(_currentSpawnPreset);
+  }
+
+  public void ResetPositions(SpawnPreset preset) {
+    _currentSpawnPreset = preset;
+    Vector3[] positions = new Vector3[MAX_PARTICLES].Fill(() => Random.insideUnitSphere);
+    Vector3[] velocities = new Vector3[MAX_PARTICLES];
+    int[] species = new int[MAX_PARTICLES].Fill(() => Random.Range(0, _currentSimulationSpeciesCount));
+
+    switch (preset) {
+      case SpawnPreset.Spherical:
+        positions.Fill(() => Random.insideUnitSphere * _spawnRadius);
+        break;
+    }
+
+    Texture2D tex = new Texture2D(MAX_PARTICLES, 1, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+
+    tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
+      Color c = (Vector4)p;
+      c.a = s;
+      return c;
+    }).ToArray());
+    tex.Apply();
+    Graphics.CopyTexture(tex, _backPos);
+
+    tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
+    tex.Apply();
+    Graphics.CopyTexture(tex, _backVel);
+
+    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+    _currScaledTime = 0;
+    _currSimulationTime = 0;
+    _prevSimulationTime = 0;
+  }
 
   private void setPlanetValues( int i, int j, float f, float r ) {
 

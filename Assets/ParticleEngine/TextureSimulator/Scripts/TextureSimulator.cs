@@ -127,16 +127,15 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private bool _handInfluenceEnabled = true;
   public bool handInfluenceEnabled {
-    get { return _handInfluenceEnabled && !_overrideDisableHandInfluence; }
+    get { return _handInfluenceEnabled; }
     set { _handInfluenceEnabled = value; }
   }
 
-  [SerializeField, Disable]
-  [Tooltip("Interfaces set this to true when the user is interacting with them. This "
-         + "prevents hand influence from actually enabling even if the user is grabbing.")]
-  private bool _overrideDisableHandInfluence = false;
-  public void SetOverrideDisableHandInfluence(bool forceHandInfluenceOff) {
-    _overrideDisableHandInfluence = forceHandInfluenceOff;
+  [SerializeField]
+  private bool _showHandInfluenceBubble = false;
+  public bool showHandInfluenceBubble {
+    get { return _showHandInfluenceBubble; }
+    set { _showHandInfluenceBubble = value; }
   }
 
   [SerializeField]
@@ -1587,8 +1586,6 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    float scale = 1.0f / transform.lossyScale.x;
-
     _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
     _simulationMat.SetFloat("_HandCollisionExtaForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
@@ -1702,7 +1699,7 @@ public class TextureSimulator : MonoBehaviour {
         _currTrackedPosition = getPositionFromHand(hand);
       }
 
-      if (active) {
+      if (active && _sim._showHandInfluenceBubble) {
         var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
         _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
         Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);

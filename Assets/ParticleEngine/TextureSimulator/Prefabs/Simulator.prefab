@@ -688,6 +688,7 @@ MonoBehaviour:
   _fieldCenter: {fileID: 4870151900081912}
   _fieldRadius: 1.01
   _fieldForce: 0.0005
+  _headRadius: 0.15
   _simulationEnabled: 1
   _dynamicTimestepEnabled: 1
   _limitStepsPerFrame: 1

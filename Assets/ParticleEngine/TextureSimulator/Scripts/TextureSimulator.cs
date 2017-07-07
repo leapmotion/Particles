@@ -371,6 +371,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _fieldForce = value; }
   }
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _headRadius = 0.15f;
+  public float headRadius {
+    get { return _headRadius; }
+    set { _headRadius = value; }
+  }
+
   //#######################//
   ///      Simulation      //
   //#######################//
@@ -1604,7 +1612,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
-    _simulationMat.SetFloat("_HandCollisionExtaForce", _extraHandCollisionForce);
+    _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
@@ -1808,6 +1816,11 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
+
+    if (_provider != null) {
+      _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
+      _simulationMat.SetFloat("_HeadRadius", _headRadius);
+    }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);

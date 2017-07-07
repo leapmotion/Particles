@@ -85,6 +85,10 @@
 #ifdef SQUASH_TAIL
       velocity.xyz *= _TrailLength;
       float velLength = length(velocity.xyz);
+      if (velLength < 0.00001) {
+        velLength = 1;
+      }
+
       float squash = sqrt(1.0 / (1.0 + velLength));
       v.vertex.xyz *= squash;
       v.vertex.xyz += velocity.xyz * dot(velocity.xyz, v.vertex.xyz) / velLength;

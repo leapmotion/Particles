@@ -45,8 +45,6 @@ public class TextureSimulatorSetters : MonoBehaviour {
         Debug.LogError("No ecosystem with name " + name);
         break;
     }
-
-    _sim.ResetPositions();
   }
 
   public void SetSpeciesCount(float count) {

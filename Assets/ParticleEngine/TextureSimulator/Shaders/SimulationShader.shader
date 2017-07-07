@@ -37,6 +37,8 @@
   float3 _FieldCenter;
   float _FieldRadius;
   float _FieldForce;
+  float3 _HeadPos;
+  float _HeadRadius;
 
   float _SpeciesCount;
   float _SpawnRadius;
@@ -104,6 +106,14 @@
     float4 pos = tex2D(_Position, i.uv);
     float4 vel = tex2D(_Velocity, i.uv);
     pos.xyz += vel.xyz;
+
+    //Dont hit the head pls
+    float3 fromHead = pos.xyz - _HeadPos;
+    float distToHead = length(fromHead);
+    if (distToHead < _HeadRadius) {
+      pos.xyz = _HeadPos + fromHead / distToHead * _HeadRadius;
+    }
+
     return pos;
   }
 

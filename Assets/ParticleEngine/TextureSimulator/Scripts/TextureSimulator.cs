@@ -371,6 +371,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _fieldForce = value; }
   }
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _headRadius = 0.15f;
+  public float headRadius {
+    get { return _headRadius; }
+    set { _headRadius = value; }
+  }
+
   //#######################//
   ///      Simulation      //
   //#######################//
@@ -1604,7 +1612,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
-    _simulationMat.SetFloat("_HandCollisionExtaForce", _extraHandCollisionForce);
+    _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
@@ -1727,16 +1735,28 @@ public class TextureSimulator : MonoBehaviour {
       prevPosition = position;
       position = Vector3.Lerp(_prevTrackedPosition, _currTrackedPosition, framePercent);
 
+      float rawGrab;
+      if (hand != null) {
+        rawGrab = 1;
+        foreach (var finger in hand.Fingers) {
+          if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
+          float angle = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis());
+          rawGrab = Mathf.Min(angle / 180, rawGrab);
+        }
+      } else {
+        rawGrab = 0;
+      }
+
       _smoothedGrab.delay = _sim.influenceGrabSmoothing;
-      _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
+      _smoothedGrab.Update(rawGrab, Time.deltaTime);
       float grab = _smoothedGrab.value;
 
       switch (_sim.handInfluenceMode) {
         case HandInfluenceMode.Binary:
           if (active) {
-            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.endGrabStrength;
+            active = hand != null && rawGrab > _sim.influenceBinarySettings.endGrabStrength;
           } else {
-            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.startGrabStrength;
+            active = hand != null && rawGrab > _sim.influenceBinarySettings.startGrabStrength;
           }
           _influence = 1;
           _radiusMultiplier = 1;
@@ -1796,6 +1816,11 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
+
+    if (_provider != null) {
+      _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
+      _simulationMat.SetFloat("_HeadRadius", _headRadius);
+    }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);

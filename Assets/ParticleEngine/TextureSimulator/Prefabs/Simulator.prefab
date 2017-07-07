@@ -561,7 +561,7 @@ MonoBehaviour:
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4
   _handInfluenceEnabled: 1
-  _overrideDisableHandInfluence: 0
+  _showHandInfluenceBubble: 0
   _influenceMat: {fileID: 2100000, guid: ec01a910a66df34448d586402c4b6db4, type: 2}
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
@@ -728,7 +728,7 @@ MonoBehaviour:
   _velocityDebug: {fileID: 23750277156700536}
   _socialDebug: {fileID: 23341970254567932}
   _shaderDataDebug: {fileID: 23460725754145476}
-  _drawHandColliders: 1
+  _drawHandColliders: 0
   _handColliderColor: {r: 0, g: 0, b: 0, a: 1}
   _enableSpeciesDebugColors: 0
   _debugSpeciesNumber: 0

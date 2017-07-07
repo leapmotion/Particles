@@ -9,6 +9,7 @@ public class ToolbeltFollower : MonoBehaviour {
   public float slerpCoeffPerSec = 10F;
 
   public bool stiffened = false;
+  public float stiffenedMultiplier = 0.1F;
 
   private float _effLerpCoeffPerSec;
   private float _effSlerpCoeffPerSec;
@@ -20,10 +21,10 @@ public class ToolbeltFollower : MonoBehaviour {
 
   void Update() {
     if (target != null) {
-      float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? 0.2F : 1F);
+      float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F);
       _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec, targetLerpCoeffPerSec, 20F * Time.deltaTime);
 
-      float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? 0.2F : 1F);
+      float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F);
       _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec, targetSlerpCoeffPerSec, 20F * Time.deltaTime);
     }
   }

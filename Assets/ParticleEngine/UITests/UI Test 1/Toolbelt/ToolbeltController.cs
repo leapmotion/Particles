@@ -44,13 +44,14 @@ public class ToolbeltController : MonoBehaviour {
   }
 
   void Update() {
+    // Commented-out sections force the toolbelt to go to and stay Ready.
     if (animState == AnimState.Idle
-        && isLookingDown()) {
+        /*&& isLookingDown()*/) {
       goIdleToReady();
     }
     else if (animState == AnimState.Ready
         && !isLookingDown()) {
-      goReadyToIdle();
+      /*goReadyToIdle();*/
     }
 
     if (_waitingForMaximizeOrMinimize) {

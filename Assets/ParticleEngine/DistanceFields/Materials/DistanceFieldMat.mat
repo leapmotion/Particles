@@ -6,9 +6,9 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: SimulationMaterial
-  m_Shader: {fileID: 4800000, guid: fd48907d591133d4e844a3bd51b2f576, type: 3}
-  m_ShaderKeywords: SPHERE_MODE_STASIS
+  m_Name: DistanceFieldMat
+  m_Shader: {fileID: 4800000, guid: bdcac16c8c1bfac4eaf421491bd193ff, type: 3}
+  m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_CustomRenderQueue: -1
@@ -66,10 +66,6 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
-    - _SoftFactor: 1.2
-    - _SoftInnerRadius: 0.02
-    - _SoftOuterRadius: 0.03
-    - _SoftThresh: 0.001
     - _SpecularHighlights: 1
     - _SrcBlend: 1
     - _UVSec: 0

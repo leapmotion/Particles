@@ -10,15 +10,15 @@ public class OverrideHandInfluenceWhenPrimaryHover : MonoBehaviour {
   public TextureSimulator particleSimulator;
 
   void Update() {
-    bool overrideHandInfluence = false;
-    foreach (var controller in manager.interactionControllers) {
-      if (controller.isPrimaryHovering) {
-        overrideHandInfluence = true;
-        break;
-      }
-    }
+    //bool overrideHandInfluence = false;
+    //foreach (var controller in manager.interactionControllers) {
+    //  if (controller.isPrimaryHovering) {
+    //    overrideHandInfluence = true;
+    //    break;
+    //  }
+    //}
 
-    particleSimulator.SetOverrideDisableHandInfluence(overrideHandInfluence);
+    //particleSimulator.SetOverrideDisableHandInfluence(overrideHandInfluence);
   }
 
 }

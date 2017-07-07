@@ -13,6 +13,7 @@
     CGPROGRAM
     #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
     #pragma multi_compile _ ENABLE_INTERPOLATION
+    #pragma multi_compile FISH_TAIL SQUASH_TAIL
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
     #pragma target 2.0
 
@@ -74,10 +75,21 @@
 
       velocity.xyz *= velocity.w;
 
+#ifdef FISH_TAIL
       float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
       v.vertex.xyz -= velocity.xyz * dir * _TrailLength;
+#endif
 
       v.vertex.xyz *= _Size;
+
+#ifdef SQUASH_TAIL
+      velocity.xyz *= _TrailLength;
+      float velLength = length(velocity.xyz);
+      float squash = sqrt(1.0 / (1.0 + velLength));
+      v.vertex.xyz *= squash;
+      v.vertex.xyz += velocity.xyz * dot(velocity.xyz, v.vertex.xyz) / velLength;
+#endif
+      
       v.vertex.xyz += particle.xyz;
     }
 

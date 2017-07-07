@@ -67,8 +67,8 @@ Material:
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
     - _SoftFactor: 1.2
-    - _SoftInnerRadius: 0.04
-    - _SoftOuterRadius: 0.05
+    - _SoftInnerRadius: 0.02
+    - _SoftOuterRadius: 0.03
     - _SoftThresh: 0.001
     - _SpecularHighlights: 1
     - _SrcBlend: 1

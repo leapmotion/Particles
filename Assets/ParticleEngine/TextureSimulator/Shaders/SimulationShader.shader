@@ -1,9 +1,5 @@
 ﻿Shader "Unlit/Simulation" {
   Properties {
-    _SoftInnerRadius ("Soft Inner Radius", Float) = 0
-    _SoftOuterRadius ("Soft Outer Radius", Float) = 1
-    _SoftThresh ("Soft Threshold", Float) = 0
-    _SoftFactor ("Soft Factor", Float) = 1
   }
 
   CGINCLUDE
@@ -45,11 +41,8 @@
   float _SpeciesCount;
   float _SpawnRadius;
 
-  float _HandCollisionRadius;
-  float _SoftInnerRadius;
-  float _SoftOuterRadius;
-  float _SoftThresh;
-  float _SoftFactor;
+  float _HandCollisionInverseThickness;
+  float _HandCollisionExtraForce;
 
   int _SocialHandSpecies;
   float _SocialHandForceFactor;
@@ -215,8 +208,7 @@
       for (int i = 0; i < _CapsuleCount; i++) {
         float3 a = _CapsuleA[i];
         float3 b = _CapsuleB[i];
-
-        b = a + (b - a) * _SoftFactor;
+        float radius = _CapsuleA[i].w;
 
         float3 pa = particle.xyz - a;
         float3 ba = b - a;
@@ -240,12 +232,12 @@
         }
         */
 
-        float soft = 1 - saturate((dist - _SoftInnerRadius) / (_SoftOuterRadius - _SoftInnerRadius));
+        float soft = 1 - saturate((dist - radius) * _HandCollisionInverseThickness);
 
         float3 relVel = vel + velocity.xyz;
         float dir = saturate(dot(normalize(relVel), normalize(pa)));
         velocity.xyz = lerp(velocity.xyz, vel, soft * dir);
-        velocity.xyz += forceVector * _SoftThresh * soft;
+        velocity.xyz += forceVector * _HandCollisionExtraForce * soft;
 
 
         float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];

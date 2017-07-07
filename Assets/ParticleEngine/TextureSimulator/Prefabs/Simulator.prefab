@@ -527,18 +527,48 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _provider: {fileID: 0}
-  _handCollisionEnabled: 0
-  _handCollisionRadius: 0.0244
+  _handCollisionEnabled: 1
+  _disableCollisionWhenGrasping: 1
+  _handCollisionRadius: {x: 0.02, y: 0.06}
+  _handCollisionThickness: 0.01
+  _handCollisionVelocityScale: 1.2
+  _maxHandCollisionSpeed: 0.035
+  _handVelocityToCollisionRadius:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.19999999
+      value: 0.0013198224
+      inSlope: 0.0065991124
+      outSlope: 0.058341213
+      tangentMode: 5
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
+  _extraHandCollisionForce: 0.001
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4
   _handInfluenceEnabled: 1
+  _overrideDisableHandInfluence: 0
   _influenceMat: {fileID: 2100000, guid: ec01a910a66df34448d586402c4b6db4, type: 2}
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
-  _influenceForwardOffset: 0.036
+  _influenceForwardOffset: 0.017
   _handInfluenceType: 0
   _stasisInfluenceSettings:
-    _maxRadius: 0.2
+    _maxRadius: 0.124
     _force: 0.02
     _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:
@@ -669,13 +699,14 @@ MonoBehaviour:
   _particleMesh: {fileID: 4300000, guid: 4146ef317cfe10d4fa7b85d3f5fb513b, type: 2}
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 0
+  _trailMode: 0
   _spawnRadius: 2
   _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114
   _randomizeEcosystemKey: 32
   _loadEcosystemSeedKey: 108
   _presetEcosystemSettings:
-    _ecosystemPreset: 3
+    _ecosystemPreset: 4
     _maxForceSteps: 7
     _maxSocialForce: 0.003
     _maxSocialRange: 0.5
@@ -683,6 +714,7 @@ MonoBehaviour:
     _collisionForceRange: {x: 0.002, y: 0.009}
   _randomEcosystemSettings:
     _speciesCount: 10
+    _spawnMode: 0
     _maxForceSteps: 64
     _maxSocialForce: 0.003
     _maxSocialRange: 0.5
@@ -696,7 +728,7 @@ MonoBehaviour:
   _velocityDebug: {fileID: 23750277156700536}
   _socialDebug: {fileID: 23341970254567932}
   _shaderDataDebug: {fileID: 23460725754145476}
-  _drawHandColliders: 0
+  _drawHandColliders: 1
   _handColliderColor: {r: 0, g: 0, b: 0, a: 1}
   _enableSpeciesDebugColors: 0
   _debugSpeciesNumber: 0

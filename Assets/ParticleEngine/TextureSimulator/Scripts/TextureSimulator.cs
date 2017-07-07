@@ -47,6 +47,14 @@ public class TextureSimulator : MonoBehaviour {
     get { return _handCollisionEnabled; }
     set { _handCollisionEnabled = value; }
   }
+
+  [SerializeField]
+  private bool _disableCollisionWhenGrasping = true;
+  public bool disableCollisionWhenGrasping {
+    get { return _disableCollisionWhenGrasping; }
+    set { _disableCollisionWhenGrasping = value; }
+  }
+
   [SerializeField]
   private Vector2 _handCollisionRadius = new Vector2(0.02f, 0.04f);
   public float minHandCollisionRadius {
@@ -66,10 +74,34 @@ public class TextureSimulator : MonoBehaviour {
     set { _handCollisionThickness = value; }
   }
 
+  [Range(0, 2)]
   [SerializeField]
-  private AnimationCurve _handCollisionVelocityCurve;
-  public AnimationCurve handCollisionVelocityCurve {
-    get { return _handCollisionVelocityCurve; }
+  private float _handCollisionVelocityScale = 1.2f;
+  public float handCollisionVelocityScale {
+    get { return _handCollisionVelocityScale; }
+    set { _handCollisionVelocityScale = value; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _maxHandCollisionSpeed = 1;
+  public float maxHandCollisionSpeed {
+    get { return _maxHandCollisionSpeed; }
+    set { _maxHandCollisionSpeed = value; }
+  }
+
+  [SerializeField]
+  private AnimationCurve _handVelocityToCollisionRadius;
+  public AnimationCurve handVelocityToCollisionRadius {
+    get { return _handVelocityToCollisionRadius; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _extraHandCollisionForce = 0.001f;
+  public float extraHandCollisionForce {
+    get { return _extraHandCollisionForce; }
+    set { _extraHandCollisionForce = value; }
   }
 
   [Range(1, 5)]
@@ -1544,26 +1576,31 @@ public class TextureSimulator : MonoBehaviour {
 
     int capsuleCount = 0;
 
-    generateCapsulesForHand(Hands.Left, ref _prevLeft, ref capsuleCount);
-    generateCapsulesForHand(Hands.Right, ref _prevRight, ref capsuleCount);
+    generateCapsulesForHand(Hands.Left, _handActors[0], ref _prevLeft, ref capsuleCount);
+    generateCapsulesForHand(Hands.Right, _handActors[1], ref _prevRight, ref capsuleCount);
 
     RuntimeGizmoDrawer drawer;
     if (_handCollisionEnabled && _drawHandColliders && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
       drawer.color = _handColliderColor;
       for (int i = 0; i < capsuleCount; i++) {
-        drawer.DrawWireCapsule(_capsuleA[i], _capsuleB[i], _handCollisionRadius);
+        drawer.DrawWireCapsule(_capsuleA[i], _capsuleB[i], _capsuleA[i].w);
       }
     }
 
     float scale = 1.0f / transform.lossyScale.x;
 
-    _simulationMat.SetFloat("_HandCollisionRadius", scale * (_handCollisionEnabled ? _handCollisionRadius : 0));
+    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
+    _simulationMat.SetFloat("_HandCollisionExtaForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
     //Transform capsules into local space
     for (int i = 0; i < capsuleCount; i++) {
-      _capsuleA[i] = transform.InverseTransformPoint(_capsuleA[i]);
+      Vector4 v = _capsuleA[i];
+      Vector4 tv = transform.InverseTransformPoint(v);
+      tv.w = v.w;
+      _capsuleA[i] = tv;
+
       _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
     }
 
@@ -1572,29 +1609,41 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_CapsuleB", _capsuleB);
   }
 
-  private void generateCapsulesForHand(Hand source, ref Hand prev, ref int count) {
+  private void generateCapsulesForHand(Hand source, HandActor actor, ref Hand prev, ref int count) {
     if (source != null) {
       if (prev == null) {
         prev = new Hand().CopyFrom(source);
       }
-      for (int i = 0; i < 5; i++) {
-        Finger finger = source.Fingers[i];
-        Finger prevFinger = prev.Fingers[i];
-        for (int j = 0; j < 4; j++) {
-          Bone bone = finger.bones[j];
-          Bone prevBone = prevFinger.bones[j];
+      if (!actor.active || !_disableCollisionWhenGrasping) {
+        for (int i = 0; i < 5; i++) {
+          Finger finger = source.Fingers[i];
+          Finger prevFinger = prev.Fingers[i];
+          for (int j = 0; j < 4; j++) {
+            Bone bone = finger.bones[j];
+            Bone prevBone = prevFinger.bones[j];
 
-          Vector3 joint0 = bone.NextJoint.ToVector3();
-          Vector3 joint1 = bone.PrevJoint.ToVector3();
-          Vector3 prevJoint0 = prevBone.NextJoint.ToVector3();
-          Vector3 prevJoint1 = prevBone.PrevJoint.ToVector3();
+            Vector3 joint0 = bone.NextJoint.ToVector3();
+            Vector3 joint1 = bone.PrevJoint.ToVector3();
+            Vector3 prevJoint0 = prevBone.NextJoint.ToVector3();
+            Vector3 prevJoint1 = prevBone.PrevJoint.ToVector3();
 
-          int spheres = j == 0 ? _spheresPerMetacarpal : _spheresPerBone;
-          for (int k = 0; k < spheres; k++) {
-            float percent = k / (float)spheresPerBone;
-            _capsuleA[count] = Vector3.Lerp(joint0, joint1, percent);
-            _capsuleB[count] = Vector3.Lerp(prevJoint0, prevJoint1, percent);
-            count++;
+            int spheres = j == 0 ? _spheresPerMetacarpal : _spheresPerBone;
+            for (int k = 0; k < spheres; k++) {
+              float percent = k / (float)spheresPerBone;
+
+              Vector4 a = Vector3.Lerp(joint0, joint1, percent);
+              Vector4 b = Vector3.Lerp(prevJoint0, prevJoint1, percent);
+
+              float speed = (a - b).magnitude;
+              float speedPercent = speed / _maxHandCollisionSpeed;
+              float radius = Mathf.Lerp(_handCollisionRadius.x, _handCollisionRadius.y, _handVelocityToCollisionRadius.Evaluate(speedPercent));
+              a.w = radius;
+
+              _capsuleA[count] = a;
+              _capsuleB[count] = a + (b - a) * _handCollisionVelocityScale;
+
+              count++;
+            }
           }
         }
       }

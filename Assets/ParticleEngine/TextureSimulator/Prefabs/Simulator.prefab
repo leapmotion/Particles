@@ -529,7 +529,7 @@ MonoBehaviour:
   _provider: {fileID: 0}
   _handCollisionEnabled: 1
   _disableCollisionWhenGrasping: 1
-  _handCollisionRadius: {x: 0.02, y: 0.06}
+  _handCollisionRadius: {x: 0.03, y: 0.06}
   _handCollisionThickness: 0.01
   _handCollisionVelocityScale: 1.2
   _maxHandCollisionSpeed: 0.035
@@ -539,14 +539,14 @@ MonoBehaviour:
     - serializedVersion: 2
       time: 0
       value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
+      inSlope: 0.52541953
+      outSlope: 0.007397745
+      tangentMode: 65
     - serializedVersion: 2
-      time: 0.19999999
-      value: 0.0013198224
-      inSlope: 0.0065991124
-      outSlope: 0.058341213
+      time: 0.28503332
+      value: 0.0021086037
+      inSlope: 0.007397745
+      outSlope: 0.58710575
       tangentMode: 5
     - serializedVersion: 2
       time: 1
@@ -569,7 +569,7 @@ MonoBehaviour:
   _handInfluenceType: 0
   _stasisInfluenceSettings:
     _maxRadius: 0.124
-    _force: 0.02
+    _force: 0.03
     _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:
     _maxRadius: 0.8
@@ -686,7 +686,7 @@ MonoBehaviour:
   _socialHandSpecies: 0
   _socialHandForceFactor: 25
   _fieldCenter: {fileID: 4870151900081912}
-  _fieldRadius: 1
+  _fieldRadius: 1.01
   _fieldForce: 0.0005
   _simulationEnabled: 1
   _dynamicTimestepEnabled: 1

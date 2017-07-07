@@ -1727,31 +1727,43 @@ public class TextureSimulator : MonoBehaviour {
       prevPosition = position;
       position = Vector3.Lerp(_prevTrackedPosition, _currTrackedPosition, framePercent);
 
+      float rawGrab;
+      if (hand != null) {
+        rawGrab = 1;
+        foreach (var finger in hand.Fingers) {
+          if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
+          float angle = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis());
+          rawGrab = Mathf.Min(angle / 180, rawGrab);
+        }
+      } else {
+        rawGrab = 0;
+      }
+
       _smoothedGrab.delay = _sim.influenceGrabSmoothing;
-      _smoothedGrab.Update(hand == null ? 0 : hand.GrabAngle / Mathf.PI, Time.deltaTime);
+      _smoothedGrab.Update(rawGrab, Time.deltaTime);
       float grab = _smoothedGrab.value;
 
       switch (_sim.handInfluenceMode) {
         case HandInfluenceMode.Binary:
           if (active) {
-            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.endGrabStrength;
+            active = hand != null && rawGrab > _sim.influenceBinarySettings.endGrabStrength;
           } else {
-            active = hand != null && hand.GrabAngle > _sim.influenceBinarySettings.startGrabStrength;
+            active = hand != null && rawGrab > _sim.influenceBinarySettings.startGrabStrength;
           }
           _influence = 1;
           _radiusMultiplier = 1;
           _alpha = 1;
           break;
         case HandInfluenceMode.Radius:
-          _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
-          _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
+          _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(rawGrab);
+          _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(rawGrab);
 
           _alpha = 1;
           active = _radiusMultiplier > 0;
           break;
         case HandInfluenceMode.Fade:
-          _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
-          _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
+          _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(rawGrab);
+          _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(rawGrab);
 
           _radiusMultiplier = 1;
           active = _alpha > 0.05f;

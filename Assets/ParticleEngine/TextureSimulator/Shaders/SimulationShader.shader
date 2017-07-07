@@ -111,6 +111,9 @@
     float4 velocity = tex2D(_Velocity, i.uv);
     float4 particle = tex2D(_Position, i.uv);
 
+    //Dont hit the head pls
+
+
     //Attraction towards the origin
     float3 toFieldCenter = _FieldCenter - particle.xyz;
     float dist = length(toFieldCenter);

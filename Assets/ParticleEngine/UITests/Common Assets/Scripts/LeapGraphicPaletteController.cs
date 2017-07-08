@@ -4,14 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class ThemedGraphicController : MonoBehaviour {
+public class LeapGraphicPaletteController : MonoBehaviour {
 
   public LeapGraphic graphic;
 
   public ColorPalette palette;
   public int colorIndex;
 
-  public static ColorPalette s_lastPalette = null;
+  public static ColorPalette s_lastPalette;
 
   private bool _paletteWasNull = true;
 

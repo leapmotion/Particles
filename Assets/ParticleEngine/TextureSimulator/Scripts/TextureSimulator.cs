@@ -897,7 +897,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_Velocity", _frontVel);
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
-    generateMeshes();
+    RecalculateMeshesForParticles();
     
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
@@ -1859,7 +1859,10 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void generateMeshes() {
+  [ContextMenu("Recalculate Meshes")]
+  public void RecalculateMeshesForParticles() {
+    _meshes.Clear();
+
     var sourceVerts = _particleMesh.vertices;
     var sourceTris = _particleMesh.triangles;
 
@@ -1868,7 +1871,7 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    for (int i = 0; i < _particlesToSimulate; i++) {
       if (bakedVerts.Count + sourceVerts.Length > 60000) {
         bakedMesh.SetVertices(bakedVerts);
         bakedMesh.SetTriangles(bakedTris, 0);

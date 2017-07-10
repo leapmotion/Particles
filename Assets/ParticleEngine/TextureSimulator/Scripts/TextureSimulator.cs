@@ -424,6 +424,16 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationTimescale = value; }
   }
 
+  [Range(1, MAX_PARTICLES)]
+  [SerializeField]
+  private int _particlesToSimulate = MAX_PARTICLES;
+  public int particlesToSimulate {
+    get { return _particlesToSimulate; }
+    set {
+      _particlesToSimulate = Mathf.Clamp(value, 1, MAX_PARTICLES);
+    }
+  }
+
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
@@ -439,6 +449,13 @@ public class TextureSimulator : MonoBehaviour {
   //####################//
   ///      Display      //
   //####################//
+  [SerializeField]
+  private bool _displayParticles = true;
+  public bool displayParticles {
+    get { return _displayParticles; }
+    set { _displayParticles = value; }
+  }
+
   [Header("Display")]
   [SerializeField]
   private Mesh _particleMesh;
@@ -887,7 +904,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_Velocity", _frontVel);
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
-    generateMeshes();
+    RecalculateMeshesForParticles();
     
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
@@ -938,7 +955,9 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    displaySimulation();
+    if (_displayParticles) {
+      displaySimulation();
+    }
   }
   #endregion
 
@@ -961,6 +980,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
+    _particlesToSimulate = MAX_PARTICLES;
+
     var setting = _presetEcosystemSettings;
     _currentSpawnPreset = SpawnPreset.Spherical;
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
@@ -1833,6 +1854,8 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+    _simulationMat.SetInt("_ParticleCount", _particlesToSimulate);
+    _displayBlock.SetFloat("_ParticleCount", _particlesToSimulate / (float)MAX_PARTICLES);
   }
 
   private void handleUserInput() {
@@ -1854,7 +1877,10 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void generateMeshes() {
+  [ContextMenu("Recalculate Meshes")]
+  public void RecalculateMeshesForParticles() {
+    _meshes.Clear();
+
     var sourceVerts = _particleMesh.vertices;
     var sourceTris = _particleMesh.triangles;
 
@@ -1863,7 +1889,7 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    for (int i = 0; i < _particlesToSimulate; i++) {
       if (bakedVerts.Count + sourceVerts.Length > 60000) {
         bakedMesh.SetVertices(bakedVerts);
         bakedMesh.SetTriangles(bakedTris, 0);
@@ -2005,21 +2031,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    GL.Begin(GL.QUADS);
-
-    GL.TexCoord2(0, 1);
-    GL.Vertex3(0, 0, 0);
-
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, 0, 0);
-
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, height, 0);
-
-    GL.TexCoord2(0, 0);
-    GL.Vertex3(0, height, 0);
-
-    GL.End();
+    quad(height);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2053,18 +2065,20 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void quad(float height = 1) {
+    float percent = _particlesToSimulate / (float)MAX_PARTICLES;
+
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, 0);
+    GL.TexCoord2(0, 1);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, 0, 0);
+    GL.TexCoord2(percent, 1);
+    GL.Vertex3(percent, 0, 0);
 
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, height, 0);
+    GL.TexCoord2(percent, 0);
+    GL.Vertex3(percent, height, 0);
 
-    GL.TexCoord2(0, 1);
+    GL.TexCoord2(0, 0);
     GL.Vertex3(0, height, 0);
 
     GL.End();

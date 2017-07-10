@@ -34,6 +34,8 @@
   sampler2D _SocialTemp;
   sampler2D _SocialForce;
 
+  uniform int _ParticleCount;
+
   float3 _FieldCenter;
   float _FieldRadius;
   float _FieldForce;
@@ -192,7 +194,7 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    for (int i = 0; i < _ParticleCount; i++) {
       float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
       float3 toOther = other.xyz - particle.xyz;
       float distance = length(toOther);

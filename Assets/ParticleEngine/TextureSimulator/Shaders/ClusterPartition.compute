@@ -1,0 +1,90 @@
+﻿#pragma kernel CalculateClusterAssignments
+#pragma kernel IntegrateCounts
+#pragma kernel SortParticlesIntoClusters
+#pragma kernel UpdateClusterCenters
+
+#define TOTAL_CLUSTERS 16
+#define MAX_SOCIAL_RANGE 0.5
+
+struct Cluster {
+  float3 center;
+  float radius;
+  uint count;
+  uint start;
+  uint end;
+};
+
+RWTexture2D<float4> _Particles;
+RWTexture2D<float4> _ClusteredParticles;
+
+RWStructuredBuffer<Cluster> _Clusters;
+RWStructuredBuffer<uint> _ClusterAssignments;
+
+float lengthSqrd(float3 v) {
+  return dot(v, v);
+}
+
+[numthreads(64, 1, 1)]
+void CalculateClusterAssignments (uint3 id : SV_DispatchThreadID) {
+  uint index = id.x;
+
+  float4 particle = _Particles[uint2(index, 0)];
+
+  int closestClusterIndex = 0;
+  float closestDistance = lengthSqrd(_Clusters[0].center - particle.xyz);
+
+  for (uint i = 1; i < TOTAL_CLUSTERS; i++) {
+    float distance = lengthSqrd(_Clusters[i].center - particle.xyz);
+    if (distance < closestDistance) {
+      closestClusterIndex = i;
+      closestDistance = distance;
+    }
+  }
+
+  _ClusterAssignments[index] = closestClusterIndex;
+
+  InterlockedAdd(_Clusters[closestClusterIndex].count, 1);
+}
+
+[numthreads(1, 1, 1)]
+void IntegrateCounts(uint3 id : SV_DispatchThreadID) {
+  uint sum = 0;
+  for (uint i = 0; i < TOTAL_CLUSTERS; i++) {
+    _Clusters[i].start = sum;
+    _Clusters[i].end = sum;
+    sum += _Clusters[i].count;
+  }
+}
+
+[numthreads(64, 1, 1)]
+void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
+  float4 particle = _Particles[uint2(id.x, 0)];
+  uint clusterAssignment = _ClusterAssignments[id.x];
+
+  int newIndex;
+  InterlockedAdd(_Clusters[clusterAssignment].end, 1, newIndex);
+
+  _ClusteredParticles[uint2(newIndex, 0)] = particle;
+}
+
+[numthreads(64, 1, 1)]
+void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
+  Cluster cluster = _Clusters[id.x];
+
+  cluster.center = float3(0, 0, 0);
+  cluster.radius = 0;
+  for (uint i = cluster.start; i < cluster.end; i++) {
+    cluster.center += _ClusteredParticles[uint2(i, 0)].xyz;
+  }
+
+  if (cluster.count > 0) {
+    cluster.center /= cluster.count;
+  }
+
+  for (uint j = cluster.start; j < cluster.end; j++) {
+    cluster.radius = max(cluster.radius, length(_ClusteredParticles[uint2(i, 0)].xyz - cluster.center));
+  }
+
+  cluster.count = 0;
+  _Clusters[id.x] = cluster;
+}

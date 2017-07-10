@@ -97,7 +97,7 @@
 #endif
 
       if (v.texcoord.x > _ParticleCount) {
-        v.vertex.xyz += float3(0, 3, 0);
+        v.vertex.xyz += float3(0, 1000, 0);
       }
       
       v.vertex.xyz += particle.xyz;

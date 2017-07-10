@@ -971,6 +971,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
+    _particlesToSimulate = MAX_PARTICLES;
+
     var setting = _presetEcosystemSettings;
     _currentSpawnPreset = SpawnPreset.Spherical;
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
@@ -1834,6 +1836,8 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+    _simulationMat.SetInt("_ParticleCount", _particlesToSimulate);
+    _displayBlock.SetFloat("_ParticleCount", _particlesToSimulate / (float)MAX_PARTICLES);
   }
 
   private void handleUserInput() {
@@ -2006,21 +2010,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    GL.Begin(GL.QUADS);
-
-    GL.TexCoord2(0, 1);
-    GL.Vertex3(0, 0, 0);
-
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, 0, 0);
-
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, height, 0);
-
-    GL.TexCoord2(0, 0);
-    GL.Vertex3(0, height, 0);
-
-    GL.End();
+    quad(height);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2054,18 +2044,20 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void quad(float height = 1) {
+    float percent = _particlesToSimulate / (float)MAX_PARTICLES;
+
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, 0);
+    GL.TexCoord2(0, 1);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, 0, 0);
+    GL.TexCoord2(percent, 1);
+    GL.Vertex3(percent, 0, 0);
 
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, height, 0);
+    GL.TexCoord2(percent, 0);
+    GL.Vertex3(percent, height, 0);
 
-    GL.TexCoord2(0, 1);
+    GL.TexCoord2(0, 0);
     GL.Vertex3(0, height, 0);
 
     GL.End();

@@ -373,7 +373,7 @@
     Blend One Zero
 
     //Pass 0: integrate velocities
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment integratePositions
@@ -381,7 +381,7 @@
     }
 
     //Pass 1: update collisions
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma multi_compile _ USE_CLUSTERS
       #pragma vertex vert
@@ -390,7 +390,7 @@
     }
 
     //Pass 2: global forces
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma multi_compile SPHERE_MODE_STASIS SPHERE_MODE_FORCE
       #pragma vertex vert
@@ -399,7 +399,7 @@
     }
 
     //Pass 3: damp velocity and add offset social forces
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment dampVelocities
@@ -407,7 +407,7 @@
     }
 
     //Pass 4: random particles
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment randomParticles
@@ -415,7 +415,7 @@
     }
 
     //Pass 5: step social queue
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment stepSocialQueue
@@ -423,7 +423,7 @@
     }
 
     //Pass 6: debug output
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment debugOutput
@@ -431,7 +431,7 @@
     }
 
     //Pass 7: copy positions
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment copy

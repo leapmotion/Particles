@@ -12,6 +12,8 @@
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
+  #define CLUSTER_COUNT 16
+
   struct appdata {
     float4 vertex : POSITION;
     float2 uv : TEXCOORD0;
@@ -27,12 +29,23 @@
     float4 dest1 : SV_Target1;
   };
 
+  struct Cluster {
+    float3 center;
+    float radius;
+    uint count;
+    uint start;
+    uint end;
+  };
+
   sampler2D _CopySource;
   sampler2D _Velocity;
   sampler2D _Position;
 
   sampler2D _SocialTemp;
   sampler2D _SocialForce;
+
+  StructuredBuffer<Cluster> _Clusters;
+  sampler2D _ClusteredPositions;
 
   uniform int _ParticleCount;
 
@@ -105,8 +118,8 @@
   }
 
   float4 integratePositions(v2f i) : SV_Target{
-    float4 pos = tex2D(_Position, i.uv);
-    float4 vel = tex2D(_Velocity, i.uv);
+    float4 pos = tex2Dlod(_Position, float4(i.uv, 0, 0));
+    float4 vel = tex2Dlod(_Velocity, float4(i.uv, 0, 0));
     pos.xyz += vel.xyz;
 
     //Dont hit the head pls
@@ -120,8 +133,8 @@
   }
 
   float4 globalForces(v2f i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float4 particle = tex2D(_Position, i.uv);
+    float4 velocity = tex2Dlod(_Velocity, float4(i.uv, 0, 0));
+    float4 particle = tex2Dlod(_Position, float4(i.uv, 0, 0));
 
     //Attraction towards the origin
     float3 toFieldCenter = _FieldCenter - particle.xyz;
@@ -164,13 +177,13 @@
   }
 
   float4 dampVelocities(v2f i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float4 particle = tex2D(_Position, i.uv);
+    float4 velocity = tex2Dlod(_Velocity, float4(i.uv, 0, 0));
+    float4 particle = tex2Dlod(_Position, float4(i.uv, 0, 0));
     float4 speciesData = _SpeciesData[(int)particle.w];
 
     //Step offset for social forces
     i.uv.y = speciesData.y / MAX_FORCE_STEPS;
-    float4 socialForce = tex2D(_SocialForce, i.uv);
+    float4 socialForce = tex2Dlod(_SocialForce, float4(i.uv, 0, 0));
     velocity.xyz += socialForce.xyz;
 
     //Damping
@@ -179,9 +192,18 @@
     return velocity;
   }
 
+  void doParticleParticleInteraction(inout float4 particle, 
+                                     inout float4 velocity, 
+                                     float4 other,
+                                     float socialOffset,
+                                     float collisionForce,
+                                     inout float4 totalSocialForce) {
+
+  }
+
   FragmentOutput updateCollisionVelocities(v2f i) {
-    float4 particle = tex2D(_Position, i.uv);
-    float4 velocity = tex2D(_Velocity, i.uv);
+    float4 particle = tex2Dlod(_Position, float4(i.uv, 0, 0));
+    float4 velocity = tex2Dlod(_Velocity, float4(i.uv, 0, 0));
     float socialOffset = (int)(particle.w * MAX_SPECIES);
     float collisionForce = _SpeciesData[0].z;
 
@@ -194,24 +216,38 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-    for (int i = 0; i < _ParticleCount; i++) {
-      float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
-      float3 toOther = other.xyz - particle.xyz;
-      float distance = length(toOther);
-      toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
-
-      float otherCollisionForce = _SpeciesData[(int)other.w].z;
-      float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
-
-      if (distance < PARTICLE_DIAMETER) {
-        float penetration = 1 - distance / PARTICLE_DIAMETER;
-        velocity.xyz -= toOther * penetration * totalCollisionForce;
+#ifdef USE_CLUSTERS
+    for (uint i = 0; i < CLUSTER_COUNT; i++) {
+      Cluster cluster = _Clusters[i];
+      float distToCluster = length(particle.xyz - cluster.center);
+      if (distToCluster > (cluster.radius + 0.5)) {
+        continue;
       }
 
-      float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+      for (uint j = cluster.start; j < cluster.end; j++) {
+        float4 other = tex2Dlod(_ClusteredPositions, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
+#else
+    {
+      for (int i = 0; i < _ParticleCount; i++) {
+        float4 other = tex2Dlod(_Position, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
+#endif
+        float3 toOther = other.xyz - particle.xyz;
+        float distance = length(toOther);
+        toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
-      if (distance < socialData.y) {
-        totalSocialForce += float4(socialData.x * toOther, 1);
+        float otherCollisionForce = _SpeciesData[(int)other.w].z;
+        float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
+
+        if (distance < PARTICLE_DIAMETER) {
+          float penetration = 1 - distance / PARTICLE_DIAMETER;
+          velocity.xyz -= toOther * penetration * totalCollisionForce;
+        }
+
+        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+
+        if (distance < socialData.y) {
+          totalSocialForce += float4(socialData.x * toOther, 1);
+        }
       }
     }
 
@@ -285,8 +321,8 @@
   float4 stepSocialQueue(v2f i) : SV_Target{
     float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
 
-    float4 newForce = tex2D(_SocialTemp, i.uv);
-    float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
+    float4 newForce = tex2Dlod(_SocialTemp, float4(i.uv, 0, 0));
+    float4 shiftedForce = tex2Dlod(_SocialForce, float4(shiftedUv, 0, 0));
 
     float4 result;
 
@@ -347,6 +383,7 @@
     //Pass 1: update collisions
     Pass{
       CGPROGRAM
+      #pragma multi_compile _ USE_CLUSTERS
       #pragma vertex vert
       #pragma fragment updateCollisionVelocities
       ENDCG

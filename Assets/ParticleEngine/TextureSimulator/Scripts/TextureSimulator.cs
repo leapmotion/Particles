@@ -446,6 +446,22 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private KeyCode _resetParticlePositionsKey = KeyCode.P;
 
+  //#######################//
+  ///      Clustering      //
+  //#######################//
+  [SerializeField]
+  private bool _clusteringEnabled = false;
+  public bool clusteringEnabled {
+    get { return _clusteringEnabled; }
+    set {
+      _clusteringEnabled = value;
+      updateKeywords();
+    }
+  }
+
+  [SerializeField]
+  private ComputeShader _clusterShader;
+
   //####################//
   ///      Display      //
   //####################//

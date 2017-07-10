@@ -424,6 +424,16 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationTimescale = value; }
   }
 
+  [Range(1, MAX_PARTICLES)]
+  [SerializeField]
+  private int _particlesToSimulate = MAX_PARTICLES;
+  public int particlesToSimulate {
+    get { return _particlesToSimulate; }
+    set {
+      _particlesToSimulate = Mathf.Clamp(value, 1, MAX_PARTICLES);
+    }
+  }
+
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 

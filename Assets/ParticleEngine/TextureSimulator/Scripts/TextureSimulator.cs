@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices; 
 using UnityEngine;
 using Leap;
 using Leap.Unity;
@@ -11,6 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
+  public const int CLUSTER_COUNT = 16;
 
   public const string BY_SPECIES = "COLOR_SPECIES";
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
@@ -32,6 +34,12 @@ public class TextureSimulator : MonoBehaviour {
   public const int PASS_STEP_SOCIAL_QUEUE = 5;
   public const int PASS_SHADER_DEBUG = 6;
   public const int PASS_COPY = 7;
+
+  public const string CLUSTER_KEYWORD = "USE_CLUSTERS";
+  public const string CLUSTER_KERNEL_ASSIGN = "CalculateClusterAssignments";
+  public const string CLUSTER_KERNEL_INTEGRATE = "IntegrateCounts";
+  public const string CLUSTER_KERNEL_SORT = "SortParticlesIntoClusters";
+  public const string CLUSTER_KERNEL_UPDATE = "UpdateClusterCenters";
 
   #region INSPECTOR
   [SerializeField]
@@ -783,6 +791,23 @@ public class TextureSimulator : MonoBehaviour {
 
   private HandActor[] _handActors = new HandActor[2];
   private Hand _prevLeft, _prevRight;
+
+  //Clustering
+  private struct Cluster {
+    Vector3 center;
+    float radius;
+    uint count;
+    uint start;
+    uint end;
+  }
+
+  private ComputeBuffer _clusters;
+  private ComputeBuffer _clusterAssignments;
+  private RenderTexture _clusteredParticles;
+  private int _clusterKernelAssign;
+  private int _clusterKernelIntegrate;
+  private int _clusterKernelSort;
+  private int _clusterKernelUpdate;
 
   //Shader debug
   private RenderTexture _shaderDebugTexture;
@@ -1964,6 +1989,9 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
+    if (_clusteringEnabled) {
+    }
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
@@ -2011,6 +2039,12 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
     _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
 
+    if (_clusteringEnabled) {
+      _simulationMat.EnableKeyword(CLUSTER_KEYWORD);
+    } else {
+      _simulationMat.DisableKeyword(CLUSTER_KEYWORD);
+    }
+
     switch (_handInfluenceType) {
       case HandInfluenceType.Force:
         _simulationMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
@@ -2032,6 +2066,72 @@ public class TextureSimulator : MonoBehaviour {
       case TrailMode.Squash:
         _particleMat.EnableKeyword(TAIL_SQUASH_KEYWORD);
         break;
+    }
+  }
+
+  private void ensureClustersReady() {
+    if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null) {
+      cleanupClusters();
+
+      _clusteredParticles = createTexture(1);
+      _clusteredParticles.enableRandomWrite = true;
+
+      _clusters = new ComputeBuffer(CLUSTER_COUNT, Marshal.SizeOf(typeof(Cluster)));
+      _clusterAssignments = new ComputeBuffer(MAX_PARTICLES, sizeof(uint));
+
+      _clusterKernelAssign = _clusterShader.FindKernel(CLUSTER_KERNEL_ASSIGN);
+      _clusterKernelIntegrate = _clusterShader.FindKernel(CLUSTER_KERNEL_INTEGRATE);
+      _clusterKernelSort = _clusterShader.FindKernel(CLUSTER_KERNEL_SORT);
+      _clusterKernelUpdate = _clusterShader.FindKernel(CLUSTER_KERNEL_UPDATE);
+
+      foreach(var kernel in new int[] { _clusterKernelAssign,
+                                        _clusterKernelIntegrate,
+                                        _clusterKernelSort,
+                                        _clusterKernelUpdate }) {
+        _clusterShader.SetBuffer(kernel, "_Clusters", _clusters);
+        _clusterShader.SetBuffer(kernel, "_ClusterAssignments", _clusterAssignments);
+        _clusterShader.SetTexture(kernel, "_ClusteredParticles", _clusteredParticles);
+      }
+
+      _simulationMat.SetTexture("_ClusteredParticles", _clusteredParticles);
+    }
+  }
+
+  private void performClustering() {
+    _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _frontPos);
+    _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _frontPos);
+
+    using (new ProfilerSample("Assign Clusters")) {
+      _clusterShader.Dispatch(_clusterKernelAssign, MAX_PARTICLES / 64, 1, 1);
+    }
+
+    using (new ProfilerSample("Integrate Clusters")) {
+      _clusterShader.Dispatch(_clusterKernelIntegrate, 1, 1, 1);
+    }
+
+    using (new ProfilerSample("Sort Clusters")) {
+      _clusterShader.Dispatch(_clusterKernelSort, MAX_PARTICLES / 64, 1, 1);
+    }
+
+    using (new ProfilerSample("Update Clusters")) {
+      _clusterShader.Dispatch(_clusterKernelUpdate, 1, 1, 1);
+    }
+  }
+
+  private void cleanupClusters() {
+    if (_clusters != null) {
+      _clusters.Release();
+      _clusters = null;
+    }
+
+    if (_clusterAssignments != null) {
+      _clusterAssignments.Release();
+      _clusterAssignments = null;
+    }
+
+    if(_clusteredParticles != null) {
+      _clusteredParticles.Release();
+      _clusteredParticles = null;
     }
   }
 

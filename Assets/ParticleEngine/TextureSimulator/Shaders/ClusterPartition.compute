@@ -67,7 +67,7 @@ void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
   _ClusteredParticles[uint2(newIndex, 0)] = particle;
 }
 
-[numthreads(64, 1, 1)]
+[numthreads(16, 1, 1)]
 void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
   Cluster cluster = _Clusters[id.x];
 

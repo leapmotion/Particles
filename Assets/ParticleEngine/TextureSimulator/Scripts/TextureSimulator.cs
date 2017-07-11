@@ -956,6 +956,10 @@ public class TextureSimulator : MonoBehaviour {
     updateKeywords();
   }
 
+  private void OnDisable() {
+    cleanupClusters();
+  }
+
   void Update() {
     if (_enableSpeciesDebugColors) {
       Color[] colors = new Color[MAX_SPECIES];
@@ -1990,6 +1994,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (_clusteringEnabled) {
+      performClustering();
     }
 
     GL.LoadPixelMatrix(0, 1, 1, 0);
@@ -2098,6 +2103,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void performClustering() {
+    ensureClustersReady();
+
     _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _frontPos);
     _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _frontPos);
 

@@ -85,6 +85,10 @@
       v.color.r = nrand(float2(cluster * 3.235, cluster * 1.343));
       v.color.g = nrand(float2(cluster * 2.967, cluster * 9.173));
       v.color.b = nrand(float2(cluster * 1.972, cluster * 4.812));
+#else
+      v.color.r = 1;
+      v.color.g = 0;
+      v.color.b = 0;
 #endif
 #endif
 

@@ -1978,10 +1978,11 @@ public class TextureSimulator : MonoBehaviour {
     bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
-  private RenderTexture createTexture(int height = 1) {
+  private RenderTexture createTexture(int height = 1, bool randomWrite = false) {
     RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
+    tex.enableRandomWrite = randomWrite;
 
     RenderTexture.active = tex;
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
@@ -2085,8 +2086,7 @@ public class TextureSimulator : MonoBehaviour {
     if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null) {
       cleanupClusters();
 
-      _clusteredParticles = createTexture(1);
-      _clusteredParticles.enableRandomWrite = true;
+      _clusteredParticles = createTexture(height: 1, randomWrite: true);
 
       _clusters = new ComputeBuffer(CLUSTER_COUNT, Marshal.SizeOf(typeof(Cluster)));
       _clusterAssignments = new ComputeBuffer(MAX_PARTICLES, sizeof(uint));

@@ -15,7 +15,7 @@
     #pragma multi_compile _ ENABLE_INTERPOLATION
     #pragma multi_compile FISH_TAIL SQUASH_TAIL
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
-    #pragma target 5.0
+    #pragma target 2.0
 
     sampler2D _PrevPos;
     sampler2D _CurrPos;

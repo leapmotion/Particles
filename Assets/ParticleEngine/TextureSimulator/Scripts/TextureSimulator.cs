@@ -458,6 +458,7 @@ public class TextureSimulator : MonoBehaviour {
   //#######################//
   ///      Clustering      //
   //#######################//
+  [Header("Clustering")]
   [SerializeField]
   private bool _clusteringEnabled = false;
   public bool clusteringEnabled {

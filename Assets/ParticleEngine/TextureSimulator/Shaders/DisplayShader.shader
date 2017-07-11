@@ -15,9 +15,7 @@
     #pragma multi_compile _ ENABLE_INTERPOLATION
     #pragma multi_compile FISH_TAIL SQUASH_TAIL
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
-    #pragma target 2.0
-
-    RWStructuredBuffer<uint> _ClusterAssignments;
+    #pragma target 5.0
 
     sampler2D _PrevPos;
     sampler2D _CurrPos;
@@ -25,6 +23,10 @@
     sampler2D _CurrVel;
 
     sampler2D _ToonRamp;
+
+#ifdef SHADER_API_D3D11
+    StructuredBuffer<uint> _ClusterAssignment;
+#endif
 
     float _ParticleCount;
 
@@ -78,10 +80,12 @@
 #endif
 
 #ifdef COLOR_CLUSTER
+#ifdef SHADER_API_D3D11
       uint cluster = _ClusterAssignments[(uint)(v.texcoord.x * 4096)];
       v.color.r = nrand(float2(cluster * 3.235, cluster * 1.343));
       v.color.g = nrand(float2(cluster * 2.967, cluster * 9.173));
       v.color.b = nrand(float2(cluster * 1.972, cluster * 4.812));
+#endif
 #endif
 
       velocity.xyz *= velocity.w;

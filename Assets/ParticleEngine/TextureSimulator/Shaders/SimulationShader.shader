@@ -4,6 +4,7 @@
 
   CGINCLUDE
   #include "UnityCG.cginc"
+#pragma target 5.0
 
   #define MAX_PARTICLES 4096
   #define MAX_FORCE_STEPS 64
@@ -12,7 +13,7 @@
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
-  #define CLUSTER_COUNT 16
+  #define CLUSTER_COUNT 64
 
   struct appdata {
     float4 vertex : POSITION;
@@ -45,7 +46,7 @@
   sampler2D _SocialForce;
 
   StructuredBuffer<Cluster> _Clusters;
-  sampler2D _ClusteredPositions;
+  sampler2D _ClusteredParticles;
 
   uniform int _ParticleCount;
 
@@ -225,7 +226,7 @@
       }
 
       for (uint j = cluster.start; j < cluster.end; j++) {
-        float4 other = tex2Dlod(_ClusteredPositions, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
+        float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
 #else
     {
       for (int i = 0; i < _ParticleCount; i++) {

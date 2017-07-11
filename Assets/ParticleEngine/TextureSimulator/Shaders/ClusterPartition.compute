@@ -3,7 +3,7 @@
 #pragma kernel SortParticlesIntoClusters
 #pragma kernel UpdateClusterCenters
 
-#define TOTAL_CLUSTERS 16
+#define TOTAL_CLUSTERS 64
 #define MAX_SOCIAL_RANGE 0.5
 
 struct Cluster {
@@ -14,7 +14,7 @@ struct Cluster {
   uint end;
 };
 
-RWTexture2D<float4> _Particles;
+Texture2D<float4> _Particles;
 RWTexture2D<float4> _ClusteredParticles;
 
 RWStructuredBuffer<Cluster> _Clusters;
@@ -67,7 +67,7 @@ void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
   _ClusteredParticles[uint2(newIndex, 0)] = particle;
 }
 
-[numthreads(16, 1, 1)]
+[numthreads(1, 1, 1)]
 void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
   Cluster cluster = _Clusters[id.x];
 
@@ -77,12 +77,14 @@ void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
     cluster.center += _ClusteredParticles[uint2(i, 0)].xyz;
   }
 
-  if (cluster.count > 0) {
+  if (cluster.count == 0) {
+    cluster.center = float3(id.x, 0, 0);
+  } else {
     cluster.center /= cluster.count;
   }
 
   for (uint j = cluster.start; j < cluster.end; j++) {
-    cluster.radius = max(cluster.radius, length(_ClusteredParticles[uint2(i, 0)].xyz - cluster.center));
+    cluster.radius = max(cluster.radius, length(_ClusteredParticles[uint2(j, 0)].xyz - cluster.center));
   }
 
   cluster.count = 0;

@@ -82,7 +82,7 @@
 #ifdef COLOR_CLUSTER
       v.color.a = 1;
 #ifdef SHADER_API_D3D11
-      uint cluster = _ClusterAssignments[(uint)(v.texcoord.x * 4096)] + 1;
+      float cluster = _ClusterAssignments[(uint)(v.texcoord.x * 4096)] * 9.34 + 0.25;
       v.color.r = nrand(float2(cluster * 3.235, cluster * 1.343));
       v.color.g = nrand(float2(cluster * 2.967, cluster * 9.173));
       v.color.b = nrand(float2(cluster * 1.972, cluster * 4.812));

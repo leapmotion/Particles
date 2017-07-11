@@ -12,7 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
-  public const int CLUSTER_COUNT = 16;
+  public const int CLUSTER_COUNT = 64;
 
   public const string BY_SPECIES = "COLOR_SPECIES";
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
@@ -459,6 +459,7 @@ public class TextureSimulator : MonoBehaviour {
   ///      Clustering      //
   //#######################//
   [Header("Clustering")]
+  [OnEditorChange("clusteringEnabled")]
   [SerializeField]
   private bool _clusteringEnabled = false;
   public bool clusteringEnabled {
@@ -767,6 +768,9 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private int _shaderDebugData1;
+
+  [SerializeField]
+  private bool _displayClusteringDebug = false;
   #endregion
 
   //Simulation
@@ -795,6 +799,7 @@ public class TextureSimulator : MonoBehaviour {
   private Hand _prevLeft, _prevRight;
 
   //Clustering
+  [StructLayout(LayoutKind.Sequential, Pack = 1)]
   private struct Cluster {
     public Vector3 center;
     public float radius;
@@ -2004,7 +2009,9 @@ public class TextureSimulator : MonoBehaviour {
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
-    doParticleInteraction();
+    using (new ProfilerSample("Particle Interaction")) {
+      doParticleInteraction();
+    }
 
     blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
 
@@ -2111,14 +2118,15 @@ public class TextureSimulator : MonoBehaviour {
 
       _displayBlock.SetBuffer("_ClusterAssignments", _clusterAssignments);
       _simulationMat.SetTexture("_ClusteredParticles", _clusteredParticles);
+      _simulationMat.SetBuffer("_Clusters", _clusters);
     }
   }
 
   private void performClustering() {
     ensureClustersReady();
 
-    _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _frontPos);
-    _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _frontPos);
+    _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _backPos);
+    _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _backPos);
 
     using (new ProfilerSample("Assign Clusters")) {
       _clusterShader.Dispatch(_clusterKernelAssign, MAX_PARTICLES / 64, 1, 1);
@@ -2133,7 +2141,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     using (new ProfilerSample("Update Clusters")) {
-      _clusterShader.Dispatch(_clusterKernelUpdate, 1, 1, 1);
+      _clusterShader.Dispatch(_clusterKernelUpdate, CLUSTER_COUNT, 1, 1);
     }
   }
 
@@ -2157,6 +2165,18 @@ public class TextureSimulator : MonoBehaviour {
   private void displaySimulation() {
     foreach (var mesh in _meshes) {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
+    }
+
+    if (_displayClusteringDebug) {
+      RuntimeGizmoDrawer drawer;
+      if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+        Cluster[] clusters = new Cluster[CLUSTER_COUNT];
+        _clusters.GetData(clusters);
+
+        foreach (var cluster in clusters) {
+          drawer.DrawWireSphere(cluster.center, cluster.radius);
+        }
+      }
     }
   }
 

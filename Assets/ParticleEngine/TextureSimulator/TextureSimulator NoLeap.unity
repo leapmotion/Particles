@@ -147,6 +147,36 @@ Prefab:
       propertyPath: m_RootOrder
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _presetEcosystemSettings._ecosystemPreset
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _colorMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _spawnRadius
+      value: 0.338
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _simulationFPS
+      value: 120
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _simulationTimescale
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _limitStepsPerFrame
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 293126bede65632468a25da3a2d80e96, type: 2}
   m_IsPrefabParent: 0

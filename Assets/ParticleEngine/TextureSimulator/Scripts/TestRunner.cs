@@ -13,7 +13,19 @@ public class TestRunner : MonoBehaviour {
     yield return new WaitForSeconds(0.5f);
     sim.ResetPositions();
     yield return new WaitForSeconds(0.5f);
+    sim.cleanupClusters();
 
+    while (true) {
+      yield return new WaitForSeconds(1);
+      sim.clusteringEnabled = false;
+      yield return new WaitForSeconds(1);
+      sim.clusteringEnabled = true;
+      sim.cleanupClusters();
+    }
+
+
+
+    /*
     for(int i=1; i<=4; i++) {
       float percent = i / 4.0f;
 
@@ -34,6 +46,7 @@ public class TestRunner : MonoBehaviour {
       _results += '\n';
       texMesh.text = _results;
     }
+    */
   }
 
   IEnumerator runTest() {

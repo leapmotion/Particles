@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.InteropServices; 
+using System.Runtime.InteropServices;
 using UnityEngine;
 using Leap;
 using Leap.Unity;
@@ -12,7 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
-  public const int CLUSTER_COUNT = 64;
+  public const int CLUSTER_COUNT = 2;
 
   public const string BY_SPECIES = "COLOR_SPECIES";
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
@@ -483,7 +483,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _displayParticles; }
     set { _displayParticles = value; }
   }
-  
+
   [SerializeField]
   private Mesh _particleMesh;
 
@@ -810,11 +810,14 @@ public class TextureSimulator : MonoBehaviour {
 
   private ComputeBuffer _clusters;
   private ComputeBuffer _clusterAssignments;
+  private ComputeBuffer _clusterDebug;
   private RenderTexture _clusteredParticles;
   private int _clusterKernelAssign;
   private int _clusterKernelIntegrate;
   private int _clusterKernelSort;
   private int _clusterKernelUpdate;
+  private int _clusterKernelParticleNaN;
+  private int _clusterKernelClusteredNaN;
 
   //Shader debug
   private RenderTexture _shaderDebugTexture;
@@ -954,7 +957,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
     RecalculateMeshesForParticles();
-    
+
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
@@ -962,6 +965,8 @@ public class TextureSimulator : MonoBehaviour {
     _handActors.Fill(() => new HandActor(this));
 
     updateKeywords();
+
+    ResetPositions();
   }
 
   private void OnDisable() {
@@ -969,6 +974,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
+    FindObjectOfType<TextMesh>().text = "";
+
     if (_enableSpeciesDebugColors) {
       Color[] colors = new Color[MAX_SPECIES];
       colors.Fill(Color.black);
@@ -1229,69 +1236,66 @@ public class TextureSimulator : MonoBehaviour {
       case EcosystemPreset.Test:
         _currentSimulationSpeciesCount = 8;
 
-        float drag 			=  0.0f;
-        float collision 	=  1.0f;
-        int   steps 		=  6;
+        float drag = 0.0f;
+        float collision = 1.0f;
+        int steps = 6;
 
-		float selfLove   	=  0.3f; 
-		float selfRange  	=  0.3f;
+        float selfLove = 0.3f;
+        float selfRange = 0.3f;
 
-		float fearForce  	= -0.4f;
-		float fearRange_ 	=  0.2f;
+        float fearForce = -0.4f;
+        float fearRange_ = 0.2f;
 
-		float loveForce  	=  0.3f;
-		float loveRange_ 	=  0.2f;
+        float loveForce = 0.3f;
+        float loveRange_ = 0.2f;
 
         float d = Mathf.Lerp(setting.minDrag, setting.maxDrag, drag);
         float c = Mathf.Lerp(setting.minCollision, setting.maxCollision, collision);
 
-		int numParticlesPerSpecies = MAX_PARTICLES / _currentSimulationSpeciesCount;
-		
-		int pp = 0;
-  		for (int species=0; species<_currentSimulationSpeciesCount; species++)
-		{
-			float g = (float)species / (float)_currentSimulationSpeciesCount;
-			colors[ species ] = new Color( g, g, g );
-	        speciesData[ species ] = new Vector3(d, steps, c);
+        int numParticlesPerSpecies = MAX_PARTICLES / _currentSimulationSpeciesCount;
 
-			// clear it all
-	  		for (int other=0; other<_currentSimulationSpeciesCount; other++)
-			{
-	        	socialData[ species, other ] = new Vector2(setting.maxSocialForce * 0.0f, setting.maxSocialRange * 0.0f );
-			}
+        int pp = 0;
+        for (int species = 0; species < _currentSimulationSpeciesCount; species++) {
+          float g = (float)species / (float)_currentSimulationSpeciesCount;
+          colors[species] = new Color(g, g, g);
+          speciesData[species] = new Vector3(d, steps, c);
 
-			// species reaction to own kind
-			socialData[ species, species ] = new Vector2(setting.maxSocialForce * selfLove, setting.maxSocialRange * selfRange );
+          // clear it all
+          for (int other = 0; other < _currentSimulationSpeciesCount; other++) {
+            socialData[species, other] = new Vector2(setting.maxSocialForce * 0.0f, setting.maxSocialRange * 0.0f);
+          }
 
-			// species reaction to before species and after species
-			int before = species - 1;
-			int after  = species + 1;
+          // species reaction to own kind
+          socialData[species, species] = new Vector2(setting.maxSocialForce * selfLove, setting.maxSocialRange * selfRange);
 
-			if ( before == -1 								) { before = _currentSimulationSpeciesCount - before; }
-			if ( after  == _currentSimulationSpeciesCount 	) { after  = _currentSimulationSpeciesCount - after;  }
+          // species reaction to before species and after species
+          int before = species - 1;
+          int after = species + 1;
 
-			socialData[ species, before ] = new Vector2(setting.maxSocialForce * fearForce, setting.maxSocialRange * fearRange_ );
-			socialData[ species, after  ] = new Vector2(setting.maxSocialForce * loveForce, setting.maxSocialRange * loveRange_ );
+          if (before == -1) { before = _currentSimulationSpeciesCount - before; }
+          if (after == _currentSimulationSpeciesCount) { after = _currentSimulationSpeciesCount - after; }
 
-			for (int p=0; p<numParticlesPerSpecies; p++) 
-			{
-				float ff = (float)p / (float)numParticlesPerSpecies;
-				float rr = 0.3f;
-				float xx = -rr * 0.5f + ff 				* rr;
-				float yy = -rr * 0.5f + g  				* rr;
-				float zz = -rr * 0.5f + Random.value	* rr;
+          socialData[species, before] = new Vector2(setting.maxSocialForce * fearForce, setting.maxSocialRange * fearRange_);
+          socialData[species, after] = new Vector2(setting.maxSocialForce * loveForce, setting.maxSocialRange * loveRange_);
 
-				particleSpecies[ pp ] = species;
-				particlePositions[pp] = new Vector3( xx, yy, zz );
-				pp ++;
-			}
-		}
+          for (int p = 0; p < numParticlesPerSpecies; p++) {
+            float ff = (float)p / (float)numParticlesPerSpecies;
+            float rr = 0.3f;
+            float xx = -rr * 0.5f + ff * rr;
+            float yy = -rr * 0.5f + g * rr;
+            float zz = -rr * 0.5f + Random.value * rr;
+
+            particleSpecies[pp] = species;
+            particlePositions[pp] = new Vector3(xx, yy, zz);
+            pp++;
+          }
+        }
 
         ResetPositions(particlePositions, particleVelocities, particleSpecies);
 
-		//default
+        //default
         //ResetPositions();
-		
+
         break;
 
       case EcosystemPreset.BodyMind:
@@ -1410,7 +1414,7 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
-//Alex added this
+        //Alex added this
         for (int i = 0; i < MAX_PARTICLES; i++) {
           float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
           float percent2 = percent * 12.123123f + Random.value;
@@ -1441,7 +1445,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _particleMat.SetColorArray("_Colors", colors);
   }
-
+  
   public void ResetPositions() {
     ResetPositions(_currentSpawnPreset);
   }
@@ -1486,7 +1490,7 @@ public class TextureSimulator : MonoBehaviour {
       return c;
     }).ToArray());
     tex.Apply();
-    
+
     blitPos(PASS_COPY);
     DestroyImmediate(tex);
 
@@ -2002,21 +2006,38 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
+    ensureClustersReady();
+
+    checkForFrontBack("A0");
+
     if (_clusteringEnabled) {
       performClustering();
     }
 
+    checkForFrontBack("A");
+
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
+
+    checkForFrontBack("B");
 
     using (new ProfilerSample("Particle Interaction")) {
       doParticleInteraction();
     }
 
+    checkForFrontBack("C");
+
     blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
 
+    checkForFrontBack("D");
+
     blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+
+    checkForFrontBack("E");
+
     blitPos(PASS_INTEGRATE_VELOCITIES);
+
+    checkForFrontBack("F");
 
     _displayBlock.SetTexture("_CurrPos", _frontPos);
     _displayBlock.SetTexture("_PrevPos", _backPos);
@@ -2090,30 +2111,34 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void ensureClustersReady() {
-    if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null) {
+    if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null || _clusterDebug == null) {
       cleanupClusters();
 
       _clusteredParticles = createTexture(height: 1, randomWrite: true);
 
       _clusters = new ComputeBuffer(CLUSTER_COUNT, Marshal.SizeOf(typeof(Cluster)));
       _clusterAssignments = new ComputeBuffer(MAX_PARTICLES, sizeof(uint));
+      _clusterDebug = new ComputeBuffer(1, sizeof(uint));
 
       _clusterKernelAssign = _clusterShader.FindKernel(CLUSTER_KERNEL_ASSIGN);
       _clusterKernelIntegrate = _clusterShader.FindKernel(CLUSTER_KERNEL_INTEGRATE);
       _clusterKernelSort = _clusterShader.FindKernel(CLUSTER_KERNEL_SORT);
       _clusterKernelUpdate = _clusterShader.FindKernel(CLUSTER_KERNEL_UPDATE);
+      _clusterKernelParticleNaN = _clusterShader.FindKernel("CheckParticlesForNaN");
 
       _clusters.SetData(new Cluster[CLUSTER_COUNT].Fill(() => new Cluster() {
         center = Random.insideUnitCircle
       }));
 
       foreach (var kernel in new int[] { _clusterKernelAssign,
-                                        _clusterKernelIntegrate,
-                                        _clusterKernelSort,
-                                        _clusterKernelUpdate }) {
+                                         _clusterKernelIntegrate,
+                                         _clusterKernelSort,
+                                         _clusterKernelUpdate,
+                                         _clusterKernelParticleNaN }) {
         _clusterShader.SetBuffer(kernel, "_Clusters", _clusters);
         _clusterShader.SetBuffer(kernel, "_ClusterAssignments", _clusterAssignments);
         _clusterShader.SetTexture(kernel, "_ClusteredParticles", _clusteredParticles);
+        _clusterShader.SetBuffer(kernel, "_Debug", _clusterDebug);
       }
 
       _displayBlock.SetBuffer("_ClusterAssignments", _clusterAssignments);
@@ -2128,24 +2153,68 @@ public class TextureSimulator : MonoBehaviour {
     _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _backPos);
     _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _backPos);
 
+    checkForFrontBack("##A");
+
     using (new ProfilerSample("Assign Clusters")) {
       _clusterShader.Dispatch(_clusterKernelAssign, MAX_PARTICLES / 64, 1, 1);
+      checkForFrontBack("##B");
     }
 
     using (new ProfilerSample("Integrate Clusters")) {
       _clusterShader.Dispatch(_clusterKernelIntegrate, 1, 1, 1);
+      checkForFrontBack("##C");
     }
 
     using (new ProfilerSample("Sort Clusters")) {
       _clusterShader.Dispatch(_clusterKernelSort, MAX_PARTICLES / 64, 1, 1);
+      checkForFrontBack("##D");
     }
 
     using (new ProfilerSample("Update Clusters")) {
       _clusterShader.Dispatch(_clusterKernelUpdate, CLUSTER_COUNT, 1, 1);
+      checkForFrontBack("##E");
+    }
+
+    string s = FindObjectOfType<TextMesh>().text;
+
+    uint[] assignments = new uint[MAX_PARTICLES];
+    _clusterAssignments.GetData(assignments);
+
+    uint min = uint.MaxValue;
+    uint max = 0;
+    foreach (var value in assignments) {
+      min = value < min ? value : min;
+      max = value > max ? value : max;
+    }
+    s += min + " : " + max + "\n";
+
+    FindObjectOfType<TextMesh>().text = s;
+  }
+
+  private void checkForFrontBack(string message) {
+    checkForNaN(_frontPos, "Front Pos " + message);
+    checkForNaN(_backPos, "Back Pos " + message);
+
+    checkForNaN(_frontVel, "Front Vel " + message);
+    checkForNaN(_backVel, "Back Vel " + message);
+
+    checkForNaN(_clusteredParticles, "Clustered " + message);
+  }
+
+  private void checkForNaN(Texture tex, string message) {
+    uint[] data = new uint[1] { 0 };
+
+    _clusterDebug.SetData(data);
+    _clusterShader.SetTexture(_clusterKernelParticleNaN, "_Particles", tex);
+    _clusterShader.Dispatch(_clusterKernelParticleNaN, MAX_PARTICLES / 64, 1, 1);
+    _clusterDebug.GetData(data);
+
+    if (data[0] != 0) {
+      Debug.Log("Particles are NaN: " + message);
     }
   }
 
-  private void cleanupClusters() {
+  public void cleanupClusters() {
     if (_clusters != null) {
       _clusters.Release();
       _clusters = null;
@@ -2156,9 +2225,14 @@ public class TextureSimulator : MonoBehaviour {
       _clusterAssignments = null;
     }
 
-    if(_clusteredParticles != null) {
+    if (_clusteredParticles != null) {
       _clusteredParticles.Release();
       _clusteredParticles = null;
+    }
+
+    if (_clusterDebug != null) {
+      _clusterDebug.Release();
+      _clusterDebug = null;
     }
   }
 
@@ -2167,15 +2241,20 @@ public class TextureSimulator : MonoBehaviour {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
 
-    if (_displayClusteringDebug) {
+    if (_displayClusteringDebug && _clusteringEnabled) {
+      TextMesh tm = FindObjectOfType<TextMesh>();
       RuntimeGizmoDrawer drawer;
       if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
         Cluster[] clusters = new Cluster[CLUSTER_COUNT];
         _clusters.GetData(clusters);
 
+        string s = tm.text;
+
         foreach (var cluster in clusters) {
+          s += (cluster.center.ContainsNaN() + " : " + System.Math.Round(cluster.radius, 1) + " : " + cluster.start + " : " + cluster.end) + "\n";
           drawer.DrawWireSphere(cluster.center, cluster.radius);
         }
+        tm.text = s;
       }
     }
   }

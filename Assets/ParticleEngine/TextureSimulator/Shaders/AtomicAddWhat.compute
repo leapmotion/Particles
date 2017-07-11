@@ -1,0 +1,30 @@
+﻿// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+Texture2D<float4> _SourceTex;
+RWTexture2D<float4> _TargetTex;
+
+struct MyStruct {
+  float3 position;
+  float radius;
+  uint happy;
+  uint notReally;
+  uint wow;
+};
+
+RWStructuredBuffer<uint> _Assignments;
+RWStructuredBuffer<MyStruct> _Target;
+RWStructuredBuffer<uint> _Buffer;
+
+
+[numthreads(64,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+  float4 texData = _SourceTex[uint2(id.x, 0)];
+
+  uint index;
+  InterlockedAdd(_Target[0].wow, 1, index);
+
+  _Buffer[index] = id.x;
+  _TargetTex[uint2(index, 0)] = texData;
+}

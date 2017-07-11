@@ -2,8 +2,9 @@
 #pragma kernel IntegrateCounts
 #pragma kernel SortParticlesIntoClusters
 #pragma kernel UpdateClusterCenters
+#pragma kernel CheckParticlesForNaN
 
-#define TOTAL_CLUSTERS 64
+#define TOTAL_CLUSTERS 2
 #define MAX_SOCIAL_RANGE 0.5
 
 struct Cluster {
@@ -19,6 +20,7 @@ RWTexture2D<float4> _ClusteredParticles;
 
 RWStructuredBuffer<Cluster> _Clusters;
 RWStructuredBuffer<uint> _ClusterAssignments;
+RWStructuredBuffer<uint> _Debug;
 
 float lengthSqrd(float3 v) {
   return dot(v, v);
@@ -30,7 +32,7 @@ void CalculateClusterAssignments (uint3 id : SV_DispatchThreadID) {
 
   float4 particle = _Particles[uint2(index, 0)];
 
-  int closestClusterIndex = 0;
+  uint closestClusterIndex = 0;
   float closestDistance = lengthSqrd(_Clusters[0].center - particle.xyz);
 
   for (uint i = 1; i < TOTAL_CLUSTERS; i++) {
@@ -61,14 +63,18 @@ void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
   float4 particle = _Particles[uint2(id.x, 0)];
   uint clusterAssignment = _ClusterAssignments[id.x];
 
-  int newIndex;
+  uint newIndex;
   InterlockedAdd(_Clusters[clusterAssignment].end, 1, newIndex);
 
-  _ClusteredParticles[uint2(newIndex, 0)] = particle;
+  uint actualIndex = newIndex & 0xFFFFFFFu;
+
+  _ClusteredParticles[uint2(actualIndex, 0)] = particle;
 }
 
 [numthreads(1, 1, 1)]
 void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
+  GroupMemoryBarrier();
+
   Cluster cluster = _Clusters[id.x];
 
   cluster.center = float3(0, 0, 0);
@@ -78,7 +84,7 @@ void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
   }
 
   if (cluster.count == 0) {
-    cluster.center = float3(id.x, 0, 0);
+    cluster.center = float3(id.x * 0.01, 0, 0);
   } else {
     cluster.center /= cluster.count;
   }
@@ -89,4 +95,11 @@ void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
 
   cluster.count = 0;
   _Clusters[id.x] = cluster;
+}
+
+[numthreads(64, 1, 1)]
+void CheckParticlesForNaN(uint3 id : SV_DispatchThreadID) {
+  float4 data = _Particles[uint2(id.x, 0)];
+  int toOr = (isfinite(data.x) && isfinite(data.y) && isfinite(data.z)) ? 0 : 1;
+  InterlockedMax(_Debug[0], toOr);
 }

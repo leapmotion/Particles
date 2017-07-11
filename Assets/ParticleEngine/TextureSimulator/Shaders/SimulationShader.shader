@@ -4,7 +4,7 @@
 
   CGINCLUDE
   #include "UnityCG.cginc"
-#pragma target 5.0
+#pragma target 4.0
 
   #define MAX_PARTICLES 4096
   #define MAX_FORCE_STEPS 64
@@ -13,7 +13,7 @@
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
-  #define CLUSTER_COUNT 64
+  #define CLUSTER_COUNT 2
 
   struct appdata {
     float4 vertex : POSITION;
@@ -130,6 +130,18 @@
       pos.xyz = _HeadPos + fromHead / distToHead * _HeadRadius;
     }
 
+    if (!isfinite(pos.x)) {
+      pos.x = nrand(i.uv) * 0.1;
+    }
+
+    if (!isfinite(pos.y)) {
+      pos.y = nrand(i.uv * 2) * 0.1;
+    }
+
+    if (!isfinite(pos.z)) {
+      pos.z = nrand(i.uv * 3) * 0.1;
+    }
+
     return pos;
   }
 
@@ -172,6 +184,18 @@
       } else {
         velocity.w = lerp(velocity.w, 1, 0.05);
       }
+    }
+
+    if (!isfinite(velocity.x)) {
+      velocity.x = 0;
+    }
+
+    if (!isfinite(velocity.y)) {
+      velocity.y = 0;
+    }
+
+    if (!isfinite(velocity.z)) {
+      velocity.z = 0;
     }
 
     return velocity;
@@ -218,15 +242,18 @@
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
 #ifdef USE_CLUSTERS
-    for (uint i = 0; i < CLUSTER_COUNT; i++) {
-      Cluster cluster = _Clusters[i];
-      float distToCluster = length(particle.xyz - cluster.center);
-      if (distToCluster > (cluster.radius + 0.5)) {
-        continue;
-      }
+    //for (uint i = 0; i < CLUSTER_COUNT; i++) {
+    //  Cluster cluster = _Clusters[i];
+    //  float distToCluster = length(particle.xyz - cluster.center);
+    //  if (distToCluster > (cluster.radius + 0.5)) {
+    //    continue;
+    //  }
 
-      for (uint j = cluster.start; j < cluster.end; j++) {
-        float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
+    //  for (uint j = cluster.start; j < cluster.end; j++) {
+    //    float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
+    {
+      for (int i = 0; i < _ParticleCount; i++) {
+        float4 other = tex2Dlod(_ClusteredParticles, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
 #else
     {
       for (int i = 0; i < _ParticleCount; i++) {

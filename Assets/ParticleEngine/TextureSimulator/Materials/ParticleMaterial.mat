@@ -7,8 +7,8 @@ Material:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: ParticleMaterial
-  m_Shader: {fileID: 4800000, guid: 6bc6737ca7f5ff545a418c726bc7b06a, type: 3}
-  m_ShaderKeywords: COLOR_SPECIES ENABLE_INTERPOLATION FISH_TAIL
+  m_Shader: {fileID: 4800000, guid: f94e45e8863748c419e529e6965c9b91, type: 3}
+  m_ShaderKeywords: COLOR_CLUSTER FISH_TAIL
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_CustomRenderQueue: -1

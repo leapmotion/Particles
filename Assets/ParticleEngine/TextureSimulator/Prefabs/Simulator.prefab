@@ -695,9 +695,12 @@ MonoBehaviour:
   _simulationFPS: 60
   _simulationTimescale: 1
   _particlesToSimulate: 4096
-  _textureFormat: 11
+  _textureFormat: 2
   _simulationMat: {fileID: 2100000, guid: 79a2ae3dd54bd23409103aa710397f82, type: 2}
   _resetParticlePositionsKey: 112
+  _clusteringEnabled: 0
+  _clusterShader: {fileID: 7200000, guid: b2bd598fd66e46242aa090bc7cad99e4, type: 3}
+  _displayParticles: 1
   _particleMesh: {fileID: 4300000, guid: 4146ef317cfe10d4fa7b85d3f5fb513b, type: 2}
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 0
@@ -708,7 +711,7 @@ MonoBehaviour:
   _randomizeEcosystemKey: 32
   _loadEcosystemSeedKey: 108
   _presetEcosystemSettings:
-    _ecosystemPreset: 4
+    _ecosystemPreset: 0
     _maxForceSteps: 7
     _maxSocialForce: 0.003
     _maxSocialRange: 0.5

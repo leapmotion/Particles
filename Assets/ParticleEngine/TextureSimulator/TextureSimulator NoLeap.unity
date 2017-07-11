@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44646937, g: 0.49630994, b: 0.5747267, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -145,26 +145,6 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4437175986409996, guid: 293126bede65632468a25da3a2d80e96, type: 2}
       propertyPath: m_RootOrder
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
-        type: 2}
-      propertyPath: _handInfluenceEnabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
-        type: 2}
-      propertyPath: _handCollisionEnabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
-        type: 2}
-      propertyPath: _presetEcosystemSettings._ecosystemPreset
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
-        type: 2}
-      propertyPath: _textureFormat
       value: 2
       objectReference: {fileID: 0}
     m_RemovedComponents: []

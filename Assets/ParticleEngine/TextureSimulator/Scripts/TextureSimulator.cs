@@ -475,14 +475,14 @@ public class TextureSimulator : MonoBehaviour {
   //####################//
   ///      Display      //
   //####################//
+  [Header("Display")]
   [SerializeField]
   private bool _displayParticles = true;
   public bool displayParticles {
     get { return _displayParticles; }
     set { _displayParticles = value; }
   }
-
-  [Header("Display")]
+  
   [SerializeField]
   private Mesh _particleMesh;
 

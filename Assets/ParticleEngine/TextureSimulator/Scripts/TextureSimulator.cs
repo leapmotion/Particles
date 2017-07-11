@@ -2104,6 +2104,7 @@ public class TextureSimulator : MonoBehaviour {
         _clusterShader.SetTexture(kernel, "_ClusteredParticles", _clusteredParticles);
       }
 
+      _displayBlock.SetBuffer("_ClusterAssignments", _clusterAssignments);
       _simulationMat.SetTexture("_ClusteredParticles", _clusteredParticles);
     }
   }

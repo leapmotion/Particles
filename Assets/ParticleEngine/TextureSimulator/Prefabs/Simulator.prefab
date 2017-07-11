@@ -694,6 +694,7 @@ MonoBehaviour:
   _limitStepsPerFrame: 1
   _simulationFPS: 60
   _simulationTimescale: 1
+  _particlesToSimulate: 4096
   _textureFormat: 11
   _simulationMat: {fileID: 2100000, guid: 79a2ae3dd54bd23409103aa710397f82, type: 2}
   _resetParticlePositionsKey: 112

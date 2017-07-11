@@ -24,6 +24,8 @@
 
     sampler2D _ToonRamp;
 
+    float _ParticleCount;
+
     struct Input {
       float4 color : COLOR;
       float3 viewDir;
@@ -93,6 +95,10 @@
       v.vertex.xyz *= squash;
       v.vertex.xyz += velocity.xyz * dot(velocity.xyz, v.vertex.xyz) / velLength;
 #endif
+
+      if (v.texcoord.x > _ParticleCount) {
+        v.vertex.xyz += float3(0, 1000, 0);
+      }
       
       v.vertex.xyz += particle.xyz;
     }

@@ -424,6 +424,16 @@ public class TextureSimulator : MonoBehaviour {
     set { _simulationTimescale = value; }
   }
 
+  [Range(1, MAX_PARTICLES)]
+  [SerializeField]
+  private int _particlesToSimulate = MAX_PARTICLES;
+  public int particlesToSimulate {
+    get { return _particlesToSimulate; }
+    set {
+      _particlesToSimulate = Mathf.Clamp(value, 1, MAX_PARTICLES);
+    }
+  }
+
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
 
@@ -439,6 +449,13 @@ public class TextureSimulator : MonoBehaviour {
   //####################//
   ///      Display      //
   //####################//
+  [SerializeField]
+  private bool _displayParticles = true;
+  public bool displayParticles {
+    get { return _displayParticles; }
+    set { _displayParticles = value; }
+  }
+
   [Header("Display")]
   [SerializeField]
   private Mesh _particleMesh;
@@ -887,7 +904,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_Velocity", _frontVel);
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
-    generateMeshes();
+    RecalculateMeshesForParticles();
     
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
@@ -938,7 +955,9 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    displaySimulation();
+    if (_displayParticles) {
+      displaySimulation();
+    }
   }
   #endregion
 
@@ -961,6 +980,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
+    _particlesToSimulate = MAX_PARTICLES;
+
     var setting = _presetEcosystemSettings;
     _currentSpawnPreset = SpawnPreset.Spherical;
     _currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
@@ -1151,59 +1172,67 @@ public class TextureSimulator : MonoBehaviour {
 
         ResetPositions();
         break;
+
       case EcosystemPreset.Test:
-        _currentSimulationSpeciesCount = 2;
+        _currentSimulationSpeciesCount = 8;
 
-        int tBlack = 0;
-        int tWhite = 1;
+        float drag 			=  0.0f;
+        float collision 	=  1.0f;
+        int   steps 		=  6;
 
-        colors[tBlack] = new Color(0.0f, 0.0f, 0.0f);
-        colors[tWhite] = new Color(1.0f, 1.0f, 1.0f);
+		float selfLove   	=  0.3f; 
+		float selfRange  	=  0.3f;
 
-        float tBlackDrag = 0.0f;
-        float tWhiteDrag = 0.0f;
+		float fearForce  	= -0.4f;
+		float fearRange_ 	=  0.2f;
 
-        float tBlackCollision = 0.0f;
-        float tWhiteCollision = 0.0f;
+		float loveForce  	=  0.3f;
+		float loveRange_ 	=  0.2f;
 
-        int tBlackSteps = 0;
-        int tWhiteSteps = 0;
+        float d = Mathf.Lerp(setting.minDrag, setting.maxDrag, drag);
+        float c = Mathf.Lerp(setting.minCollision, setting.maxCollision, collision);
 
-        float tbd = Mathf.Lerp(setting.minDrag, setting.maxDrag, tBlackDrag);
-        float twd = Mathf.Lerp(setting.minDrag, setting.maxDrag, tWhiteDrag);
-
-        float tbc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tBlackCollision);
-        float twc = Mathf.Lerp(setting.minCollision, setting.maxCollision, tWhiteCollision);
-
-        speciesData[tBlack] = new Vector3(tbd, tBlackSteps, tbc);
-        speciesData[tWhite] = new Vector3(twd, tWhiteSteps, twc);
-
-		int half = (int)( MAX_PARTICLES / 2.0f );
-        for (int i = 0; i < MAX_PARTICLES; i++) 
+		int numParticlesPerSpecies = MAX_PARTICLES / _currentSimulationSpeciesCount;
+		
+		int pp = 0;
+  		for (int species=0; species<_currentSimulationSpeciesCount; species++)
 		{
-			float rr = 1.0f;
-			float xx = 0.0f;
-			float yy = 0.0f;
-			float zz = 0.0f;
-			float ff = 0.0f;
+			float g = (float)species / (float)_currentSimulationSpeciesCount;
+			colors[ species ] = new Color( g, g, g );
+	        speciesData[ species ] = new Vector3(d, steps, c);
 
-			if ( i < half )
+			// clear it all
+	  		for (int other=0; other<_currentSimulationSpeciesCount; other++)
 			{
-				particleSpecies[i] = tBlack;
-				ff = -0.5f + (float)i/ (float)half;
-				yy -= 0.1f;
-			} 
-			else 
-			{
-				particleSpecies[i] = tWhite;	
-				ff = -0.5f + (float)( i - half ) / (float)half;
-				yy += 0.1f;
+	        	socialData[ species, other ] = new Vector2(setting.maxSocialForce * 0.0f, setting.maxSocialRange * 0.0f );
 			}
 
-			xx = ff * rr;
+			// species reaction to own kind
+			socialData[ species, species ] = new Vector2(setting.maxSocialForce * selfLove, setting.maxSocialRange * selfRange );
 
-			particlePositions[i] = new Vector3( xx, yy, zz );
-        }
+			// species reaction to before species and after species
+			int before = species - 1;
+			int after  = species + 1;
+
+			if ( before == -1 								) { before = _currentSimulationSpeciesCount - before; }
+			if ( after  == _currentSimulationSpeciesCount 	) { after  = _currentSimulationSpeciesCount - after;  }
+
+			socialData[ species, before ] = new Vector2(setting.maxSocialForce * fearForce, setting.maxSocialRange * fearRange_ );
+			socialData[ species, after  ] = new Vector2(setting.maxSocialForce * loveForce, setting.maxSocialRange * loveRange_ );
+
+			for (int p=0; p<numParticlesPerSpecies; p++) 
+			{
+				float ff = (float)p / (float)numParticlesPerSpecies;
+				float rr = 0.3f;
+				float xx = -rr * 0.5f + ff 				* rr;
+				float yy = -rr * 0.5f + g  				* rr;
+				float zz = -rr * 0.5f + Random.value	* rr;
+
+				particleSpecies[ pp ] = species;
+				particlePositions[pp] = new Vector3( xx, yy, zz );
+				pp ++;
+			}
+		}
 
         ResetPositions(particlePositions, particleVelocities, particleSpecies);
 
@@ -1211,6 +1240,7 @@ public class TextureSimulator : MonoBehaviour {
         //ResetPositions();
 		
         break;
+
       case EcosystemPreset.BodyMind:
         _currentSimulationSpeciesCount = 3;
 
@@ -1824,6 +1854,8 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+    _simulationMat.SetInt("_ParticleCount", _particlesToSimulate);
+    _displayBlock.SetFloat("_ParticleCount", _particlesToSimulate / (float)MAX_PARTICLES);
   }
 
   private void handleUserInput() {
@@ -1845,7 +1877,10 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void generateMeshes() {
+  [ContextMenu("Recalculate Meshes")]
+  public void RecalculateMeshesForParticles() {
+    _meshes.Clear();
+
     var sourceVerts = _particleMesh.vertices;
     var sourceTris = _particleMesh.triangles;
 
@@ -1854,7 +1889,7 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    for (int i = 0; i < _particlesToSimulate; i++) {
       if (bakedVerts.Count + sourceVerts.Length > 60000) {
         bakedMesh.SetVertices(bakedVerts);
         bakedMesh.SetTriangles(bakedTris, 0);
@@ -1996,21 +2031,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    GL.Begin(GL.QUADS);
-
-    GL.TexCoord2(0, 1);
-    GL.Vertex3(0, 0, 0);
-
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, 0, 0);
-
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, height, 0);
-
-    GL.TexCoord2(0, 0);
-    GL.Vertex3(0, height, 0);
-
-    GL.End();
+    quad(height);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2044,18 +2065,20 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void quad(float height = 1) {
+    float percent = _particlesToSimulate / (float)MAX_PARTICLES;
+
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, 0);
+    GL.TexCoord2(0, 1);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(1, 0);
-    GL.Vertex3(1, 0, 0);
+    GL.TexCoord2(percent, 1);
+    GL.Vertex3(percent, 0, 0);
 
-    GL.TexCoord2(1, 1);
-    GL.Vertex3(1, height, 0);
+    GL.TexCoord2(percent, 0);
+    GL.Vertex3(percent, height, 0);
 
-    GL.TexCoord2(0, 1);
+    GL.TexCoord2(0, 0);
     GL.Vertex3(0, height, 0);
 
     GL.End();

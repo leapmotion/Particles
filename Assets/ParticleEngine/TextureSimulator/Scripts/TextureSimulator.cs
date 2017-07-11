@@ -796,11 +796,11 @@ public class TextureSimulator : MonoBehaviour {
 
   //Clustering
   private struct Cluster {
-    Vector3 center;
-    float radius;
-    uint count;
-    uint start;
-    uint end;
+    public Vector3 center;
+    public float radius;
+    public uint count;
+    public uint start;
+    public uint end;
   }
 
   private ComputeBuffer _clusters;
@@ -2096,7 +2096,11 @@ public class TextureSimulator : MonoBehaviour {
       _clusterKernelSort = _clusterShader.FindKernel(CLUSTER_KERNEL_SORT);
       _clusterKernelUpdate = _clusterShader.FindKernel(CLUSTER_KERNEL_UPDATE);
 
-      foreach(var kernel in new int[] { _clusterKernelAssign,
+      _clusters.SetData(new Cluster[CLUSTER_COUNT].Fill(() => new Cluster() {
+        center = Random.insideUnitCircle
+      }));
+
+      foreach (var kernel in new int[] { _clusterKernelAssign,
                                         _clusterKernelIntegrate,
                                         _clusterKernelSort,
                                         _clusterKernelUpdate }) {

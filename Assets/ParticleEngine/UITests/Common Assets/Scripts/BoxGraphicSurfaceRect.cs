@@ -10,6 +10,8 @@ public class BoxGraphicSurfaceRect : MonoBehaviour {
 
   public LeapBoxGraphic parentBox;
 
+  public float extraDepth = 0.0001F;
+
   [SerializeField, Disable]
   private float _parentBoxDepth = 0F;
 
@@ -20,8 +22,6 @@ public class BoxGraphicSurfaceRect : MonoBehaviour {
     if (_rectTransform == null) {
       _rectTransform = this.gameObject.AddComponent<RectTransform>();
     }
-    _rectTransform.anchorMin = Vector2.zero;
-    _rectTransform.anchorMax = Vector2.one;
 
     parentBox = this.transform.parent.GetComponent<LeapBoxGraphic>();
   }
@@ -31,7 +31,7 @@ public class BoxGraphicSurfaceRect : MonoBehaviour {
       _parentBoxDepth = parentBox.size.z;
       this.transform.localPosition = new Vector3(this.transform.localPosition.x,
                                                  this.transform.localPosition.y,
-                                                 -_parentBoxDepth);
+                                                 -_parentBoxDepth - extraDepth);
     }
   }
 

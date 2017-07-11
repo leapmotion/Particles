@@ -16,7 +16,7 @@ namespace Leap.Unity.Interaction {
   [CustomEditor(typeof(InteractionSlider), editorForChildClasses: true)]
   public class InteractionSliderEditor : InteractionButtonEditor {
     public override void OnInspectorGUI() {
-      bool noRectTransformParent = !(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null);
+      bool noRectTransformParent = !(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null && !(target as InteractionSlider).overrideRectLimits);
       if (!noRectTransformParent) {
         EditorGUILayout.HelpBox("This slider's limits are being controlled by the rect transform in its parent.", MessageType.Info);
       }
@@ -39,12 +39,12 @@ namespace Leap.Unity.Interaction {
     }
 
     private void decorateHorizontalSlideLimits(SerializedProperty property) {
-      EditorGUI.BeginDisabledGroup(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null);
+      EditorGUI.BeginDisabledGroup(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null && !(target as InteractionSlider).overrideRectLimits);
     }
 
     private void decorateVerticalSlideLimits(SerializedProperty property) {
       EditorGUI.EndDisabledGroup();
-      EditorGUI.BeginDisabledGroup(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null);
+      EditorGUI.BeginDisabledGroup(target.transform.parent != null && target.transform.parent.GetComponent<RectTransform>() != null && !(target as InteractionSlider).overrideRectLimits);
     }
 
     private void decorateHorizontalSteps(SerializedProperty property) {

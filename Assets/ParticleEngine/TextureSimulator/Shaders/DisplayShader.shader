@@ -11,11 +11,13 @@
     LOD 200
     
     CGPROGRAM
-    #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
+    #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY COLOR_CLUSTER
     #pragma multi_compile _ ENABLE_INTERPOLATION
     #pragma multi_compile FISH_TAIL SQUASH_TAIL
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
     #pragma target 2.0
+
+    RWStructuredBuffer<uint> _ClusterAssignments;
 
     sampler2D _PrevPos;
     sampler2D _CurrPos;
@@ -73,6 +75,13 @@
 
 #ifdef COLOR_SPECIES_MAGNITUDE
       v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
+#endif
+
+#ifdef COLOR_CLUSTER
+      uint cluster = _ClusterAssignments[(uint)(v.texcoord.x * 4096)];
+      v.color.r = nrand(float2(cluster * 3.235, cluster * 1.343));
+      v.color.g = nrand(float2(cluster * 2.967, cluster * 9.173));
+      v.color.b = nrand(float2(cluster * 1.972, cluster * 4.812));
 #endif
 
       velocity.xyz *= velocity.w;

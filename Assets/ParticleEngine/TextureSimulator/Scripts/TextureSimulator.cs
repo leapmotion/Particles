@@ -17,6 +17,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string BY_SPECIES = "COLOR_SPECIES";
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
   public const string BY_VELOCITY = "COLOR_VELOCITY";
+  public const string BY_CLUSTER = "COLOR_CLUSTER";
 
   public const string INTERPOLATION_KEYWORD = "ENABLE_INTERPOLATION";
 
@@ -818,6 +819,7 @@ public class TextureSimulator : MonoBehaviour {
     BySpecies,
     BySpeciesWithMagnitude,
     ByVelocity,
+    ByCluster
   }
 
   public enum ShaderDebugMode {
@@ -2022,6 +2024,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.DisableKeyword(BY_SPECIES);
     _particleMat.DisableKeyword(BY_SPECIES_WITH_VELOCITY);
     _particleMat.DisableKeyword(BY_VELOCITY);
+    _particleMat.DisableKeyword(BY_CLUSTER);
 
     switch (_colorMode) {
       case ColorMode.BySpecies:
@@ -2032,6 +2035,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ColorMode.ByVelocity:
         _particleMat.EnableKeyword(BY_VELOCITY);
+        break;
+      case ColorMode.ByCluster:
+        _particleMat.EnableKeyword(BY_CLUSTER);
         break;
     }
 

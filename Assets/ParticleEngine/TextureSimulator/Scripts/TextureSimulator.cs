@@ -772,8 +772,16 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private bool _displayClusteringDebug = false;
 
+  [OnEditorChange("gpuStatsEnabled")]
   [SerializeField]
   private bool _gpuStatsEnabled = false;
+  public bool gpuStatsEnabled {
+    get { return _gpuStatsEnabled; }
+    set {
+      _gpuStatsEnabled = value;
+      updateKeywords();
+    }
+  }
   #endregion
 
   //Simulation
@@ -2120,6 +2128,12 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.EnableKeyword(INTERPOLATION_KEYWORD);
     } else {
       _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
+    }
+
+    if (_gpuStatsEnabled) {
+      _simulationMat.EnableKeyword("GPU_STATS");
+    } else {
+      _simulationMat.DisableKeyword("GPU_STATS");
     }
 
     _simulationMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);

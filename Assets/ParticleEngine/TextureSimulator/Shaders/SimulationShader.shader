@@ -253,7 +253,9 @@
         continue;
       }
 
+#ifdef GPU_STATS
       InterlockedAdd(_DebugBuffer[1], 1);
+#endif
       
       uint delta = 1;
       if (distToCluster > cluster.radius) {
@@ -288,8 +290,10 @@
         if (distance < socialData.y) {
           totalSocialForce += float4(socialData.x * toOther, 1) * scalar;
         }
-
+        
+#ifdef GPU_STATS
         InterlockedAdd(_DebugBuffer[0], 1);
+#endif
       }
     }
 
@@ -426,6 +430,7 @@
     Pass {
       CGPROGRAM
       #pragma multi_compile _ USE_CLUSTERS
+      #pragma multi_compile _ GPU_STATS
       #pragma vertex vert
       #pragma fragment updateCollisionVelocities
       ENDCG

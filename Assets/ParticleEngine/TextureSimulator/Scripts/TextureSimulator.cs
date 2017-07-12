@@ -811,6 +811,16 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public int textureDimension {
+    get {
+      int dimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
+      if (dimension * dimension != MAX_PARTICLES) {
+        throw new System.Exception("Max particles must be a square number.");
+      }
+      return dimension;
+    }
+  }
+
   public float simulationAge {
     get {
       return _currSimulationTime;
@@ -891,11 +901,12 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Start() {
-    _frontPos = createTexture();
-    _frontVel = createTexture();
-    _backPos = createTexture();
-    _backVel = createTexture();
-    _socialTemp = createTexture();
+    _frontPos = createParticleTexture();
+    _frontVel = createParticleTexture();
+    _backPos = createParticleTexture();
+    _backVel = createParticleTexture();
+    _socialTemp = createParticleTexture();
+
     _frontSocial = createTexture(MAX_FORCE_STEPS);
     _backSocial = createTexture(MAX_FORCE_STEPS);
 
@@ -1889,38 +1900,47 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < _particlesToSimulate; i++) {
-      if (bakedVerts.Count + sourceVerts.Length > 60000) {
-        bakedMesh.SetVertices(bakedVerts);
-        bakedMesh.SetTriangles(bakedTris, 0);
-        bakedMesh.SetUVs(0, bakedUvs);
-        bakedMesh.RecalculateNormals();
-        bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-        bakedMesh = null;
+    int particlesToMesh = _particlesToSimulate;
+    for(int i=0; i< textureDimension; i++) {
+      for (int j = 0; j < textureDimension; j++) {
+        if (bakedVerts.Count + sourceVerts.Length > 60000) {
+          bakedMesh.SetVertices(bakedVerts);
+          bakedMesh.SetTriangles(bakedTris, 0);
+          bakedMesh.SetUVs(0, bakedUvs);
+          bakedMesh.RecalculateNormals();
+          bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+          bakedMesh = null;
 
-        bakedVerts.Clear();
-        bakedTris.Clear();
-        bakedUvs.Clear();
-      }
+          bakedVerts.Clear();
+          bakedTris.Clear();
+          bakedUvs.Clear();
+        }
 
-      if (bakedMesh == null) {
-        sourceTris = _particleMesh.triangles;
-        bakedMesh = new Mesh();
-        bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-        _meshes.Add(bakedMesh);
-      }
+        if (bakedMesh == null) {
+          sourceTris = _particleMesh.triangles;
+          bakedMesh = new Mesh();
+          bakedMesh.hideFlags = HideFlags.HideAndDontSave;
+          _meshes.Add(bakedMesh);
+        }
 
-      bakedVerts.AddRange(sourceVerts);
-      bakedTris.AddRange(sourceTris);
+        bakedVerts.AddRange(sourceVerts);
+        bakedTris.AddRange(sourceTris);
 
-      for (int k = 0; k < sourceVerts.Length; k++) {
-        bakedUvs.Add(new Vector2((i + 0.5f) / MAX_PARTICLES, 0));
-      }
+        for (int k = 0; k < sourceVerts.Length; k++) {
+          bakedUvs.Add(new Vector2((i + 0.5f) / textureDimension, (j + 0.5f) / textureDimension));
+        }
 
-      for (int k = 0; k < sourceTris.Length; k++) {
-        sourceTris[k] += sourceVerts.Length;
+        for (int k = 0; k < sourceTris.Length; k++) {
+          sourceTris[k] += sourceVerts.Length;
+        }
+
+        particlesToMesh--;
+        if (particlesToMesh == 0) {
+          goto finishedMeshing;
+        }
       }
     }
+    finishedMeshing:
 
     bakedMesh.hideFlags = HideFlags.HideAndDontSave;
     bakedMesh.SetVertices(bakedVerts);
@@ -1931,12 +1951,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private RenderTexture createParticleTexture() {
-    int dimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
-    if (dimension * dimension != MAX_PARTICLES) {
-      throw new System.Exception("Max particles must be a square number.");
-    }
-
-    RenderTexture tex = new RenderTexture(dimension, dimension, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    RenderTexture tex = new RenderTexture(textureDimension, textureDimension, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
 

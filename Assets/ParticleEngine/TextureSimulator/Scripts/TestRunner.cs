@@ -12,6 +12,15 @@ public class TestRunner : MonoBehaviour {
 	IEnumerator Start () {
     yield return new WaitForSeconds(0.5f);
     sim.ResetPositions();
+
+    while (true) {
+      yield return new WaitForSeconds(0.5f);
+      texMesh.text = Mathf.Round(1.0f / Time.smoothDeltaTime).ToString();
+    }
+
+    /*
+    yield return new WaitForSeconds(0.5f);
+    sim.ResetPositions();
     yield return new WaitForSeconds(0.5f);
 
     for(int i=1; i<=4; i++) {
@@ -34,6 +43,7 @@ public class TestRunner : MonoBehaviour {
       _results += '\n';
       texMesh.text = _results;
     }
+    */
   }
 
   IEnumerator runTest() {

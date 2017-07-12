@@ -42,7 +42,7 @@ RenderSettings:
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
-  serializedVersion: 11
+  serializedVersion: 9
   m_GIWorkflowMode: 0
   m_GISettings:
     serializedVersion: 2
@@ -54,7 +54,7 @@ LightmapSettings:
     m_EnableBakedLightmaps: 1
     m_EnableRealtimeLightmaps: 1
   m_LightmapEditorSettings:
-    serializedVersion: 9
+    serializedVersion: 8
     m_Resolution: 2
     m_BakeResolution: 40
     m_TextureWidth: 1024
@@ -87,7 +87,7 @@ LightmapSettings:
     m_PVRFilteringAtrousNormalSigma: 1
     m_PVRFilteringAtrousPositionSigma: 1
   m_LightingDataAsset: {fileID: 0}
-  m_UseShadowmask: 1
+  m_ShadowMaskMode: 2
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -5806,7 +5806,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_NORMALS GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -6890,7 +6889,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -12171,7 +12169,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_SPHERICAL GRAPHIC_RENDERER_VERTEX_COLORS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -12396,7 +12393,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_TINTING GRAPHIC_RENDERER_VERTEX_COLORS GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -17158,7 +17154,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -18453,7 +18448,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_TINTING GRAPHIC_RENDERER_VERTEX_COLORS GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -20459,7 +20453,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_SPHERICAL GRAPHIC_RENDERER_VERTEX_COLORS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -22047,13 +22040,10 @@ Texture2D:
   m_ImageCount: 1
   m_TextureDimension: 2
   m_TextureSettings:
-    serializedVersion: 2
     m_FilterMode: 1
     m_Aniso: 1
     m_MipBias: 0
-    m_WrapU: 0
-    m_WrapV: 0
-    m_WrapW: 0
+    m_WrapMode: 0
   m_LightmapFormat: 0
   m_ColorSpace: 0
   image data: 349524
@@ -26476,7 +26466,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -30232,7 +30221,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_TINTING GRAPHIC_RENDERER_VERTEX_COLORS GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -30702,7 +30690,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_SPHERICAL GRAPHIC_RENDERER_VERTEX_COLORS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -35941,20 +35928,6 @@ Light:
   m_Lightmapping: 4
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_FalloffTable:
-    m_Table[0]: 0
-    m_Table[1]: 0
-    m_Table[2]: 0
-    m_Table[3]: 0
-    m_Table[4]: 0
-    m_Table[5]: 0
-    m_Table[6]: 0
-    m_Table[7]: 0
-    m_Table[8]: 0
-    m_Table[9]: 0
-    m_Table[10]: 0
-    m_Table[11]: 0
-    m_Table[12]: 0
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
@@ -49707,7 +49680,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_TINTING GRAPHIC_RENDERER_VERTEX_COLORS GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -61565,7 +61537,6 @@ Material:
   m_ShaderKeywords: GRAPHIC_RENDERER_VERTEX_COLORS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -69142,7 +69113,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
@@ -74866,7 +74836,6 @@ Material:
     GRAPHIC_RENDERER_VERTEX_UV_0
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []

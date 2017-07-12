@@ -1930,6 +1930,22 @@ public class TextureSimulator : MonoBehaviour {
     bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
+  private RenderTexture createParticleTexture() {
+    int dimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
+    if (dimension * dimension != MAX_PARTICLES) {
+      throw new System.Exception("Max particles must be a square number.");
+    }
+
+    RenderTexture tex = new RenderTexture(dimension, dimension, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    tex.wrapMode = TextureWrapMode.Clamp;
+    tex.filterMode = FilterMode.Point;
+
+    RenderTexture.active = tex;
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.green);
+    RenderTexture.active = null;
+    return tex;
+  }
+
   private RenderTexture createTexture(int height = 1) {
     RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;

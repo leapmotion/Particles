@@ -14,26 +14,31 @@ public class TestRunner : MonoBehaviour {
     yield return new WaitForSeconds(0.5f);
     sim.ResetPositions();
     yield return new WaitForSeconds(0.5f);
-    sim.cleanupClusters();
+    sim.clusteringEnabled = true;
 
     while (true) {
-      for(int i=0; i<10; i++) {
-        yield return new WaitForSeconds(0.5f);
-        texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
-      }
-
-      sim.clusteringEnabled = true;
-      r.material.color = Color.green;
-
-      for (int i = 0; i < 10; i++) {
-        yield return new WaitForSeconds(0.5f);
-        texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
-      }
-
-      sim.clusteringEnabled = false;
-      r.material.color = Color.red;
-      //sim.cleanupClusters();
+      yield return new WaitForSeconds(0.5f);
+      texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
     }
+
+    //while (true) {
+    //  for(int i=0; i<10; i++) {
+    //    yield return new WaitForSeconds(0.5f);
+    //    texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
+    //  }
+
+    //  sim.clusteringEnabled = true;
+    //  r.material.color = Color.green;
+
+    //  for (int i = 0; i < 10; i++) {
+    //    yield return new WaitForSeconds(0.5f);
+    //    texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
+    //  }
+
+    //  sim.clusteringEnabled = false;
+    //  r.material.color = Color.red;
+    //  //sim.cleanupClusters();
+    //}
 
 
 

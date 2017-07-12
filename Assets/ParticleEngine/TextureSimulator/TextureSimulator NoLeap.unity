@@ -150,7 +150,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _presetEcosystemSettings._ecosystemPreset
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
@@ -195,7 +195,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _displayClusteringDebug
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
@@ -205,7 +205,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _gpuStatsEnabled
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1293918469229686, guid: 293126bede65632468a25da3a2d80e96, type: 2}
       propertyPath: m_IsActive
@@ -225,7 +225,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 253537003}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b90f5105083649499a1b3ad43caac31, type: 3}
   m_Name: 

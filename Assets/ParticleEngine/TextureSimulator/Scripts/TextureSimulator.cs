@@ -1990,7 +1990,9 @@ public class TextureSimulator : MonoBehaviour {
     GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
-    doParticleInteraction();
+    using (new ProfilerSample("Do Particle Interaction")) {
+      doParticleInteraction();
+    }
 
     blitQueue("_SocialForce", ref _frontSocialQueue, ref _backSocialQueue, PASS_STEP_SOCIAL_QUEUE, MAX_FORCE_STEPS);
 
@@ -2094,14 +2096,16 @@ public class TextureSimulator : MonoBehaviour {
   private void doParticleInteraction() {
     _colorBuffers[0] = _frontVel.colorBuffer;
     _colorBuffers[1] = _socialTemp.colorBuffer;
-
-    Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
-    _frontVel.DiscardContents();
-    _socialTemp.DiscardContents();
-
-    _simulationMat.SetPass(1);
     
-    quad(_particleXRange, _particleYRange);
+    Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
+    for (int i = 0; i < 10; i++) {
+      _frontVel.DiscardContents();
+      _socialTemp.DiscardContents();
+
+      _simulationMat.SetPass(1);
+
+      quad(_particleXRange, _particleYRange);
+    }
 
     _simulationMat.SetTexture("_Velocity", _frontVel);
 

@@ -243,8 +243,6 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-    float scalar = 1;
-
 #ifdef USE_CLUSTERS
     for (uint i = 0; i < CLUSTER_COUNT; i++) {
       Cluster cluster = _Clusters[i];
@@ -256,14 +254,8 @@
 #ifdef GPU_STATS
       InterlockedAdd(_DebugBuffer[1], 1);
 #endif
-      
-      uint delta = 1;
-      if (distToCluster > cluster.radius) {
-        scalar = 8;
-        delta = 8;
-      }
 
-      for (uint j = cluster.start; j < cluster.end; j += delta) {
+      for (uint j = cluster.start; j < cluster.end; j++) {
         float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
     //{
     //  for (int i = 0; i < _ParticleCount; i++) {
@@ -288,7 +280,7 @@
         float2 socialData = _SocialData[(int)(socialOffset + other.w)];
 
         if (distance < socialData.y) {
-          totalSocialForce += float4(socialData.x * toOther, 1) * scalar;
+          totalSocialForce += float4(socialData.x * toOther, 1);
         }
         
 #ifdef GPU_STATS

@@ -171,7 +171,7 @@
     float4 speciesData = _SpeciesData[(int)particle.w];
 
     //Step offset for social forces
-    i.uv.y = speciesData.y / MAX_FORCE_STEPS;
+    i.uv.y = i.uv.y / MAX_FORCE_STEPS + speciesData.y / MAX_FORCE_STEPS;
     float4 socialForce = tex2D(_SocialForce, i.uv);
     velocity.xyz += socialForce.xyz;
 
@@ -289,8 +289,9 @@
   float4 stepSocialQueue(v2f i) : SV_Target{
     float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
 
-    float4 newForce = tex2D(_SocialTemp, i.uv);
+    float4 newForce = tex2D(_SocialTemp, i.uv * float2(1, MAX_FORCE_STEPS));
     float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
+    //newForce = float4(1, 0, 0, 1);
 
     float4 result;
 

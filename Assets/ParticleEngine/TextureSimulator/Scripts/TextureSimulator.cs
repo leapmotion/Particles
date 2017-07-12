@@ -744,8 +744,8 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
-  private int _particleXRange;
-  private int _particleYRange;
+  private int _particleXRange = 64;
+  private int _particleYRange = 64;
 
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
@@ -1438,7 +1438,7 @@ public class TextureSimulator : MonoBehaviour {
     GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
 
     Texture2D tex;
-    tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
+    tex = new Texture2D(textureDimension, textureDimension, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
@@ -1451,7 +1451,7 @@ public class TextureSimulator : MonoBehaviour {
     blitPos(PASS_COPY);
     DestroyImmediate(tex);
 
-    tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
+    tex = new Texture2D(textureDimension, textureDimension, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
@@ -2083,7 +2083,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    quad(_particleXRange, textureDimension * steps);
+    quad(_particleXRange, textureDimension);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2117,15 +2117,18 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void quad(int width, int height) {
+    float uvX = width / (float)textureDimension;
+    float uvY = height / (float)textureDimension;
+
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, height);
+    GL.TexCoord2(0, uvY);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(width, height);
+    GL.TexCoord2(uvX, uvY);
     GL.Vertex3(width, 0, 0);
 
-    GL.TexCoord2(width, 0);
+    GL.TexCoord2(uvX, 0);
     GL.Vertex3(width, height, 0);
 
     GL.TexCoord2(0, 0);

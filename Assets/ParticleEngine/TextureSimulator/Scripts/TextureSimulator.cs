@@ -771,6 +771,9 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private bool _displayClusteringDebug = false;
+
+  [SerializeField]
+  private bool _gpuStatsEnabled = false;
   #endregion
 
   //Simulation
@@ -783,6 +786,9 @@ public class TextureSimulator : MonoBehaviour {
   private float _currScaledTime = 0;
   private float _currSimulationTime = 0;
   private float _prevSimulationTime = 0;
+
+  private ComputeBuffer _gpuStatsBuffer;
+  private int[] _gpuStatsData = new int[2];
 
   //Display
   private List<Mesh> _meshes = new List<Mesh>();
@@ -971,6 +977,11 @@ public class TextureSimulator : MonoBehaviour {
 
   private void OnDisable() {
     cleanupClusters();
+
+    if (_gpuStatsBuffer != null) {
+      _gpuStatsBuffer.Release();
+      _gpuStatsBuffer = null;
+    }
   }
 
   void Update() {
@@ -2009,6 +2020,18 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void stepSimulation(float framePercent) {
+    if (_gpuStatsEnabled) {
+      if (_gpuStatsBuffer == null) {
+        _gpuStatsBuffer = new ComputeBuffer(2, sizeof(int));
+        _simulationMat.SetBuffer("_DebugBuffer", _gpuStatsBuffer);
+      }
+
+      _gpuStatsData[0] = 0;
+      _gpuStatsData[1] = 0;
+      _gpuStatsBuffer.SetData(_gpuStatsData);
+      Graphics.SetRandomWriteTarget(2, _gpuStatsBuffer);
+    }
+
     if (_provider != null) {
       doHandCollision();
 
@@ -2062,6 +2085,14 @@ public class TextureSimulator : MonoBehaviour {
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
     _socialDebug.material.mainTexture = _backSocial;
+
+    if (_gpuStatsEnabled) {
+      _gpuStatsBuffer.GetData(_gpuStatsData);
+      float particlaPercent = _gpuStatsData[0] / (float)(MAX_PARTICLES * MAX_PARTICLES);
+      float clusterPercent = _gpuStatsData[1] / (float)(MAX_PARTICLES);
+      Debug.Log(particlaPercent + " : " + clusterPercent);
+      Graphics.ClearRandomWriteTargets();
+    }
   }
 
   private void updateKeywords() {

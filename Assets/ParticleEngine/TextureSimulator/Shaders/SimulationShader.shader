@@ -4,7 +4,7 @@
 
   CGINCLUDE
   #include "UnityCG.cginc"
-#pragma target 4.0
+#pragma target 5.0
 
   #define MAX_PARTICLES 4096
   #define MAX_FORCE_STEPS 64
@@ -79,6 +79,7 @@
 
   int _DebugMode;
   float4 _DebugData;
+  RWStructuredBuffer<uint> _DebugBuffer : u2;
 
   float nrand(float2 n) {
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -251,6 +252,8 @@
       if (distToCluster > (cluster.radius + maxSocialRange)) {
         continue;
       }
+
+      InterlockedAdd(_DebugBuffer[1], 1);
       
       uint delta = 1;
       if (distToCluster > cluster.radius) {
@@ -285,6 +288,8 @@
         if (distance < socialData.y) {
           totalSocialForce += float4(socialData.x * toOther, 1) * scalar;
         }
+
+        InterlockedAdd(_DebugBuffer[0], 1);
       }
     }
 

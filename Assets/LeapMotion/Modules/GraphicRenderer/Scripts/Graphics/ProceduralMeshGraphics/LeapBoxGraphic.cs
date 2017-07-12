@@ -31,7 +31,7 @@ namespace Leap.Unity.GraphicalRenderer {
              "panel automatically changes its resolution based on its size")]
     [EditTimeOnly]
     [SerializeField]
-    private ResolutionType _resolutionType = ResolutionType.Vertices;
+    private ResolutionType _resolutionType = ResolutionType.VerticesPerRectilinearMeter;
 
     [HideInInspector]
     [SerializeField]
@@ -58,7 +58,7 @@ namespace Leap.Unity.GraphicalRenderer {
     private bool _nineSliced = false;
 
     /// <summary>
-    /// Returns whether or not a feature data object is a valid object 
+    /// Returns whether or not a feature data object is a valid object
     /// that can be used to drive texture data for this panel.  Only
     /// a TextureData object or a SpriteData object are currently valid.
     /// </summary>
@@ -98,7 +98,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Returns the current local-space rect of this panel.  If there is a 
+    /// Returns the current local-space rect of this panel.  If there is a
     /// RectTransform attached to this panel, this value is the same as calling
     /// rectTransform.rect.
     /// </summary>

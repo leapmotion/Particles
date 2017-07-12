@@ -6,6 +6,7 @@ public class TestRunner : MonoBehaviour {
 
   public TextureSimulator sim;
   public TextMesh texMesh;
+  public Renderer r;
 
   private string _results;
 
@@ -16,11 +17,22 @@ public class TestRunner : MonoBehaviour {
     sim.cleanupClusters();
 
     while (true) {
-      yield return new WaitForSeconds(1);
+      for(int i=0; i<10; i++) {
+        yield return new WaitForSeconds(0.5f);
+        texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
+      }
+
       sim.clusteringEnabled = false;
-      yield return new WaitForSeconds(1);
+      r.material.color = Color.red;
+
+      for (int i = 0; i < 10; i++) {
+        yield return new WaitForSeconds(0.5f);
+        texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
+      }
+
       sim.clusteringEnabled = true;
-      sim.cleanupClusters();
+      r.material.color = Color.green;
+      //sim.cleanupClusters();
     }
 
 

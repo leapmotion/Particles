@@ -13,7 +13,7 @@
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
-  #define CLUSTER_COUNT 2
+  #define CLUSTER_COUNT 64
 
   struct appdata {
     float4 vertex : POSITION;
@@ -234,6 +234,7 @@
 
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
+    float maxSocialRange = _SpeciesData[(uint)particle.w].w;
 
     //float4 neighborA = tex2D(_Position, i.uv - float2(1.0 / MAX_PARTICLES, 0));
     //float4 neighborB = tex2D(_Position, i.uv + float2(1.0 / MAX_PARTICLES, 0));
@@ -241,19 +242,27 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-#ifdef USE_CLUSTERS
-    //for (uint i = 0; i < CLUSTER_COUNT; i++) {
-    //  Cluster cluster = _Clusters[i];
-    //  float distToCluster = length(particle.xyz - cluster.center);
-    //  if (distToCluster > (cluster.radius + 0.5)) {
-    //    continue;
-    //  }
+    float scalar = 1;
 
-    //  for (uint j = cluster.start; j < cluster.end; j++) {
-    //    float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
-    {
-      for (int i = 0; i < _ParticleCount; i++) {
-        float4 other = tex2Dlod(_ClusteredParticles, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
+#ifdef USE_CLUSTERS
+    for (uint i = 0; i < CLUSTER_COUNT; i++) {
+      Cluster cluster = _Clusters[i];
+      float distToCluster = length(particle.xyz - cluster.center);
+      if (distToCluster > (cluster.radius + maxSocialRange)) {
+        continue;
+      }
+      
+      uint delta = 1;
+      if (distToCluster > cluster.radius) {
+        scalar = 8;
+        delta = 8;
+      }
+
+      for (uint j = cluster.start; j < cluster.end; j += delta) {
+        float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
+    //{
+    //  for (int i = 0; i < _ParticleCount; i++) {
+    //    float4 other = tex2Dlod(_ClusteredParticles, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
 #else
     {
       for (int i = 0; i < _ParticleCount; i++) {
@@ -274,7 +283,7 @@
         float2 socialData = _SocialData[(int)(socialOffset + other.w)];
 
         if (distance < socialData.y) {
-          totalSocialForce += float4(socialData.x * toOther, 1);
+          totalSocialForce += float4(socialData.x * toOther, 1) * scalar;
         }
       }
     }

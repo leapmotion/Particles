@@ -12,7 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
-  public const int CLUSTER_COUNT = 2;
+  public const int CLUSTER_COUNT = 64;
 
   public const string BY_SPECIES = "COLOR_SPECIES";
   public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
@@ -974,7 +974,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
-    FindObjectOfType<TextMesh>().text = "";
+    //FindObjectOfType<TextMesh>().text = "";
 
     if (_enableSpeciesDebugColors) {
       Color[] colors = new Color[MAX_SPECIES];
@@ -1430,6 +1430,15 @@ public class TextureSimulator : MonoBehaviour {
       Vector4 species = speciesData[i];
       species.x = 1 - species.x;
       speciesData[i] = species;
+    }
+
+    //Calculate the max social range for each species
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      Vector4 data = speciesData[i];
+      for (int j = 0; j < MAX_SPECIES; j++) {
+        data.w = Mathf.Max(data.w, socialData[i, j].y);
+      }
+      speciesData[i] = data;
     }
 
     var packedSocialData = new Vector4[MAX_SPECIES * MAX_SPECIES];
@@ -2006,12 +2015,17 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    ensureClustersReady();
+    //ensureClustersReady();
 
     checkForFrontBack("A0");
 
     if (_clusteringEnabled) {
       performClustering();
+    }
+
+    if (_clusterDebug != null) {
+      //_clusterDebug.GetData(new uint[1]);
+      _clusterShader.SetTexture(_clusterKernelParticleNaN, "_Particles", _clusteredParticles);
     }
 
     checkForFrontBack("A");
@@ -2110,6 +2124,7 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  bool logItOutFoo = true;
   private void ensureClustersReady() {
     if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null || _clusterDebug == null) {
       cleanupClusters();
@@ -2144,6 +2159,8 @@ public class TextureSimulator : MonoBehaviour {
       _displayBlock.SetBuffer("_ClusterAssignments", _clusterAssignments);
       _simulationMat.SetTexture("_ClusteredParticles", _clusteredParticles);
       _simulationMat.SetBuffer("_Clusters", _clusters);
+
+      logItOutFoo = true;
     }
   }
 
@@ -2175,6 +2192,7 @@ public class TextureSimulator : MonoBehaviour {
       checkForFrontBack("##E");
     }
 
+    /*
     string s = FindObjectOfType<TextMesh>().text;
 
     uint[] assignments = new uint[MAX_PARTICLES];
@@ -2189,6 +2207,7 @@ public class TextureSimulator : MonoBehaviour {
     s += min + " : " + max + "\n";
 
     FindObjectOfType<TextMesh>().text = s;
+    */
   }
 
   private void checkForFrontBack(string message) {
@@ -2202,6 +2221,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void checkForNaN(Texture tex, string message) {
+    if (_clusterDebug == null || true) return;
+
     uint[] data = new uint[1] { 0 };
 
     _clusterDebug.SetData(data);
@@ -2241,6 +2262,7 @@ public class TextureSimulator : MonoBehaviour {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
 
+    /*
     if (_displayClusteringDebug && _clusteringEnabled) {
       TextMesh tm = FindObjectOfType<TextMesh>();
       RuntimeGizmoDrawer drawer;
@@ -2257,6 +2279,7 @@ public class TextureSimulator : MonoBehaviour {
         tm.text = s;
       }
     }
+    */
   }
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {

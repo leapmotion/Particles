@@ -4,7 +4,7 @@
 #pragma kernel UpdateClusterCenters
 #pragma kernel CheckParticlesForNaN
 
-#define TOTAL_CLUSTERS 2
+#define TOTAL_CLUSTERS 64
 #define MAX_SOCIAL_RANGE 0.5
 
 struct Cluster {
@@ -100,6 +100,6 @@ void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
 [numthreads(64, 1, 1)]
 void CheckParticlesForNaN(uint3 id : SV_DispatchThreadID) {
   float4 data = _Particles[uint2(id.x, 0)];
-  int toOr = (isfinite(data.x) && isfinite(data.y) && isfinite(data.z)) ? 0 : 1;
+  uint toOr = (isfinite(data.x) && isfinite(data.y) && isfinite(data.z)) ? 0 : 1;
   InterlockedMax(_Debug[0], toOr);
 }

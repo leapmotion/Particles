@@ -5,7 +5,8 @@
   CGINCLUDE
   #include "UnityCG.cginc"
 
-  #define MAX_PARTICLES 4096
+  #define PARTICLE_DIM 64
+  #define MAX_PARTICLES (PARTICLE_DIM * PARTICLE_DIM)
   #define MAX_FORCE_STEPS 64
   #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
@@ -34,7 +35,8 @@
   sampler2D _SocialTemp;
   sampler2D _SocialForce;
 
-  uniform int _ParticleCount;
+  uniform int _XRange;
+  uniform int _YRange;
 
   float3 _FieldCenter;
   float _FieldRadius;
@@ -194,24 +196,26 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-    for (int i = 0; i < _ParticleCount; i++) {
-      float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
-      float3 toOther = other.xyz - particle.xyz;
-      float distance = length(toOther);
-      toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
+    for (int y = 0; y < _YRange; y++) {
+      for (int x = 0; x < _XRange; x++) {
+        float4 other = tex2D(_Position, float2(x / (float)PARTICLE_DIM, y / (float)PARTICLE_DIM));
+        float3 toOther = other.xyz - particle.xyz;
+        float distance = length(toOther);
+        toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
-      float otherCollisionForce = _SpeciesData[(int)other.w].z;
-      float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
+        float otherCollisionForce = _SpeciesData[(int)other.w].z;
+        float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
 
-      if (distance < PARTICLE_DIAMETER) {
-        float penetration = 1 - distance / PARTICLE_DIAMETER;
-        velocity.xyz -= toOther * penetration * totalCollisionForce;
-      }
+        if (distance < PARTICLE_DIAMETER) {
+          float penetration = 1 - distance / PARTICLE_DIAMETER;
+          velocity.xyz -= toOther * penetration * totalCollisionForce;
+        }
 
-      float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
 
-      if (distance < socialData.y) {
-        totalSocialForce += float4(socialData.x * toOther, 1);
+        if (distance < socialData.y) {
+          totalSocialForce += float4(socialData.x * toOther, 1);
+        }
       }
     }
 

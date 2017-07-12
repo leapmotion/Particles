@@ -744,10 +744,13 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
+  private int _particleXRange;
+  private int _particleYRange;
+
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
-  private RenderTexture _frontSocial, _backSocial;
+  private RenderTexture _frontSocialQueue, _backSocialQueue;
   private RenderTexture _socialTemp;
 
   private float _currScaledTime = 0;
@@ -907,13 +910,13 @@ public class TextureSimulator : MonoBehaviour {
     _backVel = createParticleTexture();
     _socialTemp = createParticleTexture();
 
-    _frontSocial = createTexture(MAX_FORCE_STEPS);
-    _backSocial = createTexture(MAX_FORCE_STEPS);
+    _frontSocialQueue = createQueueTexture(MAX_FORCE_STEPS);
+    _backSocialQueue = createQueueTexture(MAX_FORCE_STEPS);
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
     _simulationMat.SetTexture("_Position", _frontPos);
     _simulationMat.SetTexture("_Velocity", _frontVel);
-    _simulationMat.SetTexture("_SocialForce", _frontSocial);
+    _simulationMat.SetTexture("_SocialForce", _frontSocialQueue);
 
     RecalculateMeshesForParticles();
     
@@ -934,9 +937,9 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.SetColorArray("_Colors", colors);
     }
 
-    updateShaderData();
-
     handleUserInput();
+
+    updateShaderData();
 
     updateShaderDebug();
 
@@ -1432,7 +1435,7 @@ public class TextureSimulator : MonoBehaviour {
         throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
     }
 
-    GL.LoadPixelMatrix(0, 1, 1, 0);
+    GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
 
     Texture2D tex;
     tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
@@ -1854,6 +1857,11 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void updateShaderData() {
+    _particleYRange = _particlesToSimulate / textureDimension;
+    _particleXRange = _particleYRange > 0 ? textureDimension : _particlesToSimulate;
+    _simulationMat.SetInt("_XRange", _particleXRange);
+    _simulationMat.SetInt("_YRange", _particleYRange);
+
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
@@ -1961,8 +1969,8 @@ public class TextureSimulator : MonoBehaviour {
     return tex;
   }
 
-  private RenderTexture createTexture(int height = 1) {
-    RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
+  private RenderTexture createQueueTexture(int steps) {
+    RenderTexture tex = new RenderTexture(textureDimension, textureDimension * steps, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
 
@@ -1979,12 +1987,12 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    GL.LoadPixelMatrix(0, 1, 1, 0);
+    GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
     doParticleInteraction();
 
-    blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
+    blitQueue("_SocialForce", ref _frontSocialQueue, ref _backSocialQueue, PASS_STEP_SOCIAL_QUEUE, MAX_FORCE_STEPS);
 
     blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
     blitPos(PASS_INTEGRATE_VELOCITIES);
@@ -1997,7 +2005,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _positionDebug.material.mainTexture = _frontPos;
     _velocityDebug.material.mainTexture = _frontVel;
-    _socialDebug.material.mainTexture = _backSocial;
+    _socialDebug.material.mainTexture = _backSocialQueue;
   }
 
   private void updateKeywords() {
@@ -2056,13 +2064,26 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {
+  private void blitParticles(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass) {
     RenderTexture.active = front;
     front.DiscardContents();
 
     _simulationMat.SetPass(pass);
 
-    quad(height);
+    quad(_particleXRange, _particleYRange);
+
+    _simulationMat.SetTexture(propertyName, front);
+
+    Utils.Swap(ref front, ref back);
+  }
+
+  private void blitQueue(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, int steps) {
+    RenderTexture.active = front;
+    front.DiscardContents();
+
+    _simulationMat.SetPass(pass);
+
+    quad(_particleXRange, textureDimension * steps);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2079,8 +2100,8 @@ public class TextureSimulator : MonoBehaviour {
     _socialTemp.DiscardContents();
 
     _simulationMat.SetPass(1);
-
-    quad();
+    
+    quad(_particleXRange, _particleYRange);
 
     _simulationMat.SetTexture("_Velocity", _frontVel);
 
@@ -2088,26 +2109,24 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void blitVel(int pass) {
-    blit("_Velocity", ref _frontVel, ref _backVel, pass, 1);
+    blitParticles("_Velocity", ref _frontVel, ref _backVel, pass);
   }
 
   private void blitPos(int pass) {
-    blit("_Position", ref _frontPos, ref _backPos, pass, 1);
+    blitParticles("_Position", ref _frontPos, ref _backPos, pass);
   }
 
-  private void quad(float height = 1) {
-    float percent = _particlesToSimulate / (float)MAX_PARTICLES;
-
+  private void quad(int width, int height) {
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, 1);
+    GL.TexCoord2(0, height);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(percent, 1);
-    GL.Vertex3(percent, 0, 0);
+    GL.TexCoord2(width, height);
+    GL.Vertex3(width, 0, 0);
 
-    GL.TexCoord2(percent, 0);
-    GL.Vertex3(percent, height, 0);
+    GL.TexCoord2(width, 0);
+    GL.Vertex3(width, height, 0);
 
     GL.TexCoord2(0, 0);
     GL.Vertex3(0, height, 0);

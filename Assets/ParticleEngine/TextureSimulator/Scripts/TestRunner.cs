@@ -22,16 +22,16 @@ public class TestRunner : MonoBehaviour {
         texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
       }
 
-      sim.clusteringEnabled = false;
-      r.material.color = Color.red;
+      sim.clusteringEnabled = true;
+      r.material.color = Color.green;
 
       for (int i = 0; i < 10; i++) {
         yield return new WaitForSeconds(0.5f);
         texMesh.text = Mathf.RoundToInt(1.0f / Time.smoothDeltaTime).ToString();
       }
 
-      sim.clusteringEnabled = true;
-      r.material.color = Color.green;
+      sim.clusteringEnabled = false;
+      r.material.color = Color.red;
       //sim.cleanupClusters();
     }
 

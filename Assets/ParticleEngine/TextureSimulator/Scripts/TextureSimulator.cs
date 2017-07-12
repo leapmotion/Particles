@@ -2098,14 +2098,12 @@ public class TextureSimulator : MonoBehaviour {
     _colorBuffers[1] = _socialTemp.colorBuffer;
     
     Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
-    for (int i = 0; i < 10; i++) {
-      _frontVel.DiscardContents();
-      _socialTemp.DiscardContents();
+    _frontVel.DiscardContents();
+    _socialTemp.DiscardContents();
 
-      _simulationMat.SetPass(1);
+    _simulationMat.SetPass(1);
 
-      quad(_particleXRange, _particleYRange);
-    }
+    quad(_particleXRange, _particleYRange);
 
     _simulationMat.SetTexture("_Velocity", _frontVel);
 

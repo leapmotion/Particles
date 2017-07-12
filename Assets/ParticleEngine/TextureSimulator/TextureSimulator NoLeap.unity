@@ -206,8 +206,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b90f5105083649499a1b3ad43caac31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sim: {fileID: 0}
+  sim: {fileID: 138600651}
   texMesh: {fileID: 2047863950}
+--- !u!114 &138600651 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+    type: 2}
+  m_PrefabInternal: {fileID: 138600645}
+  m_Script: {fileID: 11500000, guid: b2f23ad601d006840b1b50102bd9fbad, type: 3}
 --- !u!1 &934286586
 GameObject:
   m_ObjectHideFlags: 0

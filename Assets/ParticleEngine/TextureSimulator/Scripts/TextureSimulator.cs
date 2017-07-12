@@ -2236,23 +2236,6 @@ public class TextureSimulator : MonoBehaviour {
       _clusterShader.Dispatch(_clusterKernelUpdate, CLUSTER_COUNT, 1, 1);
       checkForFrontBack("##E");
     }
-
-    /*
-    string s = FindObjectOfType<TextMesh>().text;
-
-    uint[] assignments = new uint[MAX_PARTICLES];
-    _clusterAssignments.GetData(assignments);
-
-    uint min = uint.MaxValue;
-    uint max = 0;
-    foreach (var value in assignments) {
-      min = value < min ? value : min;
-      max = value > max ? value : max;
-    }
-    s += min + " : " + max + "\n";
-
-    FindObjectOfType<TextMesh>().text = s;
-    */
   }
 
   private void checkForFrontBack(string message) {
@@ -2307,24 +2290,17 @@ public class TextureSimulator : MonoBehaviour {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
 
-    /*
     if (_displayClusteringDebug && _clusteringEnabled) {
-      TextMesh tm = FindObjectOfType<TextMesh>();
       RuntimeGizmoDrawer drawer;
       if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
         Cluster[] clusters = new Cluster[CLUSTER_COUNT];
         _clusters.GetData(clusters);
 
-        string s = tm.text;
-
         foreach (var cluster in clusters) {
-          s += (cluster.center.ContainsNaN() + " : " + System.Math.Round(cluster.radius, 1) + " : " + cluster.start + " : " + cluster.end) + "\n";
           drawer.DrawWireSphere(cluster.center, cluster.radius);
         }
-        tm.text = s;
       }
     }
-    */
   }
 
   private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {

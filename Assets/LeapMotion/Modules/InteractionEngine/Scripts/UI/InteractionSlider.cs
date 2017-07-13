@@ -40,6 +40,13 @@ namespace Leap.Unity.Interaction {
     public Vector2 verticalValueRange = new Vector2(0f, 1f);
 
     [Space]
+    [Tooltip("Manually specify slider limits even if the slider's parent has a RectTransform.")]
+    [DisableIf("_parentHasRectTransform", isEqualTo: false)]
+    public bool overrideRectLimits = false;
+    [SerializeField, HideInInspector]
+    #pragma warning disable 0414
+    private bool _parentHasRectTransform = false;
+    #pragma warning restore 0414
     [Tooltip("The minimum and maximum horizontal extents that the slider can slide to in world space.")]
     [MinMax(-0.5f, 0.5f)]
     public Vector2 horizontalSlideLimits = new Vector2(-0.05f, 0.05f);
@@ -125,6 +132,17 @@ namespace Leap.Unity.Interaction {
 
     public bool hackModeOn = false;
 
+    protected override void OnValidate() {
+      base.OnValidate();
+
+      if (this.transform.parent != null && this.transform.parent.GetComponent<RectTransform>() != null) {
+        _parentHasRectTransform = true;
+      }
+      else {
+        _parentHasRectTransform = false;
+      }
+    }
+
     protected override void Start() {
       if (_started) return;
 
@@ -183,21 +201,25 @@ namespace Leap.Unity.Interaction {
 
       if (transform.parent != null) {
         parent = transform.parent.GetComponent<RectTransform>();
+
+        if (overrideRectLimits) return;
+
         if (parent != null) {
           if (parent.rect.width < 0f || parent.rect.height < 0f) {
             Debug.LogError("Parent Rectangle dimensions negative; can't set slider boundaries!", parent.gameObject);
             enabled = false;
           } else {
+
             var self = transform.GetComponent<RectTransform>();
             if (self != null) {
               horizontalSlideLimits = new Vector2(parent.rect.xMin - transform.localPosition.x + self.rect.width / 2F, parent.rect.xMax - transform.localPosition.x - self.rect.width / 2F);
               if (horizontalSlideLimits.x > horizontalSlideLimits.y) {
                 horizontalSlideLimits = new Vector2(0F, 0F);
               }
-              if (horizontalSlideLimits.x < 0.0001F) {
+              if (Mathf.Abs(horizontalSlideLimits.x) < 0.0001F) {
                 horizontalSlideLimits.x = 0F;
               }
-              if (horizontalSlideLimits.y < 0.0001F) {
+              if (Mathf.Abs(horizontalSlideLimits.y) < 0.0001F) {
                 horizontalSlideLimits.y = 0F;
               }
 
@@ -205,10 +227,10 @@ namespace Leap.Unity.Interaction {
               if (verticalSlideLimits.x > verticalSlideLimits.y) {
                 verticalSlideLimits = new Vector2(0F, 0F);
               }
-              if (verticalSlideLimits.x < 0.0001F) {
+              if (Mathf.Abs(verticalSlideLimits.x) < 0.0001F) {
                 verticalSlideLimits.x = 0F;
               }
-              if (verticalSlideLimits.y < 0.0001F) {
+              if (Mathf.Abs(verticalSlideLimits.y) < 0.0001F) {
                 verticalSlideLimits.y = 0F;
               }
             } else {

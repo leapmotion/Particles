@@ -97,7 +97,7 @@ namespace Leap.Unity.GraphicalRenderer {
     /// <summary>
     /// A utility getter that returns a transformer for this graphic.  Even
     /// if the space anchor for this graphic is null, this will still return
-    /// a valid transformer.  In the null case, the transformer is always the 
+    /// a valid transformer.  In the null case, the transformer is always the
     /// identity transformer.
     /// </summary>
     public ITransformer transformer {
@@ -161,7 +161,7 @@ namespace Leap.Unity.GraphicalRenderer {
 
     /// <summary>
     /// Returns whether or not this graphic will be detached from a group
-    /// within the next frame.  Can only be true at runtime, since runtime is the 
+    /// within the next frame.  Can only be true at runtime, since runtime is the
     /// only time when delayed detaching occurs.
     /// </summary>
     public bool willbeDetached {
@@ -172,7 +172,7 @@ namespace Leap.Unity.GraphicalRenderer {
 
     /// <summary>
     /// Returns the type this graphic prefers to be attached to.  When calling
-    /// LeapGraphicRenderer.TryAddGraphic it will prioritize being attached to 
+    /// LeapGraphicRenderer.TryAddGraphic it will prioritize being attached to
     /// groups with this renderer type if possible.
     /// </summary>
     public Type preferredRendererType {
@@ -182,7 +182,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// This method tries to detach this graphic from whatever group it is 
+    /// This method tries to detach this graphic from whatever group it is
     /// currently attached to.  It can fail if the graphic is not attached
     /// to any group, or if the group it is attached to does not support
     /// adding/removing graphics at runtime.
@@ -205,7 +205,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Called by the system to notify that this graphic will be attached within 
+    /// Called by the system to notify that this graphic will be attached within
     /// the next frame. This is only called at runtime.
     /// </summary>
     public virtual void NotifyWillBeAttached(LeapGraphicGroup toBeAttachedTo) {
@@ -217,7 +217,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Called by the system to notify that a previous notification that this 
+    /// Called by the system to notify that a previous notification that this
     /// graphic would be attached has been cancelled due to a call to TryRemoveGraphic.
     /// </summary>
     public virtual void CancelWillBeAttached() {
@@ -229,7 +229,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Called by the system to notify that this graphic will be detached within 
+    /// Called by the system to notify that this graphic will be detached within
     /// the next frame. This is only called at runtime.
     /// </summary>
     public virtual void NotifyWillBeDetached(LeapGraphicGroup toBeDetachedFrom) {
@@ -239,7 +239,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Called by the system to notify that a previous notification that this 
+    /// Called by the system to notify that a previous notification that this
     /// graphic would be detached has been cancelled due to a call to TryAddGraphic.
     /// </summary>
     public virtual void CancelWillBeDetached() {
@@ -321,7 +321,12 @@ namespace Leap.Unity.GraphicalRenderer {
 
     protected virtual void Awake() {
       if (isAttachedToGroup && !attachedGroup.graphics.Contains(this)) {
+        var preferredGroup = attachedGroup;
         OnDetachedFromGroup();
+
+        //If this fails for any reason don't worry, we will be auto-added
+        //to a group if we can.
+        preferredGroup.TryAddGraphic(this);
       }
     }
 

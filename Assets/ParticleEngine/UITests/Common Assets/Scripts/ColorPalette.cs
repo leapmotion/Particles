@@ -8,4 +8,13 @@ public class ColorPalette : ScriptableObject {
   [SerializeField]
   public Color[] colors;
 
+  public Color this[int index] {
+    get {
+      return colors[index];
+    }
+    set {
+      colors[index] = value;
+    }
+  }
+
 }

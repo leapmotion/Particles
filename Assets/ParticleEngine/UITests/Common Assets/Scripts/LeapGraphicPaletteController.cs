@@ -46,6 +46,7 @@ public class LeapGraphicPaletteController : MonoBehaviour {
 
   private void refreshColor() {
     if (palette == null) return;
+    if (graphic == null) return;
 
     Color color = palette.colors[colorIndex];
 
@@ -54,7 +55,8 @@ public class LeapGraphicPaletteController : MonoBehaviour {
       text.color = color;
     }
     else {
-      graphic.SetRuntimeTint(color);
+      try { graphic.SetRuntimeTint(color); }
+      catch (System.Exception) { }
     }
   }
 

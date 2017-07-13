@@ -79,6 +79,8 @@ namespace Leap.Unity.Interaction {
     //Public State variables
     ///<summary> Gets whether the button is currently held down. </summary>
     public bool isDepressed { get; protected set; }
+    ///<summary> Gets whether the button is currently held down. </summary>
+    public bool isPressed { get { return isDepressed; } }
 
     ///<summary> Gets whether the button was pressed during this Update frame. </summary>
     public bool depressedThisFrame { get; protected set; }
@@ -170,7 +172,7 @@ namespace Leap.Unity.Interaction {
       ignoreContact = (!isPrimaryHovered || isGrasped) || !controlEnabled;
 
       //Enforce local rotation (if button is child of non-kinematic rigidbody, this is necessary)
-      transform.localRotation = _initialLocalRotation; 
+      transform.localRotation = _initialLocalRotation;
 
       //Apply physical corrections only if PhysX has modified our positions
       if (_physicsOccurred) {

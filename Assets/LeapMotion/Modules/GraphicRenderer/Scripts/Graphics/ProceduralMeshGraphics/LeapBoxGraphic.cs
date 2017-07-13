@@ -31,7 +31,7 @@ namespace Leap.Unity.GraphicalRenderer {
              "panel automatically changes its resolution based on its size")]
     [EditTimeOnly]
     [SerializeField]
-    private ResolutionType _resolutionType = ResolutionType.Vertices;
+    private ResolutionType _resolutionType = ResolutionType.VerticesPerRectilinearMeter;
 
     [HideInInspector]
     [SerializeField]
@@ -58,7 +58,7 @@ namespace Leap.Unity.GraphicalRenderer {
     private bool _nineSliced = false;
 
     /// <summary>
-    /// Returns whether or not a feature data object is a valid object 
+    /// Returns whether or not a feature data object is a valid object
     /// that can be used to drive texture data for this panel.  Only
     /// a TextureData object or a SpriteData object are currently valid.
     /// </summary>
@@ -98,7 +98,7 @@ namespace Leap.Unity.GraphicalRenderer {
     }
 
     /// <summary>
-    /// Returns the current local-space rect of this panel.  If there is a 
+    /// Returns the current local-space rect of this panel.  If there is a
     /// RectTransform attached to this panel, this value is the same as calling
     /// rectTransform.rect.
     /// </summary>
@@ -237,6 +237,8 @@ namespace Leap.Unity.GraphicalRenderer {
       List<Vector2> uvs = new List<Vector2>();
       List<int> tris = new List<int>();
 
+      List<Vector3> normals = new List<Vector3>();
+
       int vertsX, vertsY;
       if (_resolutionType == ResolutionType.Vertices) {
         vertsX = Mathf.RoundToInt(_resolution_vert_x);
@@ -260,6 +262,7 @@ namespace Leap.Unity.GraphicalRenderer {
           vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
           vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
           verts.Add(vert + new Vector2(rect.x, rect.y));
+          normals.Add(Vector3.forward);
 
           Vector2 uv;
           uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
@@ -278,6 +281,7 @@ namespace Leap.Unity.GraphicalRenderer {
           vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
           vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
           verts.Add(vert + new Vector3(rect.x, rect.y, depth));
+          normals.Add(Vector3.back);
 
           Vector2 uv;
           uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
@@ -318,41 +322,146 @@ namespace Leap.Unity.GraphicalRenderer {
 
       // Edges
       int ex = 0, ey = 0;
-      // Left
-      for (int vy = 0; vy < vertsY - 1; vy++) {
-        int backVertIdx = vy * vertsX + ex;
-        int frontVertIdx = backVertsCount + backVertIdx;
+      int backVertIdx = verts.Count, frontVertIdx = verts.Count;
 
-        addQuad(tris, frontVertIdx, backVertIdx, backVertIdx + vertsX, frontVertIdx + vertsX);
+      // Left
+      for (int vy = 0; vy < vertsY; vy++) { // Repeat back edge, left side
+        Vector2 vert;
+        vert.x = calculateVertAxis(ex, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector2(rect.x, rect.y));
+        normals.Add(Vector3.left);
+
+        frontVertIdx += 1;
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(ex, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(vy, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
       }
+      for (int vy = 0; vy < vertsY; vy++) { // Repeat front edge, left side
+        Vector3 vert = Vector3.zero;
+        vert.x = calculateVertAxis(ex, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector3(rect.x, rect.y, depth));
+        normals.Add(Vector3.left);
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(ex, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(vy, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vy = 0; vy < vertsY - 1; vy++) { // Add quads
+        addQuad(tris, frontVertIdx + vy, backVertIdx + vy, backVertIdx + vy + 1, frontVertIdx + vy + 1);
+      }
+
       // Right
       ex = vertsX - 1;
-      for (int vy = 0; vy < vertsY - 1; vy++) {
-        int backVertIdx = vy * vertsX + ex;
-        int frontVertIdx = backVertsCount + backVertIdx;
+      backVertIdx = verts.Count;
+      frontVertIdx = verts.Count;
+      for (int vy = 0; vy < vertsY; vy++) { // Repeat back edge, right side
+        Vector2 vert;
+        vert.x = calculateVertAxis(ex, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector2(rect.x, rect.y));
+        normals.Add(Vector3.right);
 
-        addQuad(tris, frontVertIdx, backVertIdx, backVertIdx + vertsX, frontVertIdx + vertsX);
+        frontVertIdx += 1;
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(ex, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(vy, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
       }
+      for (int vy = 0; vy < vertsY; vy++) { // Repeat front edge, right side
+        Vector3 vert = Vector3.zero;
+        vert.x = calculateVertAxis(ex, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(vy, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector3(rect.x, rect.y, depth));
+        normals.Add(Vector3.right);
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(ex, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(vy, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vy = 0; vy < vertsY - 1; vy++) { // Add quads
+        addQuad(tris, frontVertIdx + vy, backVertIdx + vy, backVertIdx + vy + 1, frontVertIdx + vy + 1);
+      }
+
       // Top
-      for (int vx = 0; vx < vertsX - 1; vx++) {
-        int backVertIdx = ey * vertsX + vx;
-        int frontVertIdx = backVertsCount + backVertIdx;
-
-        addQuad(tris, frontVertIdx, backVertIdx, backVertIdx + 1, frontVertIdx + 1);
-      }
-      // Bottom
       ey = vertsY - 1;
-      for (int vx = 0; vx < vertsX - 1; vx++) {
-        int backVertIdx = ey * vertsX + vx;
-        int frontVertIdx = backVertsCount + backVertIdx;
+      backVertIdx = verts.Count;
+      frontVertIdx = verts.Count;
+      for (int vx = 0; vx < vertsX; vx++) { // Repeat back edge, upper side
+        Vector2 vert;
+        vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(ey, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector2(rect.x, rect.y));
+        normals.Add(Vector3.up);
 
-        addQuad(tris, frontVertIdx, backVertIdx, backVertIdx + 1, frontVertIdx + 1);
+        frontVertIdx += 1;
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(ey, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vx = 0; vx < vertsX; vx++) { // Repeat front edge, upper side
+        Vector3 vert = Vector3.zero;
+        vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(ey, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector3(rect.x, rect.y, depth));
+        normals.Add(Vector3.up);
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(ey, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vx = 0; vx < vertsX - 1; vx++) { // Add quads
+        addQuad(tris, frontVertIdx + vx, backVertIdx + vx, backVertIdx + vx + 1, frontVertIdx + vx + 1);
+      }
+
+      // Bottom
+      ey = 0;
+      backVertIdx = verts.Count;
+      frontVertIdx = verts.Count;
+      for (int vx = 0; vx < vertsX; vx++) { // Repeat back edge, upper side
+        Vector2 vert;
+        vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(ey, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector2(rect.x, rect.y));
+        normals.Add(Vector3.down);
+
+        frontVertIdx += 1;
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(ey, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vx = 0; vx < vertsX; vx++) { // Repeat front edge, upper side
+        Vector3 vert = Vector3.zero;
+        vert.x = calculateVertAxis(vx, vertsX, rect.width, borderSize.x, borderSize.z);
+        vert.y = calculateVertAxis(ey, vertsY, rect.height, borderSize.y, borderSize.w);
+        verts.Add(vert + new Vector3(rect.x, rect.y, depth));
+        normals.Add(Vector3.down);
+
+        Vector2 uv;
+        uv.x = calculateVertAxis(vx, vertsX, 1, borderUvs.x, borderUvs.z);
+        uv.y = calculateVertAxis(ey, vertsY, 1, borderUvs.y, borderUvs.w);
+        uvs.Add(uv);
+      }
+      for (int vx = 0; vx < vertsX - 1; vx++) { // Add quads
+        addQuad(tris, frontVertIdx + vx, backVertIdx + vx, backVertIdx + vx + 1, frontVertIdx + vx + 1);
       }
 
       mesh = new Mesh();
       mesh.name = "Box Mesh";
       mesh.hideFlags = HideFlags.HideAndDontSave;
       mesh.SetVertices(verts);
+      mesh.SetNormals(normals);
       mesh.SetTriangles(tris, 0);
       mesh.SetUVs(uvChannel.Index(), uvs);
       mesh.RecalculateBounds();

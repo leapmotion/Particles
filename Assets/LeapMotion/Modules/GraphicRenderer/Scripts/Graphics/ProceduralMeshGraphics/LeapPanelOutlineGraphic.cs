@@ -305,7 +305,6 @@ namespace Leap.Unity.GraphicalRenderer {
       }
 
       mesh = new Mesh();
-      _theMesh = mesh;
       mesh.name = "Panel Mesh";
       mesh.hideFlags = HideFlags.HideAndDontSave;
       mesh.SetVertices(verts);
@@ -315,9 +314,6 @@ namespace Leap.Unity.GraphicalRenderer {
 
       remappableChannels = UVChannelFlags.UV0;
     }
-
-    [SerializeField]
-    private Mesh _theMesh;
 
     private float calculateVertAxis(int dv, int vertCount, float size, float border0, float border1) {
       if (dv == 0) {

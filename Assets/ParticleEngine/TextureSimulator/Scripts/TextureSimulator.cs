@@ -972,13 +972,15 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Start() {
-    _frontPos = createTexture();
-    _frontVel = createTexture();
-    _backPos = createTexture();
-    _backVel = createTexture();
-    _socialTemp = createTexture();
-    _frontSocial = createTexture(MAX_FORCE_STEPS);
-    _backSocial = createTexture(MAX_FORCE_STEPS);
+    _frontPos = createTexture(_textureDimension, _textureDimension);
+    _frontVel = createTexture(_textureDimension, _textureDimension);
+    _backPos = createTexture(_textureDimension, _textureDimension);
+    _backVel = createTexture(_textureDimension, _textureDimension);
+
+    _socialTemp = createTexture(_textureDimension, _textureDimension);
+
+    _frontSocial = createTexture(MAX_PARTICLES, MAX_FORCE_STEPS);
+    _backSocial = createTexture(MAX_PARTICLES, MAX_FORCE_STEPS);
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
     _simulationMat.SetTexture("_Position", _frontPos);
@@ -2032,18 +2034,6 @@ public class TextureSimulator : MonoBehaviour {
 
   private RenderTexture createTexture(int width, int height, bool randomWrite = false) {
     RenderTexture tex = new RenderTexture(width, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
-    tex.wrapMode = TextureWrapMode.Clamp;
-    tex.filterMode = FilterMode.Point;
-    tex.enableRandomWrite = randomWrite;
-
-    RenderTexture.active = tex;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
-    RenderTexture.active = null;
-    return tex;
-  }
-
-  private RenderTexture createTexture(int height = 1, bool randomWrite = false) {
-    RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
     tex.enableRandomWrite = randomWrite;

@@ -55,7 +55,8 @@ public class LeapGraphicPaletteController : MonoBehaviour {
       text.color = color;
     }
     else {
-      graphic.SetRuntimeTint(color);
+      try { graphic.SetRuntimeTint(color); }
+      catch (System.Exception) { }
     }
   }
 

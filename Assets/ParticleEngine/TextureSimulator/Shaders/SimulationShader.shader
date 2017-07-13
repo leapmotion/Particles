@@ -266,7 +266,7 @@
     {
       for (int x = 0; x < _ParticleRangeX; x++) {
         for (int y = 0; y < _ParticleRangeY; y++) {
-          float4 other = tex2Dlod(_Position, float4(x / (float)MAX_PARTICLES, y / (float)MAX_PARTICLES, 0, 0));
+          float4 other = tex2Dlod(_Position, float4(x / (float)TEXTURE_DIM, y / (float)TEXTURE_DIM, 0, 0));
 #endif
           float3 toOther = other.xyz - particle.xyz;
           float distance = length(toOther);

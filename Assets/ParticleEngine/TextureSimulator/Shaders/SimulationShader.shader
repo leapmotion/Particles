@@ -35,8 +35,7 @@
     float3 center;
     float radius;
     uint count;
-    uint start;
-    uint end;
+    uint4 rect;
   };
 
   sampler2D _CopySource;
@@ -257,39 +256,41 @@
       InterlockedAdd(_DebugBuffer[1], 1);
 #endif
 
-      for (uint j = cluster.start; j < cluster.end; j++) {
-        float4 other = tex2Dlod(_ClusteredParticles, float4(j / (float)MAX_PARTICLES, 0, 0, 0));
-    //{
-    //  for (int i = 0; i < _ParticleCount; i++) {
-    //    float4 other = tex2Dlod(_ClusteredParticles, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
+      uint2 dd = uint2(0, 0);
+      for (uint j = 0; j < cluster.rect.w; j++) {
+        float4 pos = float4((cluster.rect.xy + dd) / 128.0, 0, 0);
+        float4 other = tex2Dlod(_ClusteredParticles, pos);
+        dd.x++;
+        if (dd.x == cluster.rect.z) {
+          dd.x = 0;
+          dd.y++;
+        }
 #else
-    {
-      for (int x = 0; x < _ParticleRangeX; x++) {
-        for (int y = 0; y < _ParticleRangeY; y++) {
-          float4 other = tex2Dlod(_Position, float4(x / (float)TEXTURE_DIM, y / (float)TEXTURE_DIM, 0, 0));
+    for (int x = 0; x < _ParticleRangeX; x++) {
+      for (int y = 0; y < _ParticleRangeY; y++) {
+        float4 other = tex2Dlod(_Position, float4(x / (float)TEXTURE_DIM, y / (float)TEXTURE_DIM, 0, 0));
 #endif
-          float3 toOther = other.xyz - particle.xyz;
-          float distance = length(toOther);
-          toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
+        float3 toOther = other.xyz - particle.xyz;
+        float distance = length(toOther);
+        toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
-          float otherCollisionForce = _SpeciesData[(int)other.w].z;
-          float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
+        float otherCollisionForce = _SpeciesData[(int)other.w].z;
+        float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
 
-          if (distance < PARTICLE_DIAMETER) {
-            float penetration = 1 - distance / PARTICLE_DIAMETER;
-            velocity.xyz -= toOther * penetration * totalCollisionForce;
-          }
+        if (distance < PARTICLE_DIAMETER) {
+          float penetration = 1 - distance / PARTICLE_DIAMETER;
+          velocity.xyz -= toOther * penetration * totalCollisionForce;
+        }
 
-          float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
 
-          if (distance < socialData.y) {
-            totalSocialForce += float4(socialData.x * toOther, 1);
-          }
+        if (distance < socialData.y) {
+          totalSocialForce += float4(socialData.x * toOther, 1);
+        }
 
 #ifdef GPU_STATS
-          InterlockedAdd(_DebugBuffer[0], 1);
+        InterlockedAdd(_DebugBuffer[0], 1);
 #endif
-        }
       }
     }
 

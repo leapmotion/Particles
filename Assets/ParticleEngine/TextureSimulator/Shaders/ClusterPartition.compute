@@ -27,11 +27,9 @@ float lengthSqrd(float3 v) {
   return dot(v, v);
 }
 
-[numthreads(64, 1, 1)]
+[numthreads(8, 8, 1)]
 void CalculateClusterAssignments (uint3 id : SV_DispatchThreadID) {
-  uint index = id.x;
-
-  float4 particle = _Particles[uint2(index, 0)];
+  float4 particle = _Particles[id.xy];
 
   uint closestClusterIndex = 0;
   float closestDistance = lengthSqrd(_Clusters[0].center - particle.xyz);
@@ -44,7 +42,7 @@ void CalculateClusterAssignments (uint3 id : SV_DispatchThreadID) {
     }
   }
 
-  _ClusterAssignments[index] = closestClusterIndex;
+  _ClusterAssignments[id.x * 64 + id.y] = closestClusterIndex;
 
   InterlockedAdd(_Clusters[closestClusterIndex].count, 1);
 }
@@ -70,16 +68,17 @@ void IntegrateCounts(uint3 id : SV_DispatchThreadID) {
   }
 }
 
-[numthreads(64, 1, 1)]
+[numthreads(8, 8, 1)]
 void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
-  float4 particle = _Particles[uint2(id.x, 0)];
-  uint clusterAssignment = _ClusterAssignments[id.x];
+  float4 particle = _Particles[id.xy];
+  uint clusterAssignment = _ClusterAssignments[id.x * 64 + id.y];
 
   uint newIndex;
   InterlockedAdd(_Clusters[clusterAssignment].rect.w, 1, newIndex);
 
   uint4 rect = _Clusters[clusterAssignment].rect;
   uint x = newIndex % rect.z + rect.x;
+  newIndex = newIndex & 0x0FFFFFFF;
   uint y = newIndex / rect.z + rect.y;
 
   _ClusteredParticles[uint2(x, y)] = particle;

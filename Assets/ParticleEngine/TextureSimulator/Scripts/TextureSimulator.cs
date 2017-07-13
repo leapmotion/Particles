@@ -2151,7 +2151,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
 
     if (_clusteringEnabled) {
-      _simulationMat.DisableKeyword(CLUSTER_KEYWORD);
+      _simulationMat.EnableKeyword(CLUSTER_KEYWORD);
     } else {
       _simulationMat.DisableKeyword(CLUSTER_KEYWORD);
     }
@@ -2233,7 +2233,7 @@ public class TextureSimulator : MonoBehaviour {
     RenderTexture.active = null;
 
     using (new ProfilerSample("Assign Clusters")) {
-      _clusterShader.Dispatch(_clusterKernelAssign, MAX_PARTICLES / 64, 1, 1);
+      _clusterShader.Dispatch(_clusterKernelAssign, _textureDimension / 8, _textureDimension / 8, 1);
     }
 
     using (new ProfilerSample("Integrate Clusters")) {
@@ -2241,7 +2241,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     using (new ProfilerSample("Sort Clusters")) {
-      _clusterShader.Dispatch(_clusterKernelSort, MAX_PARTICLES / 64, 1, 1);
+      _clusterShader.Dispatch(_clusterKernelSort, _textureDimension / 8, _textureDimension / 8, 1);
     }
 
     using (new ProfilerSample("Update Clusters")) {

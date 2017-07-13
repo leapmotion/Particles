@@ -86,7 +86,7 @@
 #endif
 
 #ifdef COLOR_CLUSTER
-        float cluster = _ClusterAssignments[(uint)(v.texcoord.x * 4096)] * 9.34 + 0.25;
+        float cluster = _ClusterAssignments[(uint)(v.texcoord.x * 64 + v.texcoord.y)] * 9.34 + 0.25;
         o.color.r = nrand(float2(cluster * 3.235, cluster * 1.343));
         o.color.g = nrand(float2(cluster * 2.967, cluster * 9.173));
         o.color.b = nrand(float2(cluster * 1.972, cluster * 4.812));

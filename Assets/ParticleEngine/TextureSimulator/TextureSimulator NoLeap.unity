@@ -223,7 +223,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 253537003}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7b90f5105083649499a1b3ad43caac31, type: 3}
   m_Name: 
@@ -436,7 +436,7 @@ MonoBehaviour:
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 3
   _trailMode: 0
-  _spawnRadius: 0.093
+  _spawnRadius: 1.492
   _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114
   _randomizeEcosystemKey: 32
@@ -979,7 +979,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 6dafa457719c5694d9a26518cfedb916, type: 2}
+  - {fileID: 2100000, guid: 88425b60e84d15541b718d7561c157e2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

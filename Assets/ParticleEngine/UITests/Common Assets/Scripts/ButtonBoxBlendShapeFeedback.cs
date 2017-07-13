@@ -28,16 +28,10 @@ public class ButtonBoxBlendShapeFeedback : MonoBehaviour {
   public float speed = 20F;
 
   private Pulsator _scalePulsator;
-  private Vector3 _initBoxSize;
 
   void Reset() {
     button = GetComponent<InteractionButton>();
     box = GetComponent<LeapBoxGraphic>();
-  }
-
-  void Awake() {
-    box = GetComponent<LeapBoxGraphic>();
-    _initBoxSize = box.size;
   }
 
   void OnEnable() {

@@ -17,13 +17,13 @@ public class PulsatorRunner : MonoBehaviour {
   }
 
   public static void NotifyEnabled(Pulsator pulsator) {
-    if (s_appClosing) return;
+    if (s_appClosing || !Application.isPlaying) return;
 
     instance.notifyEnabled(pulsator);
   }
 
   public static void NotifyDisabled(Pulsator pulsator) {
-    if (s_appClosing) return;
+    if (s_appClosing || !Application.isPlaying) return;
 
     instance.notifyDisabled(pulsator);
   }

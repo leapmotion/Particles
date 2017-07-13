@@ -66,7 +66,7 @@ public class LeapGraphicButtonPaletteController : MonoBehaviour {
   private void onUnpress() { _pressPulsator.Relax(); }
 
   void Start() {
-    _pressPulsator = Pulsator.Spawn().SetValues(0F, 1F, 1.2F).SetSpeed(20F);
+    if (Application.isPlaying) _pressPulsator = Pulsator.Spawn().SetValues(0F, 1F, 1.2F).SetSpeed(20F);
   }
 
   void OnDestroy() {

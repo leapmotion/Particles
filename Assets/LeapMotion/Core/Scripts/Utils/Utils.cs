@@ -147,7 +147,7 @@ namespace Leap.Unity {
       }
     }
 
-    public static List<int> GetSortedOrder<T>(this List<T> list) where T : IComparable<T> {
+    public static List<int> GetSortedOrder<T>(this IList<T> list) where T : IComparable<T> {
       Assert.IsNotNull(list);
 
       List<int> ordering = new List<int>();

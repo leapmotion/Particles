@@ -1437,17 +1437,26 @@ public class TextureSimulator : MonoBehaviour {
 
     GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
 
+    for (int i = 0; i < species.Length; i++) {
+      species[i] = species[i] % _currentSimulationSpeciesCount;
+    }
+
+    var ordering = species.GetSortedOrder();
+    species.ApplyOrdering(ordering);
+    velocities.ApplyOrdering(ordering);
+    positions.ApplyOrdering(ordering);
+
     Texture2D tex;
     tex = new Texture2D(textureDimension, textureDimension, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
       Color c = (Vector4)p;
-      c.a = (s % _currentSimulationSpeciesCount);
+      c.a = s;
       return c;
     }).ToArray());
     tex.Apply();
-    
+
     blitPos(PASS_COPY);
     DestroyImmediate(tex);
 

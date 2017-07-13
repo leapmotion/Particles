@@ -788,6 +788,7 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
+  private readonly int _textureDimension;
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
@@ -842,6 +843,13 @@ public class TextureSimulator : MonoBehaviour {
 
   //Shader debug
   private RenderTexture _shaderDebugTexture;
+
+  public TextureSimulator() {
+    _textureDimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
+    if (_textureDimension * _textureDimension != MAX_PARTICLES) {
+      Debug.LogError("Max particles must be a perfect square");
+    }
+  }
 
   #region PUBLIC API
 
@@ -2065,43 +2073,22 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    //ensureClustersReady();
-
-    checkForFrontBack("A0");
-
     if (_clusteringEnabled) {
       performClustering();
     }
 
-    if (_clusterDebug != null) {
-      //_clusterDebug.GetData(new uint[1]);
-      _clusterShader.SetTexture(_clusterKernelParticleNaN, "_Particles", _clusteredParticles);
-    }
-
-    checkForFrontBack("A");
-
     GL.LoadPixelMatrix(0, 1, 1, 0);
     blitVel(PASS_GLOBAL_FORCES);
-
-    checkForFrontBack("B");
 
     using (new ProfilerSample("Particle Interaction")) {
       doParticleInteraction();
     }
 
-    checkForFrontBack("C");
-
     blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
-
-    checkForFrontBack("D");
 
     blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
 
-    checkForFrontBack("E");
-
     blitPos(PASS_INTEGRATE_VELOCITIES);
-
-    checkForFrontBack("F");
 
     _displayBlock.SetTexture("_CurrPos", _frontPos);
     _displayBlock.SetTexture("_PrevPos", _backPos);
@@ -2188,7 +2175,6 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  bool logItOutFoo = true;
   private void ensureClustersReady() {
     if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null || _clusterDebug == null) {
       cleanupClusters();
@@ -2228,8 +2214,6 @@ public class TextureSimulator : MonoBehaviour {
       _displayBlock.SetBuffer("_ClusterAssignments", _clusterAssignments);
       _simulationMat.SetTexture("_ClusteredParticles", _clusteredParticles);
       _simulationMat.SetBuffer("_Clusters", _clusters);
-
-      logItOutFoo = true;
     }
   }
 
@@ -2243,55 +2227,24 @@ public class TextureSimulator : MonoBehaviour {
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.gray);
     RenderTexture.active = null;
 
-    checkForFrontBack("##A");
-
     using (new ProfilerSample("Assign Clusters")) {
       _clusterShader.Dispatch(_clusterKernelAssign, MAX_PARTICLES / 64, 1, 1);
-      checkForFrontBack("##B");
     }
 
     using (new ProfilerSample("Integrate Clusters")) {
       _clusterShader.Dispatch(_clusterKernelIntegrate, 1, 1, 1);
-      checkForFrontBack("##C");
     }
 
     using (new ProfilerSample("Sort Clusters")) {
       _clusterShader.Dispatch(_clusterKernelSort, MAX_PARTICLES / 64, 1, 1);
-      checkForFrontBack("##D");
     }
 
     using (new ProfilerSample("Update Clusters")) {
       _clusterShader.Dispatch(_clusterKernelUpdate, CLUSTER_COUNT, 1, 1);
-      checkForFrontBack("##E");
     }
 
     //_clusterShader.Dispatch(_clusterKernelOrganizeX, 1, 1, 1);
     //_clusterShader.Dispatch(_clusterKernelOrganizeY, 1, 1, 1);
-  }
-
-  private void checkForFrontBack(string message) {
-    checkForNaN(_frontPos, "Front Pos " + message);
-    checkForNaN(_backPos, "Back Pos " + message);
-
-    checkForNaN(_frontVel, "Front Vel " + message);
-    checkForNaN(_backVel, "Back Vel " + message);
-
-    checkForNaN(_clusteredParticles, "Clustered " + message);
-  }
-
-  private void checkForNaN(Texture tex, string message) {
-    if (_clusterDebug == null || true) return;
-
-    uint[] data = new uint[1] { 0 };
-
-    _clusterDebug.SetData(data);
-    _clusterShader.SetTexture(_clusterKernelParticleNaN, "_Particles", tex);
-    _clusterShader.Dispatch(_clusterKernelParticleNaN, MAX_PARTICLES / 64, 1, 1);
-    _clusterDebug.GetData(data);
-
-    if (data[0] != 0) {
-      Debug.Log("Particles are NaN: " + message);
-    }
   }
 
   public void cleanupClusters() {

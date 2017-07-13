@@ -1,13 +1,15 @@
 ﻿using Leap.Unity;
 using Leap.Unity.Attributes;
+using Leap.Unity.GraphicalRenderer;
 using Leap.Unity.Interaction;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InteractionButtonScaleFeedback : MonoBehaviour {
+public class ButtonBoxBlendShapeFeedback : MonoBehaviour {
 
   public InteractionButton button;
+  public LeapBoxGraphic box;
 
   [OnEditorChange("setPulsatorSettings")]
   [MinValue(0.0001F)]
@@ -15,20 +17,27 @@ public class InteractionButtonScaleFeedback : MonoBehaviour {
 
   [OnEditorChange("setPulsatorSettings")]
   [MinValue(0.0001F)]
-  public float activeScale = 0.95F;
+  public float activeScale = 0.98F;
 
   [OnEditorChange("setPulsatorSettings")]
   [MinValue(0.0001F)]
-  public float peakScale = 0.9F;
+  public float peakScale = 0.96F;
 
   [OnEditorChange("setPulsatorSettings")]
   [MinValue(0.001F)]
-  public float speed = 0.02F;
+  public float speed = 20F;
 
   private Pulsator _scalePulsator;
+  private Vector3 _initBoxSize;
 
   void Reset() {
     button = GetComponent<InteractionButton>();
+    box = GetComponent<LeapBoxGraphic>();
+  }
+
+  void Awake() {
+    box = GetComponent<LeapBoxGraphic>();
+    _initBoxSize = box.size;
   }
 
   void OnEnable() {
@@ -41,14 +50,18 @@ public class InteractionButtonScaleFeedback : MonoBehaviour {
   }
 
   void Update() {
-    button.transform.localScale = _scalePulsator.value * Vector3.one;
+    try {
+      box.SetBlendShapeAmount(_scalePulsator.value);
+    }
+    catch (System.Exception) { }
+    //button.transform.localScale = _scalePulsator.value * Vector3.one;
   }
 
   private void setPulsatorSettings() {
     if (Application.isPlaying) {
       _scalePulsator.rest = restScale;
       _scalePulsator.active = activeScale;
-      _scalePulsator.peak = peakScale;
+      _scalePulsator.pulse = peakScale;
       _scalePulsator.speed = speed;
     }
   }

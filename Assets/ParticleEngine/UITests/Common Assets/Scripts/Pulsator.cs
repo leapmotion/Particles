@@ -7,15 +7,17 @@ using UnityEngine;
 public class Pulsator : IPoolable {
 
   public float rest   = 0F;
+  public float pulse  = 1.2F;
   public float active = 1F;
-  public float peak   = 1.2F;
 
   private float _speed = 1F;
   public float speed {
     get { return _speed; }
     set {
-      _speed = value;
-      _value.SetBlend(_speed, 1F);
+      float s = value;
+      if (s <= 0F) s = 0.001F;
+      _speed = s * 20F;
+      _value.SetBlend(1 / (speed + 1.01F), 1F);
     }
   }
 
@@ -62,6 +64,23 @@ public class Pulsator : IPoolable {
 
   private float _targetValue = 0F;
 
+  /// <summary>
+  /// Returns a pooled instance of a new Pulsator. Be sure to call Pulsator.Recycle()
+  /// when you're done with the Pulsator.
+  /// </summary>
+  public static Pulsator Spawn() {
+    return Pool<Pulsator>.Spawn();
+  }
+
+  /// <summary>
+  /// Recycles a Pulsator you're done using, to potentially be retrieved again via
+  /// Pulsator.Spawn().
+  /// </summary>
+  /// <param name="p"></param>
+  public static void Recycle(Pulsator p) {
+    Pool<Pulsator>.Recycle(p);
+  }
+
   public Pulsator() {
     Enable();
     if (_value == null) _value = new SmoothedFloat();
@@ -97,7 +116,7 @@ public class Pulsator : IPoolable {
         _targetValue = active;
         break;
       case State.Pulsing:
-        _targetValue = peak;
+        _targetValue = pulse;
         break;
       case State.Resting:
         _targetValue = rest;
@@ -106,9 +125,23 @@ public class Pulsator : IPoolable {
 
     _value.Update(_targetValue, deltaTime);
 
-    if (_state == State.Pulsing && Mathf.Abs(_value.value - peak) < 0.001F) {
+    if (_state == State.Pulsing && Mathf.Abs(_value.value - pulse) < 0.001F) {
       _state = State.Warming;
     }
+  }
+
+  public Pulsator SetValues(float rest, float pulse, float active) {
+    this.rest = rest;
+    this.pulse = pulse;
+    this.active = active;
+
+    return this;
+  }
+
+  public Pulsator SetSpeed(float speed) {
+    this.speed = speed;
+
+    return this;
   }
 
   public void WarmUp() {

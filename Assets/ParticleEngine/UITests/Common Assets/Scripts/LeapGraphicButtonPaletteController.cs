@@ -12,17 +12,22 @@ public class LeapGraphicButtonPaletteController : MonoBehaviour {
   public InteractionButton button;
 
   public ColorPalette palette;
-  public float colorChangeSpeed = 0.4F;
+  public float colorChangeSpeed = 10F;
 
   [Header("State Colors")]
   public int restingColorIdx;
+  public int primaryHoverColorIdx;
   public int pressedColorIdx;
 
   public static ColorPalette s_lastPalette;
 
   private bool _paletteWasNull = true;
+  private Color _targetColor;
   private Pulsator _pressPulsator;
-  private Color _curColor;
+
+  public Color restingColor { get { return palette[restingColorIdx]; } }
+  public Color primaryHoverColor { get { return palette[primaryHoverColorIdx]; } }
+  public Color pressedColor { get { return palette[pressedColorIdx]; } }
 
   void Reset() {
     graphic = GetComponent<LeapGraphic>();
@@ -43,68 +48,70 @@ public class LeapGraphicButtonPaletteController : MonoBehaviour {
       if (palette.colors.Length != 0) {
         restingColorIdx = Mathf.Max(0, Mathf.Min(palette.colors.Length - 1, restingColorIdx));
         pressedColorIdx = Mathf.Max(0, Mathf.Min(palette.colors.Length - 1, pressedColorIdx));
-
-        refreshColor();
       }
     }
   }
 
   void OnEnable() {
-    if (Application.isPlaying) {
-      if (_pressPulsator == null) {
-        _pressPulsator = Pool<Pulsator>.Spawn();
-      }
-      Debug.Log(_pressPulsator);
-      initPulsatorSettings();
-      Debug.Log("Hello");
-
-      _curColor = palette[restingColorIdx];
-
-      button.OnPress += onPress;
-      button.OnUnpress += onUnpress;
-    }
-  }
-
-  private void initPulsatorSettings() {
-    _pressPulsator.speed = colorChangeSpeed;
+    button.OnPress   += onPress;
+    button.OnUnpress += onUnpress;
   }
 
   void OnDisable() {
-    if (_pressPulsator != null) {
-      Pool<Pulsator>.Recycle(_pressPulsator);
-    }
-
     button.OnPress   -= onPress;
     button.OnUnpress -= onUnpress;
   }
 
-  private void onPress() {
-    _pressPulsator.Pulse();
+  private void onPress() { _pressPulsator.Pulse(); }
+  private void onUnpress() { _pressPulsator.Relax(); }
+
+  void Start() {
+    _pressPulsator = Pulsator.Spawn().SetValues(0F, 1F, 1.2F).SetSpeed(20F);
   }
 
-  private void onUnpress() {
-    _pressPulsator.Relax();
+  void OnDestroy() {
+    if (_pressPulsator != null) {
+      Pulsator.Recycle(_pressPulsator);
+    }
   }
 
   void Update() {
-    if (palette != null) {
-      if (!Application.isPlaying) {
-        _curColor = palette[restingColorIdx];
-      }
-      else {
-        _curColor = Color.Lerp(palette[restingColorIdx], palette[pressedColorIdx], _pressPulsator.value);
-      }
-    }
-
-    refreshColor();
-  }
-
-  private void refreshColor() {
     if (palette == null) return;
     if (graphic == null) return;
 
-    Color color = _curColor;
+    if (!Application.isPlaying) {
+      setColor(restingColor);
+      return;
+    }
 
+    _targetColor = restingColor;
+    if (!_pressPulsator.isResting) {
+      if (_pressPulsator.value < 1.0F) {
+        _targetColor = Color.Lerp(restingColor, pressedColor, _pressPulsator.value);
+      }
+      else {
+        _targetColor = Color.Lerp(pressedColor, restingColor, _pressPulsator.value - 1F);
+      }
+    }
+    else if (button.isPrimaryHovered) {
+      _targetColor = palette[primaryHoverColorIdx];
+    }
+
+    Color curColor = getColor();
+    setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
+  }
+
+  private Color getColor() {
+    var text = graphic as LeapTextGraphic;
+    if (text != null) {
+      return text.color;
+    }
+    else {
+      return graphic.GetRuntimeTint();
+    }
+  }
+
+  private void setColor(Color color) {
     var text = graphic as LeapTextGraphic;
     if (text != null) {
       text.color = color;

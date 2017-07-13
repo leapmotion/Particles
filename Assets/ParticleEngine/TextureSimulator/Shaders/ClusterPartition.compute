@@ -2,6 +2,8 @@
 #pragma kernel IntegrateCounts
 #pragma kernel SortParticlesIntoClusters
 #pragma kernel UpdateClusterCenters
+#pragma kernel OrganizeClustersX
+#pragma kernel OrganizeClustersY
 #pragma kernel CheckParticlesForNaN
 
 #define TOTAL_CLUSTERS 64
@@ -11,8 +13,7 @@ struct Cluster {
   float3 center;
   float radius;
   uint count;
-  uint start;
-  uint end;
+  uint4 rect;
 };
 
 Texture2D<float4> _Particles;
@@ -50,11 +51,22 @@ void CalculateClusterAssignments (uint3 id : SV_DispatchThreadID) {
 
 [numthreads(1, 1, 1)]
 void IntegrateCounts(uint3 id : SV_DispatchThreadID) {
-  uint sum = 0;
+  uint rowHeight = 0;
+  uint x = 0;
+  uint y = 0;
+
   for (uint i = 0; i < TOTAL_CLUSTERS; i++) {
-    _Clusters[i].start = sum;
-    _Clusters[i].end = sum;
-    sum += _Clusters[i].count;
+    uint side = (uint)(1 + sqrt(_Clusters[i].count));
+    if (x + side >= 128) {
+      x = 0;
+      y += rowHeight;
+      rowHeight = 0;
+    }
+
+    _Clusters[i].rect = uint4(x, y, side, 0);
+    x += side;
+
+    rowHeight = max(side, rowHeight);
   }
 }
 
@@ -64,11 +76,13 @@ void SortParticlesIntoClusters(uint3 id : SV_DispatchThreadID) {
   uint clusterAssignment = _ClusterAssignments[id.x];
 
   uint newIndex;
-  InterlockedAdd(_Clusters[clusterAssignment].end, 1, newIndex);
+  InterlockedAdd(_Clusters[clusterAssignment].rect.w, 1, newIndex);
 
-  uint actualIndex = newIndex & 0xFFFFFFFu;
+  uint4 rect = _Clusters[clusterAssignment].rect;
+  uint x = newIndex % rect.z + rect.x;
+  uint y = newIndex / rect.z + rect.y;
 
-  _ClusteredParticles[uint2(actualIndex, 0)] = particle;
+  _ClusteredParticles[uint2(x, y)] = particle;
 }
 
 [numthreads(1, 1, 1)]
@@ -79,22 +93,74 @@ void UpdateClusterCenters(uint3 id : SV_DispatchThreadID) {
 
   cluster.center = float3(0, 0, 0);
   cluster.radius = 0;
-  for (uint i = cluster.start; i < cluster.end; i++) {
-    cluster.center += _ClusteredParticles[uint2(i, 0)].xyz;
+
+  uint i;
+  uint2 dd;
+  uint count = cluster.count;
+
+  dd = uint2(0, 0);
+  for (i = 0; i < count; i++) {
+    cluster.center += _ClusteredParticles[cluster.rect.xy + dd].xyz;
+    dd.x++;
+    if (dd.x == cluster.rect.z) {
+      dd.x = 0;
+      dd.y++;
+    }
   }
 
-  if (cluster.count == 0) {
-    cluster.center = float3(id.x * 0.01, 0, 0);
+  if (count == 0) {
+    cluster.center = float3((id.x - 32.0) * 0.05, 0, 0);
   } else {
-    cluster.center /= cluster.count;
+    cluster.center /= count;
   }
 
-  for (uint j = cluster.start; j < cluster.end; j++) {
-    cluster.radius = max(cluster.radius, length(_ClusteredParticles[uint2(j, 0)].xyz - cluster.center));
+  dd = uint2(0, 0);
+  for (i = 0; i < count; i++) {
+    cluster.radius = max(cluster.radius, length(_ClusteredParticles[cluster.rect.xy + dd].xyz - cluster.center));
+    dd.x++;
+    if (dd.x == cluster.rect.z) {
+      dd.x = 0;
+      dd.y++;
+    }
   }
 
   cluster.count = 0;
   _Clusters[id.x] = cluster;
+}
+
+[numthreads(1, 1, 1)]
+void OrganizeClustersX(uint3 id : SV_DispatchThreadID) {
+  for (uint i = 1; i < TOTAL_CLUSTERS; i++) {
+    Cluster a = _Clusters[i - 1];
+    Cluster b = _Clusters[i - 0];
+
+    uint axy = a.rect.x + a.rect.y * 128;
+    uint bxy = b.rect.x + b.rect.y * 128;
+    if ((a.center.x > b.center.x) != (axy > bxy)) {
+      _Clusters[i - 1] = b;
+      _Clusters[i - 0] = a;
+    } else {
+      _Clusters[i - 1] = a;
+      _Clusters[i - 0] = b;
+    }
+  }
+}
+
+[numthreads(1, 1, 1)]
+void OrganizeClustersY(uint3 id : SV_DispatchThreadID) {
+  for (uint i = 5; i < TOTAL_CLUSTERS; i++) {
+    Cluster a = _Clusters[i - 5];
+    Cluster b = _Clusters[i - 0];
+
+    if ((a.center.y > b.center.y) != (a.rect.y > b.rect.y)) {
+      _Clusters[i - 5] = b;
+      _Clusters[i - 0] = a;
+    }
+    else {
+      _Clusters[i - 5] = a;
+      _Clusters[i - 0] = b;
+    }
+  }
 }
 
 [numthreads(64, 1, 1)]

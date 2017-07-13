@@ -742,6 +742,9 @@ public class TextureSimulator : MonoBehaviour {
   private Renderer _socialDebug;
 
   [SerializeField]
+  private Renderer _clusteredDebug;
+
+  [SerializeField]
   private Renderer _shaderDataDebug;
 
   [SerializeField]
@@ -818,8 +821,10 @@ public class TextureSimulator : MonoBehaviour {
     public Vector3 center;
     public float radius;
     public uint count;
-    public uint start;
-    public uint end;
+    public uint x;
+    public uint y;
+    public uint side;
+    public uint theOtherCount;
   }
 
   private ComputeBuffer _clusters;
@@ -830,6 +835,8 @@ public class TextureSimulator : MonoBehaviour {
   private int _clusterKernelIntegrate;
   private int _clusterKernelSort;
   private int _clusterKernelUpdate;
+  private int _clusterKernelOrganizeX;
+  private int _clusterKernelOrganizeY;
   private int _clusterKernelParticleNaN;
   private int _clusterKernelClusteredNaN;
 
@@ -2015,6 +2022,18 @@ public class TextureSimulator : MonoBehaviour {
     bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
+  private RenderTexture createTexture(int width, int height, bool randomWrite = false) {
+    RenderTexture tex = new RenderTexture(width, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    tex.wrapMode = TextureWrapMode.Clamp;
+    tex.filterMode = FilterMode.Point;
+    tex.enableRandomWrite = randomWrite;
+
+    RenderTexture.active = tex;
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
+    RenderTexture.active = null;
+    return tex;
+  }
+
   private RenderTexture createTexture(int height = 1, bool randomWrite = false) {
     RenderTexture tex = new RenderTexture(MAX_PARTICLES, height, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
@@ -2140,7 +2159,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
 
     if (_clusteringEnabled) {
-      _simulationMat.EnableKeyword(CLUSTER_KEYWORD);
+      _simulationMat.DisableKeyword(CLUSTER_KEYWORD);
     } else {
       _simulationMat.DisableKeyword(CLUSTER_KEYWORD);
     }
@@ -2174,7 +2193,8 @@ public class TextureSimulator : MonoBehaviour {
     if (_clusters == null || _clusterAssignments == null || _clusteredParticles == null || _clusterDebug == null) {
       cleanupClusters();
 
-      _clusteredParticles = createTexture(height: 1, randomWrite: true);
+      _clusteredParticles = createTexture(128, 128, randomWrite: true);
+      _clusteredDebug.material.mainTexture = _clusteredParticles;
 
       _clusters = new ComputeBuffer(CLUSTER_COUNT, Marshal.SizeOf(typeof(Cluster)));
       _clusterAssignments = new ComputeBuffer(MAX_PARTICLES, sizeof(uint));
@@ -2184,6 +2204,8 @@ public class TextureSimulator : MonoBehaviour {
       _clusterKernelIntegrate = _clusterShader.FindKernel(CLUSTER_KERNEL_INTEGRATE);
       _clusterKernelSort = _clusterShader.FindKernel(CLUSTER_KERNEL_SORT);
       _clusterKernelUpdate = _clusterShader.FindKernel(CLUSTER_KERNEL_UPDATE);
+      _clusterKernelOrganizeX = _clusterShader.FindKernel("OrganizeClustersX");
+      _clusterKernelOrganizeY = _clusterShader.FindKernel("OrganizeClustersY");
       _clusterKernelParticleNaN = _clusterShader.FindKernel("CheckParticlesForNaN");
 
       _clusters.SetData(new Cluster[CLUSTER_COUNT].Fill(() => new Cluster() {
@@ -2194,7 +2216,9 @@ public class TextureSimulator : MonoBehaviour {
                                          _clusterKernelIntegrate,
                                          _clusterKernelSort,
                                          _clusterKernelUpdate,
-                                         _clusterKernelParticleNaN }) {
+                                         _clusterKernelParticleNaN,
+                                         _clusterKernelOrganizeX,
+                                         _clusterKernelOrganizeY}) {
         _clusterShader.SetBuffer(kernel, "_Clusters", _clusters);
         _clusterShader.SetBuffer(kernel, "_ClusterAssignments", _clusterAssignments);
         _clusterShader.SetTexture(kernel, "_ClusteredParticles", _clusteredParticles);
@@ -2214,6 +2238,10 @@ public class TextureSimulator : MonoBehaviour {
 
     _clusterShader.SetTexture(_clusterKernelAssign, "_Particles", _backPos);
     _clusterShader.SetTexture(_clusterKernelSort, "_Particles", _backPos);
+
+    RenderTexture.active = _clusteredParticles;
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.gray);
+    RenderTexture.active = null;
 
     checkForFrontBack("##A");
 
@@ -2236,6 +2264,9 @@ public class TextureSimulator : MonoBehaviour {
       _clusterShader.Dispatch(_clusterKernelUpdate, CLUSTER_COUNT, 1, 1);
       checkForFrontBack("##E");
     }
+
+    //_clusterShader.Dispatch(_clusterKernelOrganizeX, 1, 1, 1);
+    //_clusterShader.Dispatch(_clusterKernelOrganizeY, 1, 1, 1);
   }
 
   private void checkForFrontBack(string message) {

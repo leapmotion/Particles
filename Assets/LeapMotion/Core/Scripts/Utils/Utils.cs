@@ -10,6 +10,7 @@
 using UnityEngine;
 using UnityEngine.Assertions;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Leap.Unity.Query;
 
@@ -143,6 +144,36 @@ namespace Leap.Unity {
         } else {
           return obj.parent.IsActiveRelativeToParent(parent);
         }
+      }
+    }
+
+    public static List<int> GetSortedOrder<T>(this List<T> list) where T : IComparable<T> {
+      Assert.IsNotNull(list);
+
+      List<int> ordering = new List<int>();
+      for (int i = 0; i < list.Count; i++) {
+        ordering.Add(i);
+      }
+
+      ordering.Sort((a, b) => list[a].CompareTo(list[b]));
+
+      return ordering;
+    }
+
+    public static void ApplyOrdering<T>(this IList<T> list, List<int> ordering) {
+      Assert.IsNotNull(list);
+      Assert.IsNotNull(ordering);
+      Assert.AreEqual(list.Count, ordering.Count, "List must be the same length as the ordering.");
+
+      List<T> copy = Pool<List<T>>.Spawn();
+      try {
+        copy.AddRange(list);
+        for (int i = 0; i < list.Count; i++) {
+          list[i] = copy[ordering[i]];
+        }
+      } finally {
+        copy.Clear();
+        Pool<List<T>>.Recycle(copy);
       }
     }
 

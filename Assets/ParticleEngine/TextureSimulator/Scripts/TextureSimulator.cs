@@ -979,8 +979,8 @@ public class TextureSimulator : MonoBehaviour {
 
     _socialTemp = createTexture(_textureDimension, _textureDimension);
 
-    _frontSocial = createTexture(MAX_PARTICLES, MAX_FORCE_STEPS);
-    _backSocial = createTexture(MAX_PARTICLES, MAX_FORCE_STEPS);
+    _frontSocial = createTexture(_textureDimension, _textureDimension * MAX_FORCE_STEPS);
+    _backSocial = createTexture(_textureDimension, _textureDimension * MAX_FORCE_STEPS);
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
     _simulationMat.SetTexture("_Position", _frontPos);
@@ -1010,8 +1010,6 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Update() {
-    //FindObjectOfType<TextMesh>().text = "";
-
     if (_enableSpeciesDebugColors) {
       Color[] colors = new Color[MAX_SPECIES];
       colors.Fill(Color.black);
@@ -1019,9 +1017,9 @@ public class TextureSimulator : MonoBehaviour {
       _particleMat.SetColorArray("_Colors", colors);
     }
 
-    updateShaderData();
-
     handleUserInput();
+
+    updateShaderData();
 
     updateShaderDebug();
 
@@ -1523,7 +1521,7 @@ public class TextureSimulator : MonoBehaviour {
         throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
     }
 
-    GL.LoadPixelMatrix(0, 1, 1, 0);
+    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
 
     Texture2D tex;
     tex = new Texture2D(MAX_PARTICLES, 1, format, mipmap: false, linear: true);
@@ -2067,7 +2065,7 @@ public class TextureSimulator : MonoBehaviour {
       performClustering();
     }
 
-    GL.LoadPixelMatrix(0, 1, 1, 0);
+    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
     using (new ProfilerSample("Particle Interaction")) {

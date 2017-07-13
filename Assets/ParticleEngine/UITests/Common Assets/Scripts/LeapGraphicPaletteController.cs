@@ -46,6 +46,7 @@ public class LeapGraphicPaletteController : MonoBehaviour {
 
   private void refreshColor() {
     if (palette == null) return;
+    if (graphic == null) return;
 
     Color color = palette.colors[colorIndex];
 

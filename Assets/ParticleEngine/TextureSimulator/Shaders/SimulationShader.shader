@@ -4,9 +4,10 @@
 
   CGINCLUDE
   #include "UnityCG.cginc"
-#pragma target 5.0
+  #pragma target 5.0
 
-  #define MAX_PARTICLES 4096
+  #define TEXTURE_DIM 64
+  #define MAX_PARTICLES (TEXTURE_DIM * TEXTURE_DIM)
   #define MAX_FORCE_STEPS 64
   #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
@@ -48,7 +49,8 @@
   StructuredBuffer<Cluster> _Clusters;
   sampler2D _ClusteredParticles;
 
-  uniform int _ParticleCount;
+  uniform int _ParticleRangeX;
+  uniform int _ParticleRangeY;
 
   float3 _FieldCenter;
   float _FieldRadius;
@@ -208,7 +210,7 @@
     float4 speciesData = _SpeciesData[(int)particle.w];
 
     //Step offset for social forces
-    i.uv.y = speciesData.y / MAX_FORCE_STEPS;
+    i.uv.y = i.uv.y / MAX_FORCE_STEPS + speciesData.y / MAX_FORCE_STEPS;
     float4 socialForce = tex2Dlod(_SocialForce, float4(i.uv, 0, 0));
     velocity.xyz += socialForce.xyz;
 
@@ -262,30 +264,32 @@
     //    float4 other = tex2Dlod(_ClusteredParticles, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
 #else
     {
-      for (int i = 0; i < _ParticleCount; i++) {
-        float4 other = tex2Dlod(_Position, float4(i / (float)MAX_PARTICLES, 0, 0, 0));
+      for (int x = 0; x < _ParticleRangeX; x++) {
+        for (int y = 0; y < _ParticleRangeY; y++) {
+          float4 other = tex2Dlod(_Position, float4(x / (float)MAX_PARTICLES, y / (float)MAX_PARTICLES, 0, 0));
 #endif
-        float3 toOther = other.xyz - particle.xyz;
-        float distance = length(toOther);
-        toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
+          float3 toOther = other.xyz - particle.xyz;
+          float distance = length(toOther);
+          toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
 
-        float otherCollisionForce = _SpeciesData[(int)other.w].z;
-        float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
+          float otherCollisionForce = _SpeciesData[(int)other.w].z;
+          float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
 
-        if (distance < PARTICLE_DIAMETER) {
-          float penetration = 1 - distance / PARTICLE_DIAMETER;
-          velocity.xyz -= toOther * penetration * totalCollisionForce;
-        }
+          if (distance < PARTICLE_DIAMETER) {
+            float penetration = 1 - distance / PARTICLE_DIAMETER;
+            velocity.xyz -= toOther * penetration * totalCollisionForce;
+          }
 
-        float2 socialData = _SocialData[(int)(socialOffset + other.w)];
+          float2 socialData = _SocialData[(int)(socialOffset + other.w)];
 
-        if (distance < socialData.y) {
-          totalSocialForce += float4(socialData.x * toOther, 1);
-        }
-        
+          if (distance < socialData.y) {
+            totalSocialForce += float4(socialData.x * toOther, 1);
+          }
+
 #ifdef GPU_STATS
-        InterlockedAdd(_DebugBuffer[0], 1);
+          InterlockedAdd(_DebugBuffer[0], 1);
 #endif
+        }
       }
     }
 
@@ -359,7 +363,7 @@
   float4 stepSocialQueue(v2f i) : SV_Target{
     float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
 
-    float4 newForce = tex2Dlod(_SocialTemp, float4(i.uv, 0, 0));
+    float4 newForce = tex2Dlod(_SocialTemp, float4(i.uv * float2(1, MAX_FORCE_STEPS), 0, 0));
     float4 shiftedForce = tex2Dlod(_SocialForce, float4(shiftedUv, 0, 0));
 
     float4 result;

@@ -789,6 +789,9 @@ public class TextureSimulator : MonoBehaviour {
 
   //Simulation
   private readonly int _textureDimension;
+  private int _particleRangeX = 64;
+  private int _particleRangeY = 64;
+
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
@@ -1943,6 +1946,11 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void updateShaderData() {
+    _particleRangeY = _particlesToSimulate / _textureDimension;
+    _particleRangeX = _particleRangeY == 0 ? _particlesToSimulate : _textureDimension;
+    _simulationMat.SetInt("_ParticleRangeX", _particleRangeX);
+    _simulationMat.SetInt("_ParticleRangeY", _particleRangeY);
+
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
@@ -1989,38 +1997,47 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector2> bakedUvs = new List<Vector2>();
 
     Mesh bakedMesh = null;
-    for (int i = 0; i < _particlesToSimulate; i++) {
-      if (bakedVerts.Count + sourceVerts.Length > 60000) {
-        bakedMesh.SetVertices(bakedVerts);
-        bakedMesh.SetTriangles(bakedTris, 0);
-        bakedMesh.SetUVs(0, bakedUvs);
-        bakedMesh.RecalculateNormals();
-        bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-        bakedMesh = null;
+    int particlesToMesh = _particlesToSimulate;
+    for (int i = 0; i < _textureDimension; i++) {
+      for (int j = 0; j < _textureDimension; j++) {
+        if (bakedVerts.Count + sourceVerts.Length > 60000) {
+          bakedMesh.SetVertices(bakedVerts);
+          bakedMesh.SetTriangles(bakedTris, 0);
+          bakedMesh.SetUVs(0, bakedUvs);
+          bakedMesh.RecalculateNormals();
+          bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+          bakedMesh = null;
 
-        bakedVerts.Clear();
-        bakedTris.Clear();
-        bakedUvs.Clear();
-      }
+          bakedVerts.Clear();
+          bakedTris.Clear();
+          bakedUvs.Clear();
+        }
 
-      if (bakedMesh == null) {
-        sourceTris = _particleMesh.triangles;
-        bakedMesh = new Mesh();
-        bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-        _meshes.Add(bakedMesh);
-      }
+        if (bakedMesh == null) {
+          sourceTris = _particleMesh.triangles;
+          bakedMesh = new Mesh();
+          bakedMesh.hideFlags = HideFlags.HideAndDontSave;
+          _meshes.Add(bakedMesh);
+        }
 
-      bakedVerts.AddRange(sourceVerts);
-      bakedTris.AddRange(sourceTris);
+        bakedVerts.AddRange(sourceVerts);
+        bakedTris.AddRange(sourceTris);
 
-      for (int k = 0; k < sourceVerts.Length; k++) {
-        bakedUvs.Add(new Vector2((i + 0.5f) / MAX_PARTICLES, 0));
-      }
+        for (int k = 0; k < sourceVerts.Length; k++) {
+          bakedUvs.Add(new Vector2((i + 0.5f) / _textureDimension, (j + 0.5f) / _textureDimension));
+        }
 
-      for (int k = 0; k < sourceTris.Length; k++) {
-        sourceTris[k] += sourceVerts.Length;
+        for (int k = 0; k < sourceTris.Length; k++) {
+          sourceTris[k] += sourceVerts.Length;
+        }
+
+        particlesToMesh--;
+        if (particlesToMesh == 0) {
+          goto finishedMeshing;
+        }
       }
     }
+    finishedMeshing:
 
     bakedMesh.hideFlags = HideFlags.HideAndDontSave;
     bakedMesh.SetVertices(bakedVerts);
@@ -2072,7 +2089,7 @@ public class TextureSimulator : MonoBehaviour {
       doParticleInteraction();
     }
 
-    blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, 1);
+    blit("_SocialForce", ref _frontSocial, ref _backSocial, PASS_STEP_SOCIAL_QUEUE, _textureDimension * MAX_FORCE_STEPS, 1);
 
     blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
 
@@ -2275,13 +2292,16 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, float height) {
+  private void blit(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, int height, float uvHeight) {
     RenderTexture.active = front;
     front.DiscardContents();
 
     _simulationMat.SetPass(pass);
 
-    quad(height);
+    quad(_particleRangeX, 
+         height, 
+         _particleRangeX / (float)_textureDimension, 
+         uvHeight);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2299,7 +2319,10 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(1);
 
-    quad();
+    quad(_particleRangeX, 
+         _particleRangeY, 
+         _particleRangeX / (float)_textureDimension, 
+         _particleRangeY / (float)_textureDimension);
 
     _simulationMat.SetTexture("_Velocity", _frontVel);
 
@@ -2307,26 +2330,24 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void blitVel(int pass) {
-    blit("_Velocity", ref _frontVel, ref _backVel, pass, 1);
+    blit("_Velocity", ref _frontVel, ref _backVel, pass, _particleRangeY, _particleRangeY / (float)_textureDimension);
   }
 
   private void blitPos(int pass) {
-    blit("_Position", ref _frontPos, ref _backPos, pass, 1);
+    blit("_Position", ref _frontPos, ref _backPos, pass, _particleRangeY, _particleRangeY / (float)_textureDimension);
   }
 
-  private void quad(float height = 1) {
-    float percent = _particlesToSimulate / (float)MAX_PARTICLES;
-
+  private void quad(int width, int height, float uvX, float uvY) {
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, 1);
+    GL.TexCoord2(0, uvY);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(percent, 1);
-    GL.Vertex3(percent, 0, 0);
+    GL.TexCoord2(uvX, uvY);
+    GL.Vertex3(width, 0, 0);
 
-    GL.TexCoord2(percent, 0);
-    GL.Vertex3(percent, height, 0);
+    GL.TexCoord2(uvX, 0);
+    GL.Vertex3(width, height, 0);
 
     GL.TexCoord2(0, 0);
     GL.Vertex3(0, height, 0);

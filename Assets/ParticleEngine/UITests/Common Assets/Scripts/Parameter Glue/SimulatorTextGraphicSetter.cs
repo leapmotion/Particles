@@ -3,13 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class TextGraphicSetter : MonoBehaviour {
+public abstract class SimulatorTextGraphicSetter : MonoBehaviour {
 
+  public TextureSimulator particleSimulator;
   public LeapTextGraphic textGraphic;
   public string prefix;
   public string postfix;
 
   public abstract string GetTextValue();
+
+  void Reset() {
+    textGraphic = GetComponent<LeapTextGraphic>();
+    particleSimulator = FindObjectOfType<TextureSimulator>();
+  }
 
   void Update() {
     string value = GetTextValue();

@@ -136,8 +136,8 @@
   }
 
   float4 globalForces(v2f_p i) : SV_Target{
-    float4 velocity = tex2D(_ParticleVelocities, i.uv);
-    float4 particle = tex2D(_ParticlePositions, i.uv);
+    float4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
+    float4 particle = tex2D(_ParticlePositions, i.uv.xy);
 
     //Attraction towards the origin
     float3 toFieldCenter = _FieldCenter - particle.xyz;
@@ -186,7 +186,7 @@
     //Step offset for social forces
     i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
     float4 socialForce = tex2D(_ParticleSocialForces, i.uv.xy);
-    //velocity.xyz += socialForce.xyz;
+    velocity.xyz += socialForce.xyz;
 
     //Damping
     velocity.xyz *= lerp(1, i.uv.w, velocity.w);
@@ -196,10 +196,9 @@
 
   FragmentOutput updateCollisionVelocities(v2f_i i) {
     float4 particle = tex2D(_ParticlePositions, i.uv.xy);
-    float4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
+    float4 velocity = tex2D(_ParticleVelocities, i.uv.xy) / 16.0;
 
-    //We are going to count our own social force, so start with -1
-    float4 totalSocialForce = float4(0, 0, 0, -1);
+    float4 totalSocialForce = float4(0, 0, 0, -1.0 / 16.0);
 
     //float4 neighborA = tex2D(_ParticlePositions, i.uv - float2(1.0 / MAX_PARTICLES, 0));
     //float4 neighborB = tex2D(_ParticlePositions, i.uv + float2(1.0 / MAX_PARTICLES, 0));
@@ -278,9 +277,9 @@
   }
 
   float4 stepSocialQueue(v2f_p i) : SV_Target{
-    float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
+    float2 shiftedUv = i.uv.xy - float2(0, 1.0 / MAX_FORCE_STEPS);
 
-    float4 newForce = tex2D(_SocialTemp, i.uv * float2(1, MAX_FORCE_STEPS));
+    float4 newForce = tex2D(_SocialTemp, i.uv.xy * float2(1, MAX_FORCE_STEPS));
     if (newForce.w > 0.5) {
       newForce.xyz /= newForce.w;
     }

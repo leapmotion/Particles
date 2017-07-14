@@ -914,20 +914,32 @@ public class TextureSimulator : MonoBehaviour {
 
   void Start() {
     _positionSrc = createParticleTexture();
-    _velocitySrc = createParticleTexture();
+    _positionSrc.name = "Position A";
+
     _positionDst = createParticleTexture();
+    _positionDst.name = "Position B";
+
+    _velocitySrc = createParticleTexture();
+    _velocitySrc.name = "Velocity A";
+    
     _velocityDst = createParticleTexture();
+    _velocityDst.name = "Velocity B";
+
     _socialTemp = createParticleTexture();
+    _socialTemp.name = "Social Temp";
 
     _socialQueueSrc = createQueueTexture(MAX_FORCE_STEPS);
     _socialQueueDst = createQueueTexture(MAX_FORCE_STEPS);
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
-    _simulationMat.SetTexture("_Position", _positionSrc);
-    _simulationMat.SetTexture("_Velocity", _velocitySrc);
-    _simulationMat.SetTexture("_SocialForce", _socialQueueSrc);
+
+    Shader.SetGlobalTexture(POSITION_GLOBAL, _positionSrc);
+    Shader.SetGlobalTexture(VELOCITY_GLOBAL, _velocitySrc);
+    Shader.SetGlobalTexture(SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
     createBlitMeshes();
+
+    buildSimulationCommands();
 
     RecalculateMeshesForParticles();
 
@@ -2017,7 +2029,7 @@ public class TextureSimulator : MonoBehaviour {
             socialData.x = 0.003f * (speciesM == specoesO ? 1 : -1);
 
             //social range
-            socialData.y = 0.5f;
+            socialData.y = speciesM == specoesO ? 0.5f : 0.2f;
 
             //collision force
             socialData.z = 0.002f;
@@ -2068,7 +2080,7 @@ public class TextureSimulator : MonoBehaviour {
         verts.Add(new Vector3(x, y + 16));
 
         float socialSteps = 0;
-        float drag = 0.99f;
+        float drag = 0.95f;
 
         float uvx0 = x / 64.0f;
         float uvy0 = y / 64.0f;
@@ -2106,9 +2118,9 @@ public class TextureSimulator : MonoBehaviour {
     tris.Add(3);
 
     verts.Add(new Vector3(0, 0, 0));
-    verts.Add(new Vector3(1, 0, 0));
-    verts.Add(new Vector3(1, 1, 0));
-    verts.Add(new Vector3(0, 1, 0));
+    verts.Add(new Vector3(_textureDimension, 0, 0));
+    verts.Add(new Vector3(_textureDimension, _textureDimension, 0));
+    verts.Add(new Vector3(0, _textureDimension, 0));
 
     uv0.Add(new Vector4(0, 0, 0, 0));
     uv0.Add(new Vector4(1, 0, 0, 0));
@@ -2143,7 +2155,7 @@ public class TextureSimulator : MonoBehaviour {
     tex.filterMode = FilterMode.Point;
 
     RenderTexture.active = tex;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.blue);
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
     RenderTexture.active = null;
     return tex;
   }
@@ -2220,8 +2232,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void blitCopy(Texture src, RenderTexture dst) {
+    GL.LoadPixelMatrix(0, 1, 0, 1);
+
     RenderTexture.active = dst;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 1, 0, 0));
 
     _simulationMat.SetTexture("_CopySource", src);
     _simulationMat.SetPass(PASS_COPY);
@@ -2256,8 +2270,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void buildSimulationCommands(CommandBuffer buffer) {
-    _simulationCommandsA.SetViewMatrix(Matrix4x4.identity);
-    _simulationCommandsA.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, _textureDimension, 0, -1, 1));
+    buffer.SetViewMatrix(Matrix4x4.identity);
+    buffer.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, 0, _textureDimension, -1, 1));
 
     blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_GLOBAL_FORCES);
     
@@ -2269,11 +2283,11 @@ public class TextureSimulator : MonoBehaviour {
 
     blitCommands(buffer, _blitMeshParticle, POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
 
-    _displayBlock.SetTexture("_CurrPos", _positionSrc);
-    _displayBlock.SetTexture("_PrevPos", _positionDst);
+    //_displayBlock.SetTexture("_CurrPos", _positionSrc);
+    //_displayBlock.SetTexture("_PrevPos", _positionDst);
 
-    _displayBlock.SetTexture("_CurrVel", _velocitySrc);
-    _displayBlock.SetTexture("_PrevVel", _velocityDst);
+    //_displayBlock.SetTexture("_CurrVel", _velocitySrc);
+    //_displayBlock.SetTexture("_PrevVel", _velocityDst);
 
     _positionDebug.material.mainTexture = _positionSrc;
     _velocityDebug.material.mainTexture = _velocitySrc;

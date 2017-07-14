@@ -17,10 +17,10 @@
     #pragma surface surf CelShadingForward vertex:vert noforwardadd
     #pragma target 2.0
 
-    sampler2D _PrevPos;
-    sampler2D _CurrPos;
-    sampler2D _PrevVel;
-    sampler2D _CurrVel;
+    sampler2D _ParticlePositions;
+    //sampler2D _CurrPos;
+    //sampler2D _PrevVel;
+    //sampler2D _CurrVel;
 
     sampler2D _ToonRamp;
 
@@ -55,13 +55,15 @@
     }
 
     void vert(inout appdata_full v) {
-#ifdef ENABLE_INTERPOLATION
-      float4 particle = lerp(tex2Dlod(_PrevPos, v.texcoord), tex2Dlod(_CurrPos, v.texcoord), _Lerp);
-#else
-      float4 particle = tex2Dlod(_CurrPos, v.texcoord);
-#endif
+//#ifdef ENABLE_INTERPOLATION
+//      float4 particle = lerp(tex2Dlod(_PrevPos, v.texcoord), tex2Dlod(_CurrPos, v.texcoord), _Lerp);
+//#else
+//      float4 particle = tex2Dlod(_CurrPos, v.texcoord);
+//#endif
+      float4 particle = tex2Dlod(_ParticlePositions, v.texcoord);
 
-      float4 velocity = tex2Dlod(_CurrVel, v.texcoord);
+      //float4 velocity = tex2Dlod(_CurrVel, v.texcoord);
+      float4 velocity = float4(0, 0, 0, 0);
 
 #ifdef COLOR_SPECIES
       v.color = _Colors[(int)particle.w];

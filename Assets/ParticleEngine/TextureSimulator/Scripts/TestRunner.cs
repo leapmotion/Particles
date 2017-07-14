@@ -10,12 +10,14 @@ public class TestRunner : MonoBehaviour {
   private string _results;
 
 	IEnumerator Start () {
-    yield return new WaitForSeconds(0.5f);
-    sim.ResetPositions();
+    //yield return new WaitForSeconds(0.5f);
+    //sim.ResetPositions();
 
     while (true) {
-      yield return new WaitForSeconds(0.5f);
-      texMesh.text = Mathf.Round(1.0f / Time.smoothDeltaTime).ToString();
+      int startTime = Time.frameCount;
+      yield return new WaitForSeconds(1f);
+      int endTime = Time.frameCount;
+      texMesh.text = Mathf.Round(endTime - startTime).ToString();
     }
 
     /*

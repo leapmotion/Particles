@@ -1998,15 +1998,12 @@ public class TextureSimulator : MonoBehaviour {
             float uvMy1 = (yM + 16.0f) / 64.0f;
 
             float uvOx0 = xO / 64.0f;
-            float uvOx1 = (xO + 16.0f) / 64.0f;
-
             float uvOy0 = yO / 64.0f;
-            float uvOy1 = (yO + 16.0f) / 64.0f;
 
             uv0.Add(new Vector4(uvMx0, uvMy0, uvOx0, uvOy0));
-            uv0.Add(new Vector4(uvMx1, uvMy0, uvOx1, uvOy0));
-            uv0.Add(new Vector4(uvMx1, uvMy1, uvOx1, uvOy1));
-            uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy1));
+            uv0.Add(new Vector4(uvMx1, uvMy0, uvOx0, uvOy0));
+            uv0.Add(new Vector4(uvMx1, uvMy1, uvOx0, uvOy0));
+            uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy0));
 
             Vector4 socialData;
 
@@ -2047,8 +2044,6 @@ public class TextureSimulator : MonoBehaviour {
 
     for (int dx = 0; dx < 4; dx++) {
       for (int dy = 0; dy < 4; dy++) {
-        int species = (dx + dy * 4);
-
         int x = dx * 16;
         int y = dy * 16;
 

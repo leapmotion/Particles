@@ -15,7 +15,7 @@ using UnityEngine.Serialization;
 namespace Leap.Unity.Interaction {
 
   /// <summary>
-  /// A physics-enabled toggle. Toggling is triggered by physically pushing the toggle to its compressed position. 
+  /// A physics-enabled toggle. Toggling is triggered by physically pushing the toggle to its compressed position.
   /// </summary>
   public class InteractionToggle : InteractionButton {
 
@@ -31,7 +31,7 @@ namespace Leap.Unity.Interaction {
     private bool _startToggled = false;
 
     ///<summary> Whether or not this toggle is currently toggled. </summary>
-    public bool toggled {
+    public bool isToggled {
       get {
         return _toggled;
       }
@@ -43,7 +43,7 @@ namespace Leap.Unity.Interaction {
           } else {
             OnUntoggle();
           }
-          restingHeight = toggled ? toggledRestingHeight : _originalRestingHeight;
+          restingHeight = isToggled ? toggledRestingHeight : _originalRestingHeight;
           rigidbody.WakeUp();
           depressedThisFrame = value;
           unDepressedThisFrame = !value;
@@ -70,7 +70,7 @@ namespace Leap.Unity.Interaction {
     /// Called when the toggle is unticked.
     /// </summary>
     public Action OnUntoggle = () => { };
-    
+
     private float _originalRestingHeight;
 
     protected override void Start() {
@@ -79,7 +79,7 @@ namespace Leap.Unity.Interaction {
       _originalRestingHeight = restingHeight;
 
       if (_startToggled) {
-        toggled = true;
+        isToggled = true;
       }
 
       OnToggle += _toggleEvent.Invoke;
@@ -97,7 +97,7 @@ namespace Leap.Unity.Interaction {
     }
 
     private void OnPressed() {
-      toggled = !toggled;
+      isToggled = !isToggled;
     }
   }
 }

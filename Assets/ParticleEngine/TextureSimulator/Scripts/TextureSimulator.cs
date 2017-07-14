@@ -744,14 +744,16 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
-  private int _particleXRange = 64;
-  private int _particleYRange = 64;
+  private int _textureDimension;
 
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocialQueue, _backSocialQueue;
   private RenderTexture _socialTemp;
+
+  private Mesh _blitMeshInteraction;
+  private Mesh _blitMeshParticle;
 
   private float _currScaledTime = 0;
   private float _currSimulationTime = 0;
@@ -775,6 +777,13 @@ public class TextureSimulator : MonoBehaviour {
   private RenderTexture _shaderDebugTexture;
 
   #region PUBLIC API
+
+  public TextureSimulator() {
+    _textureDimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
+    if (_textureDimension * _textureDimension != MAX_PARTICLES) {
+      Debug.LogError("Max particles must be a square number.");
+    }
+  }
 
   public enum ColorMode {
     BySpecies,
@@ -811,16 +820,6 @@ public class TextureSimulator : MonoBehaviour {
   public string currentSpecies {
     get {
       return _currentSpecies;
-    }
-  }
-
-  public int textureDimension {
-    get {
-      int dimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
-      if (dimension * dimension != MAX_PARTICLES) {
-        throw new System.Exception("Max particles must be a square number.");
-      }
-      return dimension;
     }
   }
 
@@ -918,8 +917,10 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_Velocity", _frontVel);
     _simulationMat.SetTexture("_SocialForce", _frontSocialQueue);
 
+    createBlitMeshes();
+
     RecalculateMeshesForParticles();
-    
+
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
@@ -1190,69 +1191,66 @@ public class TextureSimulator : MonoBehaviour {
       case EcosystemPreset.Test:
         _currentSimulationSpeciesCount = 8;
 
-        float drag 			=  0.0f;
-        float collision 	=  1.0f;
-        int   steps 		=  6;
+        float drag = 0.0f;
+        float collision = 1.0f;
+        int steps = 6;
 
-		float selfLove   	=  0.3f; 
-		float selfRange  	=  0.3f;
+        float selfLove = 0.3f;
+        float selfRange = 0.3f;
 
-		float fearForce  	= -0.4f;
-		float fearRange_ 	=  0.2f;
+        float fearForce = -0.4f;
+        float fearRange_ = 0.2f;
 
-		float loveForce  	=  0.3f;
-		float loveRange_ 	=  0.2f;
+        float loveForce = 0.3f;
+        float loveRange_ = 0.2f;
 
         float d = Mathf.Lerp(setting.minDrag, setting.maxDrag, drag);
         float c = Mathf.Lerp(setting.minCollision, setting.maxCollision, collision);
 
-		int numParticlesPerSpecies = MAX_PARTICLES / _currentSimulationSpeciesCount;
-		
-		int pp = 0;
-  		for (int species=0; species<_currentSimulationSpeciesCount; species++)
-		{
-			float g = (float)species / (float)_currentSimulationSpeciesCount;
-			colors[ species ] = new Color( g, g, g );
-	        speciesData[ species ] = new Vector3(d, steps, c);
+        int numParticlesPerSpecies = MAX_PARTICLES / _currentSimulationSpeciesCount;
 
-			// clear it all
-	  		for (int other=0; other<_currentSimulationSpeciesCount; other++)
-			{
-	        	socialData[ species, other ] = new Vector2(setting.maxSocialForce * 0.0f, setting.maxSocialRange * 0.0f );
-			}
+        int pp = 0;
+        for (int species = 0; species < _currentSimulationSpeciesCount; species++) {
+          float g = (float)species / (float)_currentSimulationSpeciesCount;
+          colors[species] = new Color(g, g, g);
+          speciesData[species] = new Vector3(d, steps, c);
 
-			// species reaction to own kind
-			socialData[ species, species ] = new Vector2(setting.maxSocialForce * selfLove, setting.maxSocialRange * selfRange );
+          // clear it all
+          for (int other = 0; other < _currentSimulationSpeciesCount; other++) {
+            socialData[species, other] = new Vector2(setting.maxSocialForce * 0.0f, setting.maxSocialRange * 0.0f);
+          }
 
-			// species reaction to before species and after species
-			int before = species - 1;
-			int after  = species + 1;
+          // species reaction to own kind
+          socialData[species, species] = new Vector2(setting.maxSocialForce * selfLove, setting.maxSocialRange * selfRange);
 
-			if ( before == -1 								) { before = _currentSimulationSpeciesCount - before; }
-			if ( after  == _currentSimulationSpeciesCount 	) { after  = _currentSimulationSpeciesCount - after;  }
+          // species reaction to before species and after species
+          int before = species - 1;
+          int after = species + 1;
 
-			socialData[ species, before ] = new Vector2(setting.maxSocialForce * fearForce, setting.maxSocialRange * fearRange_ );
-			socialData[ species, after  ] = new Vector2(setting.maxSocialForce * loveForce, setting.maxSocialRange * loveRange_ );
+          if (before == -1) { before = _currentSimulationSpeciesCount - before; }
+          if (after == _currentSimulationSpeciesCount) { after = _currentSimulationSpeciesCount - after; }
 
-			for (int p=0; p<numParticlesPerSpecies; p++) 
-			{
-				float ff = (float)p / (float)numParticlesPerSpecies;
-				float rr = 0.3f;
-				float xx = -rr * 0.5f + ff 				* rr;
-				float yy = -rr * 0.5f + g  				* rr;
-				float zz = -rr * 0.5f + Random.value	* rr;
+          socialData[species, before] = new Vector2(setting.maxSocialForce * fearForce, setting.maxSocialRange * fearRange_);
+          socialData[species, after] = new Vector2(setting.maxSocialForce * loveForce, setting.maxSocialRange * loveRange_);
 
-				particleSpecies[ pp ] = species;
-				particlePositions[pp] = new Vector3( xx, yy, zz );
-				pp ++;
-			}
-		}
+          for (int p = 0; p < numParticlesPerSpecies; p++) {
+            float ff = (float)p / (float)numParticlesPerSpecies;
+            float rr = 0.3f;
+            float xx = -rr * 0.5f + ff * rr;
+            float yy = -rr * 0.5f + g * rr;
+            float zz = -rr * 0.5f + Random.value * rr;
+
+            particleSpecies[pp] = species;
+            particlePositions[pp] = new Vector3(xx, yy, zz);
+            pp++;
+          }
+        }
 
         ResetPositions(particlePositions, particleVelocities, particleSpecies);
 
-		//default
+        //default
         //ResetPositions();
-		
+
         break;
 
       case EcosystemPreset.BodyMind:
@@ -1371,7 +1369,7 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
-//Alex added this
+        //Alex added this
         for (int i = 0; i < MAX_PARTICLES; i++) {
           float percent = Mathf.InverseLerp(0, MAX_PARTICLES, i);
           float percent2 = percent * 12.123123f + Random.value;
@@ -1435,7 +1433,7 @@ public class TextureSimulator : MonoBehaviour {
         throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
     }
 
-    GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
+    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
 
     for (int i = 0; i < species.Length; i++) {
       species[i] = species[i] % _currentSimulationSpeciesCount;
@@ -1447,7 +1445,7 @@ public class TextureSimulator : MonoBehaviour {
     positions.ApplyOrdering(ordering);
 
     Texture2D tex;
-    tex = new Texture2D(textureDimension, textureDimension, format, mipmap: false, linear: true);
+    tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
@@ -1460,7 +1458,7 @@ public class TextureSimulator : MonoBehaviour {
     blitPos(PASS_COPY);
     DestroyImmediate(tex);
 
-    tex = new Texture2D(textureDimension, textureDimension, format, mipmap: false, linear: true);
+    tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
     _simulationMat.SetTexture("_CopySource", tex);
 
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
@@ -1866,11 +1864,6 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void updateShaderData() {
-    _particleYRange = _particlesToSimulate / textureDimension;
-    _particleXRange = _particleYRange > 0 ? textureDimension : _particlesToSimulate;
-    _simulationMat.SetInt("_XRange", _particleXRange);
-    _simulationMat.SetInt("_YRange", _particleYRange);
-
     _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
     _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _fieldForce);
@@ -1918,8 +1911,8 @@ public class TextureSimulator : MonoBehaviour {
 
     Mesh bakedMesh = null;
     int particlesToMesh = _particlesToSimulate;
-    for(int i=0; i< textureDimension; i++) {
-      for (int j = 0; j < textureDimension; j++) {
+    for (int i = 0; i < _textureDimension; i++) {
+      for (int j = 0; j < _textureDimension; j++) {
         if (bakedVerts.Count + sourceVerts.Length > 60000) {
           bakedMesh.SetVertices(bakedVerts);
           bakedMesh.SetTriangles(bakedTris, 0);
@@ -1944,7 +1937,7 @@ public class TextureSimulator : MonoBehaviour {
         bakedTris.AddRange(sourceTris);
 
         for (int k = 0; k < sourceVerts.Length; k++) {
-          bakedUvs.Add(new Vector2((i + 0.5f) / textureDimension, (j + 0.5f) / textureDimension));
+          bakedUvs.Add(new Vector2((i + 0.5f) / _textureDimension, (j + 0.5f) / _textureDimension));
         }
 
         for (int k = 0; k < sourceTris.Length; k++) {
@@ -1967,8 +1960,138 @@ public class TextureSimulator : MonoBehaviour {
     bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
+  private void createBlitMeshes() {
+    List<Vector3> verts = new List<Vector3>();
+    List<int> tris = new List<int>();
+    List<Vector4> uv0 = new List<Vector4>();
+    List<Vector4> uv1 = new List<Vector4>();
+
+    for (int dxO = 0; dxO < 4; dxO++) {
+      for (int dyO = 0; dyO < 4; dyO++) {
+        for (int dxM = 0; dxM < 4; dxM++) {
+          for (int dyM = 0; dyM < 4; dyM++) {
+            int speciesM = (dxM + dyM * 4);
+            int specoesO = (dxO + dyO * 4);
+
+            int xM = dxM * 16;
+            int yM = dyM * 16;
+            int xO = dxO * 16;
+            int yO = dyO * 16;
+
+            tris.Add(verts.Count + 0);
+            tris.Add(verts.Count + 1);
+            tris.Add(verts.Count + 2);
+
+            tris.Add(verts.Count + 0);
+            tris.Add(verts.Count + 2);
+            tris.Add(verts.Count + 3);
+
+            verts.Add(new Vector3(xM, yM));
+            verts.Add(new Vector3(xM + 16, yM));
+            verts.Add(new Vector3(xM + 16, yM + 16));
+            verts.Add(new Vector3(xM, yM + 16));
+
+            float uvMx0 = xM / 64.0f;
+            float uvMx1 = (xM + 16.0f) / 64.0f;
+
+            float uvMy0 = yM / 64.0f;
+            float uvMy1 = (yM + 16.0f) / 64.0f;
+
+            float uvOx0 = xO / 64.0f;
+            float uvOx1 = (xO + 16.0f) / 64.0f;
+
+            float uvOy0 = yO / 64.0f;
+            float uvOy1 = (yO + 16.0f) / 64.0f;
+
+            uv0.Add(new Vector4(uvMx0, uvMy0, uvOx0, uvOy0));
+            uv0.Add(new Vector4(uvMx1, uvMy0, uvOx1, uvOy0));
+            uv0.Add(new Vector4(uvMx1, uvMy1, uvOx1, uvOy1));
+            uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy1));
+
+            Vector4 socialData;
+
+            //social force
+            socialData.x = 0.003f * (speciesM == specoesO ? 1 : -1);
+
+            //social range
+            socialData.y = 0.5f;
+
+            //collision force
+            socialData.z = 0.002f;
+
+            socialData.w = 0;
+
+            uv1.Add(socialData);
+            uv1.Add(socialData);
+            uv1.Add(socialData);
+            uv1.Add(socialData);
+          }
+        }
+      }
+    }
+
+    if (_blitMeshInteraction == null) {
+      _blitMeshInteraction = new Mesh();
+    }
+    _blitMeshInteraction.Clear();
+    _blitMeshInteraction.SetVertices(verts);
+    _blitMeshInteraction.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshInteraction.SetUVs(0, uv0);
+    _blitMeshInteraction.SetUVs(1, uv1);
+    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: true);
+
+    verts.Clear();
+    tris.Clear();
+    uv0.Clear();
+    uv1.Clear();
+
+    for (int dx = 0; dx < 4; dx++) {
+      for (int dy = 0; dy < 4; dy++) {
+        int species = (dx + dy * 4);
+
+        int x = dx * 16;
+        int y = dy * 16;
+
+        tris.Add(verts.Count + 0);
+        tris.Add(verts.Count + 1);
+        tris.Add(verts.Count + 2);
+
+        tris.Add(verts.Count + 0);
+        tris.Add(verts.Count + 2);
+        tris.Add(verts.Count + 3);
+
+        verts.Add(new Vector3(x, y));
+        verts.Add(new Vector3(x + 16, y));
+        verts.Add(new Vector3(x + 16, y + 16));
+        verts.Add(new Vector3(x, y + 16));
+
+        float socialSteps = 0;
+        float drag = 0.99f;
+
+        float uvx0 = x / 64.0f;
+        float uvy0 = y / 64.0f;
+        float uvx1 = (x + 16.0f) / 64.0f;
+        float uvy1 = (y + 16.0f) / 64.0f;
+
+        uv0.Add(new Vector4(uvx0, uvy0, socialSteps, drag));
+        uv0.Add(new Vector4(uvx1, uvy0, socialSteps, drag));
+        uv0.Add(new Vector4(uvx1, uvy1, socialSteps, drag));
+        uv0.Add(new Vector4(uvx0, uvy1, socialSteps, drag));
+      }
+    }
+
+    if (_blitMeshParticle == null) {
+      _blitMeshParticle = new Mesh();
+    }
+    _blitMeshParticle.Clear();
+    _blitMeshParticle.SetVertices(verts);
+    _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshParticle.SetUVs(0, uv0);
+    _blitMeshParticle.UploadMeshData(markNoLogerReadable: true);
+  }
+
   private RenderTexture createParticleTexture() {
-    RenderTexture tex = new RenderTexture(textureDimension, textureDimension, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    RenderTexture tex = new RenderTexture(_textureDimension, _textureDimension, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
 
@@ -1979,7 +2102,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private RenderTexture createQueueTexture(int steps) {
-    RenderTexture tex = new RenderTexture(textureDimension, textureDimension * steps, 0, _textureFormat, RenderTextureReadWrite.Linear);
+    RenderTexture tex = new RenderTexture(_textureDimension, _textureDimension * steps, 0, _textureFormat, RenderTextureReadWrite.Linear);
     tex.wrapMode = TextureWrapMode.Clamp;
     tex.filterMode = FilterMode.Point;
 
@@ -1996,7 +2119,7 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    GL.LoadPixelMatrix(0, textureDimension, textureDimension, 0);
+    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
     blitVel(PASS_GLOBAL_FORCES);
 
     using (new ProfilerSample("Do Particle Interaction")) {
@@ -2081,7 +2204,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    quad(_particleXRange, _particleYRange);
+    Graphics.DrawMeshNow(_blitMeshParticle, Matrix4x4.identity);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2094,7 +2217,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetPass(pass);
 
-    quad(_particleXRange, textureDimension);
+    quad(_textureDimension, _textureDimension);
 
     _simulationMat.SetTexture(propertyName, front);
 
@@ -2105,14 +2228,13 @@ public class TextureSimulator : MonoBehaviour {
   private void doParticleInteraction() {
     _colorBuffers[0] = _frontVel.colorBuffer;
     _colorBuffers[1] = _socialTemp.colorBuffer;
-    
+
     Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
-    _frontVel.DiscardContents();
-    _socialTemp.DiscardContents();
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
 
     _simulationMat.SetPass(1);
 
-    quad(_particleXRange, _particleYRange);
+    Graphics.DrawMeshNow(_blitMeshInteraction, Matrix4x4.identity);
 
     _simulationMat.SetTexture("_Velocity", _frontVel);
 
@@ -2128,8 +2250,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void quad(int width, int height) {
-    float uvX = width / (float)textureDimension;
-    float uvY = height / (float)textureDimension;
+    float uvX = width / (float)_textureDimension;
+    float uvY = height / (float)_textureDimension;
 
     GL.Begin(GL.QUADS);
 

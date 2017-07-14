@@ -26,13 +26,13 @@
 
   struct v2f_p {
     float4 uv : TEXCOORD0;
-    float4 vertex : SV_POSITION;
+    float4 vertex : SV_Position;
   };
 
   struct v2f_i {
     float4 uv : TEXCOORD0;
     float4 social : TEXCOORD1;
-    float4 vertex : SV_POSITION;
+    float4 vertex : SV_Position;
   };
 
   struct FragmentOutput {
@@ -41,11 +41,11 @@
   };
 
   sampler2D _CopySource;
-  sampler2D _Velocity;
-  sampler2D _Position;
+  sampler2D _ParticleVelocities;
+  sampler2D _ParticlePositions;
 
   sampler2D _SocialTemp;
-  sampler2D _SocialForce;
+  sampler2D _ParticleSocialForces;
 
   float3 _FieldCenter;
   float _FieldRadius;
@@ -121,8 +121,8 @@
   }
 
   float4 integratePositions(v2f_p i) : SV_Target{
-    float4 pos = tex2D(_Position, i.uv);
-    float4 vel = tex2D(_Velocity, i.uv);
+    float4 pos = tex2D(_ParticlePositions, i.uv);
+    float4 vel = tex2D(_ParticleVelocities, i.uv);
     pos.xyz += vel.xyz;
 
     //Dont hit the head pls
@@ -136,8 +136,8 @@
   }
 
   float4 globalForces(v2f_p i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float4 particle = tex2D(_Position, i.uv);
+    float4 velocity = tex2D(_ParticleVelocities, i.uv);
+    float4 particle = tex2D(_ParticlePositions, i.uv);
 
     //Attraction towards the origin
     float3 toFieldCenter = _FieldCenter - particle.xyz;
@@ -180,13 +180,13 @@
   }
 
   float4 dampVelocities(v2f_p i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv.xy);
-    float4 particle = tex2D(_Position, i.uv.xy);
+    float4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
+    float4 particle = tex2D(_ParticlePositions, i.uv.xy);
 
     //Step offset for social forces
     i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
-    float4 socialForce = tex2D(_SocialForce, i.uv.xy);
-    velocity.xyz += socialForce.xyz;
+    float4 socialForce = tex2D(_ParticleSocialForces, i.uv.xy);
+    //velocity.xyz += socialForce.xyz;
 
     //Damping
     velocity.xyz *= lerp(1, i.uv.w, velocity.w);
@@ -195,14 +195,14 @@
   }
 
   FragmentOutput updateCollisionVelocities(v2f_i i) {
-    float4 particle = tex2D(_Position, i.uv.xy);
-    float4 velocity = tex2D(_Velocity, i.uv.xy);
+    float4 particle = tex2D(_ParticlePositions, i.uv.xy);
+    float4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
 
     //We are going to count our own social force, so start with -1
     float4 totalSocialForce = float4(0, 0, 0, -1);
 
-    //float4 neighborA = tex2D(_Position, i.uv - float2(1.0 / MAX_PARTICLES, 0));
-    //float4 neighborB = tex2D(_Position, i.uv + float2(1.0 / MAX_PARTICLES, 0));
+    //float4 neighborA = tex2D(_ParticlePositions, i.uv - float2(1.0 / MAX_PARTICLES, 0));
+    //float4 neighborB = tex2D(_ParticlePositions, i.uv + float2(1.0 / MAX_PARTICLES, 0));
 
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
@@ -210,7 +210,7 @@
     for (int y = 0; y < 16; y++) {
       for (int x = 0; x < 16; x++) {
         float2 otherUv = float2(x / 64.0, y / 64.0) + i.uv.zw;
-        float4 other = tex2D(_Position, otherUv);
+        float4 other = tex2D(_ParticlePositions, otherUv);
 
         float3 toOther = other.xyz - particle.xyz;
         float distance = length(toOther);
@@ -285,7 +285,7 @@
       newForce.xyz /= newForce.w;
     }
 
-    float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
+    float4 shiftedForce = tex2D(_ParticleSocialForces, shiftedUv);
 
     float4 result;
 
@@ -300,8 +300,8 @@
 
   float4 debugOutput(v2f_p i) : SV_Target {
     float4 values = _DebugData;
-    float4 particle = tex2D(_Position, _DebugData.xx);
-    float4 particle2 = tex2D(_Position, _DebugData.yy);
+    float4 particle = tex2D(_ParticlePositions, _DebugData.xx);
+    float4 particle2 = tex2D(_ParticlePositions, _DebugData.yy);
 
     //if (_DebugMode == 10) {
     //  values = particle;

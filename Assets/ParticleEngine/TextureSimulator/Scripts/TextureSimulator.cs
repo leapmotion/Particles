@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Leap;
 using Leap.Unity;
 using Leap.Unity.Query;
@@ -23,6 +24,10 @@ public class TextureSimulator : MonoBehaviour {
 
   public const string TAIL_FISH_KEYWORD = "FISH_TAIL";
   public const string TAIL_SQUASH_KEYWORD = "SQUASH_TAIL";
+
+  public const string VELOCITY_GLOBAL = "_ParticleVelocities";
+  public const string POSITION_GLOBAL = "_ParticlePositions";
+  public const string SOCIAL_FORCE_GLOBAL = "_ParticleSocialForces";
 
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
@@ -744,14 +749,19 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
+  private CommandBuffer _simulationCommandsA;
+  private CommandBuffer _simulationCommandsB;
+  private bool _useBufferA = true;
+
   private int _textureDimension;
 
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
-  private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
-  private RenderTexture _frontSocialQueue, _backSocialQueue;
+  private RenderTexture _positionSrc, _velocitySrc, _positionDst, _velocityDst;
+  private RenderTexture _socialQueueSrc, _socialQueueDst;
   private RenderTexture _socialTemp;
 
+  private Mesh _blitMeshQuad;
   private Mesh _blitMeshInteraction;
   private Mesh _blitMeshParticle;
 
@@ -903,19 +913,19 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   void Start() {
-    _frontPos = createParticleTexture();
-    _frontVel = createParticleTexture();
-    _backPos = createParticleTexture();
-    _backVel = createParticleTexture();
+    _positionSrc = createParticleTexture();
+    _velocitySrc = createParticleTexture();
+    _positionDst = createParticleTexture();
+    _velocityDst = createParticleTexture();
     _socialTemp = createParticleTexture();
 
-    _frontSocialQueue = createQueueTexture(MAX_FORCE_STEPS);
-    _backSocialQueue = createQueueTexture(MAX_FORCE_STEPS);
+    _socialQueueSrc = createQueueTexture(MAX_FORCE_STEPS);
+    _socialQueueDst = createQueueTexture(MAX_FORCE_STEPS);
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
-    _simulationMat.SetTexture("_Position", _frontPos);
-    _simulationMat.SetTexture("_Velocity", _frontVel);
-    _simulationMat.SetTexture("_SocialForce", _frontSocialQueue);
+    _simulationMat.SetTexture("_Position", _positionSrc);
+    _simulationMat.SetTexture("_Velocity", _velocitySrc);
+    _simulationMat.SetTexture("_SocialForce", _socialQueueSrc);
 
     createBlitMeshes();
 
@@ -1446,8 +1456,6 @@ public class TextureSimulator : MonoBehaviour {
 
     Texture2D tex;
     tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
-    _simulationMat.SetTexture("_CopySource", tex);
-
     tex.SetPixels(positions.Query().Zip(species.Query(), (p, s) => {
       Color c = (Vector4)p;
       c.a = s;
@@ -1455,22 +1463,22 @@ public class TextureSimulator : MonoBehaviour {
     }).ToArray());
     tex.Apply();
 
-    blitPos(PASS_COPY);
+    blitCopy(tex, _positionSrc);
     DestroyImmediate(tex);
 
     tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
-    _simulationMat.SetTexture("_CopySource", tex);
-
     tex.SetPixels(velocities.Query().Select(p => (Color)(Vector4)p).ToArray());
     tex.Apply();
 
-    blitVel(PASS_COPY);
+    blitCopy(tex, _velocitySrc);
     DestroyImmediate(tex);
 
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
     _currScaledTime = 0;
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
+
+    _useBufferA = true;
   }
 
   private void setPlanetValues(int i, int j, float f, float r) {
@@ -1486,8 +1494,6 @@ public class TextureSimulator : MonoBehaviour {
   */
 
   }
-
-
 
   public void LoadRandomEcosystem() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
@@ -2029,6 +2035,7 @@ public class TextureSimulator : MonoBehaviour {
 
     if (_blitMeshInteraction == null) {
       _blitMeshInteraction = new Mesh();
+      _blitMeshInteraction.name = "BlitMesh Interaction";
     }
     _blitMeshInteraction.Clear();
     _blitMeshInteraction.SetVertices(verts);
@@ -2077,12 +2084,46 @@ public class TextureSimulator : MonoBehaviour {
 
     if (_blitMeshParticle == null) {
       _blitMeshParticle = new Mesh();
+      _blitMeshParticle.name = "BlitMesh Particle";
     }
     _blitMeshParticle.Clear();
     _blitMeshParticle.SetVertices(verts);
     _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
     _blitMeshParticle.SetUVs(0, uv0);
     _blitMeshParticle.UploadMeshData(markNoLogerReadable: true);
+
+    verts.Clear();
+    tris.Clear();
+    uv0.Clear();
+    uv1.Clear();
+
+    tris.Add(0);
+    tris.Add(1);
+    tris.Add(2);
+
+    tris.Add(0);
+    tris.Add(2);
+    tris.Add(3);
+
+    verts.Add(new Vector3(0, 0, 0));
+    verts.Add(new Vector3(1, 0, 0));
+    verts.Add(new Vector3(1, 1, 0));
+    verts.Add(new Vector3(0, 1, 0));
+
+    uv0.Add(new Vector4(0, 0, 0, 0));
+    uv0.Add(new Vector4(1, 0, 0, 0));
+    uv0.Add(new Vector4(1, 1, 0, 0));
+    uv0.Add(new Vector4(0, 1, 0, 0));
+
+    if (_blitMeshQuad == null) {
+      _blitMeshQuad = new Mesh();
+      _blitMeshQuad.name = "BitMesh Quad";
+    }
+    _blitMeshQuad.Clear();
+    _blitMeshQuad.SetVertices(verts);
+    _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshQuad.SetUVs(0, uv0);
+    _blitMeshQuad.UploadMeshData(markNoLogerReadable: true);
   }
 
   private RenderTexture createParticleTexture() {
@@ -2114,27 +2155,12 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
-    blitVel(PASS_GLOBAL_FORCES);
-
-    using (new ProfilerSample("Do Particle Interaction")) {
-      doParticleInteraction();
+    if (_useBufferA) {
+      Graphics.ExecuteCommandBuffer(_simulationCommandsA);
+    } else {
+      Graphics.ExecuteCommandBuffer(_simulationCommandsB);
     }
-
-    blitQueue("_SocialForce", ref _frontSocialQueue, ref _backSocialQueue, PASS_STEP_SOCIAL_QUEUE, MAX_FORCE_STEPS);
-
-    blitVel(PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
-    blitPos(PASS_INTEGRATE_VELOCITIES);
-
-    _displayBlock.SetTexture("_CurrPos", _frontPos);
-    _displayBlock.SetTexture("_PrevPos", _backPos);
-
-    _displayBlock.SetTexture("_CurrVel", _frontVel);
-    _displayBlock.SetTexture("_PrevVel", _backVel);
-
-    _positionDebug.material.mainTexture = _frontPos;
-    _velocityDebug.material.mainTexture = _frontVel;
-    _socialDebug.material.mainTexture = _backSocialQueue;
+    _useBufferA = !_useBufferA;
   }
 
   private void updateKeywords() {
@@ -2193,76 +2219,102 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void blitParticles(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass) {
-    RenderTexture.active = front;
-    front.DiscardContents();
-
-    _simulationMat.SetPass(pass);
-
-    Graphics.DrawMeshNow(_blitMeshParticle, Matrix4x4.identity);
-
-    _simulationMat.SetTexture(propertyName, front);
-
-    Utils.Swap(ref front, ref back);
-  }
-
-  private void blitQueue(string propertyName, ref RenderTexture front, ref RenderTexture back, int pass, int steps) {
-    RenderTexture.active = front;
-    front.DiscardContents();
-
-    _simulationMat.SetPass(pass);
-
-    quad(_textureDimension, _textureDimension);
-
-    _simulationMat.SetTexture(propertyName, front);
-
-    Utils.Swap(ref front, ref back);
-  }
-
-  private RenderBuffer[] _colorBuffers = new RenderBuffer[2];
-  private void doParticleInteraction() {
-    _colorBuffers[0] = _frontVel.colorBuffer;
-    _colorBuffers[1] = _socialTemp.colorBuffer;
-
-    Graphics.SetRenderTarget(_colorBuffers, _frontVel.depthBuffer);
+  private void blitCopy(Texture src, RenderTexture dst) {
+    RenderTexture.active = dst;
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
 
-    _simulationMat.SetPass(1);
-
-    Graphics.DrawMeshNow(_blitMeshInteraction, Matrix4x4.identity);
-
-    _simulationMat.SetTexture("_Velocity", _frontVel);
-
-    Utils.Swap(ref _frontVel, ref _backVel);
-  }
-
-  private void blitVel(int pass) {
-    blitParticles("_Velocity", ref _frontVel, ref _backVel, pass);
-  }
-
-  private void blitPos(int pass) {
-    blitParticles("_Position", ref _frontPos, ref _backPos, pass);
-  }
-
-  private void quad(int width, int height) {
-    float uvX = width / (float)_textureDimension;
-    float uvY = height / (float)_textureDimension;
+    _simulationMat.SetTexture("_CopySource", src);
+    _simulationMat.SetPass(PASS_COPY);
 
     GL.Begin(GL.QUADS);
 
-    GL.TexCoord2(0, uvY);
+    GL.TexCoord2(0, 0);
     GL.Vertex3(0, 0, 0);
 
-    GL.TexCoord2(uvX, uvY);
-    GL.Vertex3(width, 0, 0);
+    GL.TexCoord2(1, 0);
+    GL.Vertex3(1, 0, 0);
 
-    GL.TexCoord2(uvX, 0);
-    GL.Vertex3(width, height, 0);
+    GL.TexCoord2(1, 1);
+    GL.Vertex3(1, 1, 0);
 
-    GL.TexCoord2(0, 0);
-    GL.Vertex3(0, height, 0);
+    GL.TexCoord2(0, 1);
+    GL.Vertex3(0, 1, 0);
 
     GL.End();
+
+    RenderTexture.active = null;
+  }
+
+  private void buildSimulationCommands() {
+    _simulationCommandsA = new CommandBuffer();
+    _simulationCommandsA.name = "Particle Simulation A";
+    _simulationCommandsB = new CommandBuffer();
+    _simulationCommandsB.name = "Particle Simulation B";
+
+    buildSimulationCommands(_simulationCommandsA);
+    buildSimulationCommands(_simulationCommandsB);
+  }
+
+  private void buildSimulationCommands(CommandBuffer buffer) {
+    _simulationCommandsA.SetViewMatrix(Matrix4x4.identity);
+    _simulationCommandsA.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, _textureDimension, 0, -1, 1));
+
+    blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_GLOBAL_FORCES);
+    
+    particleCommands(buffer);
+
+    blitCommands(buffer, _blitMeshQuad, SOCIAL_FORCE_GLOBAL, ref _socialQueueSrc, ref _socialQueueDst, PASS_STEP_SOCIAL_QUEUE);
+
+    blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+
+    blitCommands(buffer, _blitMeshParticle, POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
+
+    _displayBlock.SetTexture("_CurrPos", _positionSrc);
+    _displayBlock.SetTexture("_PrevPos", _positionDst);
+
+    _displayBlock.SetTexture("_CurrVel", _velocitySrc);
+    _displayBlock.SetTexture("_PrevVel", _velocityDst);
+
+    _positionDebug.material.mainTexture = _positionSrc;
+    _velocityDebug.material.mainTexture = _velocitySrc;
+    _socialDebug.material.mainTexture = _socialQueueDst;
+  }
+
+  private void blitCommands(CommandBuffer buffer, Mesh mesh, string propertyName, ref RenderTexture src, ref RenderTexture dst, int pass) {
+    //Blit onto the destination texture
+    buffer.SetRenderTarget(dst);
+
+    //Clear it before we do (would like to discard but we don't have that)
+    buffer.ClearRenderTarget(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
+
+    //Draw the mesh onto the destination
+    buffer.DrawMesh(mesh, Matrix4x4.identity, _simulationMat, 0, pass);
+
+    //Set up the destination texture as the new source
+    buffer.SetGlobalTexture(propertyName, dst);
+
+    //Swap the textures to that the next time we come around it goes the opposite way
+    Utils.Swap(ref src, ref dst);
+  }
+  
+  private void particleCommands(CommandBuffer buffer) {
+    RenderTargetIdentifier[] _colorBuffers = new RenderTargetIdentifier[2];
+    _colorBuffers[0] = _velocityDst;
+    _colorBuffers[1] = _socialTemp;
+
+    //Blit onto both the velocity texture as well as the social force temp texture
+    buffer.SetRenderTarget(_colorBuffers, _velocitySrc);
+
+    //Clear both of them to 0,0,0,0
+    buffer.ClearRenderTarget(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
+
+    //Draw the special interaction mesh
+    buffer.DrawMesh(_blitMeshInteraction, Matrix4x4.identity, _simulationMat, 0, PASS_UPDATE_COLLISIONS);
+
+    //Set the new velocity texture as the new global
+    buffer.SetGlobalTexture(VELOCITY_GLOBAL, _velocityDst);
+
+    Utils.Swap(ref _velocitySrc, ref _velocityDst);
   }
   #endregion
 

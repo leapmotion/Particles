@@ -40,12 +40,12 @@
     float4 dest1 : SV_Target1;
   };
 
-  sampler2D _CopySource;
-  sampler2D _ParticleVelocities;
-  sampler2D _ParticlePositions;
+  sampler2D_float _CopySource;
+  sampler2D_float _ParticleVelocities;
+  sampler2D_float _ParticlePositions;
 
-  sampler2D _SocialTemp;
-  sampler2D _ParticleSocialForces;
+  sampler2D_float _SocialTemp;
+  sampler2D_float _ParticleSocialForces;
 
   float3 _FieldCenter;
   float _FieldRadius;

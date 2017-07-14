@@ -12,12 +12,10 @@ public class SimulatorToggleFastForward : SimulatorToggleControl {
   }
 
   protected override void onToggle() {
-    Debug.Log("toggled");
     simulator.simulationTimescale = 2F;
   }
 
   protected override void onUntoggle() {
-    Debug.Log("untoggled");
     simulator.simulationTimescale = 1F;
   }
 

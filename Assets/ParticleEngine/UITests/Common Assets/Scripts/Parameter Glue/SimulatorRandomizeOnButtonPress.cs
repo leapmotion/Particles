@@ -6,7 +6,7 @@ using UnityEngine;
 public class SimulatorRandomizeOnButtonPress : SimulatorButtonControl {
 
   public override void onPress() {
-    simulator.LoadRandomEcosystem();
+    simulator.LoadRandomEcosystem(dontResetPositions: true);
   }
 
 }

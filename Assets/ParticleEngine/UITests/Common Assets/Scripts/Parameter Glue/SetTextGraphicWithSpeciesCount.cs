@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class SetTextGraphicWithSpeciesCount : SimulatorTextGraphicSetter {
+public class SetTextGraphicWithSpeciesCount : SetTextGraphicWithSimulatorParam {
 
   public override string GetTextValue() {
-    if (particleSimulator == null) return "(Simulation not configured)";
+    if (simulator == null) return "(Simulation not configured)";
 
-    return particleSimulator.randomEcosystemSettings.speciesCount.ToString();
+    return simulator.currentSpeciesCount.ToString();
   }
 }

@@ -3,11 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SetTextGraphicWithSimulationAge : SimulatorTextGraphicSetter {
+public class SetTextGraphicWithSimulationAge : SetTextGraphicWithSimulatorParam {
 
   public override string GetTextValue() {
-    if (particleSimulator == null) return "0";
+    if (simulator == null) return "0";
 
-    return particleSimulator.simulationAge.ToString();
+    return simulator.simulationAge.ToString();
   }
 }

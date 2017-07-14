@@ -29,6 +29,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1112514907497746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4337587901205388}
+  - component: {fileID: 23218693862876278}
+  - component: {fileID: 102232639595873002}
+  m_Layer: 0
+  m_Name: New Text
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1154439154191448
 GameObject:
   m_ObjectHideFlags: 0
@@ -40,6 +57,7 @@ GameObject:
   - component: {fileID: 114594159204049402}
   - component: {fileID: 114069400482657242}
   - component: {fileID: 114361248690771106}
+  - component: {fileID: 114842889177650588}
   m_Layer: 0
   m_Name: Simulator
   m_TagString: Untagged
@@ -147,7 +165,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4025635996925150
 Transform:
   m_ObjectHideFlags: 1
@@ -186,6 +204,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4834533695693418}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4337587901205388
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1112514907497746}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4437175986409996}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4356748230355002
 Transform:
@@ -226,6 +257,7 @@ Transform:
   - {fileID: 4834533695693418}
   - {fileID: 4415270058185890}
   - {fileID: 4870151900081912}
+  - {fileID: 4337587901205388}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -236,7 +268,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1293918469229686}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.569, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4025635996925150}
@@ -259,6 +291,38 @@ Transform:
   m_Father: {fileID: 4437175986409996}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!23 &23218693862876278
+MeshRenderer:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1112514907497746}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 10100, guid: 0000000000000000e000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!23 &23341970254567932
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -272,7 +336,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 6dafa457719c5694d9a26518cfedb916, type: 2}
+  - {fileID: 2100000, guid: 7dce39dfccc1ccf40a5f7b7cc67d053a, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -490,6 +554,27 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!102 &102232639595873002
+TextMesh:
+  serializedVersion: 3
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1112514907497746}
+  m_Text: Hello World
+  m_OffsetZ: 0
+  m_CharacterSize: 0.08
+  m_LineSpacing: 1
+  m_Anchor: 4
+  m_Alignment: 0
+  m_TabSize: 4
+  m_FontSize: 47
+  m_FontStyle: 0
+  m_RichText: 1
+  m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+  m_Color:
+    serializedVersion: 2
+    rgba: 4294967295
 --- !u!114 &114069400482657242
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -527,7 +612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _provider: {fileID: 0}
-  _handCollisionEnabled: 1
+  _handCollisionEnabled: 0
   _disableCollisionWhenGrasping: 1
   _handCollisionRadius: {x: 0.03, y: 0.06}
   _handCollisionThickness: 0.01
@@ -686,23 +771,24 @@ MonoBehaviour:
   _socialHandSpecies: 0
   _socialHandForceFactor: 25
   _fieldCenter: {fileID: 4870151900081912}
-  _fieldRadius: 1.01
+  _fieldRadius: 0
   _fieldForce: 0.0005
   _headRadius: 0.15
   _simulationEnabled: 1
-  _dynamicTimestepEnabled: 1
-  _limitStepsPerFrame: 1
+  _dynamicTimestepEnabled: 0
+  _limitStepsPerFrame: 0
   _simulationFPS: 60
   _simulationTimescale: 1
   _particlesToSimulate: 4096
-  _textureFormat: 11
+  _textureFormat: 2
   _simulationMat: {fileID: 2100000, guid: 79a2ae3dd54bd23409103aa710397f82, type: 2}
   _resetParticlePositionsKey: 112
+  _displayParticles: 1
   _particleMesh: {fileID: 4300000, guid: 4146ef317cfe10d4fa7b85d3f5fb513b, type: 2}
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 0
   _trailMode: 0
-  _spawnRadius: 2
+  _spawnRadius: 0.4
   _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114
   _randomizeEcosystemKey: 32
@@ -737,3 +823,16 @@ MonoBehaviour:
   _shaderDebugMode: -1
   _shaderDebugData0: 0
   _shaderDebugData1: 0
+--- !u!114 &114842889177650588
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1154439154191448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b90f5105083649499a1b3ad43caac31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sim: {fileID: 114594159204049402}
+  texMesh: {fileID: 102232639595873002}

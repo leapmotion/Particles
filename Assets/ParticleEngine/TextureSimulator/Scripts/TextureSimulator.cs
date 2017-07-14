@@ -2026,13 +2026,13 @@ public class TextureSimulator : MonoBehaviour {
             Vector4 socialData;
 
             //social force
-            socialData.x = 0.003f * (speciesM == specoesO ? 1 : -1);
+            socialData.x = 3f * (speciesM == specoesO ? 1 : -1);
 
             //social range
             socialData.y = speciesM == specoesO ? 0.5f : 0.2f;
 
             //collision force
-            socialData.z = 0.002f;
+            socialData.z = 0.2f;
 
             socialData.w = 0;
 

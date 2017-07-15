@@ -160,7 +160,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _presetEcosystemSettings._ecosystemPreset
-      value: 0
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
@@ -304,7 +304,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.25, g: 0.25, b: 0.25, a: 0}
+  m_BackGroundColor: {r: 0.2205882, g: 0.2205882, b: 0.2205882, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -338,7 +338,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2061595906}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

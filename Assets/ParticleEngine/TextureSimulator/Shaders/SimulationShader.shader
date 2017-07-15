@@ -1,5 +1,5 @@
 ﻿Shader "Unlit/Simulation" {
-  Properties {
+  Properties{
   }
 
   CGINCLUDE
@@ -12,6 +12,8 @@
   #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
+
+  #define tex2Dlod0(s, c) tex2Dlod(s, half4(c, 0, 0))
 
   struct appdata_p {
     float4 vertex : POSITION;
@@ -125,8 +127,8 @@
   }
 
   half4 integratePositions(v2f_p i) : SV_Target{
-    half4 pos = tex2D(_ParticlePositions, i.uv);
-    half4 vel = tex2D(_ParticleVelocities, i.uv);
+    half4 pos = tex2Dlod0(_ParticlePositions, i.uv.xy);
+    half4 vel = tex2Dlod0(_ParticleVelocities, i.uv.xy);
     pos.xyz += vel.xyz * 0.01;
 
     //Dont hit the head pls
@@ -140,8 +142,8 @@
   }
 
   half4 globalForces(v2f_p i) : SV_Target{
-    half4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
-    half4 particle = tex2D(_ParticlePositions, i.uv.xy);
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy);
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
 
     //Attraction towards the origin
     half3 toFieldCenter = _FieldCenter - particle.xyz;
@@ -184,12 +186,12 @@
   }
 
   half4 dampVelocities(v2f_p i) : SV_Target{
-    half4 velocity = tex2D(_ParticleVelocities, i.uv.xy);
-    half4 particle = tex2D(_ParticlePositions, i.uv.xy);
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy);
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
 
     //Step offset for social forces
     i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
-    half4 socialForce = tex2D(_ParticleSocialForces, i.uv.xy);
+    half4 socialForce = tex2Dlod0(_ParticleSocialForces, i.uv.xy);
     velocity.xyz += socialForce.xyz * 0.1;
 
     //Damping
@@ -199,27 +201,27 @@
   }
 
   FragmentOutput updateCollisionVelocities(v2f_i i) {
-    half4 particle = tex2D(_ParticlePositions, i.uv.xy);
-    half4 velocity = tex2D(_ParticleVelocities, i.uv.xy) / 16.0;
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy) / 16.0;
 
     half4 totalSocialForce = half4(0, 0, 0, -1.0 / 16.0);
 
-    //half4 neighborA = tex2D(_ParticlePositions, i.uv - half2(1.0 / MAX_PARTICLES, 0));
-    //half4 neighborB = tex2D(_ParticlePositions, i.uv + half2(1.0 / MAX_PARTICLES, 0));
+    //half4 neighborA = tex2Dlod0(_ParticlePositions, i.uv - half2(1.0 / MAX_PARTICLES, 0));
+    //half4 neighborB = tex2Dlod0(_ParticlePositions, i.uv + half2(1.0 / MAX_PARTICLES, 0));
 
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
 #ifdef ENABLE_STOCHASTIC_SAMPLING
     {
-      for(uint i=0; i<_StochasticCount; i++){
-        half2 otherUv = tex2D(half2(i / 64.0, _StochasticOffset)) + i.uv.zw;
+      for(int j=0; j<_StochasticCount; j++){
+        half2 otherUv = tex2Dlod0(_StochasticCoordinates, half2(j / 256.0, _StochasticOffset)) + i.uv.zw;
 #else
     for (int y = 0; y < 16; y++) {
       for (int x = 0; x < 16; x++) {
         half2 otherUv = half2(x / 64.0, y / 64.0) + i.uv.zw;
 #endif
-        half4 other = tex2D(_ParticlePositions, otherUv);
+        half4 other = tex2Dlod0(_ParticlePositions, otherUv);
 
         half3 toOther = other.xyz - particle.xyz;
         half distance = length(toOther);
@@ -289,12 +291,12 @@
   half4 stepSocialQueue(v2f_p i) : SV_Target{
     half2 shiftedUv = i.uv.xy - half2(0, 1.0 / MAX_FORCE_STEPS);
 
-    half4 newForce = tex2D(_SocialTemp, i.uv.xy * half2(1, MAX_FORCE_STEPS));
+    half4 newForce = tex2Dlod0(_SocialTemp, i.uv.xy * half2(1, MAX_FORCE_STEPS));
     if (newForce.w > 0.5) {
       newForce.xyz /= newForce.w;
     }
 
-    half4 shiftedForce = tex2D(_ParticleSocialForces, shiftedUv);
+    half4 shiftedForce = tex2Dlod0(_ParticleSocialForces, shiftedUv);
 
     half4 result;
 
@@ -309,8 +311,8 @@
 
   float4 debugOutput(v2f_p i) : SV_Target {
     float4 values = _DebugData;
-    float4 particle = tex2D(_ParticlePositions, _DebugData.xx);
-    float4 particle2 = tex2D(_ParticlePositions, _DebugData.yy);
+    float4 particle = tex2Dlod0(_ParticlePositions, _DebugData.xx);
+    float4 particle2 = tex2Dlod0(_ParticlePositions, _DebugData.yy);
 
     //if (_DebugMode == 10) {
     //  values = particle;
@@ -332,7 +334,7 @@
   }
 
   half4 copy(v2f_p i) : SV_Target{
-    return tex2D(_CopySource, i.uv);
+    return tex2Dlod0(_CopySource, i.uv.xy);
   }
   ENDCG
 
@@ -356,6 +358,7 @@
     Pass {
       Blend One One
       CGPROGRAM
+      #pragma multi_compile _ ENABLE_STOCHASTIC_SAMPLING
       #pragma vertex vert_i
       #pragma fragment updateCollisionVelocities
       ENDCG

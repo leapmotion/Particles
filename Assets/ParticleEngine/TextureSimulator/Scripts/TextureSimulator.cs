@@ -1933,6 +1933,9 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
     _simulationMat.SetInt("_ParticleCount", _particlesToSimulate);
     _displayBlock.SetFloat("_ParticleCount", _particlesToSimulate / (float)MAX_PARTICLES);
+
+    _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
+    _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
   }
 
   private void handleUserInput() {
@@ -2204,7 +2207,7 @@ public class TextureSimulator : MonoBehaviour {
 
       doHandInfluenceStateUpdate(framePercent);
     }
-
+    
     if (_useBufferA) {
       Graphics.ExecuteCommandBuffer(_simulationCommandsA);
     } else {
@@ -2275,7 +2278,7 @@ public class TextureSimulator : MonoBehaviour {
         List<Color> block = new List<Color>();
         for (int dx = 0; dx < 16; dx++) {
           for (int dy = 0; dy < 16; dy++) {
-            block.Add(new Color(dx / 16.0f, dy / 16.0f, 0, 0));
+            block.Add(new Color(dx / 64.0f, dy / 64.0f, 0, 0));
           }
         }
         block.Shuffle();

@@ -787,9 +787,8 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   //Simulation
-  private CommandBuffer _simulationCommandsA;
-  private CommandBuffer _simulationCommandsB;
-  private bool _useBufferA = true;
+  private List<CommandBuffer> _simulationCommands = new List<CommandBuffer>();
+  private int _commandIndex = 0;
 
   private int _textureDimension;
 
@@ -1528,7 +1527,7 @@ public class TextureSimulator : MonoBehaviour {
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
 
-    _useBufferA = true;
+    _commandIndex = 0;
   }
 
   private void setPlanetValues(int i, int j, float f, float r) {
@@ -2207,13 +2206,9 @@ public class TextureSimulator : MonoBehaviour {
 
       doHandInfluenceStateUpdate(framePercent);
     }
-    
-    if (_useBufferA) {
-      Graphics.ExecuteCommandBuffer(_simulationCommandsA);
-    } else {
-      Graphics.ExecuteCommandBuffer(_simulationCommandsB);
-    }
-    _useBufferA = !_useBufferA;
+
+    Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
+    _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
   }
 
   private void updateKeywords() {
@@ -2329,16 +2324,31 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void buildSimulationCommands() {
-    _simulationCommandsA = new CommandBuffer();
-    _simulationCommandsA.name = "Particle Simulation A";
-    _simulationCommandsB = new CommandBuffer();
-    _simulationCommandsB.name = "Particle Simulation B";
+    RenderTexture startPos = _positionSrc;
+    RenderTexture startVel = _velocitySrc;
+    RenderTexture startSoc = _socialQueueSrc;
 
-    buildSimulationCommands(_simulationCommandsA);
-    buildSimulationCommands(_simulationCommandsB);
+    //We are going to keep building new command buffers
+    //until the state of the textures equals the original
+    //state.  If there is no fancy conditional logic involved 
+    //then this will always wind up being 2 buffers.
+
+    int bufferIndex = 0;
+    do {
+      CommandBuffer buffer = new CommandBuffer();
+      buffer.name = "Particle Simulation " + bufferIndex;
+      bufferIndex++;
+      _simulationCommands.Add(buffer);
+
+      buildSimulationCommands(bufferIndex, buffer);
+    } while (_positionSrc != startPos ||
+            _velocitySrc != startVel ||
+            _socialQueueSrc != startSoc);
+
+    Debug.Log("Built " + bufferIndex + " Simulation Command Buffers");
   }
 
-  private void buildSimulationCommands(CommandBuffer buffer) {
+  private void buildSimulationCommands(int bufferIndex, CommandBuffer buffer) {
     buffer.SetViewMatrix(Matrix4x4.identity);
     buffer.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, 0, _textureDimension, -1, 1));
 

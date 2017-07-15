@@ -21,7 +21,7 @@ public class RadioToggleGroup : MonoBehaviour {
         var otherToggle = toggles[j];
         toggle.OnToggle += () => {
           otherToggle.controlEnabled = true;
-          otherToggle.toggled = false;
+          otherToggle.isToggled = false;
         };
       }
     }

@@ -883,6 +883,10 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public int currentSpeciesCount {
+    get { return _currentSimulationSpeciesCount; }
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -905,7 +909,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetTexture("_SocialForce", _frontSocial);
 
     RecalculateMeshesForParticles();
-    
+
     LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
@@ -1270,6 +1274,9 @@ public class TextureSimulator : MonoBehaviour {
 
 		particlePositions[0] = new Vector3( -0.2f, 0.0f, 0.0f );
 		particlePositions[1] = new Vector3(  0.2f, 0.0f, 0.0f );
+		
+		//float selfLove   	=  0.3f;
+		//float selfRange  	=  0.3f;
 
 		particleVelocities[0] = Vector3.zero;
 		particleVelocities[1] = Vector3.zero;
@@ -1324,6 +1331,7 @@ public class TextureSimulator : MonoBehaviour {
 
 		ResetPositions( particlePositions, particleVelocities, particleSpecies );
 	}
+
 
 	//----------------------------------------------------------------
 	// This is a controlled test scenario which is the same as
@@ -1816,7 +1824,7 @@ public class TextureSimulator : MonoBehaviour {
       return c;
     }).ToArray());
     tex.Apply();
-    
+
     blitPos(PASS_COPY);
     DestroyImmediate(tex);
 
@@ -1851,7 +1859,7 @@ public class TextureSimulator : MonoBehaviour {
 
 
 
-  public void LoadRandomEcosystem() {
+  public void LoadRandomEcosystem(bool dontResetPositions = false) {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
 
     var gen = GetComponent<NameGenerator>();
@@ -1864,12 +1872,10 @@ public class TextureSimulator : MonoBehaviour {
     _currentSpecies = name;
     Debug.Log(name);
 
-    LoadRandomEcosystem(name);
-
-    ResetPositions();
+    LoadRandomEcosystem(name, dontResetPositions);
   }
 
-  public void LoadRandomEcosystem(string seed) {
+  public void LoadRandomEcosystem(string seed, bool dontResetPositions = false) {
     var setting = _randomEcosystemSettings;
     _currentSpawnPreset = setting.spawnMode;
 
@@ -1910,7 +1916,9 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVectorArray("_SpeciesData", speciesData);
     _simulationMat.SetVectorArray("_SocialData", _socialData);
 
-    ResetPositions();
+    if (!dontResetPositions) {
+      ResetPositions();
+    }
   }
 
   public void RandomizeEcosystemColors() {

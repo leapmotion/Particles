@@ -33,17 +33,10 @@ namespace Leap.Unity {
     /// <summary>
     /// Utility extension to swap the elements at index a and index b.
     /// </summary>
-    public static void Swap<T>(this List<T> list, int a, int b) {
+    public static void Swap<T>(this IList<T> list, int a, int b) {
       T temp = list[a];
       list[a] = list[b];
       list[b] = temp;
-    }
-
-    /// <summary>
-    /// Utility extension to swap the elements at index a and index b.
-    /// </summary>
-    public static void Swap<T>(this T[] array, int a, int b) {
-      Swap(ref array[a], ref array[b]);
     }
 
     /// <summary>
@@ -56,6 +49,15 @@ namespace Leap.Unity {
       int j = array.Length;
       while (i < mid) {
         array.Swap(i++, --j);
+      }
+    }
+
+    /// <summary>
+    /// Shuffle the given list into a different permutation.
+    /// </summary>
+    public static void Shuffle<T>(this IList<T> list) {
+      for (int i = 0; i < list.Count; i++) {
+        Utils.Swap(list, i, UnityEngine.Random.Range(0, list.Count));
       }
     }
 

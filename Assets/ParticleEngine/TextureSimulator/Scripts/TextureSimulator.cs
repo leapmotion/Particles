@@ -22,6 +22,9 @@ public class TextureSimulator : MonoBehaviour {
   public const string INFLUENCE_STASIS_KEYWORD = "SPHERE_MODE_STASIS";
   public const string INFLUENCE_FORCE_KEYWORD = "SPHERE_MODE_FORCE";
 
+  public const string STOCHASTIC_KEYWORD = "ENABLE_STOCHASTIC_SAMPLING";
+  public const string STOCHASTIC_PROPERTY = "_StochasticCoordinates";
+
   public const string TAIL_FISH_KEYWORD = "FISH_TAIL";
   public const string TAIL_SQUASH_KEYWORD = "SQUASH_TAIL";
 
@@ -450,6 +453,41 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private KeyCode _resetParticlePositionsKey = KeyCode.P;
+
+  //################################//
+  ///      Stochastic Sampling      //
+  //################################//
+  [Header("Stochastic Sampling")]
+  [OnEditorChange("stochasticSamplingEnabled")]
+  [SerializeField]
+  private bool _stochasticSamplingEnabled = false;
+  public bool stochasticSamplingEnabled {
+    get { return _stochasticSamplingEnabled; }
+    set {
+      _stochasticSamplingEnabled = value;
+      updateKeywords();
+    }
+  }
+
+  [Range(0, 1)]
+  [SerializeField]
+  private float _stochasticPercent = 0.5f;
+  public float stochasticPercent {
+    get { return _stochasticPercent; }
+    set { _stochasticPercent = value; }
+  }
+
+  [Range(1, 1024)]
+  [OnEditorChange("stochasticCycleCount")]
+  [SerializeField]
+  private int _stochasticCycleCount = 128;
+  public int stochasticCycleCount {
+    get { return _stochasticCycleCount; }
+    set {
+      _stochasticCycleCount = value;
+      updateKeywords();
+    }
+  }
 
   //####################//
   ///      Display      //
@@ -921,7 +959,7 @@ public class TextureSimulator : MonoBehaviour {
 
     _velocitySrc = createParticleTexture();
     _velocitySrc.name = "Velocity A";
-    
+
     _velocityDst = createParticleTexture();
     _velocityDst.name = "Velocity B";
 
@@ -2223,6 +2261,34 @@ public class TextureSimulator : MonoBehaviour {
         _particleMat.EnableKeyword(TAIL_SQUASH_KEYWORD);
         break;
     }
+
+    if (_stochasticSamplingEnabled) {
+      _simulationMat.EnableKeyword(STOCHASTIC_KEYWORD);
+
+      Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
+      coordinates.filterMode = FilterMode.Point;
+      coordinates.wrapMode = TextureWrapMode.Clamp;
+
+      List<Color> colors = new List<Color>();
+      for (int i = 0; i < _stochasticCycleCount; i++) {
+
+        List<Color> block = new List<Color>();
+        for (int dx = 0; dx < 16; dx++) {
+          for (int dy = 0; dy < 16; dy++) {
+            block.Add(new Color(dx / 16.0f, dy / 16.0f, 0, 0));
+          }
+        }
+        block.Shuffle();
+
+        colors.AddRange(block);
+      }
+
+      coordinates.SetPixels(colors.ToArray());
+      coordinates.Apply();
+      _simulationMat.SetTexture(STOCHASTIC_PROPERTY, coordinates);
+    } else {
+      _simulationMat.DisableKeyword(STOCHASTIC_KEYWORD);
+    }
   }
 
   private void displaySimulation() {
@@ -2274,7 +2340,7 @@ public class TextureSimulator : MonoBehaviour {
     buffer.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, 0, _textureDimension, -1, 1));
 
     blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_GLOBAL_FORCES);
-    
+
     particleCommands(buffer);
 
     blitCommands(buffer, _blitMeshQuad, SOCIAL_FORCE_GLOBAL, ref _socialQueueSrc, ref _socialQueueDst, PASS_STEP_SOCIAL_QUEUE);
@@ -2282,16 +2348,6 @@ public class TextureSimulator : MonoBehaviour {
     blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
 
     blitCommands(buffer, _blitMeshParticle, POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
-
-    //_displayBlock.SetTexture("_CurrPos", _positionSrc);
-    //_displayBlock.SetTexture("_PrevPos", _positionDst);
-
-    //_displayBlock.SetTexture("_CurrVel", _velocitySrc);
-    //_displayBlock.SetTexture("_PrevVel", _velocityDst);
-
-    _positionDebug.material.mainTexture = _positionSrc;
-    _velocityDebug.material.mainTexture = _velocitySrc;
-    _socialDebug.material.mainTexture = _socialQueueDst;
   }
 
   private void blitCommands(CommandBuffer buffer, Mesh mesh, string propertyName, ref RenderTexture src, ref RenderTexture dst, int pass) {
@@ -2310,7 +2366,7 @@ public class TextureSimulator : MonoBehaviour {
     //Swap the textures to that the next time we come around it goes the opposite way
     Utils.Swap(ref src, ref dst);
   }
-  
+
   private void particleCommands(CommandBuffer buffer) {
     RenderTargetIdentifier[] _colorBuffers = new RenderTargetIdentifier[2];
     _colorBuffers[0] = _velocityDst;

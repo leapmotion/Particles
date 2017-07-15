@@ -47,6 +47,10 @@
   sampler2D_half _SocialTemp;
   sampler2D_half _ParticleSocialForces;
 
+  sampler2D_half _StochasticCoordinates;
+  uniform int _StochasticCount;
+  uniform half _StochasticOffset;
+
   uniform half3 _FieldCenter;
   uniform half _FieldRadius;
   uniform half _FieldForce;
@@ -206,9 +210,15 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
+#ifdef ENABLE_STOCHASTIC_SAMPLING
+    {
+      for(uint i=0; i<_StochasticCount; i++){
+        half2 otherUv = tex2D(half2(i / 64.0, _StochasticOffset)) + i.uv.zw;
+#else
     for (int y = 0; y < 16; y++) {
       for (int x = 0; x < 16; x++) {
         half2 otherUv = half2(x / 64.0, y / 64.0) + i.uv.zw;
+#endif
         half4 other = tex2D(_ParticlePositions, otherUv);
 
         half3 toOther = other.xyz - particle.xyz;

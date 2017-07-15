@@ -80,8 +80,10 @@ public class ZoomInOutGraphicStateController : MonoBehaviour {
       text.color = text.color.WithAlpha(alpha);
     }
     else {
-      graphic.SetRuntimeTint(graphic.GetRuntimeTint().WithAlpha(alpha));
+      //graphic.SetRuntimeTint(graphic.GetRuntimeTint().WithAlpha(alpha));
+      graphic.enabled = enabled;
     }
+
   }
 
 }

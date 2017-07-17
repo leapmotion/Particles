@@ -88,6 +88,14 @@ namespace Leap.Unity.Interaction {
     ///<summary> Gets whether the button was unpressed during this Update frame. </summary>
     public bool unDepressedThisFrame { get; protected set; }
 
+    private float _depressedAmount = 0F;
+    /// <summary>
+    /// Gets a normalized value between 0 and 1 based on how depressed the button currently
+    /// is relative to its maximum depression. 0 represents a button fully at rest or pulled
+    /// out beyond its resting position; 1 represents a fully-depressed button.
+    /// </summary>
+    public float depressedAmount { get { return _depressedAmount; } }
+
     // Protected State Variables
 
     ///<summary> The initial position of this element in local space, stored upon Start() </summary>
@@ -229,6 +237,11 @@ namespace Leap.Unity.Interaction {
         // Calculate the Depression State of the Button from its Physical Position
         // Set its Graphical Position to be Constrained Physically
         bool oldDepressed = isDepressed;
+
+        // Normalized depression amount.
+        _depressedAmount = localPhysicsPosition.z.Map(initialLocalPosition.z - minMaxHeight.x,
+          initialLocalPosition.z - Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight),
+          1F, 0F);
 
         // If the button is depressed past its limit...
         if (localPhysicsPosition.z > initialLocalPosition.z - minMaxHeight.x) {

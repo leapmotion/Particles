@@ -23,13 +23,13 @@ namespace Leap.Unity.Interaction {
   /// <summary>
   /// InteractionBehaviours are components that enable GameObjects to interact with
   /// interaction controllers (InteractionControllerBase) in a physically intuitive way.
-  /// 
+  ///
   /// By default, they represent objects that can be poked, prodded, smacked, grasped,
   /// and thrown around by Interaction controllers, including Leap hands. They also
   /// provide a thorough public API with settings and hovering, contact, and grasping
   /// callbacks for creating physical interfaces or overriding the default physical
   /// behavior of the object.
-  /// 
+  ///
   /// In documentation and some method calls, GameObjects with an InteractionBehaviour
   /// component may be referred to as interaction objects.
   /// </summary>
@@ -126,7 +126,7 @@ namespace Leap.Unity.Interaction {
 
     /// <summary>
     /// Gets the finger that is currently primarily hovering over this object, of the closest
-    /// primarily hovering hand. Will return null if this object is not currently any Leap 
+    /// primarily hovering hand. Will return null if this object is not currently any Leap
     /// hand's primary hover.
     /// </summary>
     public Finger primaryHoveringFinger {
@@ -154,7 +154,7 @@ namespace Leap.Unity.Interaction {
     /// Gets the distance to the primary hover point whose controller is primarily hovering over this
     /// object. For example, if the primary hovering controller is a Leap hand, this will return the
     /// distance to the fingertip that is closest to this object.
-    /// 
+    ///
     /// If this object is not the primary hover of any interaction controller, returns positive infinity.
     /// </summary>
     public float primaryHoverDistance {
@@ -321,7 +321,7 @@ namespace Leap.Unity.Interaction {
     /// Called directly after this grasped object's Rigidbody has had its position and rotation set
     /// by its currently grasping controller(s). Subscribe to this callback if you'd like to override
     /// the default behaviour for grasping objects, for example, to constrain the object's position or rotation.
-    /// 
+    ///
     /// Use InteractionBehaviour.Rigidbody.position and InteractionBehaviour.Rigidbody.rotation to set the
     /// object's position and rotation. Merely setting the object's Transform's position and rotation is not
     /// recommended unless you understand the difference.
@@ -353,7 +353,7 @@ namespace Leap.Unity.Interaction {
 
     /// <summary>
     /// Called every fixed (physics) frame during which this object is grasped by one or more hands.
-    /// 
+    ///
     /// Unless allowMultigrasp is set to true, only one hand will ever be grasping an object at any given
     /// time.
     /// </summary>
@@ -365,7 +365,7 @@ namespace Leap.Unity.Interaction {
 
     /// <summary>
     /// Called whenever an interaction controller grasps this object.
-    /// 
+    ///
     /// Unless allowMultigrasp is set to true, only one controller will ever be grasping an object at any given
     /// time.
     /// </summary>
@@ -377,7 +377,7 @@ namespace Leap.Unity.Interaction {
 
     /// <summary>
     /// Called whenever an interaction controller stops grasping this object.
-    /// 
+    ///
     /// Unless allowMultigrasp is set to true, only one controller will ever be grasping an object at any given
     /// time. If a new controller grasps an object while allowMultigrasp is disabled, the object will first
     /// receive the end grasp event before receiving the begin grasp event for the newly grasping controller.
@@ -391,9 +391,9 @@ namespace Leap.Unity.Interaction {
     /// Called when the interaction controller that is grasping this interaction object loses tracking. This can
     /// occur if the controller is occluded from the sensor that is tracking it, e.g. by as the user's body or
     /// an object in the real world.
-    /// 
+    ///
     /// An object is "suspended" if it is currently grasped by an untracked controller.
-    /// 
+    ///
     /// By default, suspended objects will hang in the air until the interaction controller grasping them
     /// resumes tracking. Subscribe to this callback and OnResume to implement, e.g., the object disappearing
     /// and re-appearing.
@@ -403,7 +403,7 @@ namespace Leap.Unity.Interaction {
     /// <summary>
     /// Called when an object ceases being suspended. An object is suspended if it is currently grasped by
     /// an untracked controller.
-    /// 
+    ///
     /// Grasping a suspended object with a different controller will cease suspension of the object, and will
     /// invoke OnSuspensionEnd, although the input to OnSuspensionEnd will be the newly grasping controller, not
     /// the controller that suspended the object. OnGraspEnd will also be called for the interaction controller
@@ -415,7 +415,7 @@ namespace Leap.Unity.Interaction {
 
     /// <summary>
     /// Releases this object from the interaction controller currently grasping it, if it
-    /// is grasped, and returns true. If the object was not grasped, this method returns 
+    /// is grasped, and returns true. If the object was not grasped, this method returns
     /// false. Directly after calling this method, the object is guaranteed not to be held.
     /// </summary>
     public bool ReleaseFromGrasp() {
@@ -464,7 +464,7 @@ namespace Leap.Unity.Interaction {
     public Action OnContactBegin;
 
     /// <summary>
-    /// Called when the object ceases colliding with any interaction controllers, if the     
+    /// Called when the object ceases colliding with any interaction controllers, if the
     /// object was colliding with interaction controllers last frame.
     /// </summary>
     public Action OnContactEnd;
@@ -490,7 +490,7 @@ namespace Leap.Unity.Interaction {
     #region Forces API
 
     /// <summary>
-    /// Adds a linear acceleration to the center of mass of this object. 
+    /// Adds a linear acceleration to the center of mass of this object.
     /// Use this instead of Rigidbody.AddForce() to accelerate an Interaction object.
     /// </summary>
     /// <remarks>
@@ -504,8 +504,8 @@ namespace Leap.Unity.Interaction {
     }
 
     /// <summary>
-    /// Adds an angular acceleration to the center of mass of this object. 
-    /// Use this instead of Rigidbody.AddTorque() to add angular acceleration 
+    /// Adds an angular acceleration to the center of mass of this object.
+    /// Use this instead of Rigidbody.AddTorque() to add angular acceleration
     /// to an Interaction object.
     /// </summary>
     /// <remarks>
@@ -548,7 +548,7 @@ namespace Leap.Unity.Interaction {
 
     private Rigidbody _rigidbody;
     #if UNITY_EDITOR
-    new 
+    new
     #endif
     /// <summary> The Rigidbody associated with this interaction object. </summary>
     public Rigidbody rigidbody { get { return _rigidbody; }
@@ -557,7 +557,7 @@ namespace Leap.Unity.Interaction {
     public ISpaceComponent space { get; protected set; }
 
     [Header("Interaction Overrides")]
-    
+
     [Tooltip("This object will not receive callbacks from left controllers, right "
            + "controllers, or either hand if this mode is set to anything other than "
            + "None.")]
@@ -620,7 +620,7 @@ namespace Leap.Unity.Interaction {
         if (_ignoreGrasping && isGrasped) {
           graspingController.ReleaseGrasp();
         }
-      } 
+      }
     }
 
     [Header("Contact Settings")]
@@ -697,7 +697,7 @@ namespace Leap.Unity.Interaction {
         _overrideInteractionLayer = value;
       }
     }
-    
+
     [Tooltip("Sets the override layer to use for this object when it is not grasped and "
            + "not ignoring contact.")]
     [SerializeField]
@@ -816,7 +816,7 @@ namespace Leap.Unity.Interaction {
     /// <summary>
     /// Returns a comparative distance to this interaction object. Calculated by finding
     /// the smallest distance to each of the object's colliders.
-    /// 
+    ///
     /// Any MeshColliders, however, will not have their distances calculated precisely;
     /// the squared distance to their bounding box is calculated instead. It is possible
     /// to use a custom set of colliders against which to test primary hover calculations:
@@ -937,7 +937,7 @@ namespace Leap.Unity.Interaction {
     /// Clears hover tracking state for this object on all of the currently-hovering
     /// controllers. New hover state will begin anew on the next fixed frame if the
     /// appropriate conditions for hover are still fulfilled.
-    /// 
+    ///
     /// Optionally, only clear hover tracking state for controllers that should be
     /// ignoring hover for this interaction object due to its ignoreHoverMode.
     /// </summary>
@@ -1046,7 +1046,7 @@ namespace Leap.Unity.Interaction {
     /// object. Hover distancing checking will affect which object is chosen for an
     /// interaction controller's primary hover, as well as for determining this object's
     /// closest hovering controller.
-    /// 
+    ///
     /// RefreshColliderState() will automatically populate the colliders List with
     /// the this rigidbody's colliders, but is only called once on Start(). If you change
     /// the colliders for this object at runtime, you should call RefreshColliderState()
@@ -1054,11 +1054,11 @@ namespace Leap.Unity.Interaction {
     /// </summary>
     /// <remarks>
     /// If you're feeling brave, you can manually modify this list yourself.
-    /// 
+    ///
     /// Hover candidacy is determined by a hand-centric PhysX sphere-check against the
     /// Interaction object's rigidbody's attached colliders. This behavior cannot be
     /// changed, even if you modify the contents of primaryHoverColliders.
-    /// 
+    ///
     /// However, primary hover is determined by performing distance checks against the
     /// colliders in the primaryHoverColliders list, so it IS possible to use different
     /// collider(s) for primary hover checks than are used for hover candidacy, by
@@ -1211,7 +1211,7 @@ namespace Leap.Unity.Interaction {
         if (moveObjectWhenGrasped) {
           graspedPoseHandler.AddController(controller);
         }
-        
+
         // Fire interaction callback.
         OnPerControllerGraspBegin(controller);
       }
@@ -1357,7 +1357,7 @@ namespace Leap.Unity.Interaction {
     /// find all of the Colliders that are attached to its Rigidbody. These will
     /// be the colliders used to calculate distance from the controller to determine
     /// which object will become the primary hover.
-    /// 
+    ///
     /// Call this method manually if you change an Interaction object's colliders
     /// after its Start() method has been called! (Called automatically in OnEnable.)
     /// </summary>
@@ -1375,7 +1375,7 @@ namespace Leap.Unity.Interaction {
     private void initLayers() {
       refreshInteractionLayer();
       refreshNoContactLayer();
-      
+
       (manager as IInternalInteractionManager).NotifyIntObjAddedInteractionLayer(this, interactionLayer, false);
       (manager as IInternalInteractionManager).NotifyIntObjAddedNoContactLayer(this, noContactLayer, false);
       (manager as IInternalInteractionManager).RefreshLayersNow();
@@ -1393,7 +1393,7 @@ namespace Leap.Unity.Interaction {
       noContactLayer = overrideNoContactLayer ? this.noContactLayer
                                               : manager.interactionNoContactLayer;
     }
-    
+
     private void fixedUpdateLayers() {
       int layer;
       refreshInteractionLayer();
@@ -1420,7 +1420,7 @@ namespace Leap.Unity.Interaction {
       }
 
       // Update the manager if necessary.
-      
+
       if (interactionLayer != _lastInteractionLayer) {
         (manager as IInternalInteractionManager).NotifyIntObjHasNewInteractionLayer(this, oldInteractionLayer: _lastInteractionLayer,
                                                                                           newInteractionLayer: interactionLayer);
@@ -1449,10 +1449,10 @@ namespace Leap.Unity.Interaction {
     /// <summary>
     /// Returns whether the InteractionBehaviour has its position fully locked
     /// by its Rigidbody settings or by any attached PhysX Joints.
-    /// 
+    ///
     /// This is useful for the GraspedMovementController to determine whether
     /// it should attempt to move the interaction object or merely rotate it.
-    /// 
+    ///
     /// If the state of the underlying Rigidbody or Joints changes what this value
     /// should be, it will not automatically update (as an optimization) at runtime;
     /// instead, manually call RefreshPositionLockedState(). This is because the

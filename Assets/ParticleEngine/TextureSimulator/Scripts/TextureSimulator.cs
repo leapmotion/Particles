@@ -2032,6 +2032,7 @@ public class TextureSimulator : MonoBehaviour {
     generateCapsulesForHand(Hands.Left, _handActors[0], ref _prevLeft, ref capsuleCount);
     generateCapsulesForHand(Hands.Right, _handActors[1], ref _prevRight, ref capsuleCount);
 
+    //Draw the capsules in world space first
     RuntimeGizmoDrawer drawer;
     if (_handCollisionEnabled && _drawHandColliders && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
       drawer.color = _handColliderColor;
@@ -2040,12 +2041,7 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
-    _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
-    _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
-    _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
-
-    //Transform capsules into local space
+    //Then transform capsules into local space
     for (int i = 0; i < capsuleCount; i++) {
       Vector4 v = _capsuleA[i];
       Vector4 tv = transform.InverseTransformPoint(v);
@@ -2054,6 +2050,11 @@ public class TextureSimulator : MonoBehaviour {
       _capsuleA[i] = tv;
       _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
     }
+
+    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
+    _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
+    _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
+    _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
 
     _simulationMat.SetInt("_CapsuleCount", capsuleCount);
     _simulationMat.SetVectorArray("_CapsuleA", _capsuleA);

@@ -790,7 +790,7 @@ public class TextureSimulator : MonoBehaviour {
   private float _prevSimulationTime = 0;
 
   //Display
-  private List<Mesh> _meshes = new List<Mesh>();
+  private List<Mesh> _renderMeshes = new List<Mesh>();
   private MaterialPropertyBlock _displayBlock;
 
   //Hand interaction
@@ -1942,7 +1942,7 @@ public class TextureSimulator : MonoBehaviour {
   /// initial state of the simulation.
   /// </summary>
   public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
-    bool doesNeedToResetPositions = true;
+    bool isLayoutDifferent = true;
 
     if (_currentDescription != null && !forcePositionReset) {
       List<int> originalSpeciesMap = new List<int>();
@@ -1954,10 +1954,10 @@ public class TextureSimulator : MonoBehaviour {
       newSpeciesMap.Sort();
 
       if (originalSpeciesMap.Count == newSpeciesMap.Count) {
-        doesNeedToResetPositions = false;
+        isLayoutDifferent = false;
         for (int i = 0; i < originalSpeciesMap.Count; i++) {
           if (originalSpeciesMap[i] != newSpeciesMap[i]) {
-            doesNeedToResetPositions = true;
+            isLayoutDifferent = true;
             break;
           }
         }
@@ -1972,8 +1972,10 @@ public class TextureSimulator : MonoBehaviour {
       calculateLayoutGeneral(simulationDescription.toSpawn, layout);
     }
 
-    if (doesNeedToResetPositions) {
+    if (isLayoutDifferent) {
       resetParticleTextures(layout, simulationDescription.toSpawn);
+
+      resetRenderMeshes(simulationDescription, layout);
     }
 
     resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, isUsingOptimizedLayout);
@@ -2113,15 +2115,19 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
+  private void uploadSpeciesColors(Color[] colors) {
+    _displayBlock.SetVectorArray("_SpeciesColors", colors);
+  }
+
   private void resetRenderMeshes(SimulationDescription desc, List<SpeciesRect> layout) {
-    _meshes.Clear();
+    _renderMeshes.Clear();
 
     var sourceVerts = _particleMesh.vertices;
     var sourceTris = _particleMesh.triangles;
 
     List<Vector3> bakedVerts = new List<Vector3>();
     List<int> bakedTris = new List<int>();
-    List<Vector2> bakedUvs = new List<Vector2>();
+    List<Vector4> bakedUvs = new List<Vector4>();
 
     var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
@@ -2147,42 +2153,29 @@ public class TextureSimulator : MonoBehaviour {
             bakedUvs.Clear();
           }
 
+          if (bakedMesh == null) {
+            sourceTris = _particleMesh.triangles;
+            bakedMesh = new Mesh();
+            bakedMesh.hideFlags = HideFlags.HideAndDontSave;
+            _renderMeshes.Add(bakedMesh);
+          }
 
+          bakedVerts.AddRange(sourceVerts);
+          bakedTris.AddRange(sourceTris);
+
+          for (int k = 0; k < sourceVerts.Length; k++) {
+            bakedUvs.Add(new Vector4((dx + 0.5f) / _textureDimension, 
+                                     (dy + 0.5f) / _textureDimension,
+                                     0,
+                                     rect.species));
+          }
+
+          for (int k = 0; k < sourceTris.Length; k++) {
+            sourceTris[k] += sourceVerts.Length;
+          }
         }
       }
     }
-
-    
-    int particlesToMesh = desc.toSpawn.Count;
-    for (int i = 0; i < _textureDimension; i++) {
-      for (int j = 0; j < _textureDimension; j++) {
-
-
-        if (bakedMesh == null) {
-          sourceTris = _particleMesh.triangles;
-          bakedMesh = new Mesh();
-          bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-          _meshes.Add(bakedMesh);
-        }
-
-        bakedVerts.AddRange(sourceVerts);
-        bakedTris.AddRange(sourceTris);
-
-        for (int k = 0; k < sourceVerts.Length; k++) {
-          bakedUvs.Add(new Vector2((i + 0.5f) / _textureDimension, (j + 0.5f) / _textureDimension));
-        }
-
-        for (int k = 0; k < sourceTris.Length; k++) {
-          sourceTris[k] += sourceVerts.Length;
-        }
-
-        particlesToMesh--;
-        if (particlesToMesh == 0) {
-          goto finishedMeshing;
-        }
-      }
-    }
-    finishedMeshing:
 
     bakedMesh.hideFlags = HideFlags.HideAndDontSave;
     bakedMesh.SetVertices(bakedVerts);
@@ -2760,7 +2753,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void displaySimulation() {
-    foreach (var mesh in _meshes) {
+    foreach (var mesh in _renderMeshes) {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
   }

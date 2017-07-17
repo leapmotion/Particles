@@ -1935,6 +1935,7 @@ public class TextureSimulator : MonoBehaviour {
   /// Randomizes the simulation colors of the current simulation.
   /// </summary>
   public void RandomizeSimulationColors() {
+    uploadSpeciesColors();
   }
 
   /// <summary>
@@ -1977,6 +1978,8 @@ public class TextureSimulator : MonoBehaviour {
 
       resetRenderMeshes(simulationDescription, layout);
     }
+
+    uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
 
     resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, isUsingOptimizedLayout);
 
@@ -2115,7 +2118,7 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
-  private void uploadSpeciesColors(Color[] colors) {
+  private void uploadSpeciesColors(Vector4[] colors) {
     _displayBlock.SetVectorArray("_SpeciesColors", colors);
   }
 

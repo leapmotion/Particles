@@ -6,6 +6,20 @@ using UnityEngine;
 
 public class WidgetController : MonoBehaviour {
 
+  private struct Pose {
+    public Vector3 pos;
+    public Quaternion rot;
+
+    public Vector3 position { get { return pos; } set { pos = value; } }
+    public Quaternion rotation { get { return rot; } set { rot = value; } }
+
+    public Pose(Vector3 pos, Quaternion rot) { this.pos = pos; this.rot = rot; }
+
+    public static implicit operator Pose(Transform t) {
+      return new Pose(t.position, t.rotation);
+    }
+  }
+
   public InteractionBehaviour widget;
   public Transform widgetVisualPivot;
   public Transform panelPivot;
@@ -44,11 +58,7 @@ public class WidgetController : MonoBehaviour {
                                  List<InteractionController> graspingControllers) {
     Quaternion faceUserRot = getFaceUserRot(newPos);
 
-    _widgetPose = new Pose(newPos, faceUserRot);
-    _panelPose = new Pose(faceUserRot * _panelWidgetDeltaPos + newPos,
-                          faceUserRot * _panelWidgetDeltaRot);
-    _rendererPose = new Pose(_panelPose.rot * _rendererPanelDeltaPos + _panelPose.pos,
-                             _panelPose.rot * _rendererPanelDeltaRot);
+    updateAlignment(new Pose(newPos, faceUserRot));
     _widgetVisualPose = new Pose(newPos, newRot);
 
     doAlignment();
@@ -58,18 +68,13 @@ public class WidgetController : MonoBehaviour {
     return Quaternion.LookRotation((position + Vector3.up * 0.35F /* hacky heuristic */) - Camera.main.transform.position);
   }
 
-  private struct Pose {
-    public Vector3 pos;
-    public Quaternion rot;
-
-    public Vector3 position { get { return pos; } set { pos = value; } }
-    public Quaternion rotation { get { return rot; } set { rot = value; } }
-
-    public Pose(Vector3 pos, Quaternion rot) { this.pos = pos; this.rot = rot; }
-
-    public static implicit operator Pose(Transform t) {
-      return new Pose(t.position, t.rotation);
-    }
+  private void updateAlignment(Pose widgetPose) {
+    _widgetPose = new Pose(widgetPose.pos, widgetPose.rot);
+    _panelPose = new Pose(widgetPose.rot * _panelWidgetDeltaPos + widgetPose.pos,
+                          widgetPose.rot * _panelWidgetDeltaRot);
+    _rendererPose = new Pose(_panelPose.rot * _rendererPanelDeltaPos + _panelPose.pos,
+                             _panelPose.rot * _rendererPanelDeltaRot);
+    _widgetVisualPose = _widgetPose;
   }
 
   private void doAlignment() {

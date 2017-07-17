@@ -979,6 +979,7 @@ public class TextureSimulator : MonoBehaviour {
     Globules,
     Layers,
     Fluidy,
+    BlackHole,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1027,7 +1028,16 @@ public class TextureSimulator : MonoBehaviour {
 	//---------------------------------------------
 	// Red Menace 
 	//---------------------------------------------
-	if ( preset == EcosystemPreset.RedMenace )
+  if(preset == EcosystemPreset.BlackHole) {
+      colors.Fill(Color.white);
+      for(int i=0; i<MAX_SPECIES; i++) {
+        for(int j=0; j<MAX_SPECIES; j++) {
+          socialData[i, j] = new Vector4(setting.maxSocialForce * 0.3f, setting.maxSocialRange * 10);
+        }
+        speciesData[i] = new Vector4(0.11f, 0, setting.maxCollision);
+      }
+      ResetPositions();
+    } else if ( preset == EcosystemPreset.RedMenace )
 	{
         colors[0] = new Color(1.0f, 0.0f, 0.0f);
         colors[1] = new Color(0.3f, 0.2f, 0.0f);

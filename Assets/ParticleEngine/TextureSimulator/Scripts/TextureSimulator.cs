@@ -2376,7 +2376,7 @@ public class TextureSimulator : MonoBehaviour {
       float w = sphere.w;
 
       sphere = transform.InverseTransformPoint(sphere);
-      sphere.w = w / transform.lossyScale.magnitude;
+      sphere.w = w / transform.lossyScale.x;
       _spheres[i] = sphere;
 
       Vector4 velocity = _sphereVels[i];
@@ -2418,9 +2418,9 @@ public class TextureSimulator : MonoBehaviour {
     for (int i = 0; i < capsuleCount; i++) {
       Vector4 v = _capsuleA[i];
       Vector4 tv = transform.InverseTransformPoint(v);
-      tv.w = v.w;
-      _capsuleA[i] = tv;
+      tv.w = v.w / transform.lossyScale.x;
 
+      _capsuleA[i] = tv;
       _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
     }
 

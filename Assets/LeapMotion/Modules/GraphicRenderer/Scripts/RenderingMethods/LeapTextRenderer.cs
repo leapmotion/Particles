@@ -21,7 +21,7 @@ namespace Leap.Unity.GraphicalRenderer {
 
   [LeapGraphicTag("Text")]
   [Serializable]
-  public class LeapTextRenderer : LeapRenderingMethod<LeapTextGraphic> {
+  public class LeapTextRenderer : LeapRenderingMethod<LeapTextGraphic>, ISupportsAddRemove {
     public const string DEFAULT_FONT = "Arial.ttf";
     public const string DEFAULT_SHADER = "LeapMotion/GraphicRenderer/Text/Dynamic";
     public const float SCALE_CONSTANT = 0.001f;
@@ -59,6 +59,17 @@ namespace Leap.Unity.GraphicalRenderer {
 
     public override SupportInfo GetSpaceSupportInfo(LeapSpace space) {
       return SupportInfo.FullSupport();
+    }
+
+    public void OnAddRemoveGraphics(List<int> dirtyIndexes) {
+      while(_meshData.Count > group.graphics.Count) {
+        _meshData.RemoveMesh(_meshData.Count - 1);
+      }
+
+      while(_meshData.Count < group.graphics.Count) {
+        group.graphics[_meshData.Count].isRepresentationDirty = true;
+        _meshData.AddMesh(new Mesh());
+      }
     }
 
     public override void OnEnableRenderer() {

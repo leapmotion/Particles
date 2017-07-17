@@ -1743,7 +1743,7 @@ public class TextureSimulator : MonoBehaviour {
 
 
     SimulationDescription description = new SimulationDescription();
-    description.name = preset.ToString();.
+    description.name = preset.ToString();
     description.socialData = new SocialData[MAX_SPECIES, MAX_SPECIES];
     description.speciesData = new SpeciesData[MAX_SPECIES];
     description.toSpawn = new List<ParticleSpawn>();
@@ -1780,7 +1780,7 @@ public class TextureSimulator : MonoBehaviour {
     return description;
   }
 
-  private SimulationDescription getRandomEcosystemDescription(bool dontResetPositions = false) {
+  private SimulationDescription getRandomEcosystemDescription() {
     Random.InitState(Time.realtimeSinceStartup.GetHashCode());
 
     var gen = GetComponent<NameGenerator>();
@@ -1792,10 +1792,10 @@ public class TextureSimulator : MonoBehaviour {
     }
     Debug.Log(name);
 
-    return getRandomEcosystemDescription(name, dontResetPositions);
+    return getRandomEcosystemDescription(name);
   }
 
-  private SimulationDescription getRandomEcosystemDescription(string seed, bool dontResetPositions = false) {
+  private SimulationDescription getRandomEcosystemDescription(string seed) {
     var setting = _randomEcosystemSettings;
 
     SimulationDescription desc = new SimulationDescription() {
@@ -1867,6 +1867,7 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region RESET LOGIC
+  private SimulationDescription _currentDescription = null;
 
   public struct SocialData {
     public float socialForce;
@@ -1898,15 +1899,71 @@ public class TextureSimulator : MonoBehaviour {
     public List<ParticleSpawn> toSpawn;
   }
 
-  public void ResetSimulation(EcosystemPreset preset) {
+  /// <summary>
+  /// Restarts the simulation to whatever state it was in when it was
+  /// most recently restarted.
+  /// </summary>
+  public void RestartSimulation() {
 
   }
 
-  public void ResetSimulation() {
-
+  /// <summary>
+  /// Restarts the simulation using a specific preset to choose the
+  /// initial conditions.
+  /// </summary>
+  public void RestartSimulation(EcosystemPreset preset) {
+    RestartSimulation(getPresetDescription(preset));
   }
 
-  public void ResetSimulation(SimulationDescription simulationDescription) {
+  /// <summary>
+  /// Restarts the simulation using a random description.
+  /// </summary>
+  public void RandomizeSimulation(bool forcePositionReset = true) {
+    RestartSimulation(getRandomEcosystemDescription(), forcePositionReset);
+  }
+
+  /// <summary>
+  /// Restarts the simulation using a random description calculated using
+  /// the seed value.  The same seed value should always result in the same
+  /// simulation description.
+  /// </summary>
+  public void RandomizeSimulation(string seed, bool forcePositionReset = true) {
+    RestartSimulation(getRandomEcosystemDescription(seed), forcePositionReset);
+  }
+
+  /// <summary>
+  /// Randomizes the simulation colors of the current simulation.
+  /// </summary>
+  public void RandomizeSimulationColors() {
+  }
+
+  /// <summary>
+  /// Restar the simulation using the given description to describe the
+  /// initial state of the simulation.
+  /// </summary>
+  public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
+    bool doesNeedToResetPositions = true;
+
+    if (_currentDescription != null && !forcePositionReset) {
+      List<int> originalSpeciesMap = new List<int>();
+      _currentDescription.toSpawn.Query().Select(t => t.species).FillList(originalSpeciesMap);
+      originalSpeciesMap.Sort();
+
+      List<int> newSpeciesMap = new List<int>();
+      simulationDescription.toSpawn.Query().Select(t => t.species).FillList(newSpeciesMap);
+      newSpeciesMap.Sort();
+
+      if (originalSpeciesMap.Count == newSpeciesMap.Count) {
+        doesNeedToResetPositions = false;
+        for (int i = 0; i < originalSpeciesMap.Count; i++) {
+          if (originalSpeciesMap[i] != newSpeciesMap[i]) {
+            doesNeedToResetPositions = true;
+            break;
+          }
+        }
+      }
+    }
+
     List<SpeciesRect> layout = new List<SpeciesRect>();
 
     bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(simulationDescription.toSpawn, layout);
@@ -1915,7 +1972,9 @@ public class TextureSimulator : MonoBehaviour {
       calculateLayoutGeneral(simulationDescription.toSpawn, layout);
     }
 
-    resetParticleTextures(layout, simulationDescription.toSpawn);
+    if (doesNeedToResetPositions) {
+      resetParticleTextures(layout, simulationDescription.toSpawn);
+    }
 
     resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, isUsingOptimizedLayout);
 
@@ -2054,6 +2113,85 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
+  private void resetRenderMeshes(SimulationDescription desc, List<SpeciesRect> layout) {
+    _meshes.Clear();
+
+    var sourceVerts = _particleMesh.vertices;
+    var sourceTris = _particleMesh.triangles;
+
+    List<Vector3> bakedVerts = new List<Vector3>();
+    List<int> bakedTris = new List<int>();
+    List<Vector2> bakedUvs = new List<Vector2>();
+
+    var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      speciesMap[i] = desc.toSpawn.Query().Where(t => t.species == i).GetEnumerator();
+    }
+
+    Mesh bakedMesh = null;
+    foreach (var rect in layout) {
+      var enumerator = speciesMap[rect.species];
+      for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
+        for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
+
+          if (bakedVerts.Count + sourceVerts.Length > 60000) {
+            bakedMesh.SetVertices(bakedVerts);
+            bakedMesh.SetTriangles(bakedTris, 0);
+            bakedMesh.SetUVs(0, bakedUvs);
+            bakedMesh.RecalculateNormals();
+            bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+            bakedMesh = null;
+
+            bakedVerts.Clear();
+            bakedTris.Clear();
+            bakedUvs.Clear();
+          }
+
+
+        }
+      }
+    }
+
+    
+    int particlesToMesh = desc.toSpawn.Count;
+    for (int i = 0; i < _textureDimension; i++) {
+      for (int j = 0; j < _textureDimension; j++) {
+
+
+        if (bakedMesh == null) {
+          sourceTris = _particleMesh.triangles;
+          bakedMesh = new Mesh();
+          bakedMesh.hideFlags = HideFlags.HideAndDontSave;
+          _meshes.Add(bakedMesh);
+        }
+
+        bakedVerts.AddRange(sourceVerts);
+        bakedTris.AddRange(sourceTris);
+
+        for (int k = 0; k < sourceVerts.Length; k++) {
+          bakedUvs.Add(new Vector2((i + 0.5f) / _textureDimension, (j + 0.5f) / _textureDimension));
+        }
+
+        for (int k = 0; k < sourceTris.Length; k++) {
+          sourceTris[k] += sourceVerts.Length;
+        }
+
+        particlesToMesh--;
+        if (particlesToMesh == 0) {
+          goto finishedMeshing;
+        }
+      }
+    }
+    finishedMeshing:
+
+    bakedMesh.hideFlags = HideFlags.HideAndDontSave;
+    bakedMesh.SetVertices(bakedVerts);
+    bakedMesh.SetTriangles(bakedTris, 0);
+    bakedMesh.SetUVs(0, bakedUvs);
+    bakedMesh.RecalculateNormals();
+    bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+  }
+
   private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {
     List<Vector3> verts = new List<Vector3>();
     List<int> tris = new List<int>();
@@ -2156,10 +2294,10 @@ public class TextureSimulator : MonoBehaviour {
       float uvx1 = (rect.x + rect.width) / 64.0f;
       float uvy1 = (rect.y + rect.height) / 64.0f;
 
-      uv0.Add(new Vector4(uvx0, uvy0, socialSteps, drag));
-      uv0.Add(new Vector4(uvx1, uvy0, socialSteps, drag));
-      uv0.Add(new Vector4(uvx1, uvy1, socialSteps, drag));
-      uv0.Add(new Vector4(uvx0, uvy1, socialSteps, drag));
+      uv0.Add(new Vector4(uvx0, uvy0, socialSteps, dragMult));
+      uv0.Add(new Vector4(uvx1, uvy0, socialSteps, dragMult));
+      uv0.Add(new Vector4(uvx1, uvy1, socialSteps, dragMult));
+      uv0.Add(new Vector4(uvx0, uvy1, socialSteps, dragMult));
     }
 
     if (_blitMeshParticle == null) {
@@ -2508,68 +2646,6 @@ public class TextureSimulator : MonoBehaviour {
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       ResetPositions();
     }
-  }
-
-  [ContextMenu("Recalculate Meshes")]
-  public void RecalculateMeshesForParticles() {
-    _meshes.Clear();
-
-    var sourceVerts = _particleMesh.vertices;
-    var sourceTris = _particleMesh.triangles;
-
-    List<Vector3> bakedVerts = new List<Vector3>();
-    List<int> bakedTris = new List<int>();
-    List<Vector2> bakedUvs = new List<Vector2>();
-
-    Mesh bakedMesh = null;
-    int particlesToMesh = _particlesToSimulate;
-    for (int i = 0; i < _textureDimension; i++) {
-      for (int j = 0; j < _textureDimension; j++) {
-        if (bakedVerts.Count + sourceVerts.Length > 60000) {
-          bakedMesh.SetVertices(bakedVerts);
-          bakedMesh.SetTriangles(bakedTris, 0);
-          bakedMesh.SetUVs(0, bakedUvs);
-          bakedMesh.RecalculateNormals();
-          bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-          bakedMesh = null;
-
-          bakedVerts.Clear();
-          bakedTris.Clear();
-          bakedUvs.Clear();
-        }
-
-        if (bakedMesh == null) {
-          sourceTris = _particleMesh.triangles;
-          bakedMesh = new Mesh();
-          bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-          _meshes.Add(bakedMesh);
-        }
-
-        bakedVerts.AddRange(sourceVerts);
-        bakedTris.AddRange(sourceTris);
-
-        for (int k = 0; k < sourceVerts.Length; k++) {
-          bakedUvs.Add(new Vector2((i + 0.5f) / _textureDimension, (j + 0.5f) / _textureDimension));
-        }
-
-        for (int k = 0; k < sourceTris.Length; k++) {
-          sourceTris[k] += sourceVerts.Length;
-        }
-
-        particlesToMesh--;
-        if (particlesToMesh == 0) {
-          goto finishedMeshing;
-        }
-      }
-    }
-    finishedMeshing:
-
-    bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-    bakedMesh.SetVertices(bakedVerts);
-    bakedMesh.SetTriangles(bakedTris, 0);
-    bakedMesh.SetUVs(0, bakedUvs);
-    bakedMesh.RecalculateNormals();
-    bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
   private RenderTexture createParticleTexture() {

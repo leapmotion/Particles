@@ -24,6 +24,9 @@
     float4 vertex : POSITION;
     float4 uv : TEXCOORD0; 
     float4 social : TEXCOORD1;
+#ifdef GENERAL_SAMPLING
+    float4 sampleRect : TEXCOORD2;
+#endif
   };
 
   struct v2f_p {
@@ -34,6 +37,9 @@
   struct v2f_i {
     float4 uv : TEXCOORD0;
     float4 social : TEXCOORD1;
+#ifdef GENERAL_SAMPLING
+    float4 sampleRect : TEXCOORD2;
+#endif
     float4 vertex : SV_Position;
   };
 
@@ -52,6 +58,9 @@
   sampler2D_half _StochasticCoordinates;
   uniform int _StochasticCount;
   uniform half _StochasticOffset;
+
+  uniform uint _SampleWidth;
+  uniform uint _SampleHeight;
 
   uniform half3 _FieldCenter;
   uniform half _FieldRadius;
@@ -123,6 +132,9 @@
     o.vertex = UnityObjectToClipPos(v.vertex);
     o.uv = v.uv;
     o.social = v.social;
+#ifdef GENERAL_SAMPLING
+    o.sampleRect = v.sampleRect;
+#endif
     return o;
   }
 
@@ -212,15 +224,33 @@
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-#ifdef ENABLE_STOCHASTIC_SAMPLING
+    half2 otherUv = half2(0, 0);
+    {{
+
+#ifdef STOCHASTIC_SAMPLING
+    }}
+    //Chose a specific subset of the given stochastic coordinates
     {
       for(int j=0; j<_StochasticCount; j++){
-        half2 otherUv = tex2Dlod0(_StochasticCoordinates, half2(j / 256.0, _StochasticOffset)) + i.uv.zw;
-#else
-    for (int y = 0; y < 16; y++) {
-      for (int x = 0; x < 16; x++) {
-        half2 otherUv = half2(x / 64.0, y / 64.0) + i.uv.zw;
+        otherUv = tex2Dlod0(_StochasticCoordinates, half2(j / 256.0, _StochasticOffset)) + i.uv.zw;
 #endif
+
+#ifdef UNIFORM_SAMPLE_RECT
+    }}
+    //Chose a set of uvs that exist within a specific uniform rect
+    for (uint y = 0; y < _SampleHeight; y++) {
+      for (uint x = 0; x < _SampleWidth; x++) {
+        otherUv = half2(x / 64.0, y / 64.0) + i.uv.zw;
+#endif
+
+#ifdef GENERAL_SAMPLING
+    }}
+    //Chose a set of uvs that lies within a custom rect passed in as uv coordinates
+    for (half y = i.sampleRect.y; y < i.sampleRect.w; y += (1.0 / 64.0)) {
+      for (half x = i.sampleRect.x; x < i.sampleRect.z; x += (1.0 / 64.0)) {
+        otherUv = half2(x, y);
+#endif
+
         half4 other = tex2Dlod0(_ParticlePositions, otherUv);
 
         half3 toOther = other.xyz - particle.xyz;
@@ -358,7 +388,7 @@
     Pass {
       Blend One One
       CGPROGRAM
-      #pragma multi_compile _ ENABLE_STOCHASTIC_SAMPLING
+      #pragma multi_compile GENERAL_SAMPLING UNIFORM_SAMPLE_RECT STOCHASTIC_SAMPLING
       #pragma vertex vert_i
       #pragma fragment updateCollisionVelocities
       ENDCG

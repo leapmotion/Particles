@@ -792,10 +792,8 @@ public class TextureSimulator : MonoBehaviour {
 
   private int _textureDimension;
 
-  private int _currentSimulationSpeciesCount = MAX_SPECIES;
-  private bool _currentEcosystemisRandom = false;
-
-  private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
+  private SimulationDescription _currentSimDescription = null;
+  
   private RenderTexture _positionSrc, _velocitySrc, _positionDst, _velocityDst;
   private RenderTexture _socialQueueSrc, _socialQueueDst;
   private RenderTexture _socialTemp;
@@ -945,7 +943,9 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public int currentSpeciesCount {
-    get { return _currentSimulationSpeciesCount; }
+    get {
+      return _currentSimDescription.toSpawn.Count;
+    }
   }
 
   #endregion
@@ -979,8 +979,6 @@ public class TextureSimulator : MonoBehaviour {
     Shader.SetGlobalTexture(POSITION_GLOBAL, _positionSrc);
     Shader.SetGlobalTexture(VELOCITY_GLOBAL, _velocitySrc);
     Shader.SetGlobalTexture(SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-
-    createBlitMeshes();
 
     buildSimulationCommands();
 
@@ -2031,6 +2029,347 @@ public class TextureSimulator : MonoBehaviour {
   }
   #endregion
 
+  #region RESET LOGIC
+
+  public struct SocialData {
+    public float socialForce;
+    public float socialRange;
+  }
+
+  public struct SpeciesData {
+    public int forceSteps;
+    public float drag;
+    public float collisionForce;
+  }
+
+  public struct ParticleSpawn {
+    public Vector3 position;
+    public Vector3 velocity;
+    public int species;
+  }
+
+  public struct SpeciesRect {
+    public int x, y, width, height;
+    public int species;
+  }
+
+  public class SimulationDescription {
+    public SocialData[,] socialData;
+    public SpeciesData[] speciesData;
+    public List<ParticleSpawn> toSpawn;
+  }
+
+  public void ResetSimulation(EcosystemPreset preset) {
+
+  }
+
+  public void ResetSimulation() {
+
+  }
+
+  public void ResetSimulation(SimulationDescription simulationDescription) {
+    List<SpeciesRect> layout = new List<SpeciesRect>();
+
+    bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(simulationDescription.toSpawn, layout);
+
+    if (!isUsingOptimizedLayout) {
+      calculateLayoutGeneral(simulationDescription.toSpawn, layout);
+    }
+
+    resetParticleTextures(layout, simulationDescription.toSpawn);
+
+    resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, isUsingOptimizedLayout);
+
+    //TODO: more shader constants here
+    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
+    _currScaledTime = 0;
+    _currSimulationTime = 0;
+    _prevSimulationTime = 0;
+
+    //TODO: reset command buffer state correctly
+    _commandIndex = 0;
+  }
+
+  private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
+    //TODO: implement optimize layout
+    return false;
+  }
+
+  private void calculateLayoutGeneral(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
+    toSpawn.Sort((a, b) => a.species.CompareTo(b.species));
+
+    int existing = toSpawn.Count;
+    int speciesCount = toSpawn.Query().CountUnique(t => t.species);
+    int width = Mathf.RoundToInt(Mathf.Sqrt(speciesCount));
+
+    int[,] speciesMap = new int[_textureDimension, _textureDimension].Fill(-1);
+    layout.Clear();
+
+    int index = 0;
+    for (int c = 0; c < width; c++) {
+      int dx0 = _textureDimension * c / width;
+      int dx1 = _textureDimension * (c + 1) / width;
+
+      for (int dx = dx0; dx < dx1; dx++) {
+        for (int dy = 0; dy < _textureDimension; dy++) {
+          speciesMap[dx, dy] = toSpawn[index].species;
+
+          layout.Add(new SpeciesRect() {
+            x = dx,
+            y = dy,
+            width = 1,
+            height = 1,
+            species = speciesMap[dx, dy]
+          });
+
+          index++;
+          if (index == toSpawn.Count) {
+            goto speciesMapFull;
+          }
+        }
+      }
+    }
+    speciesMapFull:
+
+    bool didCollapse;
+    do {
+      didCollapse = false;
+
+      for (int i = 0; i < layout.Count - 1; i++) {
+        SpeciesRect rect0 = layout[i];
+        SpeciesRect rect1 = layout[i];
+        if (rect0.species != rect1.species) {
+          continue;
+        }
+
+        if (rect0.y == rect1.y &&
+            rect0.x + rect0.width == rect1.x &&
+            rect0.height == rect1.height) {
+          rect0.width += rect1.width;
+          layout[i] = rect0;
+          layout.RemoveAt(i + 1);
+          i--;
+          continue;
+        }
+
+        if (rect0.x == rect1.x &&
+           rect0.y + rect0.height == rect1.y &&
+           rect0.width == rect1.width) {
+          rect0.height += rect1.height;
+          layout[i] = rect0;
+          layout.RemoveAt(i + 1);
+          i--;
+          continue;
+        }
+      }
+    } while (didCollapse);
+
+    return;
+  }
+
+  private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {
+    TextureFormat format;
+    switch (_textureFormat) {
+      case RenderTextureFormat.ARGBFloat:
+        format = TextureFormat.RGBAFloat;
+        break;
+      case RenderTextureFormat.ARGBHalf:
+        format = TextureFormat.RGBAHalf;
+        break;
+      default:
+        throw new System.Exception("Only ARGBFLoat or ARGBHalf are supported currently!");
+    }
+
+    GL.LoadPixelMatrix(0, _textureDimension, _textureDimension, 0);
+
+    Color[] positionColors = new Color[_textureDimension * _textureDimension];
+    Color[] velocityColors = new Color[_textureDimension * _textureDimension];
+    var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      speciesMap[i] = toSpawn.Query().Where(t => t.species == i).GetEnumerator();
+    }
+
+    foreach (var rect in layout) {
+      var enumerator = speciesMap[rect.species];
+      for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
+        for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
+          enumerator.MoveNext();
+          positionColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.position;
+          velocityColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.velocity;
+        }
+      }
+    }
+
+    Texture2D tex;
+    tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
+    tex.SetPixels(positionColors);
+    tex.Apply();
+
+    blitCopy(tex, _positionSrc);
+    DestroyImmediate(tex);
+
+    tex = new Texture2D(_textureDimension, _textureDimension, format, mipmap: false, linear: true);
+    tex.SetPixels(velocityColors);
+    tex.Apply();
+
+    blitCopy(tex, _velocitySrc);
+    DestroyImmediate(tex);
+  }
+
+  private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {
+    List<Vector3> verts = new List<Vector3>();
+    List<int> tris = new List<int>();
+    List<Vector4> uv0 = new List<Vector4>();
+    List<Vector4> uv1 = new List<Vector4>();
+    List<Vector4> uv2 = new List<Vector4>();
+
+    foreach (var rectO in layout) {
+      foreach (var rectM in layout) {
+        int speciesM = rectM.species;
+        int speciesO = rectO.species;
+
+        tris.Add(verts.Count + 0);
+        tris.Add(verts.Count + 1);
+        tris.Add(verts.Count + 2);
+
+        tris.Add(verts.Count + 0);
+        tris.Add(verts.Count + 2);
+        tris.Add(verts.Count + 3);
+
+        verts.Add(new Vector3(rectM.x, rectM.y));
+        verts.Add(new Vector3(rectM.x + rectM.width, rectM.y));
+        verts.Add(new Vector3(rectM.x + rectM.width, rectM.y + rectM.height));
+        verts.Add(new Vector3(rectM.x, rectM.y + rectM.height));
+
+        float uvMx0 = rectM.x / 64.0f;
+        float uvMx1 = (rectM.x + rectM.width) / 64.0f;
+
+        float uvMy0 = rectM.y / 64.0f;
+        float uvMy1 = (rectM.y + rectM.height) / 64.0f;
+
+        float uvOx0 = rectO.x / 64.0f;
+        float uvOx1 = (rectO.x + rectO.width) / 64.0f;
+
+        float uvOy0 = rectO.y / 64.0f;
+        float uvOy1 = (rectO.y + rectO.height) / 64.0f;
+
+        uv0.Add(new Vector4(uvMx0, uvMy0, uvOx0, uvOy0));
+        uv0.Add(new Vector4(uvMx1, uvMy0, uvOx0, uvOy0));
+        uv0.Add(new Vector4(uvMx1, uvMy1, uvOx0, uvOy0));
+        uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy0));
+
+        Vector4 social;
+        social.x = socialData[speciesM, speciesO].socialForce;
+        social.y = socialData[speciesM, speciesO].socialRange;
+        social.z = speciesData[speciesM].collisionForce * speciesData[speciesO].collisionForce;
+        social.w = 0;
+
+        uv1.Add(social);
+        uv1.Add(social);
+        uv1.Add(social);
+        uv1.Add(social);
+
+        uv2.Add(new Vector4(uvOx0, uvOy0, uvOx1, uvOy1));
+        uv2.Add(new Vector4(uvOx0, uvOy0, uvOx1, uvOy1));
+        uv2.Add(new Vector4(uvOx0, uvOy0, uvOx1, uvOy1));
+        uv2.Add(new Vector4(uvOx0, uvOy0, uvOx1, uvOy1));
+      }
+    }
+
+    if (_blitMeshInteraction == null) {
+      _blitMeshInteraction = new Mesh();
+      _blitMeshInteraction.name = "BlitMesh Interaction";
+    }
+    _blitMeshInteraction.Clear();
+    _blitMeshInteraction.SetVertices(verts);
+    _blitMeshInteraction.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshInteraction.SetUVs(0, uv0);
+    _blitMeshInteraction.SetUVs(1, uv1);
+    if (includeRectUv) {
+      _blitMeshInteraction.SetUVs(2, uv2);
+    }
+    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: true);
+
+    verts.Clear();
+    tris.Clear();
+    uv0.Clear();
+    uv1.Clear();
+    uv2.Clear();
+
+    foreach (var rect in layout) {
+      tris.Add(verts.Count + 0);
+      tris.Add(verts.Count + 1);
+      tris.Add(verts.Count + 2);
+
+      tris.Add(verts.Count + 0);
+      tris.Add(verts.Count + 2);
+      tris.Add(verts.Count + 3);
+
+      verts.Add(new Vector3(rect.x, rect.y));
+      verts.Add(new Vector3(rect.x + rect.width, rect.y));
+      verts.Add(new Vector3(rect.x + rect.width, rect.y + rect.height));
+      verts.Add(new Vector3(rect.x, rect.y + rect.height));
+
+      float socialSteps = speciesData[rect.species].forceSteps;
+      float drag = speciesData[rect.species].drag;
+
+      float uvx0 = rect.x / 64.0f;
+      float uvy0 = rect.y / 64.0f;
+      float uvx1 = (rect.x + rect.width) / 64.0f;
+      float uvy1 = (rect.y + rect.height) / 64.0f;
+
+      uv0.Add(new Vector4(uvx0, uvy0, socialSteps, drag));
+      uv0.Add(new Vector4(uvx1, uvy0, socialSteps, drag));
+      uv0.Add(new Vector4(uvx1, uvy1, socialSteps, drag));
+      uv0.Add(new Vector4(uvx0, uvy1, socialSteps, drag));
+    }
+
+    if (_blitMeshParticle == null) {
+      _blitMeshParticle = new Mesh();
+      _blitMeshParticle.name = "BlitMesh Particle";
+    }
+    _blitMeshParticle.Clear();
+    _blitMeshParticle.SetVertices(verts);
+    _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshParticle.SetUVs(0, uv0);
+    _blitMeshParticle.UploadMeshData(markNoLogerReadable: true);
+
+    verts.Clear();
+    tris.Clear();
+    uv0.Clear();
+    uv1.Clear();
+
+    tris.Add(0);
+    tris.Add(1);
+    tris.Add(2);
+
+    tris.Add(0);
+    tris.Add(2);
+    tris.Add(3);
+
+    verts.Add(new Vector3(0, 0, 0));
+    verts.Add(new Vector3(_textureDimension, 0, 0));
+    verts.Add(new Vector3(_textureDimension, _textureDimension, 0));
+    verts.Add(new Vector3(0, _textureDimension, 0));
+
+    uv0.Add(new Vector4(0, 0, 0, 0));
+    uv0.Add(new Vector4(1, 0, 0, 0));
+    uv0.Add(new Vector4(1, 1, 0, 0));
+    uv0.Add(new Vector4(0, 1, 0, 0));
+
+    if (_blitMeshQuad == null) {
+      _blitMeshQuad = new Mesh();
+      _blitMeshQuad.name = "BitMesh Quad";
+    }
+    _blitMeshQuad.Clear();
+    _blitMeshQuad.SetVertices(verts);
+    _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
+    _blitMeshQuad.SetUVs(0, uv0);
+    _blitMeshQuad.UploadMeshData(markNoLogerReadable: true);
+  }
+
+  #endregion
+
   #region HAND INTERACTION
 
   private void doHandInfluenceStateUpdate(float framePercent) {
@@ -2393,166 +2732,6 @@ public class TextureSimulator : MonoBehaviour {
     bakedMesh.SetUVs(0, bakedUvs);
     bakedMesh.RecalculateNormals();
     bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-  }
-
-  private void createBlitMeshes() {
-    List<Vector3> verts = new List<Vector3>();
-    List<int> tris = new List<int>();
-    List<Vector4> uv0 = new List<Vector4>();
-    List<Vector4> uv1 = new List<Vector4>();
-
-    for (int dxO = 0; dxO < 4; dxO++) {
-      for (int dyO = 0; dyO < 4; dyO++) {
-        for (int dxM = 0; dxM < 4; dxM++) {
-          for (int dyM = 0; dyM < 4; dyM++) {
-            int speciesM = (dxM + dyM * 4);
-            int specoesO = (dxO + dyO * 4);
-
-            int xM = dxM * 16;
-            int yM = dyM * 16;
-            int xO = dxO * 16;
-            int yO = dyO * 16;
-
-            tris.Add(verts.Count + 0);
-            tris.Add(verts.Count + 1);
-            tris.Add(verts.Count + 2);
-
-            tris.Add(verts.Count + 0);
-            tris.Add(verts.Count + 2);
-            tris.Add(verts.Count + 3);
-
-            verts.Add(new Vector3(xM, yM));
-            verts.Add(new Vector3(xM + 16, yM));
-            verts.Add(new Vector3(xM + 16, yM + 16));
-            verts.Add(new Vector3(xM, yM + 16));
-
-            float uvMx0 = xM / 64.0f;
-            float uvMx1 = (xM + 16.0f) / 64.0f;
-
-            float uvMy0 = yM / 64.0f;
-            float uvMy1 = (yM + 16.0f) / 64.0f;
-
-            float uvOx0 = xO / 64.0f;
-            float uvOy0 = yO / 64.0f;
-
-            uv0.Add(new Vector4(uvMx0, uvMy0, uvOx0, uvOy0));
-            uv0.Add(new Vector4(uvMx1, uvMy0, uvOx0, uvOy0));
-            uv0.Add(new Vector4(uvMx1, uvMy1, uvOx0, uvOy0));
-            uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy0));
-
-            Vector4 socialData;
-
-            //social force
-            socialData.x = 3f * (speciesM == specoesO ? 1 : -1);
-
-            //social range
-            socialData.y = speciesM == specoesO ? 0.5f : 0.2f;
-
-            //collision force
-            socialData.z = 0.2f;
-
-            socialData.w = 0;
-
-            uv1.Add(socialData);
-            uv1.Add(socialData);
-            uv1.Add(socialData);
-            uv1.Add(socialData);
-          }
-        }
-      }
-    }
-
-    if (_blitMeshInteraction == null) {
-      _blitMeshInteraction = new Mesh();
-      _blitMeshInteraction.name = "BlitMesh Interaction";
-    }
-    _blitMeshInteraction.Clear();
-    _blitMeshInteraction.SetVertices(verts);
-    _blitMeshInteraction.SetTriangles(tris, 0, calculateBounds: true);
-    _blitMeshInteraction.SetUVs(0, uv0);
-    _blitMeshInteraction.SetUVs(1, uv1);
-    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: true);
-
-    verts.Clear();
-    tris.Clear();
-    uv0.Clear();
-    uv1.Clear();
-
-    for (int dx = 0; dx < 4; dx++) {
-      for (int dy = 0; dy < 4; dy++) {
-        int x = dx * 16;
-        int y = dy * 16;
-
-        tris.Add(verts.Count + 0);
-        tris.Add(verts.Count + 1);
-        tris.Add(verts.Count + 2);
-
-        tris.Add(verts.Count + 0);
-        tris.Add(verts.Count + 2);
-        tris.Add(verts.Count + 3);
-
-        verts.Add(new Vector3(x, y));
-        verts.Add(new Vector3(x + 16, y));
-        verts.Add(new Vector3(x + 16, y + 16));
-        verts.Add(new Vector3(x, y + 16));
-
-        float socialSteps = 0;
-        float drag = 0.95f;
-
-        float uvx0 = x / 64.0f;
-        float uvy0 = y / 64.0f;
-        float uvx1 = (x + 16.0f) / 64.0f;
-        float uvy1 = (y + 16.0f) / 64.0f;
-
-        uv0.Add(new Vector4(uvx0, uvy0, socialSteps, drag));
-        uv0.Add(new Vector4(uvx1, uvy0, socialSteps, drag));
-        uv0.Add(new Vector4(uvx1, uvy1, socialSteps, drag));
-        uv0.Add(new Vector4(uvx0, uvy1, socialSteps, drag));
-      }
-    }
-
-    if (_blitMeshParticle == null) {
-      _blitMeshParticle = new Mesh();
-      _blitMeshParticle.name = "BlitMesh Particle";
-    }
-    _blitMeshParticle.Clear();
-    _blitMeshParticle.SetVertices(verts);
-    _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
-    _blitMeshParticle.SetUVs(0, uv0);
-    _blitMeshParticle.UploadMeshData(markNoLogerReadable: true);
-
-    verts.Clear();
-    tris.Clear();
-    uv0.Clear();
-    uv1.Clear();
-
-    tris.Add(0);
-    tris.Add(1);
-    tris.Add(2);
-
-    tris.Add(0);
-    tris.Add(2);
-    tris.Add(3);
-
-    verts.Add(new Vector3(0, 0, 0));
-    verts.Add(new Vector3(_textureDimension, 0, 0));
-    verts.Add(new Vector3(_textureDimension, _textureDimension, 0));
-    verts.Add(new Vector3(0, _textureDimension, 0));
-
-    uv0.Add(new Vector4(0, 0, 0, 0));
-    uv0.Add(new Vector4(1, 0, 0, 0));
-    uv0.Add(new Vector4(1, 1, 0, 0));
-    uv0.Add(new Vector4(0, 1, 0, 0));
-
-    if (_blitMeshQuad == null) {
-      _blitMeshQuad = new Mesh();
-      _blitMeshQuad.name = "BitMesh Quad";
-    }
-    _blitMeshQuad.Clear();
-    _blitMeshQuad.SetVertices(verts);
-    _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
-    _blitMeshQuad.SetUVs(0, uv0);
-    _blitMeshQuad.UploadMeshData(markNoLogerReadable: true);
   }
 
   private RenderTexture createParticleTexture() {

@@ -745,6 +745,8 @@ public class TextureSimulator : MonoBehaviour {
 
   //Simulation
   private int _currentSimulationSpeciesCount = MAX_SPECIES;
+  private bool _currentEcosystemisRandom = false;
+
   private SpawnPreset _currentSpawnPreset = SpawnPreset.Spherical;
   private RenderTexture _frontPos, _frontVel, _backPos, _backVel;
   private RenderTexture _frontSocial, _backSocial;
@@ -989,6 +991,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public void LoadPresetEcosystem(EcosystemPreset preset) {
     _particlesToSimulate = MAX_PARTICLES;
+    _currentEcosystemisRandom = false;
 
     var setting = _presetEcosystemSettings;
     _currentSpawnPreset = SpawnPreset.Spherical;
@@ -1800,6 +1803,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void ResetPositions(Vector3[] positions, Vector3[] velocities, int[] species) {
+    if (_currentEcosystemisRandom) {
+      _currentSimulationSpeciesCount = _randomEcosystemSettings.speciesCount;
+    }
+
     TextureFormat format;
     switch (_textureFormat) {
       case RenderTextureFormat.ARGBFloat:
@@ -1876,6 +1883,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public void LoadRandomEcosystem(string seed, bool dontResetPositions = false) {
+    _currentEcosystemisRandom = true;
     var setting = _randomEcosystemSettings;
     _currentSpawnPreset = setting.spawnMode;
 

@@ -2051,7 +2051,7 @@ public class TextureSimulator : MonoBehaviour {
       _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
     }
 
-    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / _handCollisionThickness);
+    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / (_handCollisionThickness / transform.lossyScale.x));
     _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);

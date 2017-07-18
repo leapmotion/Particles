@@ -179,10 +179,10 @@
       if (spheres > 0.5) {
         sphereForce /= spheres;
 #ifdef SPHERE_MODE_STASIS
-        velocity.xyz = sphereForce.xyz * sphereForce.w;
+        velocity.xyz = sphereForce.xyz * sphereForce.w * 100;
         velocity.w *= lerp(1, 0.5, sphereForce.w);
 #else
-        velocity.xyz += sphereForce.xyz * sphereForce.w;
+        velocity.xyz += sphereForce.xyz * sphereForce.w * 100;
 #endif
       } else {
         velocity.w = lerp(velocity.w, 1, 0.05);
@@ -210,8 +210,8 @@
 
         half3 relVel = vel + velocity.xyz;
         half dir = saturate(dot(normalize(relVel), normalize(pa)));
-        velocity.xyz = lerp(velocity.xyz, vel, soft * dir);
-        velocity.xyz += forceVector * _HandCollisionExtraForce * soft;
+        velocity.xyz = lerp(velocity.xyz, vel * 100, soft * dir);
+        velocity.xyz += forceVector * _HandCollisionExtraForce * soft * 100;
 
         //half2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
         //if (dist < socialData.y) {

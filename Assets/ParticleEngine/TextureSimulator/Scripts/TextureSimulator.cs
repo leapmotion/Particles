@@ -748,6 +748,9 @@ public class TextureSimulator : MonoBehaviour {
   private Renderer _socialDebug;
 
   [SerializeField]
+  private Renderer _layoutDebug;
+
+  [SerializeField]
   private Renderer _shaderDataDebug;
 
   [SerializeField]
@@ -2125,8 +2128,23 @@ public class TextureSimulator : MonoBehaviour {
       speciesMap[i] = toSpawn.Query().Where(t => t.species == j).GetEnumerator();
     }
 
+    Texture2D layoutTex = null;
+    if(_layoutDebug != null && _layoutDebug.gameObject.activeInHierarchy) {
+      layoutTex = new Texture2D(_textureDimension, _textureDimension, TextureFormat.ARGB32, mipmap: false);
+      layoutTex.filterMode = FilterMode.Point;
+      layoutTex.wrapMode = TextureWrapMode.Clamp;
+      _layoutDebug.material.mainTexture = layoutTex;
+    }
+
+    int minSpecies = layout.Query().Select(t => t.species).Fold((a, b) => Mathf.Min(a, b));
+    int maxSpecies = layout.Query().Select(t => t.species).Fold((a, b) => Mathf.Max(a, b));
+
     foreach (var rect in layout) {
       var enumerator = speciesMap[rect.species];
+
+      Color speciesDebugCenter = Color.HSVToRGB(Mathf.InverseLerp(minSpecies, maxSpecies + 1, rect.species), 1, 1);
+      Color speciesDebugEdge = Color.HSVToRGB(Mathf.InverseLerp(minSpecies, maxSpecies + 1, rect.species), 1, 0.86f);
+
       for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
         for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
           if (!enumerator.MoveNext()) {
@@ -2134,8 +2152,20 @@ public class TextureSimulator : MonoBehaviour {
           }
           positionColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.position;
           velocityColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.velocity;
+
+          if (layoutTex != null) {
+            if (dx == rect.x || dx == rect.x + rect.width - 1 || dy == rect.y || dy == rect.y + rect.height - 1) {
+              layoutTex.SetPixel(dx, dy, speciesDebugEdge);
+            } else {
+              layoutTex.SetPixel(dx, dy, speciesDebugCenter);
+            }
+          }
         }
       }
+    }
+
+    if (layoutTex != null) {
+      layoutTex.Apply();
     }
 
     Texture2D tex;

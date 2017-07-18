@@ -34,7 +34,7 @@
 			}
 			
 			fixed4 frag (v2f i) : SV_Target {
-				fixed4 col = tex2D(_ParticlePositions, i.uv);
+				fixed4 col = abs(tex2D(_ParticlePositions, i.uv));
 				return col * _Scale;
 			}
 			ENDCG

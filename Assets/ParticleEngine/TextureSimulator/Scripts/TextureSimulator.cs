@@ -378,7 +378,7 @@ public class TextureSimulator : MonoBehaviour {
     set { _fieldRadius = value; }
   }
 
-  [Range(0, 0.001f)]
+  [Range(0, 0.1f)]
   [SerializeField]
   private float _fieldForce = 0.0005f;
   public float fieldForce {
@@ -1041,7 +1041,7 @@ public class TextureSimulator : MonoBehaviour {
     Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];
     Vector4[] speciesData = new Vector4[MAX_SPECIES];
 
-    Vector3[] particlePositions = new Vector3[MAX_PARTICLES].Fill(() => Random.insideUnitSphere);
+    Vector3[] particlePositions = new Vector3[MAX_PARTICLES].Fill(() => Random.insideUnitSphere * _spawnRadius);
     Vector3[] particleVelocities = new Vector3[MAX_PARTICLES];
     int[] particleSpecies = new int[MAX_PARTICLES].Fill(-1);
 
@@ -2006,7 +2006,7 @@ public class TextureSimulator : MonoBehaviour {
 
     uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
 
-    resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, isUsingOptimizedLayout);
+    resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
 
     //TODO: more shader constants here
     _currScaledTime = 0;
@@ -2254,6 +2254,9 @@ public class TextureSimulator : MonoBehaviour {
     List<Vector4> uv1 = new List<Vector4>();
     List<Vector4> uv2 = new List<Vector4>();
 
+    float velocityScalar = 100;
+    float socialScalar = 1000;
+
     foreach (var rectO in layout) {
       foreach (var rectM in layout) {
         int speciesM = rectM.species;
@@ -2290,9 +2293,9 @@ public class TextureSimulator : MonoBehaviour {
         uv0.Add(new Vector4(uvMx0, uvMy1, uvOx0, uvOy0));
 
         Vector4 social;
-        social.x = socialData[speciesM, speciesO].socialForce;
+        social.x = socialData[speciesM, speciesO].socialForce * socialScalar;
         social.y = socialData[speciesM, speciesO].socialRange;
-        social.z = speciesData[speciesM].collisionForce * speciesData[speciesO].collisionForce;
+        social.z = (speciesData[speciesM].collisionForce + speciesData[speciesO].collisionForce) * 0.5f * velocityScalar;
         social.w = 0;
 
         uv1.Add(social);

@@ -201,16 +201,17 @@
     velocity.xyz += socialForce.xyz * 0.1;
 
     //Damping
-    velocity.xyz *= lerp(1, i.uv.w, velocity.w);
+    //velocity.xyz *= lerp(1, i.uv.w, velocity.w);
+    velocity.xyz *= i.uv.w;
 
     return velocity;
   }
 
   FragmentOutput updateCollisionVelocities(v2f_i i) {
     half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
-    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy) / 16.0;
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy) / 8.0;
 
-    half4 totalSocialForce = half4(0, 0, 0, -1.0 / 16.0);
+    half4 totalSocialForce = half4(0, 0, 0, -1.0 / 8.0);
 
     //half4 neighborA = tex2Dlod0(_ParticlePositions, i.uv - half2(1.0 / MAX_PARTICLES, 0));
     //half4 neighborB = tex2Dlod0(_ParticlePositions, i.uv + half2(1.0 / MAX_PARTICLES, 0));

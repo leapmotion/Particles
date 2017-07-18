@@ -160,7 +160,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _presetEcosystemSettings._ecosystemPreset
-      value: 0
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
@@ -177,6 +177,20 @@ Prefab:
       propertyPath: _layoutDebug
       value: 
       objectReference: {fileID: 255213448}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _fieldForce
+      value: 0.001
+      objectReference: {fileID: 0}
+    - target: {fileID: 1112514907497746, guid: 293126bede65632468a25da3a2d80e96, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _spawnRadius
+      value: 1.39
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 293126bede65632468a25da3a2d80e96, type: 2}
   m_IsPrefabParent: 0

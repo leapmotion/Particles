@@ -189,6 +189,37 @@
       }
     }
 
+    //Collision with capsules and social hands
+    {
+      for (int i = 0; i < _CapsuleCount; i++) {
+        half3 a = _CapsuleA[i];
+        half3 b = _CapsuleB[i];
+        half radius = _CapsuleA[i].w;
+
+        half3 pa = particle.xyz - a;
+        half3 ba = b - a;
+        half h = saturate(dot(pa, ba) / dot(ba, ba));
+
+        half3 forceVector = pa - ba * h;
+        half3 vel = -ba;
+
+        half dist = length(forceVector);
+        forceVector /= dist;
+
+        half soft = 1 - saturate((dist - radius) * _HandCollisionInverseThickness);
+
+        half3 relVel = vel + velocity.xyz;
+        half dir = saturate(dot(normalize(relVel), normalize(pa)));
+        velocity.xyz = lerp(velocity.xyz, vel, soft * dir);
+        velocity.xyz += forceVector * _HandCollisionExtraForce * soft;
+
+        //half2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
+        //if (dist < socialData.y) {
+        //  totalSocialForce += half4(-socialData.x * forceVector, 1) * _SocialHandForceFactor;
+        //}
+      }
+    }
+
     return velocity;
   }
 
@@ -261,37 +292,6 @@
         if (distance < i.social.y) {
           totalSocialForce += half4(i.social.x * toOther, 1);
         }
-      }
-    }
-
-    //Collision with capsules and social hands
-    {
-      for (int i = 0; i < _CapsuleCount; i++) {
-        half3 a = _CapsuleA[i];
-        half3 b = _CapsuleB[i];
-        half radius = _CapsuleA[i].w;
-
-        half3 pa = particle.xyz - a;
-        half3 ba = b - a;
-        half h = saturate(dot(pa, ba) / dot(ba, ba));
-
-        half3 forceVector = pa - ba * h;
-        half3 vel = -ba;
-
-        half dist = length(forceVector);
-        forceVector /= dist;
-
-        half soft = 1 - saturate((dist - radius) * _HandCollisionInverseThickness);
-
-        half3 relVel = vel + velocity.xyz;
-        half dir = saturate(dot(normalize(relVel), normalize(pa)));
-        velocity.xyz = lerp(velocity.xyz, vel * _SampleFraction, soft * dir);
-        velocity.xyz += forceVector * _HandCollisionExtraForce * soft;
-
-        //half2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
-        //if (dist < socialData.y) {
-        //  totalSocialForce += half4(-socialData.x * forceVector, 1) * _SocialHandForceFactor;
-        //}
       }
     }
 

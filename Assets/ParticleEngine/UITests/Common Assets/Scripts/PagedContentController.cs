@@ -29,7 +29,7 @@ public class PagedContentController : MonoBehaviour {
   }
 
   void Awake() {
-    //pageIndexController.OnIndexToggled += (i) => { pageIdx = i; };
+    pageIndexController.OnIndexToggled += (i) => { pageIdx = i; };
   }
 
   private void disableOtherPages(int pageIdx) {

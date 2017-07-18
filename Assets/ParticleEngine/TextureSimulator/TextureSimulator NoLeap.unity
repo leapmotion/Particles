@@ -160,7 +160,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _presetEcosystemSettings._ecosystemPreset
-      value: 3
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
@@ -180,7 +180,7 @@ Prefab:
     - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
         type: 2}
       propertyPath: _fieldForce
-      value: 0.001
+      value: 0.0605
       objectReference: {fileID: 0}
     - target: {fileID: 1112514907497746, guid: 293126bede65632468a25da3a2d80e96, type: 2}
       propertyPath: m_IsActive
@@ -190,6 +190,31 @@ Prefab:
         type: 2}
       propertyPath: _spawnRadius
       value: 1.39
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: dynamicSpeciesCount
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 102232639595873002, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: m_Text
+      value: 90 -90 - 90 - 90 - 90 - 90 -90 - 90 - 90 - 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 102232639595873002, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: m_FontSize
+      value: 19
+      objectReference: {fileID: 0}
+    - target: {fileID: 114842889177650588, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114594159204049402, guid: 293126bede65632468a25da3a2d80e96,
+        type: 2}
+      propertyPath: _fieldRadius
+      value: 1.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 293126bede65632468a25da3a2d80e96, type: 2}

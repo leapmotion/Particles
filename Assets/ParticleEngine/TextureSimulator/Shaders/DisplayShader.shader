@@ -73,7 +73,7 @@
 #endif
 
 #ifdef COLOR_SPECIES_MAGNITUDE
-      v.color = _Colors[(int)v.texcoord.w] * length(velocity.xyz) * _Brightness;
+      v.color = _SpeciesColors[(int)v.texcoord.w] * length(velocity.xyz) * _Brightness;
 #endif
 
       velocity.xyz *= velocity.w;

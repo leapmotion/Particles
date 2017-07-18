@@ -27,6 +27,8 @@ public class TextureSimulator : MonoBehaviour {
   public const string PROP_POSITION_GLOBAL = "_ParticlePositions";
   public const string PROP_SOCIAL_FORCE_GLOBAL = "_ParticleSocialForces";
 
+  public const string PROP_SIMULATION_FRACTION = "_SampleFraction";
+
   //#### Display Keywords ####
   public const string KEYWORD_BY_SPECIES = "COLOR_SPECIES";
   public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
@@ -957,10 +959,6 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
 
-    Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
-    Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
-    Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-
     RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
 
     buildSimulationCommands();
@@ -1033,8 +1031,7 @@ public class TextureSimulator : MonoBehaviour {
     TEST_ThreeParticles,
     TEST_ThreeSpecies
   }
-
-
+  
   private SimulationDescription getPresetDescription(EcosystemPreset preset) {
     var setting = _presetEcosystemSettings;
     Color[] colors = new Color[MAX_SPECIES];
@@ -1066,9 +1063,9 @@ public class TextureSimulator : MonoBehaviour {
       speciesData[i] = new Vector3(setting.minDrag, 0, setting.maxCollision);
     }
 
-    //---------------------------------------------
-    // Red Menace 
-    //---------------------------------------------
+      //---------------------------------------------
+      // Red Menace 
+      //---------------------------------------------
     if (preset == EcosystemPreset.RedMenace) {
       colors[0] = new Color(1.0f, 0.0f, 0.0f);
       colors[1] = new Color(0.3f, 0.2f, 0.0f);
@@ -1830,6 +1827,14 @@ public class TextureSimulator : MonoBehaviour {
       };
     }
 
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+      desc.toSpawn.Add(new ParticleSpawn() {
+        position = Random.insideUnitSphere * _spawnRadius,
+        velocity = Vector3.zero,
+        species = i % setting.speciesCount
+      });
+    }
+
     // Perform color randomization last so that it has no effect on particle interaction.
     var colors = getRandomColors();
     for (int i = 0; i < MAX_SPECIES; i++) {
@@ -1999,6 +2004,8 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (isLayoutDifferent) {
+      Debug.Log("Layout generated using " + layout.Count + " rectangles.");
+
       resetParticleTextures(layout, simulationDescription.toSpawn);
 
       resetRenderMeshes(simulationDescription, layout);
@@ -2009,12 +2016,16 @@ public class TextureSimulator : MonoBehaviour {
     resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
 
     //TODO: more shader constants here
+    _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
     _currScaledTime = 0;
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
 
     //TODO: reset command buffer state correctly
     _commandIndex = 0;
+    Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
+    Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
+    Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
     _currentDescription = simulationDescription;
   }
@@ -2099,8 +2110,6 @@ public class TextureSimulator : MonoBehaviour {
       Debug.Log("Layout had more than 100 rects! (" + layout.Count + ")");
       throw new System.Exception();
     }
-
-    Debug.Log("Layout generated using " + layout.Count + " rectangles.");
 
     return;
   }
@@ -2695,7 +2704,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
-      RandomizeSimulation();
+      RandomizeSimulation(forcePositionReset: false);
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {

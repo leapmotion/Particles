@@ -930,6 +930,7 @@ public class TextureSimulator : MonoBehaviour {
   #region UNITY MESSAGES
   private void Awake() {
     _displayBlock = new MaterialPropertyBlock();
+    _handActors.Fill(() => new HandActor(this));
   }
 
   void Start() {
@@ -957,13 +958,11 @@ public class TextureSimulator : MonoBehaviour {
     Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
     Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
-    buildSimulationCommands();
-
     RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
 
-    updateShaderData();
+    buildSimulationCommands();
 
-    _handActors.Fill(() => new HandActor(this));
+    updateShaderData();
 
     updateKeywords();
   }
@@ -2070,6 +2069,7 @@ public class TextureSimulator : MonoBehaviour {
         if (rect0.y == rect1.y &&
             rect0.x + rect0.width == rect1.x &&
             rect0.height == rect1.height) {
+          didCollapse = true;
           rect0.width += rect1.width;
           layout[i] = rect0;
           layout.RemoveAt(i + 1);
@@ -2080,6 +2080,7 @@ public class TextureSimulator : MonoBehaviour {
         if (rect0.x == rect1.x &&
            rect0.y + rect0.height == rect1.y &&
            rect0.width == rect1.width) {
+          didCollapse = true;
           rect0.height += rect1.height;
           layout[i] = rect0;
           layout.RemoveAt(i + 1);

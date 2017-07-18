@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: SimulationMaterial
   m_Shader: {fileID: 4800000, guid: fd48907d591133d4e844a3bd51b2f576, type: 3}
-  m_ShaderKeywords: ENABLE_STOCHASTIC_SAMPLING SPHERE_MODE_STASIS
+  m_ShaderKeywords: GENERAL_SAMPLING SPHERE_MODE_STASIS
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0

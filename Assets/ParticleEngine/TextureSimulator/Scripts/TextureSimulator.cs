@@ -1120,10 +1120,10 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-  //---------------------------------------------
-  // Chase 
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.Chase) {
+    //---------------------------------------------
+    // Chase 
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Chase) {
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
         speciesData[i] = new Vector3(setting.minDrag, 0, setting.minCollision);
         socialData[i, i] = new Vector2(setting.maxSocialForce * 0.1f, setting.maxSocialRange);
@@ -1166,10 +1166,10 @@ public class TextureSimulator : MonoBehaviour {
       socialData[9, 8] = new Vector2(flee, range);
     }
 
-  //---------------------------------------------
-  // Mitosis 
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.Mitosis) {
+    //---------------------------------------------
+    // Mitosis 
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Mitosis) {
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
         speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.1f),
                                      0,
@@ -1195,10 +1195,10 @@ public class TextureSimulator : MonoBehaviour {
       colors[0] = new Color(0.0f, 0.0f, 0.0f);
     }
 
-  //---------------------------------------------
-  // Planets 
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.Planets) {
+    //---------------------------------------------
+    // Planets 
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Planets) {
       currentSimulationSpeciesCount = 9;
 
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1239,11 +1239,11 @@ public class TextureSimulator : MonoBehaviour {
       colors[8] = new Color(0.2f, 0.1f, 0.5f);
     }
 
-  //---------------------------------------------
-  // This is a controlled test scenario with
-  // only ONE particle! (Yea, boring, I know).
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.TEST_OneParticle) {
+    //---------------------------------------------
+    // This is a controlled test scenario with
+    // only ONE particle! (Yea, boring, I know).
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.TEST_OneParticle) {
       currentSimulationSpeciesCount = 1;
       particlesToSimulate = 1;
 
@@ -1264,11 +1264,11 @@ public class TextureSimulator : MonoBehaviour {
       particlePositions[0] = new Vector3(0.0f, 0.0f, 0.0f);
     }
 
-  //---------------------------------------------
-  // This is a controlled test scenario with
-  // two particles that have mutual attraction
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.TEST_TwoParticles) {
+    //---------------------------------------------
+    // This is a controlled test scenario with
+    // two particles that have mutual attraction
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.TEST_TwoParticles) {
       currentSimulationSpeciesCount = 2;
       particlesToSimulate = 2;
 
@@ -1319,11 +1319,11 @@ public class TextureSimulator : MonoBehaviour {
       particleSpecies[1] = Test2_TWO_species;
     }
 
-  //---------------------------------------------
-  // This is a controlled test scenario with
-  // three particles that have mutual attraction
-  //---------------------------------------------
-  else if (preset == EcosystemPreset.TEST_ThreeParticles) {
+    //---------------------------------------------
+    // This is a controlled test scenario with
+    // three particles that have mutual attraction
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.TEST_ThreeParticles) {
       currentSimulationSpeciesCount = 3;
       particlesToSimulate = 3;
 
@@ -1359,11 +1359,11 @@ public class TextureSimulator : MonoBehaviour {
     }
 
 
-  //----------------------------------------------------------------
-  // This is a controlled test scenario which is the same as
-  // Test3 in terms of species, but it has lots of particles
-  //----------------------------------------------------------------
-  else if (preset == EcosystemPreset.TEST_ThreeSpecies) {
+    //----------------------------------------------------------------
+    // This is a controlled test scenario which is the same as
+    // Test3 in terms of species, but it has lots of particles
+    //----------------------------------------------------------------
+    else if (preset == EcosystemPreset.TEST_ThreeSpecies) {
       currentSimulationSpeciesCount = 3;
       particlesToSimulate = 3000;
 
@@ -1404,10 +1404,10 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-  //-----------------------------------------------------------------------------------
-  // This is a test to see if we can simulate (somewhat and somehow) a bilayer lipid!
-  //-----------------------------------------------------------------------------------
-  else if (preset == EcosystemPreset.Layers) {
+    //-----------------------------------------------------------------------------------
+    // This is a test to see if we can simulate (somewhat and somehow) a bilayer lipid!
+    //-----------------------------------------------------------------------------------
+    else if (preset == EcosystemPreset.Layers) {
       currentSimulationSpeciesCount = 4;
 
       int s0 = 0;
@@ -1623,10 +1623,10 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-  //------------------------------------------------
-  // Bodymind!
-  //------------------------------------------------
-  else if (preset == EcosystemPreset.BodyMind) {
+    //------------------------------------------------
+    // Bodymind!
+    //------------------------------------------------
+    else if (preset == EcosystemPreset.BodyMind) {
       int blue = 0;
       int purple = 1;
       int black = 2;
@@ -1685,10 +1685,10 @@ public class TextureSimulator : MonoBehaviour {
       socialData[black, purple] = new Vector2(setting.maxSocialForce * blackToPurpleForce, setting.maxSocialRange * blackToPurpleRange);
     }
 
-  //------------------------------------------------
-  // Globules
-  //------------------------------------------------
-  else if (preset == EcosystemPreset.Globules) {
+    //------------------------------------------------
+    // Globules
+    //------------------------------------------------
+    else if (preset == EcosystemPreset.Globules) {
       currentSimulationSpeciesCount = 3;
 
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1725,10 +1725,10 @@ public class TextureSimulator : MonoBehaviour {
       colors[2] = new Color(0.4f, 0.1f, 0.1f);
     }
 
-  //------------------------------------------------
-  // Fluidy
-  //------------------------------------------------
-  else if (preset == EcosystemPreset.Fluidy) {
+    //------------------------------------------------
+    // Fluidy
+    //------------------------------------------------
+    else if (preset == EcosystemPreset.Fluidy) {
       for (var i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
         for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
           socialData[i, j] = new Vector2(0, 0);

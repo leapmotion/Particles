@@ -14,15 +14,22 @@ public class PagedContentController : MonoBehaviour {
       return _pageIdx;
     }
     set {
-      _pageIdx = Mathf.Max(0, Mathf.Min(pages.Length, value));
+      _pageIdx = Mathf.Max(0, Mathf.Min(pages.Length - 1, value));
 
       disableOtherPages(_pageIdx);
       enablePage(_pageIdx);
     }
   }
 
+  [Header("Page Controllers")]
+  public RadioToggleGroup pageIndexController;
+
   void OnValidate() {
     _pageIdx = Mathf.Max(0, Mathf.Min(pages.Length, pageIdx));
+  }
+
+  void Awake() {
+    //pageIndexController.OnIndexToggled += (i) => { pageIdx = i; };
   }
 
   private void disableOtherPages(int pageIdx) {

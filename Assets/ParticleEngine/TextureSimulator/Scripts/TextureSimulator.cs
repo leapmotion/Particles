@@ -864,6 +864,12 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public SimulationDescription currentSimulationDescription {
+    get {
+      return _currentSimDescription;
+    }
+  }
+
   public float maxInfluenceRadius {
     get {
       switch (_handInfluenceType) {
@@ -1889,14 +1895,6 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region RESET LOGIC
-
-  private SimulationDescription _currentDescription = null;
-  public SimulationDescription currentSimulationDescription {
-    get {
-      return _currentDescription;
-    }
-  }
-
   public struct SocialData {
     public float socialForce;
     public float socialRange;
@@ -1932,7 +1930,7 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentDescription);
+    RestartSimulation(_currentSimDescription);
   }
 
   /// <summary>
@@ -1973,9 +1971,9 @@ public class TextureSimulator : MonoBehaviour {
   public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
     bool isLayoutDifferent = true;
 
-    if (_currentDescription != null && !forcePositionReset) {
+    if (_currentSimDescription != null && !forcePositionReset) {
       List<int> originalSpeciesMap = new List<int>();
-      _currentDescription.toSpawn.Query().Select(t => t.species).FillList(originalSpeciesMap);
+      _currentSimDescription.toSpawn.Query().Select(t => t.species).FillList(originalSpeciesMap);
       originalSpeciesMap.Sort();
 
       List<int> newSpeciesMap = new List<int>();
@@ -2034,7 +2032,7 @@ public class TextureSimulator : MonoBehaviour {
     Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
     Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
-    _currentDescription = simulationDescription;
+    _currentSimDescription = simulationDescription;
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {

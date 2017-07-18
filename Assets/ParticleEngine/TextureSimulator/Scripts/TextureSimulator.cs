@@ -2152,8 +2152,8 @@ public class TextureSimulator : MonoBehaviour {
       _layoutDebug.material.mainTexture = layoutTex;
     }
 
-    int minSpecies = layout.Query().Select(t => t.species).Fold((a, b) => Mathf.Min(a, b));
-    int maxSpecies = layout.Query().Select(t => t.species).Fold((a, b) => Mathf.Max(a, b));
+    int minSpecies = layout.Query().Min(t => t.species);
+    int maxSpecies = layout.Query().Max(t => t.species);
 
     foreach (var rect in layout) {
       var enumerator = speciesMap[rect.species];

@@ -24,8 +24,6 @@
 
     sampler2D _ToonRamp;
 
-    float _ParticleCount;
-
     struct Input {
       float4 color : COLOR;
       float3 viewDir;
@@ -34,7 +32,8 @@
     half _Lerp;
     half _Glossiness;
     half _Metallic;
-    float4 _Colors[32];
+
+    float4 _SpeciesColors[32];
     float _Size;
     float _TrailLength;
     float _Brightness;
@@ -66,7 +65,7 @@
       float4 velocity = float4(0, 0, 0, 0);
 
 #ifdef COLOR_SPECIES
-      v.color = _Colors[(int)particle.w];
+      v.color = _SpeciesColors[(int)v.texcoord.w];
 #endif
 
 #ifdef COLOR_VELOCITY
@@ -74,7 +73,7 @@
 #endif
 
 #ifdef COLOR_SPECIES_MAGNITUDE
-      v.color = _Colors[(int)particle.w] * length(velocity.xyz) * _Brightness;
+      v.color = _Colors[(int)v.texcoord.w] * length(velocity.xyz) * _Brightness;
 #endif
 
       velocity.xyz *= velocity.w;
@@ -97,10 +96,6 @@
       v.vertex.xyz *= squash;
       v.vertex.xyz += velocity.xyz * dot(velocity.xyz, v.vertex.xyz) / velLength;
 #endif
-
-      if (v.texcoord.x > _ParticleCount) {
-        v.vertex.xyz += float3(0, 1000, 0);
-      }
       
       v.vertex.xyz += particle.xyz;
     }

@@ -1917,7 +1917,7 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-
+    RestartSimulation(_currentDescription);
   }
 
   /// <summary>
@@ -2012,6 +2012,8 @@ public class TextureSimulator : MonoBehaviour {
 
     //TODO: reset command buffer state correctly
     _commandIndex = 0;
+
+    _currentDescription = simulationDescription;
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
@@ -2034,8 +2036,8 @@ public class TextureSimulator : MonoBehaviour {
       int dx0 = _textureDimension * c / width;
       int dx1 = _textureDimension * (c + 1) / width;
 
-      for (int dx = dx0; dx < dx1; dx++) {
-        for (int dy = 0; dy < _textureDimension; dy++) {
+      for (int dy = 0; dy < _textureDimension; dy++) {
+        for (int dx = dx0; dx < dx1; dx++) {
           speciesMap[dx, dy] = toSpawn[index].species;
 
           layout.Add(new SpeciesRect() {
@@ -2061,7 +2063,7 @@ public class TextureSimulator : MonoBehaviour {
 
       for (int i = 0; i < layout.Count - 1; i++) {
         SpeciesRect rect0 = layout[i];
-        SpeciesRect rect1 = layout[i];
+        SpeciesRect rect1 = layout[i + 1];
         if (rect0.species != rect1.species) {
           continue;
         }
@@ -2090,6 +2092,13 @@ public class TextureSimulator : MonoBehaviour {
       }
     } while (didCollapse);
 
+    if (layout.Count > 100) {
+      Debug.Log("Layout had more than 100 rects! (" + layout.Count + ")");
+      throw new System.Exception();
+    }
+
+    Debug.Log("Layout generated using " + layout.Count + " rectangles.");
+
     return;
   }
 
@@ -2112,14 +2121,17 @@ public class TextureSimulator : MonoBehaviour {
     Color[] velocityColors = new Color[_textureDimension * _textureDimension];
     var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
-      speciesMap[i] = toSpawn.Query().Where(t => t.species == i).GetEnumerator();
+      int j = i;
+      speciesMap[i] = toSpawn.Query().Where(t => t.species == j).GetEnumerator();
     }
 
     foreach (var rect in layout) {
       var enumerator = speciesMap[rect.species];
       for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
         for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
-          enumerator.MoveNext();
+          if (!enumerator.MoveNext()) {
+            throw new System.Exception("Enumerator finished too early!  Layout did not match actual particles to spawn!");
+          }
           positionColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.position;
           velocityColors[dx + dy * _textureDimension] = (Vector4)enumerator.Current.velocity;
         }
@@ -2277,7 +2289,7 @@ public class TextureSimulator : MonoBehaviour {
     if (includeRectUv) {
       _blitMeshInteraction.SetUVs(2, uv2);
     }
-    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: true);
+    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: false);
 
     verts.Clear();
     tris.Clear();
@@ -2321,7 +2333,7 @@ public class TextureSimulator : MonoBehaviour {
     _blitMeshParticle.SetVertices(verts);
     _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
     _blitMeshParticle.SetUVs(0, uv0);
-    _blitMeshParticle.UploadMeshData(markNoLogerReadable: true);
+    _blitMeshParticle.UploadMeshData(markNoLogerReadable: false);
 
     verts.Clear();
     tris.Clear();
@@ -2354,7 +2366,7 @@ public class TextureSimulator : MonoBehaviour {
     _blitMeshQuad.SetVertices(verts);
     _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
     _blitMeshQuad.SetUVs(0, uv0);
-    _blitMeshQuad.UploadMeshData(markNoLogerReadable: true);
+    _blitMeshQuad.UploadMeshData(markNoLogerReadable: false);
   }
 
   #endregion

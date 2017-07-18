@@ -1,25 +1,46 @@
 ﻿Shader "Unlit/Simulation" {
-  Properties {
+  Properties{
   }
 
   CGINCLUDE
   #include "UnityCG.cginc"
 
-  #define MAX_PARTICLES 4096
+  #define PARTICLE_DIM 64
+  #define MAX_PARTICLES (PARTICLE_DIM * PARTICLE_DIM)
   #define MAX_FORCE_STEPS 64
   #define MAX_SPECIES 10
   #define PARTICLE_RADIUS 0.01
   #define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
   #define COLLISION_FORCE 0.002
 
-  struct appdata {
+  #define tex2Dlod0(s, c) tex2Dlod(s, half4(c, 0, 0))
+
+  struct appdata_p {
     float4 vertex : POSITION;
-    float2 uv : TEXCOORD0;
+    float4 uv : TEXCOORD0;
   };
 
-  struct v2f {
-    float2 uv : TEXCOORD0;
-    float4 vertex : SV_POSITION;
+  struct appdata_i {
+    float4 vertex : POSITION;
+    float4 uv : TEXCOORD0; 
+    float4 social : TEXCOORD1;
+#ifdef GENERAL_SAMPLING
+    float4 sampleRect : TEXCOORD2;
+#endif
+  };
+
+  struct v2f_p {
+    float4 uv : TEXCOORD0;
+    float4 vertex : SV_Position;
+  };
+
+  struct v2f_i {
+    float4 uv : TEXCOORD0;
+    float4 social : TEXCOORD1;
+#ifdef GENERAL_SAMPLING
+    float4 sampleRect : TEXCOORD2;
+#endif
+    float4 vertex : SV_Position;
   };
 
   struct FragmentOutput {
@@ -27,46 +48,43 @@
     float4 dest1 : SV_Target1;
   };
 
-  sampler2D _CopySource;
-  sampler2D _Velocity;
-  sampler2D _Position;
+  sampler2D_half _CopySource;
+  sampler2D_half _ParticleVelocities;
+  sampler2D_half _ParticlePositions;
 
-  sampler2D _SocialTemp;
-  sampler2D _SocialForce;
+  sampler2D_half _SocialTemp;
+  sampler2D_half _ParticleSocialForces;
 
-  uniform int _ParticleCount;
+  sampler2D_half _StochasticCoordinates;
+  uniform int _StochasticCount;
+  uniform half _StochasticOffset;
 
-  float3 _FieldCenter;
-  float _FieldRadius;
-  float _FieldForce;
-  float3 _HeadPos;
-  float _HeadRadius;
+  uniform uint _SampleWidth;
+  uniform uint _SampleHeight;
+  uniform half _SampleFraction;
 
-  float _SpeciesCount;
-  float _SpawnRadius;
+  uniform half3 _FieldCenter;
+  uniform half _FieldRadius;
+  uniform half _FieldForce;
+  uniform float3 _HeadPos;
+  uniform half _HeadRadius;
 
-  float _HandCollisionInverseThickness;
-  float _HandCollisionExtraForce;
+  uniform half _HandCollisionInverseThickness;
+  uniform half _HandCollisionExtraForce;
 
-  int _SocialHandSpecies;
-  float _SocialHandForceFactor;
+  uniform half4 _CapsuleA[128];
+  uniform half4 _CapsuleB[128];
+  uniform int _CapsuleCount;
 
-  float4 _SpeciesData[MAX_SPECIES];
-  float4 _SocialData[MAX_SPECIES * MAX_SPECIES];
+  uniform half4 _Spheres[2];
+  uniform half4 _SphereVelocities[2];
+  uniform int _SphereCount;
+  uniform half _SphereForce;
 
-  float4 _CapsuleA[128];
-  float4 _CapsuleB[128];
-  int _CapsuleCount;
+  uniform int _DebugMode;
+  uniform half4 _DebugData;
 
-  float4 _Spheres[2];
-  float4 _SphereVelocities[2];
-  int _SphereCount;
-  float _SphereForce;
-
-  int _DebugMode;
-  float4 _DebugData;
-
-  float nrand(float2 n) {
+  half nrand(half2 n) {
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
   }
 
@@ -97,21 +115,32 @@
     return floor(fmod(bits / pow(2.0, floor(frac(charCoord.x) * 4.0) + floor(charCoord.y * 5.0) * 4.0), 2.0));
   }
 
-  v2f vert(appdata v) {
-    v2f o;
+  v2f_p vert_p(appdata_p v) {
+    v2f_p o;
     o.vertex = UnityObjectToClipPos(v.vertex);
     o.uv = v.uv;
     return o;
   }
 
-  float4 integratePositions(v2f i) : SV_Target{
-    float4 pos = tex2D(_Position, i.uv);
-    float4 vel = tex2D(_Velocity, i.uv);
-    pos.xyz += vel.xyz;
+  v2f_i vert_i(appdata_i v) {
+    v2f_i o;
+    o.vertex = UnityObjectToClipPos(v.vertex);
+    o.uv = v.uv;
+    o.social = v.social;
+#ifdef GENERAL_SAMPLING
+    o.sampleRect = v.sampleRect;
+#endif
+    return o;
+  }
+
+  half4 integratePositions(v2f_p i) : SV_Target{
+    half4 pos = tex2Dlod0(_ParticlePositions, i.uv.xy);
+    half4 vel = tex2Dlod0(_ParticleVelocities, i.uv.xy);
+    pos.xyz += vel.xyz * 0.01;
 
     //Dont hit the head pls
-    float3 fromHead = pos.xyz - _HeadPos;
-    float distToHead = length(fromHead);
+    half3 fromHead = pos.xyz - _HeadPos;
+    half distToHead = length(fromHead);
     if (distToHead < _HeadRadius) {
       pos.xyz = _HeadPos + fromHead / distToHead * _HeadRadius;
     }
@@ -119,23 +148,23 @@
     return pos;
   }
 
-  float4 globalForces(v2f i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float4 particle = tex2D(_Position, i.uv);
+  half4 globalForces(v2f_p i) : SV_Target{
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy);
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
 
     //Attraction towards the origin
-    float3 toFieldCenter = _FieldCenter - particle.xyz;
-    float dist = length(toFieldCenter);
+    half3 toFieldCenter = _FieldCenter - particle.xyz;
+    half dist = length(toFieldCenter);
     if (dist > _FieldRadius) {
       velocity.xyz += toFieldCenter * _FieldForce;
     }
 
     //Grasping by spheres
     {
-      float4 sphereForce = float4(0, 0, 0, 0);
-      float spheres = 0;
+      half4 sphereForce = half4(0, 0, 0, 0);
+      half spheres = 0;
       for (int i = 0; i < _SphereCount; i++) {
-        float3 toSphere = _Spheres[i] - particle.xyz;
+        half3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
 #ifdef SPHERE_MODE_STASIS
           sphereForce += _SphereVelocities[i];
@@ -150,145 +179,139 @@
       if (spheres > 0.5) {
         sphereForce /= spheres;
 #ifdef SPHERE_MODE_STASIS
-        velocity.xyz = sphereForce.xyz * sphereForce.w;
+        velocity.xyz = sphereForce.xyz * sphereForce.w * 100;
         velocity.w *= lerp(1, 0.5, sphereForce.w);
 #else
-        velocity.xyz += sphereForce.xyz * sphereForce.w;
+        velocity.xyz += sphereForce.xyz * sphereForce.w * 100;
 #endif
       } else {
         velocity.w = lerp(velocity.w, 1, 0.05);
       }
     }
 
+    //Collision with capsules and social hands
+    {
+      for (int i = 0; i < _CapsuleCount; i++) {
+        half3 a = _CapsuleA[i];
+        half3 b = _CapsuleB[i];
+        half radius = _CapsuleA[i].w;
+
+        half3 pa = particle.xyz - a;
+        half3 ba = b - a;
+        half h = saturate(dot(pa, ba) / dot(ba, ba));
+
+        half3 forceVector = pa - ba * h;
+        half3 vel = -ba;
+
+        half dist = length(forceVector);
+        forceVector /= dist;
+
+        half soft = 1 - saturate((dist - radius) * _HandCollisionInverseThickness);
+
+        half3 relVel = vel + velocity.xyz;
+        half dir = saturate(dot(normalize(relVel), normalize(pa)));
+        velocity.xyz = lerp(velocity.xyz, vel * 100, soft * dir);
+        velocity.xyz += forceVector * _HandCollisionExtraForce * soft * 100;
+
+        //half2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
+        //if (dist < socialData.y) {
+        //  totalSocialForce += half4(-socialData.x * forceVector, 1) * _SocialHandForceFactor;
+        //}
+      }
+    }
+
     return velocity;
   }
 
-  float4 dampVelocities(v2f i) : SV_Target{
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float4 particle = tex2D(_Position, i.uv);
-    float4 speciesData = _SpeciesData[(int)particle.w];
+  half4 dampVelocities(v2f_p i) : SV_Target{
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy);
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
 
     //Step offset for social forces
-    i.uv.y = speciesData.y / MAX_FORCE_STEPS;
-    float4 socialForce = tex2D(_SocialForce, i.uv);
-    velocity.xyz += socialForce.xyz;
+    i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
+    half4 socialForce = tex2Dlod0(_ParticleSocialForces, i.uv.xy);
+    velocity.xyz += socialForce.xyz * 0.1;
 
     //Damping
-    velocity.xyz *= lerp(1, speciesData.x, velocity.w);
+    //velocity.xyz *= lerp(1, i.uv.w, velocity.w);
+    velocity.xyz *= i.uv.w;
 
     return velocity;
   }
 
-  FragmentOutput updateCollisionVelocities(v2f i) {
-    float4 particle = tex2D(_Position, i.uv);
-    float4 velocity = tex2D(_Velocity, i.uv);
-    float socialOffset = (int)(particle.w * MAX_SPECIES);
-    float collisionForce = _SpeciesData[0].z;
+  FragmentOutput updateCollisionVelocities(v2f_i i) {
+    half4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
+    half4 velocity = tex2Dlod0(_ParticleVelocities, i.uv.xy) * _SampleFraction;
 
-    //We are going to count our own social force, so start with -1
-    float4 totalSocialForce = float4(0, 0, 0, -1);
+    half4 totalSocialForce = half4(0, 0, 0, -_SampleFraction);
 
-    //float4 neighborA = tex2D(_Position, i.uv - float2(1.0 / MAX_PARTICLES, 0));
-    //float4 neighborB = tex2D(_Position, i.uv + float2(1.0 / MAX_PARTICLES, 0));
+    //half4 neighborA = tex2Dlod0(_ParticlePositions, i.uv - half2(1.0 / MAX_PARTICLES, 0));
+    //half4 neighborB = tex2Dlod0(_ParticlePositions, i.uv + half2(1.0 / MAX_PARTICLES, 0));
 
     //velocity.xyz += (neighborA.xyz - particle.xyz) * _SpringForce;
     //velocity.xyz += (neighborB.xyz - particle.xyz) * _SpringForce;
 
-    for (int i = 0; i < _ParticleCount; i++) {
-      float4 other = tex2D(_Position, float2(i / (float)MAX_PARTICLES, 0));
-      float3 toOther = other.xyz - particle.xyz;
-      float distance = length(toOther);
-      toOther = distance < 0.0001 ? float3(0, 0, 0) : toOther / distance;
+    half2 otherUv = half2(0, 0);
+    {{
 
-      float otherCollisionForce = _SpeciesData[(int)other.w].z;
-      float totalCollisionForce = (collisionForce + otherCollisionForce) * 0.5;
-
-      if (distance < PARTICLE_DIAMETER) {
-        float penetration = 1 - distance / PARTICLE_DIAMETER;
-        velocity.xyz -= toOther * penetration * totalCollisionForce;
-      }
-
-      float2 socialData = _SocialData[(int)(socialOffset + other.w)];
-
-      if (distance < socialData.y) {
-        totalSocialForce += float4(socialData.x * toOther, 1);
-      }
-    }
-
-    //Collision with capsules and social hands
+#ifdef STOCHASTIC_SAMPLING
+    }}
+    //Chose a specific subset of the given stochastic coordinates
     {
-      for (int i = 0; i < _CapsuleCount; i++) {
-        float3 a = _CapsuleA[i];
-        float3 b = _CapsuleB[i];
-        float radius = _CapsuleA[i].w;
+      for(int j=0; j<_StochasticCount; j++){
+        otherUv = tex2Dlod0(_StochasticCoordinates, half2(j / 256.0, _StochasticOffset)) + i.uv.zw;
+#endif
 
-        float3 pa = particle.xyz - a;
-        float3 ba = b - a;
-        float h = saturate(dot(pa, ba) / dot(ba, ba));
+#ifdef UNIFORM_SAMPLE_RECT
+    }}
+    //Chose a set of uvs that exist within a specific uniform rect
+    for (uint y = 0; y < _SampleHeight; y++) {
+      for (uint x = 0; x < _SampleWidth; x++) {
+        otherUv = half2(x / 64.0, y / 64.0) + i.uv.zw;
+#endif
 
-        float3 forceVector = pa - ba * h;
-        float3 vel = -ba;
+#ifdef GENERAL_SAMPLING
+    }}
+    //Chose a set of uvs that lies within a custom rect passed in as uv coordinates
+    for (half y = i.sampleRect.y; y < i.sampleRect.w; y += (1.0 / 64.0)) {
+      for (half x = i.sampleRect.x; x < i.sampleRect.z; x += (1.0 / 64.0)) {
+        otherUv = half2(x, y);
+#endif
 
-        float dist = length(forceVector);
-        forceVector /= dist;
+        half4 other = tex2Dlod0(_ParticlePositions, otherUv);
 
-        /*
-        if (dist < _HandCollisionRadius) {
-          float3 normal = normalize(particle.xyz - b);
-          float mag = max(0, dot(normal, a - b));
+        half3 toOther = other.xyz - particle.xyz;
+        half distance = length(toOther);
+        toOther = distance < 0.0001 ? half3(0, 0, 0) : toOther / distance;
 
-          float3 relativeVel = velocity.xyz - normal * mag;
-          float3 reflectedVel = relativeVel - 2 * dot(relativeVel, normal) * normal;
-          velocity.xyz = reflectedVel + normal * mag;
-          velocity.w = 0;
+        if (distance < PARTICLE_DIAMETER) {
+          half penetration = 1 - distance / PARTICLE_DIAMETER;
+          velocity.xyz -= toOther * penetration * i.social.z;
         }
-        */
 
-        float soft = 1 - saturate((dist - radius) * _HandCollisionInverseThickness);
-
-        float3 relVel = vel + velocity.xyz;
-        float dir = saturate(dot(normalize(relVel), normalize(pa)));
-        velocity.xyz = lerp(velocity.xyz, vel, soft * dir);
-        velocity.xyz += forceVector * _HandCollisionExtraForce * soft;
-
-
-        float2 socialData = _SocialData[(int)(socialOffset + _SocialHandSpecies)];
-        if (dist < socialData.y) {
-          totalSocialForce += float4(-socialData.x * forceVector, 1) * _SocialHandForceFactor;
+        if (distance < i.social.y) {
+          totalSocialForce += half4(i.social.x * toOther, 1);
         }
       }
     }
 
     FragmentOutput output;
     output.dest0 = velocity;
-    output.dest1 = float4(0, 0, 0, 0);
-    if (totalSocialForce.w > 0.5) {
-      output.dest1 = float4(totalSocialForce.xyz / totalSocialForce.w, 0);
-    }
-
+    output.dest1 = totalSocialForce;
     return output;
   }
 
-  float4 randomParticles(v2f i) : SV_Target{
-    float4 particle;
-    particle.x = nrand(i.uv) - 0.5;
-    particle.y = nrand(i.uv * 2 + float2(0.2f, 0.9f)) - 0.5;
-    particle.z = nrand(i.uv * 3 + float2(2.2f, 33.9f)) - 0.5;
-    particle.w = floor(nrand(i.uv * 4 + float2(23, 54)) * _SpeciesCount);
-    //particle.w = i.uv.x * _SpeciesCount;
+  half4 stepSocialQueue(v2f_p i) : SV_Target{
+    half2 shiftedUv = i.uv.xy - half2(0, 1.0 / MAX_FORCE_STEPS);
 
-    particle.xyz *= _SpawnRadius;
+    half4 newForce = tex2Dlod0(_SocialTemp, i.uv.xy * half2(1, MAX_FORCE_STEPS));
+    if (newForce.w > 0.5) {
+      newForce.xyz /= newForce.w;
+    }
 
-    return particle;
-  }
+    half4 shiftedForce = tex2Dlod0(_ParticleSocialForces, shiftedUv);
 
-  float4 stepSocialQueue(v2f i) : SV_Target{
-    float2 shiftedUv = i.uv - float2(0, 1.0 / MAX_FORCE_STEPS);
-
-    float4 newForce = tex2D(_SocialTemp, i.uv);
-    float4 shiftedForce = tex2D(_SocialForce, shiftedUv);
-
-    float4 result;
+    half4 result;
 
     if (i.uv.y <= 1.0 / MAX_FORCE_STEPS) {
       result = newForce;
@@ -299,21 +322,21 @@
     return result;
   }
 
-  float4 debugOutput(v2f i) : SV_Target {
+  float4 debugOutput(v2f_p i) : SV_Target {
     float4 values = _DebugData;
-    float4 particle = tex2D(_Position, _DebugData.xx);
-    float4 particle2 = tex2D(_Position, _DebugData.yy);
+    float4 particle = tex2Dlod0(_ParticlePositions, _DebugData.xx);
+    float4 particle2 = tex2Dlod0(_ParticlePositions, _DebugData.yy);
 
-    if (_DebugMode == 10) {
-      values = particle;
-    } else if (_DebugMode == 11) {
-      float socialOffset = (int)(particle.w * MAX_SPECIES);
-      values.x = socialOffset;
-      values.y = (int)(socialOffset + particle2.w);
-    } else if (_DebugMode == 12) {
-      values.xy = _SocialData[(int)_DebugData.x];
-      values.zw = _SpeciesData[(int)_DebugData.y].xy;
-    }
+    //if (_DebugMode == 10) {
+    //  values = particle;
+    //} else if (_DebugMode == 11) {
+    //  float socialOffset = (int)(particle.w * MAX_SPECIES);
+    //  values.x = socialOffset;
+    //  values.y = (int)(socialOffset + particle2.w);
+    //} else if (_DebugMode == 12) {
+    //  values.xy = _SocialData[(int)_DebugData.x];
+    //  values.zw = _SpeciesData[(int)_DebugData.y].xy;
+    //}
 
     float color = 0;
     color += printValue(i.uv, float2(0, 0.1), float2(0.1, 0.1), values.w, 2, 6);
@@ -323,8 +346,8 @@
     return color;
   }
 
-  float4 copy(v2f i) : SV_Target{
-    return tex2D(_CopySource, i.uv);
+  half4 copy(v2f_p i) : SV_Target{
+    return tex2Dlod0(_CopySource, i.uv.xy);
   }
   ENDCG
 
@@ -337,66 +360,60 @@
     Blend One Zero
 
     //Pass 0: integrate velocities
-    Pass{
+    Pass {
       CGPROGRAM
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment integratePositions
       ENDCG
     }
 
     //Pass 1: update collisions
-    Pass{
+    Pass {
+      Blend One One
       CGPROGRAM
-      #pragma vertex vert
+      #pragma multi_compile GENERAL_SAMPLING UNIFORM_SAMPLE_RECT STOCHASTIC_SAMPLING
+      #pragma vertex vert_i
       #pragma fragment updateCollisionVelocities
       ENDCG
     }
 
     //Pass 2: global forces
-    Pass{
+    Pass {
       CGPROGRAM
       #pragma multi_compile SPHERE_MODE_STASIS SPHERE_MODE_FORCE
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment globalForces
       ENDCG
     }
 
     //Pass 3: damp velocity and add offset social forces
-    Pass{
+    Pass {
       CGPROGRAM
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment dampVelocities
       ENDCG
     }
 
-    //Pass 4: random particles
-    Pass{
+    //Pass 4: step social queue
+    Pass {
       CGPROGRAM
-      #pragma vertex vert
-      #pragma fragment randomParticles
-      ENDCG
-    }
-
-    //Pass 5: step social queue
-    Pass{
-      CGPROGRAM
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment stepSocialQueue
       ENDCG
     }
 
-    //Pass 6: debug output
-    Pass{
+    //Pass 5: debug output
+    Pass {
       CGPROGRAM
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment debugOutput
       ENDCG
     }
 
-    //Pass 7: copy positions
-    Pass{
+    //Pass 6: copy positions
+    Pass {
       CGPROGRAM
-      #pragma vertex vert
+      #pragma vertex vert_p
       #pragma fragment copy
       ENDCG
     }

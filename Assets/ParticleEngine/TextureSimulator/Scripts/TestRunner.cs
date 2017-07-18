@@ -11,6 +11,26 @@ public class TestRunner : MonoBehaviour {
 
 	IEnumerator Start () {
     yield return new WaitForSeconds(0.5f);
+    sim.RestartSimulation();
+
+    //while (true) {
+    //  int startTime = Time.frameCount;
+    //  yield return new WaitForSeconds(1f);
+    //  int endTime = Time.frameCount;
+    //  texMesh.text = Mathf.Round(endTime - startTime).ToString();
+    //}
+
+    //for (int i = 1; i <= 10; i++) {
+    //  sim.dynamicSpeciesCount = i;
+    //  sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_Dynamic);
+    //  yield return StartCoroutine(runTest());
+    //  if ((i + 1) % 4 == 0) {
+    //    _results += "\n";
+    //  }
+    //}
+
+    /*
+    yield return new WaitForSeconds(0.5f);
     sim.ResetPositions();
     yield return new WaitForSeconds(0.5f);
 
@@ -34,6 +54,7 @@ public class TestRunner : MonoBehaviour {
       _results += '\n';
       texMesh.text = _results;
     }
+    */
   }
 
   IEnumerator runTest() {

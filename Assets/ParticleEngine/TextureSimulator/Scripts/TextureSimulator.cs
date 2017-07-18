@@ -13,33 +13,40 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
 
-  public const string BY_SPECIES = "COLOR_SPECIES";
-  public const string BY_SPECIES_WITH_VELOCITY = "COLOR_SPECIES_MAGNITUDE";
-  public const string BY_VELOCITY = "COLOR_VELOCITY";
+  //#### Simulation Keywords ####
+  public const string KEYWORD_INFLUENCE_STASIS = "SPHERE_MODE_STASIS";
+  public const string KEYWORD_INFLUENCE_FORCE = "SPHERE_MODE_FORCE";
 
-  public const string INTERPOLATION_KEYWORD = "ENABLE_INTERPOLATION";
+  public const string KEYWORD_SAMPLING_GENERAL = "GENERAL_SAMPLING";
+  public const string KEYWORD_SAMPLING_UNIFORM = "UNIFORM_SAMPLE_RECT";
 
-  public const string INFLUENCE_STASIS_KEYWORD = "SPHERE_MODE_STASIS";
-  public const string INFLUENCE_FORCE_KEYWORD = "SPHERE_MODE_FORCE";
+  public const string KEYWORD_STOCHASTIC = "ENABLE_STOCHASTIC_SAMPLING";
+  public const string PROP_STOCHASTIC = "_StochasticCoordinates";
 
-  public const string STOCHASTIC_KEYWORD = "ENABLE_STOCHASTIC_SAMPLING";
-  public const string STOCHASTIC_PROPERTY = "_StochasticCoordinates";
+  public const string PROP_VELOCITY_GLOBAL = "_ParticleVelocities";
+  public const string PROP_POSITION_GLOBAL = "_ParticlePositions";
+  public const string PROP_SOCIAL_FORCE_GLOBAL = "_ParticleSocialForces";
 
-  public const string TAIL_FISH_KEYWORD = "FISH_TAIL";
-  public const string TAIL_SQUASH_KEYWORD = "SQUASH_TAIL";
+  //#### Display Keywords ####
+  public const string KEYWORD_BY_SPECIES = "COLOR_SPECIES";
+  public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
+  public const string KEYWORD_BY_VELOCITY = "COLOR_VELOCITY";
 
-  public const string VELOCITY_GLOBAL = "_ParticleVelocities";
-  public const string POSITION_GLOBAL = "_ParticlePositions";
-  public const string SOCIAL_FORCE_GLOBAL = "_ParticleSocialForces";
+  public const string KEYWORD_ENABLE_INTERPOLATION = "ENABLE_INTERPOLATION";
 
+  public const string KEYWORD_TAIL_FISH = "FISH_TAIL";
+  public const string KEYWORD_TAIL_SQUASH = "SQUASH_TAIL";
+
+  public const string PROP_SPECIES_COLOR = "_SpeciesColors";
+
+  //#### Pass Constants ####
   public const int PASS_INTEGRATE_VELOCITIES = 0;
   public const int PASS_UPDATE_COLLISIONS = 1;
   public const int PASS_GLOBAL_FORCES = 2;
   public const int PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES = 3;
-  public const int PASS_RANDOMIZE_PARTICLES = 4;
-  public const int PASS_STEP_SOCIAL_QUEUE = 5;
-  public const int PASS_SHADER_DEBUG = 6;
-  public const int PASS_COPY = 7;
+  public const int PASS_STEP_SOCIAL_QUEUE = 4;
+  public const int PASS_SHADER_DEBUG = 5;
+  public const int PASS_COPY = 6;
 
   #region INSPECTOR
   [SerializeField]
@@ -946,9 +953,9 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
 
-    Shader.SetGlobalTexture(POSITION_GLOBAL, _positionSrc);
-    Shader.SetGlobalTexture(VELOCITY_GLOBAL, _velocitySrc);
-    Shader.SetGlobalTexture(SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
+    Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
+    Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
+    Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
     buildSimulationCommands();
 
@@ -1976,7 +1983,16 @@ public class TextureSimulator : MonoBehaviour {
 
     bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(simulationDescription.toSpawn, layout);
 
-    if (!isUsingOptimizedLayout) {
+    if (isUsingOptimizedLayout) {
+      _simulationMat.DisableKeyword(KEYWORD_SAMPLING_GENERAL);
+      _simulationMat.EnableKeyword(KEYWORD_SAMPLING_UNIFORM);
+
+      _simulationMat.SetInt("_SampleWidth", layout[0].width);
+      _simulationMat.SetInt("_SampleHeight", layout[0].height);
+    } else {
+      _simulationMat.DisableKeyword(KEYWORD_SAMPLING_UNIFORM);
+      _simulationMat.EnableKeyword(KEYWORD_SAMPLING_GENERAL);
+
       calculateLayoutGeneral(simulationDescription.toSpawn, layout);
     }
 
@@ -2126,7 +2142,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void uploadSpeciesColors(Vector4[] colors) {
-    _displayBlock.SetVectorArray("_SpeciesColors", colors);
+    _displayBlock.SetVectorArray(PROP_SPECIES_COLOR, colors);
   }
 
   private void resetRenderMeshes(SimulationDescription desc, List<SpeciesRect> layout) {
@@ -2675,56 +2691,56 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void updateKeywords() {
-    _particleMat.DisableKeyword(BY_SPECIES);
-    _particleMat.DisableKeyword(BY_SPECIES_WITH_VELOCITY);
-    _particleMat.DisableKeyword(BY_VELOCITY);
+    _particleMat.DisableKeyword(KEYWORD_BY_SPECIES);
+    _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
+    _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
 
     switch (_colorMode) {
       case ColorMode.BySpecies:
-        _particleMat.EnableKeyword(BY_SPECIES);
+        _particleMat.EnableKeyword(KEYWORD_BY_SPECIES);
         break;
       case ColorMode.BySpeciesWithMagnitude:
-        _particleMat.EnableKeyword(BY_SPECIES_WITH_VELOCITY);
+        _particleMat.EnableKeyword(KEYWORD_BY_SPEED);
         break;
       case ColorMode.ByVelocity:
-        _particleMat.EnableKeyword(BY_VELOCITY);
+        _particleMat.EnableKeyword(KEYWORD_BY_VELOCITY);
         break;
     }
 
     if (_dynamicTimestepEnabled) {
-      _particleMat.EnableKeyword(INTERPOLATION_KEYWORD);
+      _particleMat.EnableKeyword(KEYWORD_ENABLE_INTERPOLATION);
     } else {
-      _particleMat.DisableKeyword(INTERPOLATION_KEYWORD);
+      _particleMat.DisableKeyword(KEYWORD_ENABLE_INTERPOLATION);
     }
 
-    _simulationMat.DisableKeyword(INFLUENCE_FORCE_KEYWORD);
-    _simulationMat.DisableKeyword(INFLUENCE_STASIS_KEYWORD);
+    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_FORCE);
+    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_STASIS);
 
     switch (_handInfluenceType) {
       case HandInfluenceType.Force:
-        _simulationMat.EnableKeyword(INFLUENCE_FORCE_KEYWORD);
+        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_FORCE);
         break;
       case HandInfluenceType.Stasis:
-        _simulationMat.EnableKeyword(INFLUENCE_STASIS_KEYWORD);
+        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_STASIS);
         break;
       default:
         throw new System.Exception();
     }
 
-    _particleMat.DisableKeyword(TAIL_FISH_KEYWORD);
-    _particleMat.DisableKeyword(TAIL_SQUASH_KEYWORD);
+    _particleMat.DisableKeyword(KEYWORD_TAIL_FISH);
+    _particleMat.DisableKeyword(KEYWORD_TAIL_SQUASH);
 
     switch (_trailMode) {
       case TrailMode.Fish:
-        _particleMat.EnableKeyword(TAIL_FISH_KEYWORD);
+        _particleMat.EnableKeyword(KEYWORD_TAIL_FISH);
         break;
       case TrailMode.Squash:
-        _particleMat.EnableKeyword(TAIL_SQUASH_KEYWORD);
+        _particleMat.EnableKeyword(KEYWORD_TAIL_SQUASH);
         break;
     }
 
     if (_stochasticSamplingEnabled) {
-      _simulationMat.EnableKeyword(STOCHASTIC_KEYWORD);
+      _simulationMat.EnableKeyword(KEYWORD_STOCHASTIC);
 
       Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
       coordinates.filterMode = FilterMode.Point;
@@ -2746,9 +2762,9 @@ public class TextureSimulator : MonoBehaviour {
 
       coordinates.SetPixels(colors.ToArray());
       coordinates.Apply();
-      _simulationMat.SetTexture(STOCHASTIC_PROPERTY, coordinates);
+      _simulationMat.SetTexture(PROP_STOCHASTIC, coordinates);
     } else {
-      _simulationMat.DisableKeyword(STOCHASTIC_KEYWORD);
+      _simulationMat.DisableKeyword(KEYWORD_STOCHASTIC);
     }
   }
 
@@ -2815,15 +2831,15 @@ public class TextureSimulator : MonoBehaviour {
     buffer.SetViewMatrix(Matrix4x4.identity);
     buffer.SetProjectionMatrix(Matrix4x4.Ortho(0, _textureDimension, 0, _textureDimension, -1, 1));
 
-    blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_GLOBAL_FORCES);
+    blitCommands(buffer, _blitMeshParticle, PROP_VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_GLOBAL_FORCES);
 
     particleCommands(buffer);
 
-    blitCommands(buffer, _blitMeshQuad, SOCIAL_FORCE_GLOBAL, ref _socialQueueSrc, ref _socialQueueDst, PASS_STEP_SOCIAL_QUEUE);
+    blitCommands(buffer, _blitMeshQuad, PROP_SOCIAL_FORCE_GLOBAL, ref _socialQueueSrc, ref _socialQueueDst, PASS_STEP_SOCIAL_QUEUE);
 
-    blitCommands(buffer, _blitMeshParticle, VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
+    blitCommands(buffer, _blitMeshParticle, PROP_VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
 
-    blitCommands(buffer, _blitMeshParticle, POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
+    blitCommands(buffer, _blitMeshParticle, PROP_POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
   }
 
   private void blitCommands(CommandBuffer buffer, Mesh mesh, string propertyName, ref RenderTexture src, ref RenderTexture dst, int pass) {
@@ -2858,7 +2874,7 @@ public class TextureSimulator : MonoBehaviour {
     buffer.DrawMesh(_blitMeshInteraction, Matrix4x4.identity, _simulationMat, 0, PASS_UPDATE_COLLISIONS);
 
     //Set the new velocity texture as the new global
-    buffer.SetGlobalTexture(VELOCITY_GLOBAL, _velocityDst);
+    buffer.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocityDst);
 
     Utils.Swap(ref _velocitySrc, ref _velocityDst);
   }

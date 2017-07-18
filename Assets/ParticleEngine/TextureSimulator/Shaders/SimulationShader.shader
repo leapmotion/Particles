@@ -68,14 +68,8 @@
   uniform float3 _HeadPos;
   uniform half _HeadRadius;
 
-  uniform half _SpeciesCount;
-  uniform half _SpawnRadius;
-
   uniform half _HandCollisionInverseThickness;
   uniform half _HandCollisionExtraForce;
-
-  uniform int _SocialHandSpecies;
-  uniform half _SocialHandForceFactor;
 
   uniform half4 _CapsuleA[128];
   uniform half4 _CapsuleB[128];
@@ -306,18 +300,6 @@
     return output;
   }
 
-  half4 randomParticles(v2f_p i) : SV_Target{
-    half4 particle;
-    particle.x = nrand(i.uv) - 0.5;
-    particle.y = nrand(i.uv * 2 + half2(0.2f, 0.9f)) - 0.5;
-    particle.z = nrand(i.uv * 3 + half2(2.2f, 33.9f)) - 0.5;
-    particle.w = 1;
-
-    particle.xyz *= _SpawnRadius;
-
-    return particle;
-  }
-
   half4 stepSocialQueue(v2f_p i) : SV_Target{
     half2 shiftedUv = i.uv.xy - half2(0, 1.0 / MAX_FORCE_STEPS);
 
@@ -411,15 +393,7 @@
       ENDCG
     }
 
-    //Pass 4: random particles
-    Pass {
-      CGPROGRAM
-      #pragma vertex vert_p
-      #pragma fragment randomParticles
-      ENDCG
-    }
-
-    //Pass 5: step social queue
+    //Pass 4: step social queue
     Pass {
       CGPROGRAM
       #pragma vertex vert_p
@@ -427,7 +401,7 @@
       ENDCG
     }
 
-    //Pass 6: debug output
+    //Pass 5: debug output
     Pass {
       CGPROGRAM
       #pragma vertex vert_p
@@ -435,7 +409,7 @@
       ENDCG
     }
 
-    //Pass 7: copy positions
+    //Pass 6: copy positions
     Pass {
       CGPROGRAM
       #pragma vertex vert_p

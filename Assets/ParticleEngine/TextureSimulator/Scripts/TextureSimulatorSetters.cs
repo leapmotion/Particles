@@ -15,43 +15,43 @@ public class TextureSimulatorSetters : MonoBehaviour {
     name = name.ToLower();
     switch (name) {
       case "red menace":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.RedMenace);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.RedMenace);
         break;
       case "chase":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Chase);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Chase);
         break;
       case "planets":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Planets);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Planets);
         break;
       case "mitosis":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Mitosis);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Mitosis);
         break;
       case "bodymind":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.BodyMind);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.BodyMind);
         break;
       case "fluidy":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Fluidy);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Fluidy);
         break;
       case "globules":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Globules);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Globules);
         break;
       case "Layers":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.Layers);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Layers);
         break;
       case "body mind":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.BodyMind);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.BodyMind);
         break;
       case "TEST_OneParticle":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.TEST_OneParticle);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_OneParticle);
         break;
       case "TEST_TwoParticles":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.TEST_TwoParticles);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_TwoParticles);
         break;
       case "TEST_ThreeParticles":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.TEST_ThreeParticles);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeParticles);
         break;
       case "TEST_ThreeSpecies":
-        _sim.LoadPresetEcosystem(TextureSimulator.EcosystemPreset.TEST_ThreeSpecies);
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeSpecies);
         break;
       default:
         Debug.LogError("No ecosystem with name " + name);
@@ -64,7 +64,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
   }
 
   public void SetParticleCount(float count) {
-    _sim.particlesToSimulate = Mathf.RoundToInt(Mathf.Lerp(1, TextureSimulator.MAX_PARTICLES, count));
+    //TODO
+    //_sim.particlesToSimulate = Mathf.RoundToInt(Mathf.Lerp(1, TextureSimulator.MAX_PARTICLES, count));
   }
 
   public void SetMaxForce(float maxForce) {
@@ -125,7 +126,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   public void LoadRandomEcosystem(LabelController controller) {
     var name = _sim.GetComponent<NameGenerator>().GenerateName();
     controller.SetLabel(name);
-    _sim.LoadRandomEcosystem(name);
+    _sim.RandomizeSimulation(name);
   }
 
   private void setSkyColor(Color c) {

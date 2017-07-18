@@ -952,9 +952,7 @@ public class TextureSimulator : MonoBehaviour {
 
     buildSimulationCommands();
 
-    RecalculateMeshesForParticles();
-
-    LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
+    RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
 
     updateShaderData();
 
@@ -1814,7 +1812,7 @@ public class TextureSimulator : MonoBehaviour {
         };
       }
     }
-    
+
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
         drag = Random.Range(setting.minDrag, setting.maxDrag),
@@ -1824,12 +1822,15 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     // Perform color randomization last so that it has no effect on particle interaction.
-    randomizeDescriptionColors(desc);
+    var colors = getRandomColors();
+    for (int i = 0; i < MAX_SPECIES; i++) {
+      desc.speciesData[i].color = colors[i];
+    }
 
     return desc;
   }
 
-  private void randomizeDescriptionColors(SimulationDescription desc) {
+  private Color[] getRandomColors() {
     var setting = _randomEcosystemSettings;
 
     List<Color> colors = new List<Color>();
@@ -1861,13 +1862,19 @@ public class TextureSimulator : MonoBehaviour {
       }
 
       colors.Add(newColor);
-      desc.speciesData[i].color = newColor;
     }
+    return colors.ToArray();
   }
   #endregion
 
   #region RESET LOGIC
+
   private SimulationDescription _currentDescription = null;
+  public SimulationDescription currentSimulationDescription {
+    get {
+      return _currentDescription;
+    }
+  }
 
   public struct SocialData {
     public float socialForce;
@@ -1935,7 +1942,7 @@ public class TextureSimulator : MonoBehaviour {
   /// Randomizes the simulation colors of the current simulation.
   /// </summary>
   public void RandomizeSimulationColors() {
-    uploadSpeciesColors();
+    uploadSpeciesColors(getRandomColors().Query().Select(t => (Vector4)t).ToArray());
   }
 
   /// <summary>
@@ -2132,17 +2139,10 @@ public class TextureSimulator : MonoBehaviour {
     List<int> bakedTris = new List<int>();
     List<Vector4> bakedUvs = new List<Vector4>();
 
-    var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
-    for (int i = 0; i < MAX_SPECIES; i++) {
-      speciesMap[i] = desc.toSpawn.Query().Where(t => t.species == i).GetEnumerator();
-    }
-
     Mesh bakedMesh = null;
     foreach (var rect in layout) {
-      var enumerator = speciesMap[rect.species];
       for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
         for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
-
           if (bakedVerts.Count + sourceVerts.Length > 60000) {
             bakedMesh.SetVertices(bakedVerts);
             bakedMesh.SetTriangles(bakedTris, 0);
@@ -2618,9 +2618,6 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
-    _simulationMat.SetInt("_SpeciesCount", _currentSimulationSpeciesCount);
-    _simulationMat.SetInt("_ParticleCount", _particlesToSimulate);
-    _displayBlock.SetFloat("_ParticleCount", _particlesToSimulate / (float)MAX_PARTICLES);
 
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
@@ -2628,20 +2625,19 @@ public class TextureSimulator : MonoBehaviour {
 
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
-      LoadPresetEcosystem(_presetEcosystemSettings.ecosystemPreset);
+      RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
     }
 
     if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
-      LoadRandomEcosystem(_ecosystemSeed);
-      ResetPositions();
+      RandomizeSimulation(_ecosystemSeed);
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
-      LoadRandomEcosystem();
+      RandomizeSimulation();
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
-      ResetPositions();
+      RestartSimulation();
     }
   }
 

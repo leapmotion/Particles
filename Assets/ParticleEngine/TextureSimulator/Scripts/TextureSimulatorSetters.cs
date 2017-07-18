@@ -7,7 +7,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
 
   private TextureSimulator _sim;
 
-  private void Awake() {
+  void Awake() {
     _sim = GetComponent<TextureSimulator>();
   }
 
@@ -86,8 +86,16 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + diff * 0.5f);
   }
 
+  public float GetParticleSize() {
+    return _sim.displayProperties.GetFloat("_Size");
+  }
+
   public void SetParticleSize(float particleSize) {
     _sim.displayProperties.SetFloat("_Size", particleSize);
+  }
+
+  public float GetTrailSize() {
+    return _sim.displayProperties.GetFloat("_TrailLength");
   }
 
   public void SetTrailSize(float trailSize) {
@@ -103,6 +111,10 @@ public class TextureSimulatorSetters : MonoBehaviour {
     } else if (mode.Contains("direction")) {
       _sim.colorMode = TextureSimulator.ColorMode.ByVelocity;
     }
+  }
+
+  public void SetColorMode(TextureSimulator.ColorMode mode) {
+    _sim.colorMode = mode;
   }
 
   public void SetSkyRed(float red) {

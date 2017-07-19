@@ -21,7 +21,7 @@ public class PagedContentController : MonoBehaviour {
     }
   }
 
-  [Header("Page Controllers")]
+  [Header("Page Index Controller")]
   public RadioToggleGroup pageIndexController;
 
   void OnValidate() {
@@ -29,7 +29,9 @@ public class PagedContentController : MonoBehaviour {
   }
 
   void Awake() {
-    pageIndexController.OnIndexToggled += (i) => { pageIdx = i; };
+    pageIndexController.OnIndexToggled += (i) => {
+      pageIdx = i;
+    };
   }
 
   private void disableOtherPages(int pageIdx) {

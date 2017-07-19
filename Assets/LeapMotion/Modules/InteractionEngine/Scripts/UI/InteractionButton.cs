@@ -107,6 +107,22 @@ namespace Leap.Unity.Interaction {
     ///<summary> The physical position of this element in world space; may diverge from the graphical position. </summary>
     protected Vector3 physicsPosition = Vector3.zero;
 
+    protected override void OnValidate() {
+      base.OnValidate();
+
+      initialLocalPosition = transform.localPosition;
+    }
+
+    /// <summary>
+    /// Returns the local position of this button when it is able to relax into its target
+    /// position.
+    /// </summary>
+    public virtual Vector3 RelaxedLocalPosition {
+      get {
+        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
+      }
+    }
+
     private Rigidbody _lastDepressor;
     private Vector3 _localDepressorPosition;
     private Vector3 _physicsVelocity = Vector3.zero;

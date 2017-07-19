@@ -10,6 +10,10 @@ public class RadioToggleGroup : MonoBehaviour {
   [EditTimeOnly]
   public List<InteractionToggle> toggles;
 
+  private int _activeToggleIdx = 0;
+  public int activeToggleIdx { get { return _activeToggleIdx; } }
+  public InteractionToggle activeToggle { get { return toggles[activeToggleIdx]; } }
+
   public Action<int> OnIndexToggled = (idx) => { };
 
   void Awake() {
@@ -19,7 +23,7 @@ public class RadioToggleGroup : MonoBehaviour {
       int toggleIndex = i;
       toggle.OnToggle += () => {
         toggle.controlEnabled = false;
-        OnIndexToggled(toggleIndex);
+        onIndexToggled(toggleIndex);
       };
 
       for (int j = 0; j < toggles.Count; j++) {
@@ -32,6 +36,12 @@ public class RadioToggleGroup : MonoBehaviour {
         };
       }
     }
+  }
+
+  private void onIndexToggled(int idx) {
+    _activeToggleIdx = idx;
+
+    OnIndexToggled(idx);
   }
 
 }

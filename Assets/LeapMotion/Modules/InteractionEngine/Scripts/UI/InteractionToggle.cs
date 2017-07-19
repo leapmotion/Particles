@@ -72,6 +72,29 @@ namespace Leap.Unity.Interaction {
     public Action OnUntoggle = () => { };
 
     private float _originalRestingHeight;
+    public float untoggledRestingHeight {
+      get {
+        return _originalRestingHeight;
+      }
+    }
+
+    /// <summary>
+    /// Returns the local position of this toggle when it is able to relax into its untoggled position.
+    /// </summary>
+    public Vector3 RelaxedToggledLocalPosition {
+      get {
+        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, toggledRestingHeight);
+      }
+    }
+
+    /// <summary>
+    /// Returns the local position of this toggle when it is able to relax into its untoggled position.
+    /// </summary>
+    public override Vector3 RelaxedLocalPosition {
+      get {
+        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, untoggledRestingHeight);
+      }
+    }
 
     protected override void Start() {
       base.Start();

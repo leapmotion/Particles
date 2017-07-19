@@ -3,24 +3,12 @@ using Leap.Unity.Interaction;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class SimulatorSliderSetParticleSize : SimulatorUIControl {
+public class SimulatorSliderSetParticleSize : SimulatorSliderControl {
 
-  public InteractionSlider slider;
-  public LeapTextGraphic textOutput;
-
-  protected override void Reset() {
-    base.Reset();
-
-    slider = GetComponent<InteractionSlider>();
-  }
-
-  void Update() {
-    simulatorSetters.SetParticleSize(slider.HorizontalSliderValue);
-
-    if (textOutput != null) {
-      textOutput.text = slider.HorizontalSliderValue.ToString();
-    }
+  protected override void setSimulatorValue(float sliderValue) {
+    simulatorSetters.SetParticleSize(sliderValue);
   }
 
 }

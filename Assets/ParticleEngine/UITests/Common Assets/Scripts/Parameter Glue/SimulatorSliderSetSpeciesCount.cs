@@ -3,26 +3,22 @@ using Leap.Unity.Interaction;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class SimulatorSliderSetSpeciesCount : SimulatorUIControl {
-
-  public InteractionSlider slider;
-  public LeapTextGraphic textOutput;
+public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
 
   protected override void Reset() {
     base.Reset();
 
-    slider = GetComponent<InteractionSlider>();
+    outputFormat = "F0";
   }
 
-  void Update() {
-    int speciesCount = Mathf.RoundToInt(slider.HorizontalSliderValue);
+  protected override float filterSliderValue(float sliderValue) {
+    return Mathf.Round(slider.HorizontalSliderValue);
+  }
 
-    simulatorSetters.SetSpeciesCount(speciesCount);
-
-    if (textOutput != null) {
-      textOutput.text = speciesCount.ToString();
-    }
+  protected override void setSimulatorValue(float sliderValue) {
+    simulatorSetters.SetSpeciesCount(sliderValue);
   }
 
 }

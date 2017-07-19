@@ -869,21 +869,27 @@ MonoBehaviour:
   _stochasticSamplingEnabled: 0
   _stochasticPercent: 0.5
   _stochasticCycleCount: 128
-  _resetTime: 1
+  _resetTime: 3
   _resetForce: 0.05
-  _resetRange: 0.2
+  _resetRange: 0.4
   _resetColorCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 2
-      time: 0
-      value: 0
-      inSlope: 2
-      outSlope: 2
+      time: -0.0009002062
+      value: -0.00079458253
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.2314915
-      value: 0.9286669
+      time: 0.28075996
+      value: 0.005077578
+      inSlope: 0.062305145
+      outSlope: 0.062305145
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.6241612
+      value: 0.98238164
       inSlope: 0.4659663
       outSlope: 0.4659663
       tangentMode: 0
@@ -906,15 +912,15 @@ MonoBehaviour:
       outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.155
-      value: 0.99962294
+      time: 0.45266846
+      value: 1.0028654
       inSlope: -0.3039321
-      outSlope: 0.037664212
+      outSlope: -0.07171903
       tangentMode: 65
     - serializedVersion: 2
-      time: 0.16499999
-      value: 0.9999996
-      inSlope: 0.037664212
+      time: 0.47002319
+      value: 1.0016208
+      inSlope: -0.07171903
       outSlope: 0.14413148
       tangentMode: 5
     - serializedVersion: 2

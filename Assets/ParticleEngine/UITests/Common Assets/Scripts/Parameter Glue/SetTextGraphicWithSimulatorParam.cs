@@ -6,6 +6,7 @@ using UnityEngine;
 public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
 
   public TextureSimulator simulator;
+  public TextureSimulatorSetters simulatorSetters;
   public LeapTextGraphic textGraphic;
   public string prefix;
   public string postfix;
@@ -15,6 +16,7 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
   void Reset() {
     textGraphic = GetComponent<LeapTextGraphic>();
     simulator = FindObjectOfType<TextureSimulator>();
+    simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
   }
 
   void OnValidate() {

@@ -522,7 +522,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _displayParticles; }
     set { _displayParticles = value; }
   }
-  
+
   [SerializeField]
   private Mesh _particleMesh;
 
@@ -1095,7 +1095,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     //---------------------------------------------
-    // Red Menace 
+    // Red Menace
     //---------------------------------------------
     if (preset == EcosystemPreset.BlackHole) {
       colors.Fill(Color.white);
@@ -1151,7 +1151,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     //---------------------------------------------
-    // Chase 
+    // Chase
     //---------------------------------------------
     else if (preset == EcosystemPreset.Chase) {
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1197,7 +1197,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     //---------------------------------------------
-    // Mitosis 
+    // Mitosis
     //---------------------------------------------
     else if (preset == EcosystemPreset.Mitosis) {
       for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
@@ -1226,7 +1226,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     //---------------------------------------------
-    // Planets 
+    // Planets
     //---------------------------------------------
     else if (preset == EcosystemPreset.Planets) {
       currentSimulationSpeciesCount = 9;
@@ -1563,40 +1563,40 @@ public class TextureSimulator : MonoBehaviour {
       Debug.Log("float r_3_3 = " + r_3_3 + "f; ");
 
       /*
-      float f_0_0 = -0.001361714f; 
-      float f_0_1 = -0.001863675f; 
-      float f_0_2 = -0.0006116494f; 
-      float f_0_3 = -0.0009556326f; 
-      float f_1_0 = -0.000519999f; 
-      float f_1_1 = 0.0006196692f; 
-      float f_1_2 = -0.0007936339f; 
-      float f_1_3 = -0.00107222f; 
-      float f_2_0 = -0.001001807f; 
-      float f_2_1 = 0.0007801288f; 
-      float f_2_2 = -0.001814131f; 
-      float f_2_3 = -0.0005873627f; 
-      float f_3_0 = 0.0005874083f; 
-      float f_3_1 = 0.0008533328f; 
-      float f_3_2 = 0.001345f; 
-      float f_3_3 = -0.0003365405f; 
+      float f_0_0 = -0.001361714f;
+      float f_0_1 = -0.001863675f;
+      float f_0_2 = -0.0006116494f;
+      float f_0_3 = -0.0009556326f;
+      float f_1_0 = -0.000519999f;
+      float f_1_1 = 0.0006196692f;
+      float f_1_2 = -0.0007936339f;
+      float f_1_3 = -0.00107222f;
+      float f_2_0 = -0.001001807f;
+      float f_2_1 = 0.0007801288f;
+      float f_2_2 = -0.001814131f;
+      float f_2_3 = -0.0005873627f;
+      float f_3_0 = 0.0005874083f;
+      float f_3_1 = 0.0008533328f;
+      float f_3_2 = 0.001345f;
+      float f_3_3 = -0.0003365405f;
 
 
-      float r_0_0 = 0.2570884f; 
-      float r_0_1 = 0.5648767f; 
-      float r_0_2 = 0.3039016f; 
-      float r_0_3 = 0.4649104f; 
-      float r_1_0 = 0.2592408f; 
-      float r_1_1 = 0.1084508f; 
-      float r_1_2 = 0.05279962f; 
-      float r_1_3 = 0.1394664f; 
-      float r_2_0 = 0.4481683f; 
-      float r_2_1 = 0.2992772f; 
-      float r_2_2 = 0.01796358f; 
-      float r_2_3 = 0.04451307f; 
-      float r_3_0 = 0.5427676f; 
-      float r_3_1 = 0.1953885f; 
-      float r_3_2 = 0.05868421f; 
-      float r_3_3 = 0.03309977f; 
+      float r_0_0 = 0.2570884f;
+      float r_0_1 = 0.5648767f;
+      float r_0_2 = 0.3039016f;
+      float r_0_3 = 0.4649104f;
+      float r_1_0 = 0.2592408f;
+      float r_1_1 = 0.1084508f;
+      float r_1_2 = 0.05279962f;
+      float r_1_3 = 0.1394664f;
+      float r_2_0 = 0.4481683f;
+      float r_2_1 = 0.2992772f;
+      float r_2_2 = 0.01796358f;
+      float r_2_3 = 0.04451307f;
+      float r_3_0 = 0.5427676f;
+      float r_3_1 = 0.1953885f;
+      float r_3_2 = 0.05868421f;
+      float r_3_3 = 0.03309977f;
       */
 
 
@@ -1846,6 +1846,7 @@ public class TextureSimulator : MonoBehaviour {
     };
 
     Random.InitState(seed.GetHashCode());
+    desc.name = seed;
 
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
@@ -2061,7 +2062,7 @@ public class TextureSimulator : MonoBehaviour {
         float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
         float colorPercent = _resetColorCurve.Evaluate(percent);
         var lerpedColors = _currentSimDescription.speciesData.Query().
-                                                              Zip(simulationDescription.speciesData.Query(), 
+                                                              Zip(simulationDescription.speciesData.Query(),
                                                                   (a, b) => (Vector4)Color.Lerp(a.color, b.color, colorPercent)).
                                                               ToArray();
 
@@ -2932,7 +2933,7 @@ public class TextureSimulator : MonoBehaviour {
 
     //We are going to keep building new command buffers
     //until the state of the textures equals the original
-    //state.  If there is no fancy conditional logic involved 
+    //state.  If there is no fancy conditional logic involved
     //then this will always wind up being 2 buffers.
 
     int bufferIndex = 0;

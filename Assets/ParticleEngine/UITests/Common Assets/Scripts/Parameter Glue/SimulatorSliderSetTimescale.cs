@@ -10,9 +10,9 @@ public class SimulatorSliderSetTimescale : SimulatorSliderControl {
     return true;
   }
 
-  protected override float filterSliderValue(float sliderValue) {
-    return Mathf.Round(sliderValue * 10F) / 10F;
-  }
+  //protected override float filterSliderValue(float sliderValue) {
+  //  return Mathf.Round(sliderValue * 10F) / 10F;
+  //}
 
   protected override void setSimulatorValue(float sliderValue) {
     simulatorSetters.SetTimescale(sliderValue);

@@ -21,24 +21,29 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
 
   void Start() {
     maybeRefreshSimValue();
+
+    slider.HorizontalSlideEvent += onSlideEvent;
+  }
+
+  private void onSlideEvent(float value) {
+    value = filterSliderValue(value);
+
+    setSimulatorValue(value);
   }
 
   void Update() {
-    float value = slider.HorizontalSliderValue;
-    value = filterSliderValue(value);
-    setSimulatorValue(value);
-
     maybeRefreshSimValue();
 
     if (textOutput != null) {
-      textOutput.text = value.ToString(outputFormat);
+      textOutput.text = slider.HorizontalSliderValue.ToString(outputFormat);
     }
   }
 
   private void maybeRefreshSimValue() {
+    float sliderValue = slider.HorizontalSliderValue;
     float simValue;
     bool shouldRefresh = refreshWithSimulatorValue(out simValue);
-    if (shouldRefresh) {
+    if (shouldRefresh && sliderValue != simValue) {
       slider.HorizontalSliderValue = simValue;
     }
   }

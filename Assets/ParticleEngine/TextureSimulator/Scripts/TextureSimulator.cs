@@ -25,6 +25,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public const string PROP_VELOCITY_GLOBAL = "_ParticleVelocities";
   public const string PROP_POSITION_GLOBAL = "_ParticlePositions";
+  public const string PROP_POSITION_PREV_GLOBAL = "_ParticlePrevPositions";
   public const string PROP_SOCIAL_FORCE_GLOBAL = "_ParticleSocialForces";
 
   public const string PROP_SIMULATION_FRACTION = "_SampleFraction";
@@ -2900,6 +2901,8 @@ public class TextureSimulator : MonoBehaviour {
     blitCommands(buffer, _blitMeshParticle, PROP_VELOCITY_GLOBAL, ref _velocitySrc, ref _velocityDst, PASS_DAMP_VELOCITIES_APPLY_SOCIAL_FORCES);
 
     blitCommands(buffer, _blitMeshParticle, PROP_POSITION_GLOBAL, ref _positionSrc, ref _positionDst, PASS_INTEGRATE_VELOCITIES);
+
+    buffer.SetGlobalTexture(PROP_POSITION_PREV_GLOBAL, _positionDst);
   }
 
   private void blitCommands(CommandBuffer buffer, Mesh mesh, string propertyName, ref RenderTexture src, ref RenderTexture dst, int pass) {

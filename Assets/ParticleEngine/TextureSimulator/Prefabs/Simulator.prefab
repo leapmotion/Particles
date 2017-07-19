@@ -859,8 +859,8 @@ MonoBehaviour:
   _fieldForce: 0.0605
   _headRadius: 0.15
   _simulationEnabled: 1
-  _dynamicTimestepEnabled: 0
-  _limitStepsPerFrame: 0
+  _dynamicTimestepEnabled: 1
+  _limitStepsPerFrame: 1
   _simulationFPS: 60
   _simulationTimescale: 1
   _textureFormat: 2

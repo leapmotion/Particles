@@ -80,10 +80,11 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.maxSocialRange = maxRange;
   }
 
+  private float _dragDiff = -1;
   public void SetDrag(float drag) {
-    float diff = _sim.randomEcosystemSettings.maxDrag - _sim.randomEcosystemSettings.minDrag;
-    _sim.randomEcosystemSettings.minDrag = Mathf.Clamp01(drag - diff * 0.5f);
-    _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + diff * 0.5f);
+    if (_dragDiff < 0F) _dragDiff = _sim.randomEcosystemSettings.maxDrag - _sim.randomEcosystemSettings.minDrag;
+    _sim.randomEcosystemSettings.minDrag = Mathf.Clamp01(drag - _dragDiff * 0.5f);
+    _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + _dragDiff * 0.5f);
   }
 
   public float GetParticleSize() {
@@ -100,6 +101,22 @@ public class TextureSimulatorSetters : MonoBehaviour {
 
   public void SetTrailSize(float trailSize) {
     _sim.displayProperties.SetFloat("_TrailLength", trailSize);
+  }
+
+  public void SetBoundingForce(float boundingForce) {
+    _sim.fieldForce = boundingForce;
+  }
+
+  public void SetBoundingRadius(float boundingRadius) {
+    _sim.fieldRadius = boundingRadius;
+  }
+
+  public void SetTimescale(float timescale) {
+    _sim.simulationTimescale = timescale;
+  }
+
+  public float GetTimescale() {
+    return _sim.simulationTimescale;
   }
 
   public void SetDisplayMode(string mode) {

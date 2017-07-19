@@ -63,6 +63,10 @@
   uniform uint _SampleHeight;
   uniform half _SampleFraction;
 
+  uniform half _ResetPercent;
+  uniform half _ResetForce;
+  uniform half _ResetRange;
+
   uniform half3 _FieldCenter;
   uniform half _FieldRadius;
   uniform half _FieldForce;
@@ -245,6 +249,9 @@
 
     half4 totalSocialForce = half4(0, 0, 0, -_SampleFraction);
 
+    half socialForce = lerp(i.social.x, _ResetForce, _ResetPercent);
+    half socialRange = lerp(i.social.y, _ResetRange, _ResetPercent);
+
     //half4 neighborA = tex2Dlod0(_ParticlePositions, i.uv - half2(1.0 / MAX_PARTICLES, 0));
     //half4 neighborB = tex2Dlod0(_ParticlePositions, i.uv + half2(1.0 / MAX_PARTICLES, 0));
 
@@ -289,8 +296,8 @@
           velocity.xyz -= toOther * penetration * i.social.z;
         }
 
-        if (distance < i.social.y) {
-          totalSocialForce += half4(i.social.x * toOther, 1);
+        if (distance < socialRange) {
+          totalSocialForce += half4(socialForce * toOther, 1);
         }
       }
     }

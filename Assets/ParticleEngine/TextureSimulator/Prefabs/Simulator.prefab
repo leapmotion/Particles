@@ -869,6 +869,63 @@ MonoBehaviour:
   _stochasticSamplingEnabled: 0
   _stochasticPercent: 0.5
   _stochasticCycleCount: 128
+  _resetTime: 1
+  _resetForce: 0.05
+  _resetRange: 0.2
+  _resetColorCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.2314915
+      value: 0.9286669
+      inSlope: 0.4659663
+      outSlope: 0.4659663
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
+  _resetSocialCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.155
+      value: 0.99962294
+      inSlope: -0.3039321
+      outSlope: 0.037664212
+      tangentMode: 65
+    - serializedVersion: 2
+      time: 0.16499999
+      value: 0.9999996
+      inSlope: 0.037664212
+      outSlope: 0.14413148
+      tangentMode: 5
+    - serializedVersion: 2
+      time: 1
+      value: -0.0032274132
+      inSlope: -0.7620382
+      outSlope: -0.7620382
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
   _displayParticles: 1
   _particleMesh: {fileID: 4300000, guid: 4146ef317cfe10d4fa7b85d3f5fb513b, type: 2}
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}

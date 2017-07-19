@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Leap;
@@ -489,17 +490,39 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  //###########################//
+  ///      Reset Behavior      //
+  //###########################//
+  [Header("Reset Behavior")]
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetTime = 0.5f;
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetForce = 1;
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetRange = 1;
+
+  [SerializeField]
+  private AnimationCurve _resetColorCurve;
+
+  [SerializeField]
+  private AnimationCurve _resetSocialCurve;
+
   //####################//
   ///      Display      //
   //####################//
+  [Header("Display")]
   [SerializeField]
   private bool _displayParticles = true;
   public bool displayParticles {
     get { return _displayParticles; }
     set { _displayParticles = value; }
   }
-
-  [Header("Display")]
+  
   [SerializeField]
   private Mesh _particleMesh;
 
@@ -1970,6 +1993,10 @@ public class TextureSimulator : MonoBehaviour {
   /// initial state of the simulation.
   /// </summary>
   public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
+    StartCoroutine(restartCoroutine(simulationDescription, forcePositionReset));
+  }
+
+  private IEnumerator restartCoroutine(SimulationDescription simulationDescription, bool forcePositionReset = true) {
     bool isLayoutDifferent = true;
 
     if (_currentSimDescription != null && !forcePositionReset) {
@@ -2015,13 +2042,43 @@ public class TextureSimulator : MonoBehaviour {
       resetParticleTextures(layout, simulationDescription.toSpawn);
 
       resetRenderMeshes(simulationDescription, layout);
+
+      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
+
+      resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+    } else {
+      _simulationMat.SetFloat("_ResetRange", _resetRange);
+      _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
+
+      float startTime = Time.time;
+      float endTime = Time.time + _resetTime;
+      bool hasUploadedNewSocialMesh = false;
+      while(Time.time < endTime) {
+        float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
+        float colorPercent = _resetColorCurve.Evaluate(percent);
+        var lerpedColors = _currentSimDescription.speciesData.Query().
+                                                              Zip(simulationDescription.speciesData.Query(), 
+                                                                  (a, b) => (Vector4)Color.Lerp(a.color, b.color, colorPercent)).
+                                                              ToArray();
+
+        uploadSpeciesColors(lerpedColors);
+
+        float socialPercent = _resetSocialCurve.Evaluate(percent);
+        if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
+          hasUploadedNewSocialMesh = true;
+          resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+        }
+
+        _simulationMat.SetFloat("_ResetPercent", socialPercent);
+
+        yield return null;
+      }
+
+      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
     }
 
-    uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
-
-    resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
-
     //TODO: more shader constants here
+    _simulationMat.SetFloat("_ResetPercent", 0);
     _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
     _currScaledTime = 0;
     _currSimulationTime = 0;

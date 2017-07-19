@@ -16,9 +16,10 @@ public class RadioToggleGroup : MonoBehaviour {
     for (int i = 0; i < toggles.Count; i++) {
       var toggle = toggles[i];
 
+      int toggleIndex = i;
       toggle.OnToggle += () => {
         toggle.controlEnabled = false;
-        OnIndexToggled(i);
+        OnIndexToggled(toggleIndex);
       };
 
       for (int j = 0; j < toggles.Count; j++) {

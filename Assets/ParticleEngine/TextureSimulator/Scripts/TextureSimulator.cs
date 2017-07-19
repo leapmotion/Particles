@@ -1993,9 +1993,13 @@ public class TextureSimulator : MonoBehaviour {
   /// initial state of the simulation.
   /// </summary>
   public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
-    StartCoroutine(restartCoroutine(simulationDescription, forcePositionReset));
+    if (_resetCoroutine != null) {
+      StopCoroutine(_resetCoroutine);
+    }
+    _resetCoroutine = StartCoroutine(restartCoroutine(simulationDescription, forcePositionReset));
   }
 
+  private Coroutine _resetCoroutine;
   private IEnumerator restartCoroutine(SimulationDescription simulationDescription, bool forcePositionReset = true) {
     bool isLayoutDifferent = true;
 
@@ -2091,6 +2095,7 @@ public class TextureSimulator : MonoBehaviour {
     Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
     _currentSimDescription = simulationDescription;
+    _resetCoroutine = null;
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {

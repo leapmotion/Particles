@@ -956,7 +956,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public int currentSpeciesCount {
     get {
-      return _currentSimDescription.toSpawn.Count;
+      return _currentSimDescription.toSpawn.Query().CountUnique(t => t.species);
     }
   }
 

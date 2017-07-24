@@ -1199,31 +1199,49 @@ public class TextureSimulator : MonoBehaviour {
     //---------------------------------------------
     // Mitosis
     //---------------------------------------------
-    else if (preset == EcosystemPreset.Mitosis) {
-      for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) {
-        speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, 0.1f),
+	else if ( preset == EcosystemPreset.Mitosis ) 
+	{
+		float drag 		=  0.0f;
+		float collision =  0.0f;
+		float range 	=  0.35f;
+		float initRange =  0.2f;
+		float start		=  0.00015f;
+		float shift		= -0.000065f;
+		float inc		=  0.0001f;
+
+		for (int i = 0; i < SPECIES_CAP_FOR_PRESETS; i++) 
+		{
+			speciesData[i] = new Vector3(Mathf.Lerp(setting.minDrag, setting.maxDrag, drag ),
                                      0,
-                                     Mathf.Lerp(setting.minCollision, setting.maxCollision, 0.05f));
+                                     Mathf.Lerp(setting.minCollision, setting.maxCollision, collision ));
 
-        for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) {
-          float a = (j / (float)SPECIES_CAP_FOR_PRESETS * 0.9f) * setting.maxSocialForce * 1.0f;
-          float b = (i / (float)SPECIES_CAP_FOR_PRESETS * 1.2f) * setting.maxSocialForce * 0.4f;
+			float force = start + (float)( i * shift );
 
-          socialData[i, j] = new Vector2(a - b, setting.maxSocialRange * 0.7f);
-        }
-      }
+			for (var j = 0; j < SPECIES_CAP_FOR_PRESETS; j++) 
+			{
+				force += inc;
+				socialData[i, j] = new Vector2( force, setting.maxSocialRange * range );
+			}
+		}
 
-      colors[9] = new Color(0.9f, 0.9f, 0.9f);
-      colors[8] = new Color(0.9f, 0.7f, 0.3f);
-      colors[7] = new Color(0.9f, 0.4f, 0.2f);
-      colors[6] = new Color(0.9f, 0.3f, 0.3f);
-      colors[5] = new Color(0.6f, 0.3f, 0.6f);
-      colors[4] = new Color(0.5f, 0.3f, 0.7f);
-      colors[3] = new Color(0.2f, 0.2f, 0.3f);
-      colors[2] = new Color(0.1f, 0.1f, 0.3f);
-      colors[1] = new Color(0.0f, 0.0f, 0.3f);
-      colors[0] = new Color(0.0f, 0.0f, 0.0f);
+      	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particleVelocities[p] = Vector3.zero;
+			particlePositions [p] = Random.insideUnitSphere * initRange;
+      	}
+
+		colors[9] = new Color(0.9f, 0.9f, 0.9f);
+		colors[8] = new Color(0.9f, 0.7f, 0.3f);
+		colors[7] = new Color(0.9f, 0.4f, 0.2f);
+		colors[6] = new Color(0.9f, 0.3f, 0.3f);
+		colors[5] = new Color(0.6f, 0.3f, 0.6f);
+		colors[4] = new Color(0.5f, 0.3f, 0.7f);
+		colors[3] = new Color(0.2f, 0.2f, 0.3f);
+		colors[2] = new Color(0.1f, 0.1f, 0.3f);
+		colors[1] = new Color(0.0f, 0.0f, 0.3f);
+		colors[0] = new Color(0.0f, 0.0f, 0.0f);
     }
+
 
     //---------------------------------------------
     // Planets

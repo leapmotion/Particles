@@ -1057,6 +1057,7 @@ public class TextureSimulator : MonoBehaviour {
     Layers,
     Fluidy,
     BlackHole,
+	Nova,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1411,46 +1412,111 @@ public class TextureSimulator : MonoBehaviour {
     // This is a controlled test scenario which is the same as
     // Test3 in terms of species, but it has lots of particles
     //----------------------------------------------------------------
-    else if (preset == EcosystemPreset.TEST_ThreeSpecies) {
-      currentSimulationSpeciesCount = 3;
-      particlesToSimulate = 3000;
+    else if (preset == EcosystemPreset.TEST_ThreeSpecies) 
+	{
+		currentSimulationSpeciesCount = 3;
+		particlesToSimulate = 3000;
+		
+		colors[0] = new Color(0.7f, 0.2f, 0.2f);
+		colors[1] = new Color(0.4f, 0.4f, 0.0f);
+		colors[2] = new Color(0.1f, 0.2f, 0.7f);
 
-      colors[0] = new Color(0.7f, 0.2f, 0.2f);
-      colors[1] = new Color(0.4f, 0.4f, 0.0f);
-      colors[2] = new Color(0.1f, 0.2f, 0.7f);
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+        	speciesData[s] = new Vector3(0.1f, 1, 0.01f);
+      	}
 
-      for (int s = 0; s < currentSimulationSpeciesCount; s++) {
-        speciesData[s] = new Vector3(0.1f, 1, 0.01f);
-      }
+		float Test4_selfForce = 0.001f;
+		float Test4_selfRange = 0.3f;
+		
+		float Test4_loveForce = 0.002f;
+		float Test4_loveRange = 0.5f;
+		
+		float Test4_hateForce = -0.0022f;
+		float Test4_hateRange = 0.8f;
+		
+		socialData[0, 0] = new Vector2(Test4_selfForce, Test4_selfRange);
+		socialData[1, 1] = new Vector2(Test4_selfForce, Test4_selfRange);
+		socialData[2, 2] = new Vector2(Test4_selfForce, Test4_selfRange);
+		
+		socialData[0, 1] = new Vector2(Test4_loveForce, Test4_loveRange);
+		socialData[1, 2] = new Vector2(Test4_loveForce, Test4_loveRange);
+		socialData[2, 0] = new Vector2(Test4_loveForce, Test4_loveRange);
+		
+		socialData[0, 2] = new Vector2(Test4_hateForce, Test4_hateRange);
+		socialData[1, 0] = new Vector2(Test4_hateForce, Test4_hateRange);
+		socialData[2, 1] = new Vector2(Test4_hateForce, Test4_hateRange);
 
-      float Test4_selfForce = 0.001f;
-      float Test4_selfRange = 0.3f;
+      	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+        	float fraction = (float)p / (float)particlesToSimulate;
+	        if (fraction < (1.0f / currentSimulationSpeciesCount)) 
+			{ 
+				particleSpecies[p] = 0; 
+			} 
+			else if (fraction < (2.0f / currentSimulationSpeciesCount)) 
+			{ 
+				particleSpecies[p] = 1; 
+			} 
+			else 
+			{ 
+				particleSpecies[p] = 2; 
+			}
 
-      float Test4_loveForce = 0.002f;
-      float Test4_loveRange = 0.5f;
+			particleVelocities[p] = Vector3.zero;
+		}
+	}
 
-      float Test4_hateForce = -0.0022f;
-      float Test4_hateRange = 0.8f;
+    //----------------------------------------------------------------
+    // This is a controlled test scenario which is the same as
+    // Test3 in terms of species, but it has lots of particles
+    //----------------------------------------------------------------
+    else if (preset == EcosystemPreset.Nova) 
+	{
+		currentSimulationSpeciesCount = 3;
 
-      socialData[0, 0] = new Vector2(Test4_selfForce, Test4_selfRange);
-      socialData[1, 1] = new Vector2(Test4_selfForce, Test4_selfRange);
-      socialData[2, 2] = new Vector2(Test4_selfForce, Test4_selfRange);
+		particlesToSimulate = 4000;
 
-      socialData[0, 1] = new Vector2(Test4_loveForce, Test4_loveRange);
-      socialData[1, 2] = new Vector2(Test4_loveForce, Test4_loveRange);
-      socialData[2, 0] = new Vector2(Test4_loveForce, Test4_loveRange);
+		float circleRadius 	= 0.99f;
+		float selfRange 	= 0.05f;
+		float otherRange 	= 0.2f;
+		float drag 			= 0.4f;
+		float collision		= 0.0f;
 
-      socialData[0, 2] = new Vector2(Test4_hateForce, Test4_hateRange);
-      socialData[1, 0] = new Vector2(Test4_hateForce, Test4_hateRange);
-      socialData[2, 1] = new Vector2(Test4_hateForce, Test4_hateRange);
+		colors[0] = new Color( 0.6f, 0.6f, 0.3f );
+		colors[1] = new Color( 0.9f, 0.9f, 0.9f );
+		colors[2] = new Color( 0.4f, 0.2f, 0.7f );
 
-      for (int p = 0; p < particlesToSimulate; p++) {
-        float fraction = (float)p / (float)particlesToSimulate;
-        if (fraction < (1.0f / currentSimulationSpeciesCount)) { particleSpecies[p] = 0; } else if (fraction < (2.0f / currentSimulationSpeciesCount)) { particleSpecies[p] = 1; } else { particleSpecies[p] = 2; }
+		speciesData[0] = new Vector3( drag, 0, collision );
+		speciesData[1] = new Vector3( drag, 0, collision );
+		speciesData[2] = new Vector3( drag, 0, 0.1f );
 
-        particleVelocities[p] = Vector3.zero;
-      }
-    }
+		socialData[ 0, 0 ] = new Vector2( -0.0001f, selfRange	);	
+		socialData[ 0, 1 ] = new Vector2( -0.0030f, otherRange	);	
+		socialData[ 0, 2 ] = new Vector2( -0.0030f, otherRange	);	
+
+		socialData[ 1, 1 ] = new Vector2( -0.0001f, selfRange	);	
+		socialData[ 1, 0 ] = new Vector2( -0.0030f, otherRange 	);	
+		socialData[ 1, 2 ] = new Vector2( -0.0030f, otherRange 	);	
+
+		socialData[ 2, 2 ] = new Vector2(  0.0000f, 0.4f );	
+		socialData[ 2, 0 ] = new Vector2( -0.0030f, otherRange 	);	
+		socialData[ 2, 1 ] = new Vector2( -0.0030f, otherRange 	);	
+
+     	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float fraction = (float)p / (float)particlesToSimulate;
+			float radian = fraction * Mathf.PI * 2.0f;
+
+			Vector3 right = Vector3.right 	* Mathf.Sin( radian );
+			Vector3 up    = Vector3.up    	* Mathf.Cos( radian );
+			Vector3 front = Vector3.forward	* 0.01f  * Random.value;
+
+			particlePositions	[p] = circleRadius * right + circleRadius * up + front;
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % 3; 
+		}	
+	}
 
     //-----------------------------------------------------------------------------------
     // This is a test to see if we can simulate (somewhat and somehow) a bilayer lipid!
@@ -1490,6 +1556,7 @@ public class TextureSimulator : MonoBehaviour {
 
       float minRange = 0.01f;
       float maxRange = 0.6f;
+
 
       float f_0_0 = minForce + (maxForce - minForce) * Random.value;
       float f_0_1 = minForce + (maxForce - minForce) * Random.value;
@@ -1533,9 +1600,7 @@ public class TextureSimulator : MonoBehaviour {
       float r_3_2 = minRange + (maxRange - minRange) * Random.value;
       float r_3_3 = minRange + (maxRange - minRange) * Random.value;
 
-
-
-
+	  /*
       Debug.Log("");
       Debug.Log("data  -----------------------------------------------------");
 
@@ -1580,7 +1645,7 @@ public class TextureSimulator : MonoBehaviour {
       Debug.Log("float r_3_2 = " + r_3_2 + "f; ");
       Debug.Log("float r_3_3 = " + r_3_3 + "f; ");
 
-      /*
+
       float f_0_0 = -0.001361714f;
       float f_0_1 = -0.001863675f;
       float f_0_2 = -0.0006116494f;

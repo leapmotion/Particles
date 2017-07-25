@@ -41,6 +41,9 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "body mind":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.BodyMind);
         break;
+	  case "Nova":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Nova);
+        break;
       case "TEST_OneParticle":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_OneParticle);
         break;
@@ -53,7 +56,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "TEST_ThreeSpecies":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeSpecies);
         break;
-      default:
+       default:
         Debug.LogError("No ecosystem with name " + name);
         break;
     }

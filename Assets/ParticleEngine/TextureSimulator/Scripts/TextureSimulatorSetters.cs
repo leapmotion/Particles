@@ -44,6 +44,9 @@ public class TextureSimulatorSetters : MonoBehaviour {
 	  case "Nova":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Nova);
         break;
+	  case "EnergyConserving":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.EnergyConserving);
+        break;
       case "TEST_OneParticle":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_OneParticle);
         break;

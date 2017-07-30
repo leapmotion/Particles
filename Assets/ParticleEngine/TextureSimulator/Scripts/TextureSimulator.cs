@@ -1058,6 +1058,7 @@ public class TextureSimulator : MonoBehaviour {
     Fluidy,
     BlackHole,
 	Nova,
+	EnergyConserving,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1517,6 +1518,53 @@ public class TextureSimulator : MonoBehaviour {
 			particleSpecies		[p] = p % 3; 
 		}	
 	}
+
+	
+	//-----------------------------------------------------------------------------------------------------
+	// This is a test to see what happens when opposing forces are specified between pairs of species
+	//-----------------------------------------------------------------------------------------------------
+	else if (preset == EcosystemPreset.EnergyConserving ) 
+	{
+		currentSimulationSpeciesCount = 6;
+
+		particlesToSimulate = 3000;
+
+		colors[0] = new Color( 0.9f, 0.2f, 0.2f );
+		colors[1] = new Color( 0.9f, 0.5f, 0.2f );
+		colors[2] = new Color( 0.9f, 0.9f, 0.2f );
+		colors[3] = new Color( 0.2f, 0.9f, 0.2f );
+		colors[4] = new Color( 0.1f, 0.2f, 0.8f );
+		colors[5] = new Color( 0.3f, 0.2f, 0.8f );
+
+		float drag			= 0.1f;
+		float steps			= 0;
+		float collision		= 0.01f;
+		float forceRange	= 0.01f;
+		float minRange		= 0.1f;
+		float maxRange		= 0.9f;
+
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+
+			for (int o = s; o < currentSimulationSpeciesCount; o++) 
+			{
+				float force = -forceRange * 0.5f + forceRange * Random.value;
+				float range = minRange + ( maxRange - minRange ) * Random.value;
+
+				socialData[ s, o ] = new Vector2( force, range );	
+				socialData[ o, s ] = new Vector2( force, range );	
+			}
+		}
+
+     	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % currentSimulationSpeciesCount; 
+		}
+	}
+
+
 
     //-----------------------------------------------------------------------------------
     // This is a test to see if we can simulate (somewhat and somehow) a bilayer lipid!

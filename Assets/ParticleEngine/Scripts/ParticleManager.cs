@@ -167,7 +167,7 @@ public class ParticleManager : MonoBehaviour {
     //-----------------------------------------
     //randomizeSpecies();
 
-    setPresetEcosystem(ParticleControl.ECOSYSTEM_MITOSIS);
+    setPresetEcosystem(ParticleControl.ECOSYSTEM_CHASE);
 
     //-----------------------------------------
     // randomize particles 

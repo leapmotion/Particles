@@ -1062,7 +1062,8 @@ public class TextureSimulator : MonoBehaviour {
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
-    TEST_ThreeSpecies
+    TEST_ThreeSpecies,
+    Comets
   }
 
   private SimulationDescription getPresetDescription(EcosystemPreset preset) {
@@ -1466,6 +1467,68 @@ public class TextureSimulator : MonoBehaviour {
 
 			particleVelocities[p] = Vector3.zero;
 		}
+	}
+
+	//----------------------------------------------------------------
+    // This is a controlled test scenario which is the same as
+    // Test3 in terms of species, but it has lots of particles
+    //----------------------------------------------------------------
+    else if (preset == EcosystemPreset.Comets ) 
+	{
+		currentSimulationSpeciesCount = 3;
+		particlesToSimulate = 3000;
+
+
+		//----------------------------------------------------------------
+	    // This code is useful for finding new ecosystems...
+	    //----------------------------------------------------------------
+		/*
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			colors[s] = new Color( Random.value, Random.value, Random.value );
+		
+			int steps = 0;
+			if ( Random.value > 0.5f )
+			{
+				steps = (int)( Random.value * 10.0f );
+			}
+
+			float drag 		= Random.value * setting.maxDrag;
+			float collision = Random.value * setting.maxCollision;
+
+			speciesData[s] = new Vector3( drag, steps, collision );
+
+			Debug.Log( "species " + s + ": drag = " + drag + "; steps = " + steps + "; collision = " + collision );
+
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+				float force = -setting.maxSocialForce + Random.value * setting.maxSocialForce * 2.0f;
+				float range = Random.value * 0.5f ;
+
+				socialData[ s, o ] = new Vector2( force, range );	
+				Debug.Log( "other species: " + o + ": force = " + force + "; range = " + range );
+			}
+		}	
+		*/
+
+
+		colors[0] = new Color( 0.8f, 0.8f, 0.2f );
+		speciesData[0] = new Vector3( 0.045f, 1, 0.003f );
+		socialData [0, 0] = new Vector2(  0.001f, 	0.225f );	
+		socialData [0, 1] = new Vector2( -0.002f, 	0.237f );	
+		socialData [0, 2] = new Vector2( -0.001f, 	0.335f );	
+
+		colors[1] = new Color( 0.6f, 0.2f, 0.0f );
+		speciesData[1] = new Vector3( 0.213f, 0, 0.008f );
+		socialData [1, 0] = new Vector2(  0.002f, 	0.466f );	
+		socialData [1, 1] = new Vector2( -0.002f, 	0.240f );	
+		socialData [1, 2] = new Vector2( -0.001f, 	0.033f );	
+
+		colors[2] = new Color( 0.3f, 0.0f, 0.6f );
+		speciesData[2] = new Vector3( 0.065f, 4, 0.000f );
+		socialData [2, 0] = new Vector2(  0.001f, 	0.351f );	
+		socialData [2, 1] = new Vector2(  0.002f, 	0.274f );	
+		socialData [2, 2] = new Vector2( -0.001f, 	0.272f );	
 	}
 
     //----------------------------------------------------------------

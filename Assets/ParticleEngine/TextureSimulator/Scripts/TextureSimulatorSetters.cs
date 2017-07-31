@@ -56,8 +56,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "TEST_ThreeParticles":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeParticles);
         break;
-      case "TEST_ThreeSpecies":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeSpecies);
+      case "Comets":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
         break;
        default:
         Debug.LogError("No ecosystem with name " + name);

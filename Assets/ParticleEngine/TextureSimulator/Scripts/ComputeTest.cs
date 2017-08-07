@@ -54,28 +54,16 @@ public class ComputeTest : MonoBehaviour {
     end();
 
     maxParticles = (4096 / stride) * stride;
-
-    Debug.Log("Creating velocity... " + maxParticles);
+    
     velocities = new ComputeBuffer(maxParticles, sizeof(float) * 4);
-    Debug.Log("Created");
-
-    Debug.Log("Creating position... " + maxParticles);
     positions = new ComputeBuffer(maxParticles, sizeof(float) * 4);
-    Debug.Log("Created");
 
-    Debug.Log("Finding Kernels");
     velocityKernel = shader.FindKernel("UpdateVelocity_" + stride);
-    Debug.Log("Found");
 
-    Debug.Log("Assigning buffers");
     foreach (var kernel in new int[] { velocityKernel }) {
       shader.SetBuffer(kernel, "_Positions", positions);
       shader.SetBuffer(kernel, "_Velocities", velocities);
     }
-    Debug.Log("Assigned");
-
-    Debug.Log("Velocity kernel: " + velocityKernel);
-    Debug.Log("Position kernel: " + positionKernel);
   }
 
   private void end() {

@@ -1,0 +1,244 @@
+﻿#pragma kernel RandomizePositions STRIDE=1024 GROUP=1024
+#pragma kernel UpdatePosition STRIDE=1024 GROUP=1024
+
+#pragma kernel UpdateVelocity_1024 STRIDE=1024 GROUP=1024
+#pragma kernel UpdateVelocity_512  STRIDE=512  GROUP=512
+#pragma kernel UpdateVelocity_256  STRIDE=256  GROUP=256
+#pragma kernel UpdateVelocity_128  STRIDE=128  GROUP=128
+#pragma kernel UpdateVelocity_64   STRIDE=64   GROUP=64 
+#pragma kernel UpdateVelocity_32   STRIDE=32   GROUP=32 
+
+//#pragma kernel UpdateVelocity_1024_1 STRIDE=1024 GROUP=1024
+//#pragma kernel UpdateVelocity_512_2  STRIDE=512  GROUP=1024
+//#pragma kernel UpdateVelocity_256_4  STRIDE=256  GROUP=1024
+//#pragma kernel UpdateVelocity_128_8  STRIDE=128  GROUP=1024
+//#pragma kernel UpdateVelocity_64_16  STRIDE=64   GROUP=1024
+//#pragma kernel UpdateVelocity_32_32  STRIDE=32   GROUP=1024 
+
+#define PARTICLE_RADIUS 0.01
+#define PARTICLE_DIAMETER (PARTICLE_RADIUS * 2)
+
+#define _SocialRange 0.1
+#define _SocialForce 0.001
+#define _CollisionForce 0.005
+
+//float _SocialRange;
+//float _SocialForce;
+//float _CollisionForce;
+
+RWStructuredBuffer<float4> _Positions;
+RWStructuredBuffer<float4> _Velocities;
+
+groupshared float4 _accumulationSpace[1024];
+groupshared float4 _cachedParticles[GROUP];
+
+float nrand(float2 n)
+{
+  return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+}
+
+[numthreads(1, 1, 1)]
+void RandomizePositions(uint3 id : SV_DispatchThreadID) {
+  _Positions[id.x] = float4(nrand(id.x * 0.00123), nrand(id.x * 0.00234) * 0.1, nrand(id.x * 0.00345), 0);
+  _Velocities[id.x] = 0;
+}
+
+[numthreads(1024, 1, 1)]
+void UpdatePosition(uint3 id : SV_DispatchThreadID)
+{
+  _Velocities[id.x].xyz *= 0.9;
+  _Positions[id.x].xyz += _Velocities[id.x].xyz;
+}
+
+void UpdateVelocity(uint id, uint stride) {
+  uint maxParticles = (4096 / stride) * stride;
+  uint offset = id % stride;
+
+  float4 position = _Positions[id];
+  float4 velocity = _Velocities[id];
+  float4 totalSocialForce = float4(0, 0, 0, -1);
+
+  uint i = 0;
+  while (i != maxParticles) {
+    _cachedParticles[offset] = _Positions[i + offset];
+    GroupMemoryBarrierWithGroupSync();
+
+    for (uint j = 0; j < stride; i++, j++) {
+      float4 otherPosition = _cachedParticles[j];
+
+      float3 toOther = otherPosition.xyz - position.xyz;
+      float distSqrd = dot(toOther, toOther);
+
+      toOther = distSqrd < 0.0001 ? float3(0, 0, 0) : toOther * rsqrt(distSqrd);
+
+      if (distSqrd < PARTICLE_DIAMETER * PARTICLE_DIAMETER) {
+        float penetration = 1 - distSqrd / (PARTICLE_DIAMETER * PARTICLE_DIAMETER);
+        velocity.xyz -= toOther * penetration * _CollisionForce;
+      }
+
+      if (distSqrd < _SocialRange * _SocialRange) {
+        totalSocialForce += float4(_SocialForce * toOther, 1);
+      }
+    }
+  }
+
+  if (totalSocialForce.w > 0.5) {
+    velocity.xyz += totalSocialForce.xyz / totalSocialForce.w;
+  }
+
+  _Velocities[id] = velocity;
+}
+
+//particleIndex
+//  the index of the particle we are doing work on 0-4096
+//groupIndex
+//  the index of this thread 0-1024 
+//layerNum
+//  the layer this thread is working on 0-numLayers
+//numLayers
+//  the number of layers it takes to accumulate 1 particle
+void UpdateVelocity_Layered(uint particleIndex, uint groupIndex, uint layerNum, uint numLayers) {
+
+  float4 position = _Positions[particleIndex];
+  float4 accel = float4(0, 0, 0, 0);
+
+  //Number of elements in a layer, this is the number of particles 
+  //we look at inside the inner loop.
+  uint particlesPerLayer = 1024 / numLayers;
+
+  //The index of the start of our layer
+  //this ranges 0-1024 since it is the offset within the 1024 chunks
+  uint layerIndex = layerNum * particlesPerLayer;
+
+  //Have to loop 4 times on outer loop because we can't fit the entire
+  //particle space in groupshared memory.  Can only fit 1024 at a time,
+  //so we do the algo in 4 passes
+  for (uint j = 0; j < 4; j++) {
+    //Move next 1024 particles into shared memory
+    //Each thread is responsible for moving a single particle
+    _cachedParticles[groupIndex] = _Positions[groupIndex + j * 1024];
+    GroupMemoryBarrierWithGroupSync();
+
+    for (uint ik = 0; ik < particlesPerLayer; ik++) {
+      float4 otherPosition = _cachedParticles[layerIndex + ik];
+
+      half3 toOther = otherPosition.xyz - position.xyz;
+      half distance = length(toOther);
+      toOther = distance < 0.0001 ? half3(0, 0, 0) : toOther / distance;
+
+      if (distance < PARTICLE_DIAMETER) {
+        half penetration = 1 - distance / PARTICLE_DIAMETER;
+        accel.xyz -= toOther * penetration * _CollisionForce;
+      }
+
+      if (distance < _SocialRange) {
+        accel.xyz += toOther * 0.00001;
+      }
+    }
+  }
+
+  //if (totalSocialForce.w > 0.5) {
+  //  velocity.xyz += totalSocialForce.xyz / totalSocialForce.w;
+  //}
+
+  uint particleAccumIndex = (particleIndex % particlesPerLayer) * numLayers + layerNum;
+  _accumulationSpace[particleAccumIndex] = accel;
+  GroupMemoryBarrierWithGroupSync();
+
+  //float4 sum = float4(0, 0, 0, 0);
+  //if (layerNum == 0) {
+  //  for (uint s = 0; s < numLayers; s++) {
+  //    sum += _accumulationSpace[particleAccumIndex + s];
+  //  }
+
+  //  _Velocities[particleIndex] += sum;
+  //}
+
+  [unroll]
+  for (uint s = numLayers / 2; s > 0; s = s / 2) {
+    if (layerNum < s) {
+      _accumulationSpace[particleAccumIndex] += _accumulationSpace[particleAccumIndex + s];
+    }
+    GroupMemoryBarrierWithGroupSync();
+  }
+
+  if (layerNum == 0) {
+    _Velocities[particleIndex] += _accumulationSpace[particleAccumIndex];
+  }
+}
+
+//VELOCITY
+
+[numthreads(1024, 1, 1)]
+void UpdateVelocity_1024(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 1024);
+}
+
+[numthreads(512, 1, 1)]
+void UpdateVelocity_512(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 512);
+}
+
+[numthreads(256, 1, 1)]
+void UpdateVelocity_256(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 256);
+}
+
+[numthreads(128, 1, 1)]
+void UpdateVelocity_128(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 128);
+}
+
+[numthreads(64, 1, 1)]
+void UpdateVelocity_64(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 64);
+}
+
+[numthreads(32, 1, 1)]
+void UpdateVelocity_32(uint3 id : SV_DispatchThreadID)
+{
+  UpdateVelocity(id.x, 32);
+}
+
+//VELOCITY LAYERED
+
+[numthreads(1024, 1, 1)]
+void UpdateVelocity_1024_1(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 1);
+}
+
+[numthreads(512, 2, 1)]
+void UpdateVelocity_512_2(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 2);
+}
+
+[numthreads(256, 4, 1)]
+void UpdateVelocity_256_4(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 4);
+}
+
+[numthreads(128, 8, 1)]
+void UpdateVelocity_128_8(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 8);
+}
+
+[numthreads(64, 16, 1)]
+void UpdateVelocity_64_16(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 16);
+}
+
+[numthreads(32, 32, 1)]
+void UpdateVelocity_32_32(uint3 id : SV_DispatchThreadID, uint groupId : SV_GroupIndex)
+{
+  UpdateVelocity_Layered(id.x, groupId, id.y, 32);
+}

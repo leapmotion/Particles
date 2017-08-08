@@ -442,6 +442,14 @@ public class TextureSimulator : MonoBehaviour {
     get { return _simulationTimescale; }
     set { _simulationTimescale = value; }
   }
+  
+  [MinValue(1)]
+  [SerializeField]
+  private int _stepsPerTick = 1;
+  public int stepsPerTick {
+    get { return _stepsPerTick; }
+    set { _stepsPerTick = value; }
+  }
 
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
@@ -3007,8 +3015,10 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
-    _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+    for (int i = 0; i < _stepsPerTick; i++) {
+      Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
+      _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+    }
   }
 
   private void updateKeywords() {

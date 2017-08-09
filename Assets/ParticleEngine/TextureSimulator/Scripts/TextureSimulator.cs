@@ -467,6 +467,7 @@ public class TextureSimulator : MonoBehaviour {
   ///      Stochastic Sampling      //
   //################################//
   [Header("Stochastic Sampling")]
+  [Disable]
   [OnEditorChange("stochasticSamplingEnabled")]
   [SerializeField]
   private bool _stochasticSamplingEnabled = false;

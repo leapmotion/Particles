@@ -190,6 +190,10 @@ namespace Leap.Unity.Interaction {
 
     #region Unity Events
 
+    protected virtual void Reset() {
+      if (manager == null) manager = GetComponentInParent<InteractionManager>();
+    }
+
     protected virtual void OnEnable() {
       if (_contactInitialized) {
         EnableSoftContact();
@@ -233,6 +237,9 @@ namespace Leap.Unity.Interaction {
     }
 
     public void NotifyObjectUnregistered(IInteractionBehaviour intObj) {
+      ClearHoverTrackingForObject(intObj);
+      ClearContactTrackingForObject(intObj);
+
       onObjectUnregistered(intObj);
     }
 
@@ -246,6 +253,13 @@ namespace Leap.Unity.Interaction {
     /// </summary>
     protected abstract void onObjectUnregistered(IInteractionBehaviour intObj);
 
+    /// <summary>
+    /// Called just before the InteractionController proceeds with its usual FixedUpdate.
+    ///
+    /// It's generally better to override this method instead of having your
+    /// InteractionController implement FixedUpdate because its execution order relative
+    /// to the Interaction Manager is fixed.
+    /// </summary>
     protected virtual void fixedUpdateController() { }
 
     #region Hovering
@@ -944,9 +958,11 @@ namespace Leap.Unity.Interaction {
 
       // Request and store target bone positions and rotations
       // for use during the contact update.
-      for (int i = 0; i < contactBones.Length; i++) {
-        getColliderBoneTargetPositionRotation(i, out _boneTargetPositions[i],
-                                                 out _boneTargetRotations[i]);
+      using (new ProfilerSample("Update Contact Bone Targets")) {
+        for (int i = 0; i < contactBones.Length; i++) {
+          getColliderBoneTargetPositionRotation(i, out _boneTargetPositions[i],
+                                                   out _boneTargetRotations[i]);
+        }
       }
 
       using (new ProfilerSample("Update Contact Bones")) {
@@ -958,7 +974,7 @@ namespace Leap.Unity.Interaction {
       using (new ProfilerSample("Update Soft Contact")) {
         fixedUpdateSoftContact();
       }
-      using (new ProfilerSample("Update ContactCallbacks")) {
+      using (new ProfilerSample("Update Contact Callbacks")) {
         fixedUpdateContactState();
       }
     }
@@ -1000,61 +1016,51 @@ namespace Leap.Unity.Interaction {
 
       // Set a fixed rotation for bones; otherwise most friction is lost
       // as any capsule or spherical bones will roll on contact.
-      using (new ProfilerSample("MoveRotation")) {
-        body.MoveRotation(targetRotation);
+      body.MoveRotation(targetRotation);
+
+      // Calculate how far off its target the contact bone is.
+      Vector3 lastTargetPositionTransformedAhead = contactBone.lastTargetPosition;
+      if (manager.hasMovingFrameOfReference) {
+        manager.TransformAheadByFixedUpdate(contactBone.lastTargetPosition, out lastTargetPositionTransformedAhead);
       }
+      float errorDistance = Vector3.Distance(lastTargetPositionTransformedAhead, body.position);
+      float errorFraction = errorDistance / contactBone.width;
 
-      using (new ProfilerSample("Error, Mass Adjustment, Soft Contact")) {
-        // Calculate how far off its target the contact bone is.
-        float errorDistance, errorFraction;
-        using (new ProfilerSample("Calculate Error")) {
-          errorDistance = Vector3.Distance(contactBone.lastTargetPosition, body.position);
-          errorFraction = errorDistance / contactBone.width;
-        }
+      // Adjust the mass of the contact bone based on the mass of
+      // the object it is currently touching.
+      float speed = velocity.magnitude;
+      float massScale = Mathf.Clamp(1.0F - (errorFraction * 2.0F), 0.1F, 1.0F)
+                      * Mathf.Clamp(speed * 10F, 1F, 10F);
+      body.mass = massScale * contactBone._lastObjectTouchedAdjustedMass;
 
-        // Adjust the mass of the contact bone based on the mass of
-        // the object it is currently touching.
-        float speed, massScale;
-        using (new ProfilerSample("Mass Adjustment")) {
-          speed = velocity.magnitude;
-          massScale = Mathf.Clamp(1.0F - (errorFraction * 2.0F), 0.1F, 1.0F)
-                    * Mathf.Clamp(speed * 10F, 1F, 10F);
-          body.mass = massScale * contactBone._lastObjectTouchedAdjustedMass;
-        }
-
-        // Potentially enable Soft Contact if our error is too large.
-        if (!_softContactEnabled && errorDistance >= softContactDislocationDistance
-            && speed < 1.5F
-         /* && boneArrayIndex != NUM_FINGERS * BONES_PER_FINGER */) {
-          using (new ProfilerSample("Enable Soft Contact")) {
-            EnableSoftContact();
-          }
-        }
+      // Potentially enable Soft Contact if our error is too large.
+      if (!_softContactEnabled && errorDistance >= softContactDislocationDistance
+          && speed < 1.5F
+       /* && boneArrayIndex != NUM_FINGERS * BONES_PER_FINGER */) {
+         EnableSoftContact();
       }
 
       // Attempt to move the contact bone to its target position and rotation
       // by setting its target velocity and angular velocity. Include a "deadzone"
       // for position to avoid tiny vibrations.
-      using (new ProfilerSample("Set Target Velocity with Deadzone")) {
-        float deadzone = Mathf.Min(DEAD_ZONE_FRACTION * contactBone.width, 0.01F * scale);
-        Vector3 delta = (targetPosition - body.position);
-        float deltaMag = delta.magnitude;
-        if (deltaMag <= deadzone) {
-          body.velocity = Vector3.zero;
-          contactBone.lastTargetPosition = body.position;
-        }
-        else {
-          delta *= (deltaMag - deadzone) / deltaMag;
-          contactBone.lastTargetPosition = body.position + delta;
-
-          Vector3 targetVelocity = delta / Time.fixedDeltaTime;
-          float targetVelocityMag = targetVelocity.magnitude;
-          body.velocity = (targetVelocity / targetVelocityMag)
-                        * Mathf.Clamp(targetVelocityMag, 0F, 100F);
-        }
-        Quaternion deltaRot = targetRotation * Quaternion.Inverse(body.rotation);
-        body.angularVelocity = PhysicsUtility.ToAngularVelocity(deltaRot, Time.fixedDeltaTime);
+      float deadzone = Mathf.Min(DEAD_ZONE_FRACTION * contactBone.width, 0.01F * scale);
+      Vector3 delta = (targetPosition - body.position);
+      float deltaMag = delta.magnitude;
+      if (deltaMag <= deadzone) {
+        body.velocity = Vector3.zero;
+        contactBone.lastTargetPosition = body.position;
       }
+      else {
+        delta *= (deltaMag - deadzone) / deltaMag;
+        contactBone.lastTargetPosition = body.position + delta;
+
+        Vector3 targetVelocity = delta / Time.fixedDeltaTime;
+        float targetVelocityMag = targetVelocity.magnitude;
+        body.velocity = (targetVelocity / targetVelocityMag)
+                      * Mathf.Clamp(targetVelocityMag, 0F, 100F);
+      }
+      Quaternion deltaRot = targetRotation * Quaternion.Inverse(body.rotation);
+      body.angularVelocity = PhysicsUtility.ToAngularVelocity(deltaRot, Time.fixedDeltaTime);
     }
 
     #endregion
@@ -1092,6 +1098,7 @@ namespace Leap.Unity.Interaction {
           //  _softContactColliderBuffer[i] = null;
           //}
           // HACK: assume only using hands on android
+          // TODO: This probably doesn't take into accoutn ignoreContact settings
           PhysicsUtility.generateSphereContacts(contactBone.rigidbody.position,
                                                 0.02f * manager.SimulationScale,
                                                 contactBone.rigidbody.velocity,
@@ -1118,6 +1125,10 @@ namespace Leap.Unity.Interaction {
             for (int i = 0; i < numCollisions; i++) {
               //NotifySoftContactOverlap(contactBone, _softContactColliderBuffer[i]);
 
+              // Skip soft contact if the object is ignoring contact
+              if (_softContactColliderBuffer[i].attachedRigidbody == null) continue;
+              if (manager.interactionObjectBodies[_softContactColliderBuffer[i].attachedRigidbody].ignoreContact) continue;
+
               PhysicsUtility.generateSphereContact(boneSphere, 0, _softContactColliderBuffer[i],
                                                    ref manager._softContacts,
                                                    ref manager._softContactOriginalVelocities);
@@ -1136,6 +1147,10 @@ namespace Leap.Unity.Interaction {
                                                                QueryTriggerInteraction.Ignore);
             for (int i = 0; i < numCollisions; i++) {
               //NotifySoftContactOverlap(contactBone, _softContactColliderBuffer[i]);
+
+              // Skip soft contact if the object is ignoring contact
+              if (_softContactColliderBuffer[i].attachedRigidbody == null) continue;
+              if (manager.interactionObjectBodies[_softContactColliderBuffer[i].attachedRigidbody].ignoreContact) continue;
 
               PhysicsUtility.generateCapsuleContact(boneCapsule, 0,
                                                     _softContactColliderBuffer[i],
@@ -1161,6 +1176,10 @@ namespace Leap.Unity.Interaction {
                                                            QueryTriggerInteraction.Ignore);
             for (int i = 0; i < numCollisions; i++) {
               //NotifySoftContactOverlap(contactBone, _softContactColliderBuffer[i]);
+
+              // Skip soft contact if the object is ignoring contact
+              if (_softContactColliderBuffer[i].attachedRigidbody == null) continue;
+              if (manager.interactionObjectBodies[_softContactColliderBuffer[i].attachedRigidbody].ignoreContact) continue;
 
               PhysicsUtility.generateBoxContact(boneBox, 0, _softContactColliderBuffer[i],
                                                 ref manager._softContacts,
@@ -1674,15 +1693,78 @@ namespace Leap.Unity.Interaction {
         return false;
       }
       else {
+        // Release this controller's grasp.
         _releasingControllersBuffer.Clear();
         _releasingControllersBuffer.Add(this);
 
-        onGraspedObjectForciblyReleased(_graspedObject);
+        // Calling things in the right order requires we remember the object we're
+        // releasing.
+        var tempGraspedObject = _graspedObject;
 
-        _graspedObject.EndGrasp(_releasingControllersBuffer);
+        // Clear controller grasped object, and enable soft contact.
+        EnableSoftContact();
         _graspedObject = null;
 
+        // Fire object's grasp-end callback.
+        tempGraspedObject.EndGrasp(_releasingControllersBuffer);
+
+        // The grasped object was forcibly released; some controllers hook into this
+        // by virtual method implementation.
+        onGraspedObjectForciblyReleased(tempGraspedObject);
+
         return true;
+      }
+    }
+
+    /// <summary>
+    /// Helper static method for forcing multiple controllers to release their grasps
+    /// on a single object simultaneously. All of the provided controllers must be
+    /// grasping the argument interaction object.
+    /// </summary>
+    /// <details>
+    /// The input controllers List is copied to a temporary (pooled) buffer before 
+    /// release operations are actually carried out. This prevents errors that might
+    /// arise from modifying a held-controllers list while enumerating through the same
+    /// list.
+    /// </details>
+    public static void ReleaseGrasps(IInteractionBehaviour graspedObj,
+                                     ReadonlyHashSet<InteractionController> controllers) {
+      var controllersBuffer = Pool<List<InteractionController>>.Spawn();
+      try {
+        foreach (var controller in controllers) {
+          if (controller.graspedObject != graspedObj) {
+            Debug.LogError("Argument intObj " + graspedObj.name + " is not held by "
+                         + "controller " + controller.name + "; skipping release for this "
+                         + "controller.");
+            continue;
+          }
+
+          controllersBuffer.Add(controller);
+        }
+
+        // Enable soft contact on releasing controllers, and clear grasp state.
+        // Note: controllersBuffer is iterated twice to preserve state modification order.
+        // For reference order, see InteractionController.ReleaseGrasp() above.
+        foreach (var controller in controllersBuffer) {
+          // Avoid "popping" of released objects by enabling soft contact on releasing
+          // controllers.
+          controller.EnableSoftContact();
+
+          // Clear grasped object state.
+          controller._graspedObject = null;
+        }
+
+        // Evaluate object logic for being released by each controller.
+        graspedObj.EndGrasp(controllersBuffer);
+
+        // Object was forcibly released, so fire virtual callbacks on each controller.
+        foreach (var controller in controllersBuffer) {
+          controller.onGraspedObjectForciblyReleased(graspedObj);
+        }
+      }
+      finally {
+        controllersBuffer.Clear();
+        Pool<List<InteractionController>>.Recycle(controllersBuffer);
       }
     }
 

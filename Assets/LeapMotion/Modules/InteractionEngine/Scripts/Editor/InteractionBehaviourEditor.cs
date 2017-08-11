@@ -181,7 +181,7 @@ namespace Leap.Unity.Interaction {
 
     public override void OnInspectorGUI() {
       checkHasColliders();
-
+      
       base.OnInspectorGUI();
     }
 

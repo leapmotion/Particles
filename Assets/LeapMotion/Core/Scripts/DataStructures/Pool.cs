@@ -74,7 +74,11 @@ namespace Leap.Unity {
       if (_pool == null) _pool = new Stack<T>();
 
       T value;
-      value = spawnValue();
+      if (_pool.Count > 0) {
+        value = _pool.Pop();
+      } else {
+        value = new T();
+      }
 
       if (value is IPoolable) {
         (value as IPoolable).OnSpawn();
@@ -83,25 +87,12 @@ namespace Leap.Unity {
       return value;
     }
 
-    private static T spawnValue() {
-      T value;
-      int count = 0;
-      do {
-        if (_pool.Count > 0) {
-          value = _pool.Pop();
-        }
-        else {
-          value = new T();
-        }
-        count++;
-      } while (value == null && count < 100);
-      if (count == 100) {
-        Debug.LogError("Couldn't construct a valid T...");
-      }
-      return value;
-    }
-
     public static void Recycle(T t) {
+      if (t == null) {
+        Debug.LogError("Cannot recycle a null object.");
+        return;
+      }
+
       if (t is IPoolable) {
         (t as IPoolable).OnRecycle();
       }

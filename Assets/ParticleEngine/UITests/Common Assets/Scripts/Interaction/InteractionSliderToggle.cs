@@ -29,7 +29,7 @@ public class InteractionSliderToggle : MonoBehaviour {
   }
 
   void Start() {
-    if (slider.sliderType == InteractionSlider.SliderType.Horizonal) {
+    if (slider.sliderType == InteractionSlider.SliderType.Horizontal) {
       slider.HorizontalSlideEvent += refreshToggleState;
     }
     else if (slider.sliderType == InteractionSlider.SliderType.Vertical) {
@@ -61,7 +61,7 @@ public class InteractionSliderToggle : MonoBehaviour {
   }
 
   private bool isSliderSetToEnabled() {
-    if (slider.sliderType == InteractionSlider.SliderType.Horizonal) {
+    if (slider.sliderType == InteractionSlider.SliderType.Horizontal) {
       return slider.normalizedHorizontalValue > 0.5F;
     }
     else {

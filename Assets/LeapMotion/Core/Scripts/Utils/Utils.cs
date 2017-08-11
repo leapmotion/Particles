@@ -10,9 +10,8 @@
 using UnityEngine;
 using UnityEngine.Assertions;
 using System;
-using System.Collections;
+using System.IO;
 using System.Collections.Generic;
-using Leap.Unity.Query;
 
 namespace Leap.Unity {
 
@@ -37,6 +36,13 @@ namespace Leap.Unity {
       T temp = list[a];
       list[a] = list[b];
       list[b] = temp;
+    }
+
+    /// <summary>
+    /// Utility extension to swap the elements at index a and index b.
+    /// </summary>
+    public static void Swap<T>(this T[] array, int a, int b) {
+      Swap(ref array[a], ref array[b]);
     }
 
     /// <summary>
@@ -149,6 +155,11 @@ namespace Leap.Unity {
       }
     }
 
+    /// <summary>
+    /// Given a list of comparable types, return an ordering that orders the
+    /// elements into sorted order.  The ordering is a list of indices where each
+    /// index refers to the element located at that index in the original list.
+    /// </summary>
     public static List<int> GetSortedOrder<T>(this IList<T> list) where T : IComparable<T> {
       Assert.IsNotNull(list);
 
@@ -162,6 +173,10 @@ namespace Leap.Unity {
       return ordering;
     }
 
+    /// <summary>
+    /// Given a list and an ordering, order the list according to the ordering.
+    /// This method assumes the ordering is a valid ordering.
+    /// </summary>
     public static void ApplyOrdering<T>(this IList<T> list, List<int> ordering) {
       Assert.IsNotNull(list);
       Assert.IsNotNull(ordering);
@@ -177,6 +192,25 @@ namespace Leap.Unity {
         copy.Clear();
         Pool<List<T>>.Recycle(copy);
       }
+    }
+
+    public static string MakeRelativePath(string relativeTo, string path) {
+      if (string.IsNullOrEmpty(relativeTo)) throw new ArgumentNullException("relativeTo");
+      if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
+
+      Uri relativeToUri = new Uri(relativeTo);
+      Uri pathUri = new Uri(path);
+
+      if (relativeToUri.Scheme != pathUri.Scheme) { return path; } // path can't be made relative.
+
+      Uri relativeUri = relativeToUri.MakeRelativeUri(pathUri);
+      string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+      if (pathUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase)) {
+        relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+      }
+
+      return relativePath;
     }
 
     #endregion
@@ -225,6 +259,12 @@ namespace Leap.Unity {
           return new Vector3(0, vector.z, -vector.y);
         }
       }
+    }
+
+    public static bool ContainsNaN(this Vector3 v) {
+      return float.IsNaN(v.x)
+          || float.IsNaN(v.y)
+          || float.IsNaN(v.z);
     }
 
     #endregion
@@ -355,6 +395,27 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector4 CompDiv(this Vector4 A, Vector4 B) {
       return new Vector4(A.x / B.x, A.y / B.y, A.z / B.z, A.w / B.w);
+    }
+
+    /// <summary>
+    /// Returns the sum of the components of the input vector.
+    /// </summary>
+    public static float CompSum(this Vector2 v) {
+      return v.x + v.y;
+    }
+
+    /// <summary>
+    /// Returns the sum of the components of the input vector.
+    /// </summary>
+    public static float CompSum(this Vector3 v) {
+      return v.x + v.y + v.z;
+    }
+
+    /// <summary>
+    /// Returns the sum of the components of the input vector.
+    /// </summary>
+    public static float CompSum(this Vector4 v) {
+      return v.x + v.y + v.z + v.w;
     }
 
     #endregion
@@ -490,15 +551,18 @@ namespace Leap.Unity {
 
     /// <summary>
     /// Recursively searches the hierarchy of the argument GameObject to find all of the
-    /// Colliders that are attached to the object's Rigidbody (or that _would_ be 
+    /// Colliders that are attached to the object's Rigidbody (or that _would_ be
     /// attached to its Rigidbody if it doesn't have one) and adds them to the provided
     /// colliders list. Warning: The provided "colliders" List will be cleared before
     /// use.
-    /// 
+    ///
     /// Colliders that are the children of other Rigidbody elements beneath the argument
-    /// object are ignored.
+    /// object are ignored. Optionally, colliders of inactive GameObjects can be included
+    /// in the returned list; by default, these colliders are skipped.
     /// </summary>
-    public static void FindColliders<T>(GameObject obj, List<T> colliders) where T : Collider {
+    public static void FindColliders<T>(GameObject obj, List<T> colliders,
+                                        bool includeInactiveObjects = false)
+                                    where T : Collider {
       colliders.Clear();
       Stack<Transform> toVisit = Pool<Stack<Transform>>.Spawn();
       List<T> collidersBuffer = Pool<List<T>>.Spawn();
@@ -515,12 +579,13 @@ namespace Leap.Unity {
           foreach (var child in curTransform.GetChildren()) {
             // Ignore children with Rigidbodies of their own; its own Rigidbody
             // owns its own colliders and the colliders of its children
-            if (child.GetComponent<Rigidbody>() == null) {
+            if (child.GetComponent<Rigidbody>() == null
+                && (includeInactiveObjects || child.gameObject.activeSelf)) {
               toVisit.Push(child);
             }
           }
 
-          // Since we'll visit every child, all we need to do is add the colliders
+          // Since we'll visit every valid child, all we need to do is add the colliders
           // of every transform we visit.
           collidersBuffer.Clear();
           curTransform.GetComponents<T>(collidersBuffer);

@@ -184,6 +184,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _influenceForwardOffset = value; }
   }
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _pointingFactor = 2;
+  public float pointingFactor {
+    get { return _pointingFactor; }
+    set { _pointingFactor = value; }
+  }
+
   [SerializeField]
   [OnEditorChange("handInfluenceType")]
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
@@ -2855,6 +2863,8 @@ public class TextureSimulator : MonoBehaviour {
     private Vector3 _prevTrackedPosition;
     private Vector3 _currTrackedPosition;
 
+    private float[] _curls = new float[4];
+
     public HandActor(TextureSimulator sim) {
       _sim = sim;
       _block = new MaterialPropertyBlock();
@@ -2902,11 +2912,47 @@ public class TextureSimulator : MonoBehaviour {
 
       float rawGrab;
       if (hand != null) {
-        rawGrab = 1;
-        foreach (var finger in hand.Fingers) {
-          if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
-          float angle = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis());
-          rawGrab = Mathf.Min(angle / 180, rawGrab);
+        //First update curls array
+        {
+          int index = 0;
+          foreach (var finger in hand.Fingers) {
+            if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
+
+            _curls[index++] = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis()) / 180.0f;
+          }
+        }
+
+        //Then calculate raw grab
+        {
+          rawGrab = 1;
+          for (int i = 0; i < _curls.Length; i++) {
+            rawGrab = Mathf.Min(_curls[i], rawGrab);
+          }
+        }
+
+        //Then calculate whether or not we are pointing
+        {
+          //Pointing if any finger is significantly more uncurled than all of the other fingers
+          for (int i = 0; i < 4; i++) {
+
+            float minOtherCurl = float.MaxValue;
+            float maxOtherCurl = float.MinValue;
+            for (int j = 0; j < 4; j++) {
+              if (i == j) continue;
+
+              float curl = _curls[j];
+              minOtherCurl = Mathf.Min(minOtherCurl, curl);
+              maxOtherCurl = Mathf.Max(maxOtherCurl, curl);
+            }
+
+            //If the distance between our curl and the next highest curl is
+            //greater by X than the distance between the min and the max curl, 
+            //we assume this finger is pointing!
+            if (minOtherCurl - _curls[i] > (maxOtherCurl - minOtherCurl) * _sim._pointingFactor) {
+              rawGrab = 0;
+              break;
+            }
+          }
         }
       } else {
         rawGrab = 0;

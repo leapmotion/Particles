@@ -812,6 +812,9 @@ public class TextureSimulator : MonoBehaviour {
   private Color _handColliderColor = Color.black;
 
   [SerializeField]
+  private bool _showIsPointing = false;
+
+  [SerializeField]
   private bool _enableSpeciesDebugColors = false;
 
   [Range(0, MAX_SPECIES - 1)]
@@ -2950,6 +2953,13 @@ public class TextureSimulator : MonoBehaviour {
             //we assume this finger is pointing!
             if (minOtherCurl - _curls[i] > (maxOtherCurl - minOtherCurl) * _sim._pointingFactor) {
               rawGrab = 0;
+
+              RuntimeGizmoDrawer drawer;
+              if (_sim._showIsPointing && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+                drawer.color = Color.green;
+                drawer.DrawSphere(hand.PalmPosition.ToVector3(), 0.03f);
+              }
+
               break;
             }
           }

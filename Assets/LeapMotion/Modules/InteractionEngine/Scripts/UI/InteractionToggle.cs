@@ -24,8 +24,8 @@ namespace Leap.Unity.Interaction {
     ///<summary> The height that this toggle rests at when it is toggled. </summary>
     public float toggledRestingHeight = 0.25f;
 
-    [SerializeField]
-    private bool _toggled = false;
+    [SerializeField, FormerlySerializedAs("_toggled")]
+    private bool _isToggled = false;
 
     [SerializeField]
     private bool _startToggled = false;
@@ -33,12 +33,12 @@ namespace Leap.Unity.Interaction {
     ///<summary> Whether or not this toggle is currently toggled. </summary>
     public bool isToggled {
       get {
-        return _toggled;
+        return _isToggled;
       }
       set {
-        if (_toggled != value) {
-          _toggled = value;
-          if (_toggled) {
+        if (_isToggled != value) {
+          _isToggled = value;
+          if (_isToggled) {
             OnToggle();
           } else {
             OnUntoggle();
@@ -72,29 +72,6 @@ namespace Leap.Unity.Interaction {
     public Action OnUntoggle = () => { };
 
     private float _originalRestingHeight;
-    public float untoggledRestingHeight {
-      get {
-        return _originalRestingHeight;
-      }
-    }
-
-    /// <summary>
-    /// Returns the local position of this toggle when it is able to relax into its untoggled position.
-    /// </summary>
-    public Vector3 RelaxedToggledLocalPosition {
-      get {
-        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, toggledRestingHeight);
-      }
-    }
-
-    /// <summary>
-    /// Returns the local position of this toggle when it is able to relax into its untoggled position.
-    /// </summary>
-    public override Vector3 RelaxedLocalPosition {
-      get {
-        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, untoggledRestingHeight);
-      }
-    }
 
     protected override void Start() {
       base.Start();

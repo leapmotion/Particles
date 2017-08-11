@@ -192,6 +192,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _pointingFactor = value; }
   }
 
+  [Range(0, 1)]
+  [SerializeField]
+  private float _minPointingDelta = 0.05f;
+  public float minPointingDelta {
+    get { return _minPointingDelta; }
+    set { _minPointingDelta = value; }
+  }
+
   [SerializeField]
   [OnEditorChange("handInfluenceType")]
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;
@@ -2947,11 +2955,18 @@ public class TextureSimulator : MonoBehaviour {
               minOtherCurl = Mathf.Min(minOtherCurl, curl);
               maxOtherCurl = Mathf.Max(maxOtherCurl, curl);
             }
+            
+            float pointingDelta = minOtherCurl - _curls[i];
 
             //If the distance between our curl and the next highest curl is
             //greater by X than the distance between the min and the max curl, 
             //we assume this finger is pointing!
-            if (minOtherCurl - _curls[i] > (maxOtherCurl - minOtherCurl) * _sim._pointingFactor) {
+
+            //We also ensure that the delta is greater than a certain minimum,
+            //or else we get a singularity when the fingers all have almost the
+            //same curl values
+            if (pointingDelta > _sim._minPointingDelta &&
+                pointingDelta > (maxOtherCurl - minOtherCurl) * _sim._pointingFactor) {
               rawGrab = 0;
 
               RuntimeGizmoDrawer drawer;

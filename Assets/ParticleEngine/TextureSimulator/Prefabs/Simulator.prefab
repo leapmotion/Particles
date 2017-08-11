@@ -735,6 +735,8 @@ MonoBehaviour:
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.017
+  _pointingFactor: 3
+  _minPointingDelta: 0.05
   _handInfluenceType: 0
   _stasisInfluenceSettings:
     _maxRadius: 0.124
@@ -984,8 +986,9 @@ MonoBehaviour:
   _socialDebug: {fileID: 23341970254567932}
   _layoutDebug: {fileID: 23653733492362770}
   _shaderDataDebug: {fileID: 23460725754145476}
-  _drawHandColliders: 0
+  _drawHandColliders: 1
   _handColliderColor: {r: 0, g: 0, b: 0, a: 1}
+  _showIsPointing: 0
   _enableSpeciesDebugColors: 0
   _debugSpeciesNumber: 0
   _shaderDebugMode: -1

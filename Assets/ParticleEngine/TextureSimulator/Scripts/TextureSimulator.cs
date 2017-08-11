@@ -14,6 +14,8 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_FORCE_STEPS = 64;
   public const int MAX_SPECIES = 10;
 
+  public const int TAIL_RAMP_RESOLUTION = 128;
+
   //#### Simulation Keywords ####
   public const string KEYWORD_INFLUENCE_STASIS = "SPHERE_MODE_STASIS";
   public const string KEYWORD_INFLUENCE_FORCE = "SPHERE_MODE_FORCE";
@@ -563,6 +565,10 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  [OnEditorChange("RebuildTrailTexture")]
+  [SerializeField]
+  private AnimationCurve _speedToTrailLength;
+
   //#######################//
   ///      Ecosystems      //
   //#######################//
@@ -969,6 +975,22 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public void RebuildTrailTexture() {
+    if (!Application.isPlaying) {
+      return;
+    }
+
+    Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
+    for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
+      float speed = i / (float)TAIL_RAMP_RESOLUTION;
+      float length = _speedToTrailLength.Evaluate(speed);
+      ramp.SetPixel(i, 0, new Color(length, length, length, length));
+    }
+    ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+
+    _particleMat.SetTexture("_TailRamp", ramp);
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -1005,6 +1027,8 @@ public class TextureSimulator : MonoBehaviour {
     updateShaderData();
 
     updateKeywords();
+
+    RebuildTrailTexture();
   }
 
   void Update() {

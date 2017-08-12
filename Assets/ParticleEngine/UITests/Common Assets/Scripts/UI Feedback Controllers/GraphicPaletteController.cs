@@ -35,6 +35,7 @@ public class GraphicPaletteController : MonoBehaviour {
         s_lastPalette = palette;
       }
       validateColorIdx(ref restingColorIdx);
+      setColor(restingColor);
     }
   }
 

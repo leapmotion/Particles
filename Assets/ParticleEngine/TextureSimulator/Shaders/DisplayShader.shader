@@ -2,6 +2,7 @@
   Properties {
     _Lerp     ("Prev to Curr", Range(0, 1)) = 1
     _ToonRamp ("Toon Ramp", 2D) = "white" {}
+    _TailRamp ("Tail Ramp", 2D) = "white" {}
     _Size     ("Size", Range(0, 0.5)) = 0.01
     _TrailLength ("Trail Length", Range(0, 10000)) = 1000
     _Brightness ("Brightness", Float) = 1
@@ -22,6 +23,7 @@
 
     sampler2D _ParticleVelocities;
 
+    sampler2D _TailRamp;
     sampler2D _ToonRamp;
 
     struct Input {
@@ -78,8 +80,11 @@
       velocity.xyz *= velocity.w;
 
 #ifdef FISH_TAIL
-      float dir = saturate(-dot(normalize(velocity.xyz), normalize(v.vertex.xyz)) - 0.2);
-      v.vertex.xyz -= velocity.xyz * dir * _TrailLength;
+      float speed = length(velocity.xyz);
+      float3 velDir = velocity.xyz / speed;
+      float trailLength = _TrailLength * tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a / 100;
+      float vertFactor = saturate(-dot(velDir, normalize(v.vertex.xyz)) - 0.2);
+      v.vertex.xyz -= velDir * vertFactor * trailLength;
 #endif
 
       v.vertex.xyz *= _Size;

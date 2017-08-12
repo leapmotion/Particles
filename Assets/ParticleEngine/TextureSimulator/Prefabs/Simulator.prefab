@@ -863,6 +863,7 @@ MonoBehaviour:
   _limitStepsPerFrame: 1
   _simulationFPS: 60
   _simulationTimescale: 1
+  _stepsPerTick: 1
   _textureFormat: 2
   _simulationMat: {fileID: 2100000, guid: 79a2ae3dd54bd23409103aa710397f82, type: 2}
   _resetParticlePositionsKey: 112
@@ -937,6 +938,24 @@ MonoBehaviour:
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 0
   _trailMode: 0
+  _speedToTrailLength:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
   _spawnRadius: 1.39
   _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114

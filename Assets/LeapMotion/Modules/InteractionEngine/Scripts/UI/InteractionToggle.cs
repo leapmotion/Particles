@@ -92,14 +92,23 @@ namespace Leap.Unity.Interaction {
     /// </summary>
     public override Vector3 RelaxedLocalPosition {
       get {
-        return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, untoggledRestingHeight);
+        if (!Application.isPlaying) {
+          return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight);
+        }
+        else {
+          return initialLocalPosition + Vector3.back * Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, untoggledRestingHeight);
+        }
       }
+    }
+
+    protected override void Awake() {
+      base.Awake();
+      
+      _originalRestingHeight = restingHeight;
     }
 
     protected override void Start() {
       base.Start();
-
-      _originalRestingHeight = restingHeight;
 
       if (_startToggled) {
         isToggled = true;

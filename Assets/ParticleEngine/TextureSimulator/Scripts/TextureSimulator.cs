@@ -3055,7 +3055,7 @@ public class TextureSimulator : MonoBehaviour {
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
-      _simulationMat.SetFloat("_HeadRadius", _headRadius);
+      _simulationMat.SetFloat("_HeadRadius", _headRadius / transform.lossyScale.x);
     }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);

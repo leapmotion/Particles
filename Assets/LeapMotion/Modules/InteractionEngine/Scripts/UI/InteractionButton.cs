@@ -101,7 +101,7 @@ namespace Leap.Unity.Interaction {
 
     // Protected State Variables
 
-    ///<summary> The initial position of this element in local space, stored upon Start() </summary>
+    ///<summary> The initial position of this element in local space, stored upon Awake() </summary>
     protected Vector3 initialLocalPosition;
 
     ///<summary> The physical position of this element in local space; may diverge from the graphical position. </summary>
@@ -128,11 +128,8 @@ namespace Leap.Unity.Interaction {
     private Quaternion _initialLocalRotation;
     private InteractionController _lockedInteractingController = null;
 
-    protected override void Start() {
-      if(transform == transform.root) {
-        Debug.LogError("This button has no parent!  Please ensure that it is parented to something!", this);
-        enabled = false;
-      }
+    protected override void Awake() {
+      base.Awake();
 
       // Initialize Positions
       initialLocalPosition = transform.localPosition;
@@ -146,6 +143,13 @@ namespace Leap.Unity.Interaction {
       rigidbody.position = physicsPosition;
       _initialIgnoreGrasping = ignoreGrasping;
       _initialLocalRotation = transform.localRotation;
+    }
+
+    protected override void Start() {
+      if(transform == transform.root) {
+        Debug.LogError("This button has no parent!  Please ensure that it is parented to something!", this);
+        enabled = false;
+      }
 
       //Add a custom grasp controller
       OnGraspBegin += onGraspBegin;

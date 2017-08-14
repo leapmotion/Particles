@@ -117,6 +117,32 @@ public class TextureSimulator : MonoBehaviour {
     get { return _handVelocityToCollisionRadius; }
   }
 
+  [SerializeField]
+  private HandCollisionBoneScales _boneCollisionScalars;
+
+  [System.Serializable]
+  public struct HandCollisionBoneScales {
+    public float distalScalar;
+    public float intermediateScalar;
+    public float proximalScalar;
+    public float metacarpalScalar;
+
+    public float GetScalar(Bone.BoneType type) {
+      switch (type) {
+        case Bone.BoneType.TYPE_DISTAL:
+          return distalScalar;
+        case Bone.BoneType.TYPE_INTERMEDIATE:
+          return intermediateScalar;
+        case Bone.BoneType.TYPE_PROXIMAL:
+          return proximalScalar;
+        case Bone.BoneType.TYPE_METACARPAL:
+          return metacarpalScalar;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
   [MinValue(0)]
   [SerializeField]
   private float _extraHandCollisionForce = 0.001f;
@@ -2825,6 +2851,7 @@ public class TextureSimulator : MonoBehaviour {
           Finger finger = source.Fingers[i];
           Finger prevFinger = prev.Fingers[i];
           for (int j = 0; j < 4; j++) {
+            float boneScale = _boneCollisionScalars.GetScalar((Bone.BoneType)j);
             Bone bone = finger.bones[j];
             Bone prevBone = prevFinger.bones[j];
 
@@ -2843,7 +2870,7 @@ public class TextureSimulator : MonoBehaviour {
               float speed = (a - b).magnitude;
               float speedPercent = speed / _maxHandCollisionSpeed;
               float radius = Mathf.Lerp(_handCollisionRadius.x, _handCollisionRadius.y, _handVelocityToCollisionRadius.Evaluate(speedPercent));
-              a.w = radius;
+              a.w = radius * boneScale;
 
               _capsuleA[count] = a;
               _capsuleB[count] = a + (b - a) * _handCollisionVelocityScale;

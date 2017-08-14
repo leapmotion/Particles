@@ -726,6 +726,11 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  _boneCollisionScalars:
+    distalScalar: 0.5
+    intermediateScalar: 0.8
+    proximalScalar: 0.9
+    metacarpalScalar: 1
   _extraHandCollisionForce: 0.001
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4

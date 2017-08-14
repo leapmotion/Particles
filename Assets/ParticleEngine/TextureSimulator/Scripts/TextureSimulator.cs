@@ -12,7 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
-  public const int MAX_SPECIES = 10;
+  public const int MAX_SPECIES = 31;
 
   public const int TAIL_RAMP_RESOLUTION = 128;
 

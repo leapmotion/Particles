@@ -7,13 +7,12 @@
   CGINCLUDE
   #include "UnityCG.cginc"
 
-  sampler2D _Positions;
-  sampler2D _Velocities;
+  sampler2D_half _Positions;
+  sampler2D_half _Velocities;
   half _Seed;
   half _Force;
 
-  half4 _Target0;
-  half4 _Target1;
+  half4 _Targets[10];
   
 
   struct appdata {
@@ -33,8 +32,8 @@
     return o;
   }
 
-  half nrand(half2 n) {
-    return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
+  float nrand(half2 n) {
+    return frac(sin(dot(n.xy, half2(12.9898, 78.233)))* 43758.5453);
   }
 
   half4 integrateVelocity(v2f i) : SV_Target {
@@ -43,11 +42,16 @@
 
     velocity.xyz *= 0.999;
 
-    float3 toTarget0 = _Target0.xyz - position.xyz;
-    velocity.xyz += _Force * toTarget0 / (0.1 + dot(toTarget0, toTarget0));
+    for (uint j = 0; j < 10; j++) {
+      half4 target = _Targets[j];
+      half3 toTarget = target.xyz - position.xyz;
+      velocity.xyz += _Force * toTarget / (0.1 + dot(toTarget, toTarget));
+      velocity.xyz -= _Force * toTarget / (0.02 + 9 * dot(toTarget, toTarget) * dot(toTarget, toTarget));
+    }
 
-    float3 toTarget1 = _Target1.xyz - position.xyz;
-    velocity.xyz += _Force * toTarget1 / (0.1 + dot(toTarget1, toTarget1));
+    velocity.x += 0.001 * (nrand(i.uv.xy * half2(2.123 * _Time.x, 4.1238 * _Time.y)) - 0.5);
+    velocity.y += 0.001 * (nrand(i.uv.yx * half2(1.545 * _Time.y, 8.123 * _Time.x)) - 0.5);
+    velocity.z += 0.001 * (nrand(i.uv.xx * half2(9.182 + _Time.x, 1.999 + _Time.y)) - 0.5);
 
     return velocity;
   }
@@ -57,11 +61,12 @@
     half4 position = tex2D(_Positions, i.uv);
 
     position += velocity * 0.01;
+    position.z = 0;
     return position;
   }
 
-  half4 initPositions(v2f i) : SV_Target {
-    half4 pos;
+  float4 initPositions(v2f i) : SV_Target {
+    float4 pos;
     pos.x = 0.3 * (nrand(i.uv + float2(2.123 + _Seed, 4.123 + _Seed)) - 0.5);
     pos.y = 0.3 * (nrand(i.uv + float2(1.545 + _Seed, 8.123 + _Seed)) - 0.5);
     pos.z = 0.3 * (nrand(i.uv + float2(9.182 + _Seed, 1.999 + _Seed)) - 0.5);
@@ -69,8 +74,8 @@
     return pos;
   }
 
-  half4 initVelocities(v2f i) : SV_Target{
-    return half4(0, 0, 0, 0);
+  float4 initVelocities(v2f i) : SV_Target{
+    return float4(0.3, 0.2, 0, 0);
   }
 
   ENDCG

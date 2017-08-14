@@ -22,11 +22,11 @@
 				v2f o;
 
         uint dx = i % 256;
-        uint dy = i / 256;
+        uint dy = i / 512;
 
         float4 uv;
         uv.x = dx / 256.0;
-        uv.y = dy / 256.0;
+        uv.y = dy / 512.0;
         uv.z = 0;
         uv.w = 0;
 

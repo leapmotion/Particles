@@ -1154,7 +1154,7 @@ public class TextureSimulator : MonoBehaviour {
     Vector3[] particleVelocities = new Vector3[MAX_PARTICLES];
     int[] particleSpecies = new int[MAX_PARTICLES].Fill(-1);
 
-    int currentSimulationSpeciesCount = MAX_SPECIES;
+    int currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     int particlesToSimulate = MAX_PARTICLES;
 
     //Default colors are greyscale 0 to 1
@@ -2230,7 +2230,7 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription);
+    RestartSimulation(_currentSimDescription, forcePositionReset: false);
   }
 
   /// <summary>

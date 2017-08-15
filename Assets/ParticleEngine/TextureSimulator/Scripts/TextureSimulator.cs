@@ -1059,6 +1059,7 @@ public class TextureSimulator : MonoBehaviour {
     BlackHole,
 	Nova,
 	EnergyConserving,
+	Capillary,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1152,7 +1153,6 @@ public class TextureSimulator : MonoBehaviour {
         socialData[redSpecies, s] = new Vector2(redLoveOfOthers, loveRange);
       }
     }
-
     //---------------------------------------------
     // Chase
     //---------------------------------------------
@@ -1530,6 +1530,127 @@ public class TextureSimulator : MonoBehaviour {
 		socialData [2, 1] = new Vector2(  0.002f, 	0.274f );	
 		socialData [2, 2] = new Vector2( -0.001f, 	0.272f );	
 	}
+    //---------------------------------------------
+    // Capillary
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Capillary) 
+	{
+		currentSimulationSpeciesCount = 3;
+
+		int blood = 0;
+		int vesel = 1;
+		int pulll = 2;
+
+		colors[ blood ] = new Color( 0.9f, 0.0f, 0.0f );
+		colors[ vesel ] = new Color( 0.5f, 0.4f, 0.4f );
+		colors[ pulll ] = new Color( 0.4f, 0.4f, 0.9f );
+
+		int numBloodPartiles = 50;
+		int numVeselPartiles = 100;
+		int numPulllPartiles = 20;
+
+		particlesToSimulate = numBloodPartiles + numVeselPartiles + numPulllPartiles;
+
+		float bloodDrag 		=  0.01f;
+		float veselDrag 		=  0.9f;
+		float pulllDrag 		=  0.9f;
+
+		float bloodCollision 	=  0.002f;
+		float veselCollision 	=  0.0f;
+		float veselSelfLove		=  0.0f;
+		float veselRange		=  0.03f;
+		float bloodSelfLove		=  0.0001f;
+		float bloodSelfRange 	=  0.05f;
+
+		float bloodPullRange 	= 0.3f;
+
+		float bloodFear 		= -0.002f;
+		float bloodPullLove		=  0.00003f;
+		float bloodFearRange	=  0.02f;
+		float pushForce 		=  0.02f;
+		float capillaryWidth 	=  0.03f;
+		float xRange 			=  1.6f;
+		int   pushNum		 	=  15;
+
+		speciesData[ blood ] = new Vector3( bloodDrag, 0, bloodCollision );
+		speciesData[ vesel ] = new Vector3( veselDrag, 0, veselCollision );
+		speciesData[ pulll ] = new Vector3( pulllDrag, 0, 0.0f );
+
+		socialData[ blood, blood ] = new Vector2( bloodSelfLove, bloodSelfRange );	
+		socialData[ blood, vesel ] = new Vector2( bloodFear, 	 bloodFearRange );	
+		socialData[ blood, pulll ] = new Vector2( bloodPullLove, bloodPullRange );	
+
+		socialData[ vesel, blood ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ vesel, vesel ] = new Vector2( veselSelfLove, veselRange );	
+		socialData[ vesel, pulll ] = new Vector2( 0.0f, 0.1f );	
+
+		socialData[ pulll, blood ] = new Vector2( -0.0001f, 0.2f );	
+		socialData[ pulll, vesel ] = new Vector2( -0.0001f, 0.2f );	
+		socialData[ pulll, pulll ] = new Vector2(  0.0001f, 0.3f );	
+
+		//----------------------------------------------------
+		// blood
+		//----------------------------------------------------
+    	for (int p0 = 0; p0 < numBloodPartiles; p0++) 
+		{
+			float f = (float)p0 / (float)numBloodPartiles;
+			float x = -xRange * 0.5f + xRange * f;
+			particlePositions	[p0] = new Vector3( x, 0.0f, 0.0f );
+			particleSpecies		[p0] = blood; 
+			particleVelocities	[p0] = Vector3.zero;;
+
+			/*
+			int d = numBloodPartiles - pushNum;
+			if ( p0 > d )
+			{
+				float fx = ( p0 - d ) * pushForce;
+				particleVelocities[p0] = new Vector3( fx, 0.0f, 0.0f );
+			}
+			*/
+		}	
+
+		//----------------------------------------------------
+		// capillary
+		//----------------------------------------------------
+    	for (int p1 = numBloodPartiles; p1 < ( numBloodPartiles + numVeselPartiles ); p1++) 
+		{
+			float f = (float)( p1 - numBloodPartiles ) / (float)numVeselPartiles;
+
+			float y = capillaryWidth;
+
+			if ( f >= 0.5f )
+			{
+				f -= 0.5f;
+				y = -capillaryWidth;
+			}
+
+			float x = -xRange * 0.5f + xRange * f * 2.0f;
+
+			particlePositions	[p1] = new Vector3( x, y, 0.0f );
+			particleVelocities	[p1] = Vector3.zero;
+			particleSpecies		[p1] = vesel; 
+		}	
+
+
+		//----------------------------------------------------
+		// pull
+		//----------------------------------------------------
+    	for (int p2 = ( numBloodPartiles + numVeselPartiles ); p2 < particlesToSimulate; p2++) 
+		{
+			float f = (float)( p2 - ( numBloodPartiles + numVeselPartiles ) )/ (float)numPulllPartiles;
+
+			float x = xRange * 0.54f;
+
+			float y = -0.1f + xRange * f * 0.2f;
+
+			particlePositions	[p2] = new Vector3( x, y, 0.0f );
+			particleVelocities	[p2] = Vector3.zero;
+			particleSpecies		[p2] = pulll; 
+		}	
+	}
+
+
+
 
     //----------------------------------------------------------------
     // This is a controlled test scenario which is the same as

@@ -59,6 +59,9 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "Comets":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
         break;
+      case "Capillary":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
+        break;
        default:
         Debug.LogError("No ecosystem with name " + name);
         break;

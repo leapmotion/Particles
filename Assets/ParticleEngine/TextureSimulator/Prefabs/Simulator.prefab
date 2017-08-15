@@ -726,6 +726,11 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  _boneCollisionScalars:
+    distalScalar: 0.5
+    intermediateScalar: 0.6
+    proximalScalar: 0.75
+    metacarpalScalar: 1
   _extraHandCollisionForce: 0.001
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4
@@ -735,6 +740,8 @@ MonoBehaviour:
   _influenceMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _influenceNormalOffset: 0.057
   _influenceForwardOffset: 0.017
+  _pointingFactor: 3
+  _minPointingDelta: 0.05
   _handInfluenceType: 0
   _stasisInfluenceSettings:
     _maxRadius: 0.124
@@ -863,6 +870,7 @@ MonoBehaviour:
   _limitStepsPerFrame: 1
   _simulationFPS: 60
   _simulationTimescale: 1
+  _stepsPerTick: 1
   _textureFormat: 2
   _simulationMat: {fileID: 2100000, guid: 79a2ae3dd54bd23409103aa710397f82, type: 2}
   _resetParticlePositionsKey: 112
@@ -937,6 +945,24 @@ MonoBehaviour:
   _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
   _colorMode: 0
   _trailMode: 0
+  _speedToTrailLength:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
   _spawnRadius: 1.39
   _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114
@@ -967,6 +993,7 @@ MonoBehaviour:
   _shaderDataDebug: {fileID: 23460725754145476}
   _drawHandColliders: 0
   _handColliderColor: {r: 0, g: 0, b: 0, a: 1}
+  _showIsPointing: 0
   _enableSpeciesDebugColors: 0
   _debugSpeciesNumber: 0
   _shaderDebugMode: -1

@@ -9,7 +9,7 @@ public class RadioToggleGroup : MonoBehaviour {
 
   [EditTimeOnly]
   public List<InteractionToggle> toggles;
-
+  
   private int _activeToggleIdx = 0;
   public int activeToggleIdx { get { return _activeToggleIdx; } }
   public InteractionToggle activeToggle { get { return toggles[activeToggleIdx]; } }

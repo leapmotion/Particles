@@ -12,7 +12,9 @@ public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
-  public const int MAX_SPECIES = 10;
+  public const int MAX_SPECIES = 31;
+
+  public const int TAIL_RAMP_RESOLUTION = 128;
 
   //#### Simulation Keywords ####
   public const string KEYWORD_INFLUENCE_STASIS = "SPHERE_MODE_STASIS";
@@ -115,6 +117,32 @@ public class TextureSimulator : MonoBehaviour {
     get { return _handVelocityToCollisionRadius; }
   }
 
+  [SerializeField]
+  private HandCollisionBoneScales _boneCollisionScalars;
+
+  [System.Serializable]
+  public struct HandCollisionBoneScales {
+    public float distalScalar;
+    public float intermediateScalar;
+    public float proximalScalar;
+    public float metacarpalScalar;
+
+    public float GetScalar(Bone.BoneType type) {
+      switch (type) {
+        case Bone.BoneType.TYPE_DISTAL:
+          return distalScalar;
+        case Bone.BoneType.TYPE_INTERMEDIATE:
+          return intermediateScalar;
+        case Bone.BoneType.TYPE_PROXIMAL:
+          return proximalScalar;
+        case Bone.BoneType.TYPE_METACARPAL:
+          return metacarpalScalar;
+        default:
+          throw new System.Exception();
+      }
+    }
+  }
+
   [MinValue(0)]
   [SerializeField]
   private float _extraHandCollisionForce = 0.001f;
@@ -180,6 +208,22 @@ public class TextureSimulator : MonoBehaviour {
   public float influenceForwardOffset {
     get { return _influenceForwardOffset; }
     set { _influenceForwardOffset = value; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _pointingFactor = 2;
+  public float pointingFactor {
+    get { return _pointingFactor; }
+    set { _pointingFactor = value; }
+  }
+
+  [Range(0, 1)]
+  [SerializeField]
+  private float _minPointingDelta = 0.05f;
+  public float minPointingDelta {
+    get { return _minPointingDelta; }
+    set { _minPointingDelta = value; }
   }
 
   [SerializeField]
@@ -442,6 +486,14 @@ public class TextureSimulator : MonoBehaviour {
     get { return _simulationTimescale; }
     set { _simulationTimescale = value; }
   }
+  
+  [MinValue(1)]
+  [SerializeField]
+  private int _stepsPerTick = 1;
+  public int stepsPerTick {
+    get { return _stepsPerTick; }
+    set { _stepsPerTick = value; }
+  }
 
   [SerializeField]
   private RenderTextureFormat _textureFormat = RenderTextureFormat.ARGBFloat;
@@ -459,6 +511,7 @@ public class TextureSimulator : MonoBehaviour {
   ///      Stochastic Sampling      //
   //################################//
   [Header("Stochastic Sampling")]
+  [Disable]
   [OnEditorChange("stochasticSamplingEnabled")]
   [SerializeField]
   private bool _stochasticSamplingEnabled = false;
@@ -553,6 +606,10 @@ public class TextureSimulator : MonoBehaviour {
       updateKeywords();
     }
   }
+
+  [OnEditorChange("RebuildTrailTexture")]
+  [SerializeField]
+  private AnimationCurve _speedToTrailLength;
 
   //#######################//
   ///      Ecosystems      //
@@ -789,6 +846,9 @@ public class TextureSimulator : MonoBehaviour {
   private Color _handColliderColor = Color.black;
 
   [SerializeField]
+  private bool _showIsPointing = false;
+
+  [SerializeField]
   private bool _enableSpeciesDebugColors = false;
 
   [Range(0, MAX_SPECIES - 1)]
@@ -960,6 +1020,22 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public void RebuildTrailTexture() {
+    if (!Application.isPlaying) {
+      return;
+    }
+
+    Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
+    for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
+      float speed = i / (float)TAIL_RAMP_RESOLUTION;
+      float length = _speedToTrailLength.Evaluate(speed);
+      ramp.SetPixel(i, 0, new Color(length, length, length, length));
+    }
+    ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+
+    _particleMat.SetTexture("_TailRamp", ramp);
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -996,6 +1072,8 @@ public class TextureSimulator : MonoBehaviour {
     updateShaderData();
 
     updateKeywords();
+
+    RebuildTrailTexture();
   }
 
   void Update() {
@@ -1060,6 +1138,7 @@ public class TextureSimulator : MonoBehaviour {
 	Nova,
 	EnergyConserving,
 	Capillary,
+	NewTest,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1077,7 +1156,7 @@ public class TextureSimulator : MonoBehaviour {
     Vector3[] particleVelocities = new Vector3[MAX_PARTICLES];
     int[] particleSpecies = new int[MAX_PARTICLES].Fill(-1);
 
-    int currentSimulationSpeciesCount = MAX_SPECIES;
+    int currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     int particlesToSimulate = MAX_PARTICLES;
 
     //Default colors are greyscale 0 to 1
@@ -1570,7 +1649,6 @@ public class TextureSimulator : MonoBehaviour {
 		float pushForce 		=  0.02f;
 		float capillaryWidth 	=  0.03f;
 		float xRange 			=  1.6f;
-		int   pushNum		 	=  15;
 
 		speciesData[ blood ] = new Vector3( bloodDrag, 0, bloodCollision );
 		speciesData[ vesel ] = new Vector3( veselDrag, 0, veselCollision );
@@ -1598,15 +1676,6 @@ public class TextureSimulator : MonoBehaviour {
 			particlePositions	[p0] = new Vector3( x, 0.0f, 0.0f );
 			particleSpecies		[p0] = blood; 
 			particleVelocities	[p0] = Vector3.zero;;
-
-			/*
-			int d = numBloodPartiles - pushNum;
-			if ( p0 > d )
-			{
-				float fx = ( p0 - d ) * pushForce;
-				particleVelocities[p0] = new Vector3( fx, 0.0f, 0.0f );
-			}
-			*/
 		}	
 
 		//----------------------------------------------------
@@ -1649,6 +1718,63 @@ public class TextureSimulator : MonoBehaviour {
 		}	
 	}
 
+
+
+   //---------------------------------------------
+    // New Test
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.NewTest) 
+	{
+		currentSimulationSpeciesCount = 4;
+
+		particlesToSimulate = 1000;
+
+		colors[0] = new Color( 0.9f, 0.2f, 0.2f );
+		colors[1] = new Color( 0.2f, 0.9f, 0.2f );
+		colors[2] = new Color( 0.2f, 0.2f, 0.9f );
+		colors[3] = new Color( 0.9f, 0.6f, 0.2f );
+
+		float drag 			= 0.1f;
+		float steps 		= 0;
+		float collision		= 0.01f;
+
+		speciesData[0] = new Vector3( drag, steps, collision );
+		speciesData[1] = new Vector3( drag, steps, collision );
+		speciesData[2] = new Vector3( drag, steps, collision );
+		speciesData[3] = new Vector3( drag, steps, collision );
+
+		socialData[ 0, 0 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 0, 1 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 0, 2 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 0, 3 ] = new Vector2( 0.0f, 0.2f );	
+
+		socialData[ 1, 0 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 1, 1 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 1, 2 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 1, 3 ] = new Vector2( 0.0f, 0.2f );	
+
+		socialData[ 2, 0 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 2, 1 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 2, 2 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 2, 3 ] = new Vector2( 0.0f, 0.2f );	
+
+		socialData[ 3, 0 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 3, 1 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 3, 2 ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ 3, 3 ] = new Vector2( 0.0f, 0.2f );	
+
+		float r = 0.3f;
+     	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -r * 0.5f + Random.value * r;
+			float y = -r * 0.5f + Random.value * r;
+			float z = -r * 0.5f + Random.value * r;
+
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % 4; 
+		}	
+	}
 
 
 
@@ -2273,7 +2399,7 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription);
+    RestartSimulation(_currentSimDescription, forcePositionReset: false);
   }
 
   /// <summary>
@@ -2894,6 +3020,7 @@ public class TextureSimulator : MonoBehaviour {
           Finger finger = source.Fingers[i];
           Finger prevFinger = prev.Fingers[i];
           for (int j = 0; j < 4; j++) {
+            float boneScale = _boneCollisionScalars.GetScalar((Bone.BoneType)j);
             Bone bone = finger.bones[j];
             Bone prevBone = prevFinger.bones[j];
 
@@ -2912,7 +3039,7 @@ public class TextureSimulator : MonoBehaviour {
               float speed = (a - b).magnitude;
               float speedPercent = speed / _maxHandCollisionSpeed;
               float radius = Mathf.Lerp(_handCollisionRadius.x, _handCollisionRadius.y, _handVelocityToCollisionRadius.Evaluate(speedPercent));
-              a.w = radius;
+              a.w = radius * boneScale;
 
               _capsuleA[count] = a;
               _capsuleB[count] = a + (b - a) * _handCollisionVelocityScale;
@@ -2942,6 +3069,8 @@ public class TextureSimulator : MonoBehaviour {
 
     private Vector3 _prevTrackedPosition;
     private Vector3 _currTrackedPosition;
+
+    private float[] _curls = new float[4];
 
     public HandActor(TextureSimulator sim) {
       _sim = sim;
@@ -2990,11 +3119,61 @@ public class TextureSimulator : MonoBehaviour {
 
       float rawGrab;
       if (hand != null) {
-        rawGrab = 1;
-        foreach (var finger in hand.Fingers) {
-          if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
-          float angle = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis());
-          rawGrab = Mathf.Min(angle / 180, rawGrab);
+        //First update curls array
+        {
+          int index = 0;
+          foreach (var finger in hand.Fingers) {
+            if (finger.Type == Finger.FingerType.TYPE_THUMB) continue;
+
+            _curls[index++] = Vector3.Angle(finger.bones[(int)Bone.BoneType.TYPE_DISTAL].Direction.ToVector3(), hand.DistalAxis()) / 180.0f;
+          }
+        }
+
+        //Then calculate raw grab
+        {
+          rawGrab = 1;
+          for (int i = 0; i < _curls.Length; i++) {
+            rawGrab = Mathf.Min(_curls[i], rawGrab);
+          }
+        }
+
+        //Then calculate whether or not we are pointing
+        {
+          //Pointing if any finger is significantly more uncurled than all of the other fingers
+          for (int i = 0; i < 4; i++) {
+
+            float minOtherCurl = float.MaxValue;
+            float maxOtherCurl = float.MinValue;
+            for (int j = 0; j < 4; j++) {
+              if (i == j) continue;
+
+              float curl = _curls[j];
+              minOtherCurl = Mathf.Min(minOtherCurl, curl);
+              maxOtherCurl = Mathf.Max(maxOtherCurl, curl);
+            }
+            
+            float pointingDelta = minOtherCurl - _curls[i];
+
+            //If the distance between our curl and the next highest curl is
+            //greater by X than the distance between the min and the max curl, 
+            //we assume this finger is pointing!
+
+            //We also ensure that the delta is greater than a certain minimum,
+            //or else we get a singularity when the fingers all have almost the
+            //same curl values
+            if (pointingDelta > _sim._minPointingDelta &&
+                pointingDelta > (maxOtherCurl - minOtherCurl) * _sim._pointingFactor) {
+              rawGrab = 0;
+
+              RuntimeGizmoDrawer drawer;
+              if (_sim._showIsPointing && RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+                drawer.color = Color.green;
+                drawer.DrawSphere(hand.PalmPosition.ToVector3(), 0.03f);
+              }
+
+              break;
+            }
+          }
         }
       } else {
         rawGrab = 0;
@@ -3072,7 +3251,7 @@ public class TextureSimulator : MonoBehaviour {
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
-      _simulationMat.SetFloat("_HeadRadius", _headRadius);
+      _simulationMat.SetFloat("_HeadRadius", _headRadius / transform.lossyScale.x);
     }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
@@ -3128,8 +3307,10 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
-    _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+    for (int i = 0; i < _stepsPerTick; i++) {
+      Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
+      _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+    }
   }
 
   private void updateKeywords() {

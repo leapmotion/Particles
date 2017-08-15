@@ -10,15 +10,15 @@ public class TestRunner : MonoBehaviour {
   private string _results;
 
 	IEnumerator Start () {
-    yield return new WaitForSeconds(0.5f);
-    sim.RestartSimulation();
+    //yield return new WaitForSeconds(0.5f);
+    //sim.RestartSimulation();
 
-    //while (true) {
-    //  int startTime = Time.frameCount;
-    //  yield return new WaitForSeconds(1f);
-    //  int endTime = Time.frameCount;
-    //  texMesh.text = Mathf.Round(endTime - startTime).ToString();
-    //}
+    while (true) {
+      int startTime = Time.frameCount;
+      yield return new WaitForSeconds(1f);
+      int endTime = Time.frameCount;
+      texMesh.text = Mathf.Round(endTime - startTime).ToString();
+    }
 
     //for (int i = 1; i <= 10; i++) {
     //  sim.dynamicSpeciesCount = i;

@@ -13,13 +13,13 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
 
   public abstract string GetTextValue();
 
-  void Reset() {
+  protected virtual void Reset() {
     textGraphic = GetComponent<LeapTextGraphic>();
     simulator = FindObjectOfType<TextureSimulator>();
     simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
   }
 
-  void OnValidate() {
+  protected void OnValidate() {
     if (simulator == null) simulator = FindObjectOfType<TextureSimulator>();
   }
 

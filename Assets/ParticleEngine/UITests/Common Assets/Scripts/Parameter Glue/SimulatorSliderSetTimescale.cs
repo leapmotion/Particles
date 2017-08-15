@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class SimulatorSliderSetTimescale : SimulatorSliderControl {
 
-  protected override bool refreshWithSimulatorValue(out float value) {
+  protected override bool getShouldRefreshWithSimulatorValue(out float value) {
     value = simulatorSetters.GetTimescale();
     return true;
   }

@@ -12,7 +12,7 @@ public class TextureSimulator : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;
-  public const int MAX_SPECIES = 10;
+  public const int MAX_SPECIES = 31;
 
   public const int TAIL_RAMP_RESOLUTION = 128;
 
@@ -115,6 +115,32 @@ public class TextureSimulator : MonoBehaviour {
   private AnimationCurve _handVelocityToCollisionRadius;
   public AnimationCurve handVelocityToCollisionRadius {
     get { return _handVelocityToCollisionRadius; }
+  }
+
+  [SerializeField]
+  private HandCollisionBoneScales _boneCollisionScalars;
+
+  [System.Serializable]
+  public struct HandCollisionBoneScales {
+    public float distalScalar;
+    public float intermediateScalar;
+    public float proximalScalar;
+    public float metacarpalScalar;
+
+    public float GetScalar(Bone.BoneType type) {
+      switch (type) {
+        case Bone.BoneType.TYPE_DISTAL:
+          return distalScalar;
+        case Bone.BoneType.TYPE_INTERMEDIATE:
+          return intermediateScalar;
+        case Bone.BoneType.TYPE_PROXIMAL:
+          return proximalScalar;
+        case Bone.BoneType.TYPE_METACARPAL:
+          return metacarpalScalar;
+        default:
+          throw new System.Exception();
+      }
+    }
   }
 
   [MinValue(0)]
@@ -1128,7 +1154,7 @@ public class TextureSimulator : MonoBehaviour {
     Vector3[] particleVelocities = new Vector3[MAX_PARTICLES];
     int[] particleSpecies = new int[MAX_PARTICLES].Fill(-1);
 
-    int currentSimulationSpeciesCount = MAX_SPECIES;
+    int currentSimulationSpeciesCount = SPECIES_CAP_FOR_PRESETS;
     int particlesToSimulate = MAX_PARTICLES;
 
     //Default colors are greyscale 0 to 1
@@ -2204,7 +2230,7 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription);
+    RestartSimulation(_currentSimDescription, forcePositionReset: false);
   }
 
   /// <summary>
@@ -2825,6 +2851,7 @@ public class TextureSimulator : MonoBehaviour {
           Finger finger = source.Fingers[i];
           Finger prevFinger = prev.Fingers[i];
           for (int j = 0; j < 4; j++) {
+            float boneScale = _boneCollisionScalars.GetScalar((Bone.BoneType)j);
             Bone bone = finger.bones[j];
             Bone prevBone = prevFinger.bones[j];
 
@@ -2843,7 +2870,7 @@ public class TextureSimulator : MonoBehaviour {
               float speed = (a - b).magnitude;
               float speedPercent = speed / _maxHandCollisionSpeed;
               float radius = Mathf.Lerp(_handCollisionRadius.x, _handCollisionRadius.y, _handVelocityToCollisionRadius.Evaluate(speedPercent));
-              a.w = radius;
+              a.w = radius * boneScale;
 
               _capsuleA[count] = a;
               _capsuleB[count] = a + (b - a) * _handCollisionVelocityScale;

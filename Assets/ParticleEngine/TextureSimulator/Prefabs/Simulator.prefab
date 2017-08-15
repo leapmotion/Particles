@@ -726,6 +726,11 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  _boneCollisionScalars:
+    distalScalar: 0.5
+    intermediateScalar: 0.6
+    proximalScalar: 0.75
+    metacarpalScalar: 1
   _extraHandCollisionForce: 0.001
   _spheresPerBone: 1
   _spheresPerMetacarpal: 4
@@ -986,7 +991,7 @@ MonoBehaviour:
   _socialDebug: {fileID: 23341970254567932}
   _layoutDebug: {fileID: 23653733492362770}
   _shaderDataDebug: {fileID: 23460725754145476}
-  _drawHandColliders: 1
+  _drawHandColliders: 0
   _handColliderColor: {r: 0, g: 0, b: 0, a: 1}
   _showIsPointing: 0
   _enableSpeciesDebugColors: 0

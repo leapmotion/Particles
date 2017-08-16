@@ -2739,14 +2739,28 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
-  private void uploadSpeciesColors(List<SpeciesRect> layout, Vector4[] colors) {
-    int currParticleIndex = 0;
-    foreach(var block in _instanceBlocks) {
+  private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors) {
+    foreach (var rect in layout) {
+      Color color = colors[rect.species];
+      for (int dx = 0; dx < rect.width; dx++) {
+        for (int dy = 0; dy < rect.height; dy++) {
+          int x = dx + rect.x;
+          int y = dy + rect.y;
 
+          int index = y * 64 + x;
 
+          int arrayIndex = index / 1023;
+          int cappedIndex = index % 1023;
 
+          _instanceColorArray[arrayIndex][cappedIndex] = color;
+        }
+      }
+    }
+  }
 
-      currParticleIndex += 1023;
+  private void uploadColorToChannel(string channel) {
+    for (int i = 0; i < _instanceBlocks.Count; i++) {
+      _instanceBlocks[i].SetVectorArray(channel, _instanceColorArray[i]);
     }
   }
 

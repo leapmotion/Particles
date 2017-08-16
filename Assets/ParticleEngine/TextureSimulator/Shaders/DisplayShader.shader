@@ -81,7 +81,7 @@
 
 #ifdef FISH_TAIL
       float speed = length(velocity.xyz);
-      float3 velDir = velocity.xyz / speed;
+      float3 velDir = speed < 0.00001 ? float3(0,0,0) : velocity.xyz / speed;
       float trailLength = _TrailLength * tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a / 100;
       float vertFactor = saturate(-dot(velDir, normalize(v.vertex.xyz)) - 0.2);
       v.vertex.xyz -= velDir * vertFactor * trailLength;

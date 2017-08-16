@@ -1,4 +1,4 @@
-﻿Shader "Unlit/Outline Pass2" {
+﻿Shader "Unlit/Outline" {
   Properties {
     _Color   ("Color",         Color) = (1,1,1,1)
     _Outline ("Outline Color", Color) = (1,1,1,1)

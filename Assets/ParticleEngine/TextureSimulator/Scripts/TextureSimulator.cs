@@ -711,6 +711,15 @@ public class TextureSimulator : MonoBehaviour {
 
   [System.Serializable]
   public class RandomEcosystemSettings {
+
+    [Range(1, MAX_PARTICLES)]
+    [SerializeField]
+    private int _particleCount = MAX_PARTICLES;
+    public int particleCount {
+      get { return _particleCount; }
+      set { _particleCount = value; }
+    }
+
     [Range(1, MAX_SPECIES)]
     [SerializeField]
     private int _speciesCount = 10;
@@ -2309,7 +2318,7 @@ public class TextureSimulator : MonoBehaviour {
       };
     }
 
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    for (int i = 0; i < _randomEcosystemSettings.particleCount; i++) {
       desc.toSpawn.Add(new ParticleSpawn() {
         position = Random.insideUnitSphere * _spawnRadius,
         velocity = Vector3.zero,

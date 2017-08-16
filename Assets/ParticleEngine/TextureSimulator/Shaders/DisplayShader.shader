@@ -1,4 +1,4 @@
-﻿Shader "Custom/DisplayShader" {
+﻿Shader "Particle Demo/DisplayShader" {
   Properties {
     _Lerp     ("Prev to Curr", Range(0, 1)) = 1
     _ToonRamp ("Toon Ramp", 2D) = "white" {}

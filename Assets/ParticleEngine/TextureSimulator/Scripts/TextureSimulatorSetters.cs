@@ -75,9 +75,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.speciesCount = Mathf.RoundToInt(count);
   }
 
-  public void SetParticleCount(float count) {
-    //TODO
-    //_sim.particlesToSimulate = Mathf.RoundToInt(Mathf.Lerp(1, TextureSimulator.MAX_PARTICLES, count));
+  public void SetParticleCount(int count) {
+    _sim.randomEcosystemSettings.particleCount = count;
   }
 
   public void SetMaxForce(float maxForce) {

@@ -1740,6 +1740,53 @@ public class TextureSimulator : MonoBehaviour {
     else if (preset == EcosystemPreset.NewTest) 
 	{
 		currentSimulationSpeciesCount = 4;
+		particlesToSimulate = 40;
+
+		colors[0] = new Color( 0.9f, 0.2f, 0.2f );
+		colors[1] = new Color( 0.2f, 0.9f, 0.2f );
+		colors[2] = new Color( 0.2f, 0.2f, 0.9f );
+		colors[3] = new Color( 0.9f, 0.4f, 0.2f );
+
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+        	speciesData[s] = new Vector3(0.1f, 1, 0.1f);
+
+			float epsilon = 0.0001f; //Alex: this is a bandaid for a side effect
+
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+				socialData[s, o] = new Vector2(0.0f, epsilon);
+			}
+		}
+
+		float nextLove = 0.001f;
+		float nextRange = 0.5f;
+
+		socialData[0, 1] = new Vector2(nextLove, nextRange);
+		socialData[1, 2] = new Vector2(nextLove, nextRange);
+		socialData[2, 0] = new Vector2(nextLove, nextRange);
+		socialData[3, 0] = new Vector2(nextLove, nextRange);
+
+		//particlePositions[0] = new Vector3(-0.2f, -0.17f, 0.0f);
+		//particlePositions[1] = new Vector3(0.2f, -0.17f, 0.0f);
+		//particlePositions[2] = new Vector3(0.0f, 0.20f, 0.0f);
+		//particlePositions[3] = new Vector3(0.0f, 0.20f, 0.0f);
+
+		float r = 0.3f;
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -r * 0.5f + Random.value * r;
+			float y = -r * 0.5f + Random.value * r;
+			float z = -r * 0.5f + Random.value * r;
+
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleSpecies		[p] = p % currentSimulationSpeciesCount;
+			particleVelocities	[p] = Vector3.zero;
+		}
+	
+
+/*
+		currentSimulationSpeciesCount = 4;
 
 		particlesToSimulate = 1000;
 
@@ -1788,6 +1835,7 @@ public class TextureSimulator : MonoBehaviour {
 			particleVelocities	[p] = Vector3.zero;
 			particleSpecies		[p] = p % 4; 
 		}	
+*/
 	}
 
 

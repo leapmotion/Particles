@@ -2463,7 +2463,27 @@ public class TextureSimulator : MonoBehaviour {
   /// Randomizes the simulation colors of the current simulation.
   /// </summary>
   public void RandomizeSimulationColors() {
-    uploadSpeciesColors(getRandomColors().Query().Select(t => (Vector4)t).ToArray());
+    var newRandomColors = getRandomColors();
+    int newIndex = 0;
+
+    var colorMapping = new Dictionary<Color, Color>();
+
+    for (int i = 0; i < _instanceColorArray.GetLength(0); i++) {
+      var currArray = _instanceColorArray[i];
+      for (int j = 0; j < 1023; j++) {
+        Color existing = currArray[j];
+        Color newColor;
+        if (!colorMapping.TryGetValue(existing, out newColor)) {
+          newColor = newRandomColors[newIndex++];
+          colorMapping[existing] = newColor;
+        }
+
+        currArray[j] = newColor;
+      }
+    }
+
+    uploadColorToChannel("_ColorA");
+    uploadColorToChannel("_ColorB");
   }
 
   /// <summary>
@@ -2518,32 +2538,35 @@ public class TextureSimulator : MonoBehaviour {
       calculateLayoutGeneral(simulationDescription.toSpawn, layout);
     }
 
+    var colorArray = simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray();
+    refillColorArrays(layout, colorArray);
+
     if (isLayoutDifferent) {
       Debug.Log("Layout generated using " + layout.Count + " rectangles.");
 
       resetParticleTextures(layout, simulationDescription.toSpawn);
-
-      resetRenderMeshes(simulationDescription, layout);
-
-      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
+      
+      uploadColorToChannel("_ColorA");
+      uploadColorToChannel("_ColorB");
 
       resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
     } else {
       _simulationMat.SetFloat("_ResetRange", _resetRange);
       _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
+      //Don't upload color to A yet because we need to lerp
+      uploadColorToChannel("_ColorB");
+
       float startTime = Time.time;
       float endTime = Time.time + _resetTime;
       bool hasUploadedNewSocialMesh = false;
-      while(Time.time < endTime) {
+      while (Time.time < endTime) {
         float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
         float colorPercent = _resetColorCurve.Evaluate(percent);
-        var lerpedColors = _currentSimDescription.speciesData.Query().
-                                                              Zip(simulationDescription.speciesData.Query(),
-                                                                  (a, b) => (Vector4)Color.Lerp(a.color, b.color, colorPercent)).
-                                                              ToArray();
 
-        uploadSpeciesColors(lerpedColors);
+        foreach (var block in _instanceBlocks) {
+          block.SetFloat("_ColorLerp", colorPercent);
+        }
 
         float socialPercent = _resetSocialCurve.Evaluate(percent);
         if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
@@ -2556,7 +2579,9 @@ public class TextureSimulator : MonoBehaviour {
         yield return null;
       }
 
-      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
+      //Finish by uploading colors to channel A
+      //both channels now have the new color
+      uploadColorToChannel("_ColorA");
     }
 
     //TODO: more shader constants here

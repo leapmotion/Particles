@@ -2320,7 +2320,7 @@ public class TextureSimulator : MonoBehaviour {
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
         drag = Random.Range(setting.minDrag, setting.maxDrag),
-        forceSteps = Random.Range(0, setting.maxForceSteps),
+        forceSteps = Mathf.FloorToInt(Random.Range(0.0f, setting.maxForceSteps)),
         collisionForce = Random.Range(setting.minCollision, setting.maxCollision)
       };
     }

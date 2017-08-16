@@ -57,7 +57,7 @@
   UNITY_DEFINE_INSTANCED_PROP(half4, _ColorA)
   UNITY_DEFINE_INSTANCED_PROP(half4, _ColorB)
 #else
-  UNITY_DEFINE_INSTANCED_PROP(half4, _Color)
+  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorA)
 #endif
   
   UNITY_INSTANCING_CBUFFER_END
@@ -121,7 +121,7 @@
     half4 colorB = UNITY_ACCESS_INSTANCED_PROP(_ColorB);
     half4 color = lerp(colorA, colorB, _ColorLerp);
 #else
-    half4 color = UNITY_ACCESS_INSTANCED_PROP(_Color);
+    half4 color = UNITY_ACCESS_INSTANCED_PROP(_ColorA);
 #endif
     
 

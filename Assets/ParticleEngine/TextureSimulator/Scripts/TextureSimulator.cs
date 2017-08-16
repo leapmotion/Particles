@@ -895,8 +895,9 @@ public class TextureSimulator : MonoBehaviour {
   private float _prevSimulationTime = 0;
 
   //Display
-  private List<Mesh> _renderMeshes = new List<Mesh>();
-  private MaterialPropertyBlock _displayBlock;
+  private Matrix4x4[] _instanceMatrices = new Matrix4x4[1023];
+  private List<MaterialPropertyBlock> _instanceBlocks = new List<MaterialPropertyBlock>();
+  private Vector4[][] _instanceColorArray = new Vector4[5][]; //5 layers of 1023 >= 4096
 
   //Hand interaction
   private Vector4[] _capsuleA = new Vector4[128];
@@ -1004,7 +1005,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public MaterialPropertyBlock displayProperties {
     get {
-      return _displayBlock;
+      throw new System.Exception();
     }
   }
 
@@ -1049,7 +1050,8 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Awake() {
-    _displayBlock = new MaterialPropertyBlock();
+    initMaterialPropertyBlocks();
+
     _handActors.Fill(() => new HandActor(this));
   }
 
@@ -1118,7 +1120,10 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
-        _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+        float lerpValue = Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime);
+        foreach (var block in _instanceBlocks) {
+          block.SetFloat("_Lerp", lerpValue);
+        }
       } else {
         _currSimulationTime = _prevSimulationTime = _currScaledTime;
         stepSimulation(1);
@@ -2734,67 +2739,15 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
-  private void uploadSpeciesColors(Vector4[] colors) {
-    _displayBlock.SetVectorArray(PROP_SPECIES_COLOR, colors);
-  }
+  private void uploadSpeciesColors(List<SpeciesRect> layout, Vector4[] colors) {
+    int currParticleIndex = 0;
+    foreach(var block in _instanceBlocks) {
 
-  private void resetRenderMeshes(SimulationDescription desc, List<SpeciesRect> layout) {
-    _renderMeshes.Clear();
 
-    var sourceVerts = _particleMesh.vertices;
-    var sourceTris = _particleMesh.triangles;
 
-    List<Vector3> bakedVerts = new List<Vector3>();
-    List<int> bakedTris = new List<int>();
-    List<Vector4> bakedUvs = new List<Vector4>();
 
-    Mesh bakedMesh = null;
-    foreach (var rect in layout) {
-      for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
-        for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
-          if (bakedVerts.Count + sourceVerts.Length > 60000) {
-            bakedMesh.SetVertices(bakedVerts);
-            bakedMesh.SetTriangles(bakedTris, 0);
-            bakedMesh.SetUVs(0, bakedUvs);
-            bakedMesh.RecalculateNormals();
-            bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-            bakedMesh = null;
-
-            bakedVerts.Clear();
-            bakedTris.Clear();
-            bakedUvs.Clear();
-          }
-
-          if (bakedMesh == null) {
-            sourceTris = _particleMesh.triangles;
-            bakedMesh = new Mesh();
-            bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-            _renderMeshes.Add(bakedMesh);
-          }
-
-          bakedVerts.AddRange(sourceVerts);
-          bakedTris.AddRange(sourceTris);
-
-          for (int k = 0; k < sourceVerts.Length; k++) {
-            bakedUvs.Add(new Vector4((dx + 0.5f) / _textureDimension,
-                                     (dy + 0.5f) / _textureDimension,
-                                     0,
-                                     rect.species));
-          }
-
-          for (int k = 0; k < sourceTris.Length; k++) {
-            sourceTris[k] += sourceVerts.Length;
-          }
-        }
-      }
+      currParticleIndex += 1023;
     }
-
-    bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-    bakedMesh.SetVertices(bakedVerts);
-    bakedMesh.SetTriangles(bakedTris, 0);
-    bakedMesh.SetUVs(0, bakedUvs);
-    bakedMesh.RecalculateNormals();
-    bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
   }
 
   private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {
@@ -3287,7 +3240,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
   }
-
+  
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
       RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
@@ -3303,6 +3256,36 @@ public class TextureSimulator : MonoBehaviour {
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       RestartSimulation();
+    }
+  }
+
+  private void initMaterialPropertyBlocks() {
+    _instanceMatrices.Fill(Matrix4x4.identity);
+
+    Vector4[] uvs = new Vector4[1023];
+
+    for (int i = 0; i < _instanceColorArray.GetLength(0); i++) {
+      _instanceColorArray[i] = new Vector4[1023].Fill(Color.red);
+    }
+
+    int particlesLeft = MAX_PARTICLES;
+    int currParticle = 0;
+    while (particlesLeft > 0) {
+      int toBuild = Mathf.Min(1023, particlesLeft);
+      particlesLeft -= toBuild;
+
+      MaterialPropertyBlock block = new MaterialPropertyBlock();
+      _instanceBlocks.Add(block);
+
+      for (int i = 0; i < toBuild; i++, currParticle++) {
+        float dx = (currParticle % 64) / 64.0f;
+        float dy = (currParticle / 64) / 64.0f;
+        uvs[i] = new Vector4(dx, dy, 0, 0);
+      }
+
+      block.SetVectorArray("_ColorA", _instanceColorArray[0]);
+      block.SetVectorArray("_ColorB", _instanceColorArray[0]);
+      block.SetVectorArray("_Uv", uvs);
     }
   }
 
@@ -3420,8 +3403,13 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void displaySimulation() {
-    foreach (var mesh in _renderMeshes) {
-      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
+    int leftToDraw = _currentSimDescription.toSpawn.Count;
+    int blockIndex = 0;
+    while(leftToDraw > 0) {
+      int toDraw = Mathf.Min(leftToDraw, 1023);
+
+      Graphics.DrawMeshInstanced(_particleMesh, 0, _particleMat, _instanceMatrices, toDraw, _instanceBlocks[blockIndex]);
+      blockIndex++;
     }
   }
 

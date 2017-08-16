@@ -12,6 +12,17 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   public LeapTextGraphic textOutput;
   public string outputFormat = "F2";
 
+  public float value {
+    get {
+      return slider.HorizontalSliderValue;
+    }
+    set {
+      float newValue = filterSliderValue(value);
+      slider.HorizontalSliderValue = newValue;
+      onSlideEvent(newValue);
+    }
+  }
+
   protected override void Reset() {
     base.Reset();
 
@@ -19,7 +30,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     outputFormat = "F2";
   }
 
-  void Start() {
+  void Awake() {
     maybeRefreshSimValue();
 
     slider.HorizontalSlideEvent += onSlideEvent;
@@ -42,13 +53,18 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   private void maybeRefreshSimValue() {
     float sliderValue = slider.HorizontalSliderValue;
     float simValue;
-    bool shouldRefresh = refreshWithSimulatorValue(out simValue);
+    bool shouldRefresh = getShouldRefreshWithSimulatorValue(out simValue);
     if (shouldRefresh && sliderValue != simValue) {
       slider.HorizontalSliderValue = simValue;
     }
   }
 
-  protected virtual bool refreshWithSimulatorValue(out float value) {
+  /// <summary>
+  /// Implement this method to return whether the slider should refresh its own value
+  /// with the simulation's value. The method must also provide what the simulation's
+  /// value is.
+  /// </summary>
+  protected virtual bool getShouldRefreshWithSimulatorValue(out float value) {
     value = 0F;
     return false;
   }

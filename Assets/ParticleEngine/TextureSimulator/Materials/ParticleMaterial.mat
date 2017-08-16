@@ -59,7 +59,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ToonRamp:
-        m_Texture: {fileID: 28088535481012970, guid: a89e18055f5411045b36bfc253e09d46,
+        m_Texture: {fileID: 28088535481012970, guid: 135630564768bbe42baaaed72d2d410a,
           type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}

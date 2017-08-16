@@ -1,0 +1,81 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52c842d1b2b9c484c87dd90f52aef336, type: 3}
+  m_Name: ToonRamp2
+  m_EditorClassIdentifier: 
+  _gradient:
+    serializedVersion: 2
+    key0: {r: 0.6764706, g: 0.6764706, b: 0.6764706, a: 1}
+    key1: {r: 0.5514706, g: 0.5514706, b: 0.5514706, a: 1}
+    key2: {r: 0.7352941, g: 0.7461073, b: 0.7461073, a: 0}
+    key3: {r: 0.8455882, g: 0.8455882, b: 0.8455882, a: 0}
+    key4: {r: 0.8455882, g: 0.8455882, b: 0.8455882, a: 0}
+    key5: {r: 0.76450515, g: 0.77412504, b: 0.77412504, a: 0}
+    key6: {r: 1, g: 1, b: 1, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 28334
+    ctime2: 44525
+    ctime3: 65535
+    ctime4: 65535
+    ctime5: 65535
+    ctime6: 62644
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 4
+    m_NumAlphaKeys: 2
+  _wrapMode: 1
+  _textureResolution: 128
+  _filterMode: 1
+  _texture: {fileID: 28088535481012970}
+--- !u!28 &28088535481012970
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_Name: RampTexture
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  serializedVersion: 2
+  m_Width: 128
+  m_Height: 1
+  m_CompleteImageSize: 512
+  m_TextureFormat: 5
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_AlphaIsTransparency: 1
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  image data: 512
+  _typelessdata: ffacacacffabababffabababffaaaaaaffaaaaaaffa9a9a9ffa9a9a9ffa8a8a8ffa7a7a7ffa7a7a7ffa6a6a6ffa6a6a6ffa5a5a5ffa4a4a4ffa4a4a4ffa3a3a3ffa3a3a3ffa2a2a2ffa2a2a2ffa1a1a1ffa0a0a0ffa0a0a0ff9f9f9fff9f9f9fff9e9e9eff9d9d9dff9d9d9dff9c9c9cff9c9c9cff9b9b9bff9b9b9bff9a9a9aff999999ff999999ff989898ff989898ff979797ff979797ff969696ff959595ff959595ff949494ff949494ff939393ff929292ff929292ff919191ff919191ff909090ff909090ff8f8f8fff8e8e8eff8e8e8eff8d8d8dff8d8d8dff8c8c8cff8e8e8eff8f8f8fff919191ff929393ff949494ff959696ff979797ff989999ff9a9b9bff9b9c9cff9d9e9eff9e9f9fffa0a1a1ffa1a2a2ffa3a4a4ffa4a6a6ffa6a7a7ffa7a9a9ffa9aaaaffaaacacffacadadffadafafffafb1b1ffb0b2b2ffb2b4b4ffb3b5b5ffb5b7b7ffb6b9b9ffb8babaffb9bcbcffbbbdbdffbbbebeffbcbfbfffbdbfbfffbec0c0ffbec1c1ffbfc1c1ffc0c2c2ffc0c3c3ffc1c3c3ffc2c4c4ffc2c4c4ffc3c5c5ffc4c6c6ffc4c6c6ffc5c7c7ffc6c8c8ffc7c8c8ffc7c9c9ffc8c9c9ffc9cacaffc9cbcbffcacbcbffcbccccffcbcdcdffcccdcdffcdceceffcdceceffcecfcfffcfd0d0ffd0d0d0ffd0d1d1ffd1d2d2ffd2d2d2ffd2d3d3ffd3d3d3ffd4d4d4ffd4d5d5ffd5d5d5ffd6d6d6ffd6d7d7ffd7d7d7
+  m_StreamData:
+    offset: 0
+    size: 0
+    path: 

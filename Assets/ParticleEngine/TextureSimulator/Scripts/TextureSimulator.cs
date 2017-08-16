@@ -711,6 +711,15 @@ public class TextureSimulator : MonoBehaviour {
 
   [System.Serializable]
   public class RandomEcosystemSettings {
+
+    [Range(1, MAX_PARTICLES)]
+    [SerializeField]
+    private int _particleCount = MAX_PARTICLES;
+    public int particleCount {
+      get { return _particleCount; }
+      set { _particleCount = value; }
+    }
+
     [Range(1, MAX_SPECIES)]
     [SerializeField]
     private int _speciesCount = 10;
@@ -2275,7 +2284,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
 
-    SimulationDescription description = new SimulationDescription();
+    SimulationDescription description = new SimulationDescription(isRandomDescription: false);
     description.name = preset.ToString();
     description.socialData = new SocialData[MAX_SPECIES, MAX_SPECIES];
     description.speciesData = new SpeciesData[MAX_SPECIES];
@@ -2331,15 +2340,21 @@ public class TextureSimulator : MonoBehaviour {
   private SimulationDescription getRandomEcosystemDescription(string seed) {
     var setting = _randomEcosystemSettings;
 
-    SimulationDescription desc = new SimulationDescription() {
+    SimulationDescription desc = new SimulationDescription(isRandomDescription: true) {
+      name = seed,
       socialData = new SocialData[MAX_SPECIES, MAX_SPECIES],
       speciesData = new SpeciesData[MAX_SPECIES],
       toSpawn = new List<ParticleSpawn>()
     };
 
+    //We first generate a bunch of 'meta seeds' which will be used for seeds for
+    //each of the following steps.  We do this so that even if the length of the steps
+    //change, it will not have an effect on the results of the following steps.
     Random.InitState(seed.GetHashCode());
-    desc.name = seed;
+    List<int> metaSeeds = new List<int>().FillEach(10, () => Random.Range(int.MinValue, int.MaxValue));
+    int currMetaSeed = 0;
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
         desc.socialData[s, o] = new SocialData() {
@@ -2349,15 +2364,17 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
         drag = Random.Range(setting.minDrag, setting.maxDrag),
-        forceSteps = Random.Range(0, setting.maxForceSteps),
+        forceSteps = Mathf.FloorToInt(Random.Range(0.0f, setting.maxForceSteps)),
         collisionForce = Random.Range(setting.minCollision, setting.maxCollision)
       };
     }
 
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    Random.InitState(metaSeeds[currMetaSeed++]);
+    for (int i = 0; i < _randomEcosystemSettings.particleCount; i++) {
       desc.toSpawn.Add(new ParticleSpawn() {
         position = Random.insideUnitSphere * _spawnRadius,
         velocity = Vector3.zero,
@@ -2365,7 +2382,7 @@ public class TextureSimulator : MonoBehaviour {
       });
     }
 
-    // Perform color randomization last so that it has no effect on particle interaction.
+    Random.InitState(metaSeeds[currMetaSeed++]);
     var colors = getRandomColors();
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i].color = colors[i];
@@ -2437,9 +2454,14 @@ public class TextureSimulator : MonoBehaviour {
 
   public class SimulationDescription {
     public string name;
+    public bool isRandomDescription;
     public SocialData[,] socialData;
     public SpeciesData[] speciesData;
     public List<ParticleSpawn> toSpawn;
+
+    public SimulationDescription(bool isRandomDescription) {
+      this.isRandomDescription = isRandomDescription;
+    }
   }
 
   /// <summary>
@@ -2447,7 +2469,13 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription, forcePositionReset: false);
+    //If we had generated a random simulation, re-generate it so that new settings
+    //can take effect.  We assume the name of the description is it's seed!
+    if (_currentSimDescription.isRandomDescription) {
+      RandomizeSimulation(_currentSimDescription.name, forcePositionReset: false);
+    } else {
+      RestartSimulation(_currentSimDescription, forcePositionReset: false);
+    }
   }
 
   /// <summary>

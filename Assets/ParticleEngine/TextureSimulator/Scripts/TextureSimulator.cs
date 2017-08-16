@@ -2236,7 +2236,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
 
-    SimulationDescription description = new SimulationDescription();
+    SimulationDescription description = new SimulationDescription(isRandomDescription: false);
     description.name = preset.ToString();
     description.socialData = new SocialData[MAX_SPECIES, MAX_SPECIES];
     description.speciesData = new SpeciesData[MAX_SPECIES];
@@ -2292,7 +2292,8 @@ public class TextureSimulator : MonoBehaviour {
   private SimulationDescription getRandomEcosystemDescription(string seed) {
     var setting = _randomEcosystemSettings;
 
-    SimulationDescription desc = new SimulationDescription() {
+    SimulationDescription desc = new SimulationDescription(isRandomDescription: true) {
+      name = seed,
       socialData = new SocialData[MAX_SPECIES, MAX_SPECIES],
       speciesData = new SpeciesData[MAX_SPECIES],
       toSpawn = new List<ParticleSpawn>()
@@ -2405,9 +2406,14 @@ public class TextureSimulator : MonoBehaviour {
 
   public class SimulationDescription {
     public string name;
+    public bool isRandomDescription;
     public SocialData[,] socialData;
     public SpeciesData[] speciesData;
     public List<ParticleSpawn> toSpawn;
+
+    public SimulationDescription(bool isRandomDescription) {
+      this.isRandomDescription = isRandomDescription;
+    }
   }
 
   /// <summary>
@@ -2415,7 +2421,13 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription, forcePositionReset: false);
+    //If we had generated a random simulation, re-generate it so that new settings
+    //can take effect.  We assume the name of the description is it's seed!
+    if (_currentSimDescription.isRandomDescription) {
+      RandomizeSimulation(_currentSimDescription.name, forcePositionReset: false);
+    } else {
+      RestartSimulation(_currentSimDescription, forcePositionReset: false);
+    }
   }
 
   /// <summary>

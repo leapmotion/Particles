@@ -20,6 +20,9 @@ public class GraphicPaletteController : MonoBehaviour {
   public int restingColorIdx;
   public Color restingColor { get { return palette[restingColorIdx]; } }
 
+  // State tracking (optimization)
+  private Color _lastFrameTargetColor;
+
   protected virtual void Reset() {
     graphic = GetComponent<LeapGraphic>();
 
@@ -54,8 +57,12 @@ public class GraphicPaletteController : MonoBehaviour {
 
     _targetColor = updateTargetColor();
 
-    Color curColor = getColor();
-    setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
+    if (_lastFrameTargetColor != _targetColor) {
+      Color curColor = getColor();
+      setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
+    }
+
+    _lastFrameTargetColor = _targetColor;
   }
 
   protected virtual Color updateTargetColor() {

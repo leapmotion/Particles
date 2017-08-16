@@ -2298,9 +2298,14 @@ public class TextureSimulator : MonoBehaviour {
       toSpawn = new List<ParticleSpawn>()
     };
 
+    //We first generate a bunch of 'meta seeds' which will be used for seeds for
+    //each of the following steps.  We do this so that even if the length of the steps
+    //change, it will not have an effect on the results of the following steps.
     Random.InitState(seed.GetHashCode());
-    desc.name = seed;
+    List<int> metaSeeds = new List<int>().FillEach(10, () => Random.Range(int.MinValue, int.MaxValue));
+    int currMetaSeed = 0;
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
         desc.socialData[s, o] = new SocialData() {
@@ -2310,6 +2315,7 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
         drag = Random.Range(setting.minDrag, setting.maxDrag),
@@ -2318,6 +2324,7 @@ public class TextureSimulator : MonoBehaviour {
       };
     }
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < _randomEcosystemSettings.particleCount; i++) {
       desc.toSpawn.Add(new ParticleSpawn() {
         position = Random.insideUnitSphere * _spawnRadius,
@@ -2326,7 +2333,7 @@ public class TextureSimulator : MonoBehaviour {
       });
     }
 
-    // Perform color randomization last so that it has no effect on particle interaction.
+    Random.InitState(metaSeeds[currMetaSeed++]);
     var colors = getRandomColors();
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i].color = colors[i];

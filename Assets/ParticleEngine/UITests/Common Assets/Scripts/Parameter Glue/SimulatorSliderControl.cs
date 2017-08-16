@@ -12,6 +12,17 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   public LeapTextGraphic textOutput;
   public string outputFormat = "F2";
 
+  public float value {
+    get {
+      return slider.HorizontalSliderValue;
+    }
+    set {
+      float newValue = filterSliderValue(value);
+      slider.HorizontalSliderValue = newValue;
+      onSlideEvent(newValue);
+    }
+  }
+
   protected override void Reset() {
     base.Reset();
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class GraphicPaletteController : MonoBehaviour {
 
   public LeapGraphic graphic;
@@ -19,9 +20,6 @@ public class GraphicPaletteController : MonoBehaviour {
 
   public int restingColorIdx;
   public Color restingColor { get { return palette[restingColorIdx]; } }
-
-  // State tracking (optimization)
-  private Color _lastFrameTargetColor;
 
   protected virtual void Reset() {
     graphic = GetComponent<LeapGraphic>();
@@ -57,12 +55,10 @@ public class GraphicPaletteController : MonoBehaviour {
 
     _targetColor = updateTargetColor();
 
-    if (_lastFrameTargetColor != _targetColor) {
-      Color curColor = getColor();
+    Color curColor = getColor();
+    if (curColor != _targetColor) {
       setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
     }
-
-    _lastFrameTargetColor = _targetColor;
   }
 
   protected virtual Color updateTargetColor() {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [ExecuteInEditMode]
-public class LeapGraphicPaletteController : MonoBehaviour {
+public class ZZOLD_LeapGraphicPaletteController : MonoBehaviour {
 
   public LeapGraphic graphic;
 

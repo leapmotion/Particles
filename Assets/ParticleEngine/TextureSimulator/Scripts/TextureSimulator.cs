@@ -2556,6 +2556,7 @@ public class TextureSimulator : MonoBehaviour {
 
       //Don't upload color to A yet because we need to lerp
       uploadColorToChannel("_ColorB");
+      _particleMat.EnableKeyword("COLOR_LERP");
 
       float startTime = Time.time;
       float endTime = Time.time + _resetTime;
@@ -2582,6 +2583,7 @@ public class TextureSimulator : MonoBehaviour {
       //Finish by uploading colors to channel A
       //both channels now have the new color
       uploadColorToChannel("_ColorA");
+      _particleMat.DisableKeyword("COLOR_LERP");
     }
 
     //TODO: more shader constants here
@@ -3446,6 +3448,7 @@ public class TextureSimulator : MonoBehaviour {
     int blockIndex = 0;
     while(leftToDraw > 0) {
       int toDraw = Mathf.Min(leftToDraw, 1023);
+      leftToDraw -= toDraw;
 
       Graphics.DrawMeshInstanced(_particleMesh, 0, _particleMat, _instanceMatrices, toDraw, _instanceBlocks[blockIndex]);
       blockIndex++;

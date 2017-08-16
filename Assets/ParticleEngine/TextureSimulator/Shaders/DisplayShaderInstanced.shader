@@ -13,6 +13,7 @@
   #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY
   #pragma multi_compile _ ENABLE_INTERPOLATION
   #pragma multi_compile FISH_TAIL SQUASH_TAIL
+  #pragma multi_compile _ COLOR_LERP
   #pragma multi_compile_instancing
   #pragma instancing_options assumeuniformscaling
   #pragma target 2.0
@@ -41,6 +42,7 @@
   uint _InstanceOffset;
 
   half _Lerp;
+  half _ColorLerp;
   half _Glossiness;
   half _Metallic;
 
@@ -50,7 +52,14 @@
 
   UNITY_INSTANCING_CBUFFER_START(MyProperties)
   UNITY_DEFINE_INSTANCED_PROP(half4, _Uv)
+
+#ifdef COLOR_LERP
+  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorA)
+  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorB)
+#else
   UNITY_DEFINE_INSTANCED_PROP(half4, _Color)
+#endif
+  
   UNITY_INSTANCING_CBUFFER_END
 
   float nrand(float2 n) {
@@ -106,7 +115,15 @@
     UNITY_SETUP_INSTANCE_ID(v);
 
     half4 texcoord = UNITY_ACCESS_INSTANCED_PROP(_Uv);
+
+#ifdef COLOR_LERP
+    half4 colorA = UNITY_ACCESS_INSTANCED_PROP(_ColorA);
+    half4 colorB = UNITY_ACCESS_INSTANCED_PROP(_ColorB);
+    half4 color = lerp(colorA, colorB, _ColorLerp);
+#else
     half4 color = UNITY_ACCESS_INSTANCED_PROP(_Color);
+#endif
+    
 
     float4 particle, velocity;
     sampleParticle(texcoord, particle, velocity);

@@ -3572,7 +3572,10 @@ public class TextureSimulator : MonoBehaviour {
 
     for (int i = 0; i < _stepsPerTick; i++) {
       Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
-      _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+      _commandIndex++;
+      if (_commandIndex == _simulationCommands.Count) {
+        _commandIndex = 0;
+      }
     }
   }
 

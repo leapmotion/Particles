@@ -5,16 +5,9 @@ using UnityEngine;
 
 public class PanelOutlineStateController : MonoBehaviour {
 
-  public enum State {
-    Open,
-    Outline,
-    Closed
-  }
-
   public InteractionBehaviour widget;
   public Transform panel;
   public Transform panelOutline;
-  private float _outlineHintDelay = 0.5F;
 
   [Header("Auto")]
   public State state = State.Open;
@@ -22,6 +15,7 @@ public class PanelOutlineStateController : MonoBehaviour {
   private float _grabIdleDuration = 0F;
   private Vector3 _lastGrabPosition;
   private float _grabIdleThreshold = 0.01F;
+  private float _outlineHintDelay = 0.5F;
 
   void Start() {
     widget.OnGraspBegin += onGraspBegin;
@@ -81,6 +75,12 @@ public class PanelOutlineStateController : MonoBehaviour {
     panelOutline.gameObject.SetActive(false);
 
     state = State.Open;
+  }
+
+  public enum State {
+    Open,
+    Outline,
+    Closed
   }
 
 }

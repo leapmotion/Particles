@@ -39,6 +39,8 @@ public class WidgetController : MonoBehaviour {
   private bool _aligningWidgetVisual = false;
   private Pose _widgetVisualTargetPose;
 
+  private bool _firstFixedUpdate = true;
+
   void Start() {
     _panelWidgetDeltaPos = panelPivot.position - widget.rigidbody.position;
     _panelWidgetDeltaRot = panelPivot.rotation * Quaternion.Inverse(widget.rigidbody.rotation);
@@ -48,9 +50,6 @@ public class WidgetController : MonoBehaviour {
 
     widget.OnGraspedMovement += onGraspedMovement;
     widget.OnGraspEnd += onGraspEnd;
-
-    onGraspedMovement(this.transform.position, this.transform.rotation, this.transform.position, this.transform.rotation, null);
-    onGraspEnd();
   }
 
   private void onGraspedMovement(Vector3 oldPos, Quaternion oldRot,
@@ -98,6 +97,13 @@ public class WidgetController : MonoBehaviour {
   }
 
   private void FixedUpdate() {
+    //if (_firstFixedUpdate) {
+    //  onGraspedMovement(this.transform.position, this.transform.rotation, this.transform.position, this.transform.rotation, null);
+    //  onGraspEnd();
+
+    //  _firstFixedUpdate = false;
+    //}
+
     if (_aligningWidgetVisual) {
       Quaternion targetRot = getFaceUserRot(_widgetVisualPose.position);
 

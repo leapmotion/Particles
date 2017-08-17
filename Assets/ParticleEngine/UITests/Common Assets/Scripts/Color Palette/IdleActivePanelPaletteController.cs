@@ -21,6 +21,10 @@ public class IdleActivePanelPaletteController : MonoBehaviour {
     if (paletteSwitcherController == null) {
       paletteSwitcherController = GetComponent<PaletteSwitcherController>();
     }
+
+    if (findInteractionObjectsWithin == null) {
+      findInteractionObjectsWithin = this.transform;
+    }
   }
 
   void OnEnable() {

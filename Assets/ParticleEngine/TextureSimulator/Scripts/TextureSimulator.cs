@@ -2515,7 +2515,9 @@ public class TextureSimulator : MonoBehaviour {
   /// initial conditions.
   /// </summary>
   public void RestartSimulation(EcosystemPreset preset) {
-    RestartSimulation(getPresetDescription(preset), ResetBehavior.SmoothTransition);
+    var presetDesc = getPresetDescription(preset);
+    copyDescriptionToSlidersIfLinked(presetDesc);
+    RestartSimulation(presetDesc, ResetBehavior.SmoothTransition);
   }
 
   /// <summary>
@@ -2553,11 +2555,34 @@ public class TextureSimulator : MonoBehaviour {
       var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), _currentSimDescription.name);
       var presetDesc = getPresetDescription(preset);
 
+      float maxForce = 0;
+      float maxRange = 0;
+      float maxSteps = 0;
+      float maxDrag = 0;
+      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
+        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
+          maxForce = Mathf.Max(maxForce, presetDesc.socialData[i, j].socialForce);
+          maxRange = Mathf.Max(maxRange, presetDesc.socialData[i, j].socialRange);
+        }
+        maxSteps = Mathf.Max(maxSteps, presetDesc.speciesData[i].forceSteps);
+        maxDrag = Mathf.Max(maxDrag, presetDesc.speciesData[i].drag);
+      }
 
+      float forceFactor = _randomEcosystemSettings.maxSocialForce / maxForce;
+      float rangeFactor = _randomEcosystemSettings.maxSocialRange / maxRange;
+      float stepFactor = _randomEcosystemSettings.maxForceSteps / maxSteps;
+      float dragFactor = (_randomEcosystemSettings.maxDrag + _randomEcosystemSettings.minDrag) * 0.5f / maxDrag;
 
+      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
+        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
+          presetDesc.socialData[i, j].socialForce *= forceFactor;
+          presetDesc.socialData[i, j].socialRange *= rangeFactor;
+        }
+        presetDesc.speciesData[i].forceSteps = Mathf.RoundToInt(presetDesc.speciesData[i].forceSteps * stepFactor);
+        presetDesc.speciesData[i].drag *= dragFactor;
+      }
 
-
-
+      RestartSimulation(presetDesc, ResetBehavior.None);
     }
   }
 
@@ -2771,6 +2796,29 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     return;
+  }
+
+  private void copyDescriptionToSlidersIfLinked(SimulationDescription desc) {
+    if (!_linkToPresets) return;
+
+    float maxForce = 0;
+    float maxRange = 0;
+    float maxSteps = 0;
+    float maxDrag = 0;
+    for (int i = 0; i < desc.speciesData.Length; i++) {
+      for (int j = 0; j < desc.speciesData.Length; j++) {
+        maxForce = Mathf.Max(maxForce, desc.socialData[i, j].socialForce);
+        maxRange = Mathf.Max(maxRange, desc.socialData[i, j].socialRange);
+      }
+      maxSteps = Mathf.Max(maxSteps, desc.speciesData[i].forceSteps);
+      maxDrag = Mathf.Max(maxDrag, desc.speciesData[i].drag);
+    }
+
+    _randomEcosystemSettings.maxSocialForce = maxForce;
+    _randomEcosystemSettings.maxSocialRange = maxRange;
+    _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
+    _randomEcosystemSettings.minDrag = maxDrag;
+    _randomEcosystemSettings.maxDrag = maxDrag;
   }
 
   private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {

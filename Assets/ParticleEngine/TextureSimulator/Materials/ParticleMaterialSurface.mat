@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: ParticleMaterial
+  m_Name: ParticleMaterialSurface
   m_Shader: {fileID: 4800000, guid: 6bc6737ca7f5ff545a418c726bc7b06a, type: 3}
   m_ShaderKeywords: COLOR_SPECIES_MAGNITUDE ENABLE_INTERPOLATION SQUASH_TAIL
   m_LightmapFlags: 4

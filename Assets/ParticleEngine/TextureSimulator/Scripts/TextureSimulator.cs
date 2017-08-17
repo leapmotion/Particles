@@ -1061,7 +1061,7 @@ public class TextureSimulator : MonoBehaviour {
     _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorA.filterMode = FilterMode.Point;
     _displayColorB = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
-    _displayColorA.filterMode = FilterMode.Point;
+    _displayColorB.filterMode = FilterMode.Point;
     _handActors.Fill(() => new HandActor(this));
   }
 

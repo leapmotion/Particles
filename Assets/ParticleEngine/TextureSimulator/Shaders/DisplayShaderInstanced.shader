@@ -139,7 +139,7 @@
 
     NdotL = tex2D(_ToonRamp, float2(NdotL * 0.5 + 0.5, 0));
 
-    return i.color;// *NdotL;
+    return i.color *NdotL;
   }
   ENDCG
 

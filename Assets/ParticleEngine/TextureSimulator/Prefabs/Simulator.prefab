@@ -862,8 +862,8 @@ MonoBehaviour:
   _socialHandSpecies: 0
   _socialHandForceFactor: 25
   _fieldCenter: {fileID: 4870151900081912}
-  _fieldRadius: 1.5
-  _fieldForce: 0.0605
+  _fieldRadius: 0.95
+  _fieldForce: 0.1
   _headRadius: 0.15
   _simulationEnabled: 1
   _dynamicTimestepEnabled: 1
@@ -878,38 +878,8 @@ MonoBehaviour:
   _stochasticPercent: 0.5
   _stochasticCycleCount: 128
   _resetTime: 3
-  _resetForce: 0.05
+  _resetForce: 0.02
   _resetRange: 0.4
-  _resetColorCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 2
-      time: -0.0009002062
-      value: -0.00079458253
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 0.28075996
-      value: 0.005077578
-      inSlope: 0.062305145
-      outSlope: 0.062305145
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 0.6241612
-      value: 0.98238164
-      inSlope: 0.4659663
-      outSlope: 0.4659663
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 0
   _resetSocialCurve:
     serializedVersion: 2
     m_Curve:
@@ -932,17 +902,23 @@ MonoBehaviour:
       outSlope: 0.14413148
       tangentMode: 5
     - serializedVersion: 2
+      time: 0.7692811
+      value: 0.2613272
+      inSlope: -2.6929379
+      outSlope: -2.6929379
+      tangentMode: 1
+    - serializedVersion: 2
       time: 1
       value: -0.0032274132
-      inSlope: -0.7620382
-      outSlope: -0.7620382
+      inSlope: -0.12550023
+      outSlope: -0.12550023
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
   _displayParticles: 1
   _particleMesh: {fileID: 4300000, guid: 4146ef317cfe10d4fa7b85d3f5fb513b, type: 2}
-  _particleMat: {fileID: 2100000, guid: 38953175458ad47479929dcfb902dce9, type: 2}
+  _particleMat: {fileID: 2100000, guid: 981f815e96d36fd45bfec19cbb8a856a, type: 2}
   _colorMode: 0
   _trailMode: 0
   _speedToTrailLength:
@@ -963,11 +939,12 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  _saveEcosystemKey: 286
+  _loadEcosystemKey: 287
+  _ecosystemAssetToLoad: {fileID: 0}
   _spawnRadius: 1.39
-  _ecosystemSeed: Sulfurea Nium
   _loadPresetEcosystemKey: 114
   _randomizeEcosystemKey: 32
-  _loadEcosystemSeedKey: 108
   _presetEcosystemSettings:
     _ecosystemPreset: 4
     _maxForceSteps: 7
@@ -976,6 +953,7 @@ MonoBehaviour:
     _dragRange: {x: 0.05, y: 0.3}
     _collisionForceRange: {x: 0.002, y: 0.009}
   _randomEcosystemSettings:
+    _particleCount: 4096
     _speciesCount: 10
     _maxForceSteps: 64
     _maxSocialForce: 0.003

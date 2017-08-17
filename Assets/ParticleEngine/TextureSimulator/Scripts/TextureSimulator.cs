@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -614,6 +615,15 @@ public class TextureSimulator : MonoBehaviour {
   //#######################//
   ///      Ecosystems      //
   //#######################//
+  [SerializeField]
+  private KeyCode _saveEcosystemKey = KeyCode.S;
+
+  [SerializeField]
+  private KeyCode _loadEcosystemKey = KeyCode.L;
+
+  [SerializeField]
+  private TextAsset _ecosystemAssetToLoad;
+
   [Header("Ecosystems")]
   [Range(0, 2)]
   [SerializeField]
@@ -3357,6 +3367,15 @@ public class TextureSimulator : MonoBehaviour {
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       RestartSimulation();
+    }
+
+    if (Input.GetKeyDown(_saveEcosystemKey)) {
+      File.WriteAllText(_currentSimDescription.name + ".json", JsonUtility.ToJson(_currentSimDescription, prettyPrint: true));
+    }
+
+    if (Input.GetKeyDown(_loadEcosystemKey)) {
+      var description = JsonUtility.FromJson<SimulationDescription>(_ecosystemAssetToLoad.text);
+      RestartSimulation(description, forcePositionReset: true);
     }
   }
 

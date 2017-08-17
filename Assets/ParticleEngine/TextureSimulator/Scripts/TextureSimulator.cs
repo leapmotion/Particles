@@ -615,16 +615,16 @@ public class TextureSimulator : MonoBehaviour {
   //#######################//
   ///      Ecosystems      //
   //#######################//
+  [Header("Ecosystems")]
   [SerializeField]
-  private KeyCode _saveEcosystemKey = KeyCode.S;
+  private KeyCode _saveEcosystemKey = KeyCode.F5;
 
   [SerializeField]
-  private KeyCode _loadEcosystemKey = KeyCode.L;
+  private KeyCode _loadEcosystemKey = KeyCode.F6;
 
   [SerializeField]
   private TextAsset _ecosystemAssetToLoad;
-
-  [Header("Ecosystems")]
+  
   [Range(0, 2)]
   [SerializeField]
   private float _spawnRadius = 1;
@@ -634,16 +634,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [SerializeField]
-  private string _ecosystemSeed;
-
-  [SerializeField]
   private KeyCode _loadPresetEcosystemKey = KeyCode.R;
 
   [SerializeField]
   private KeyCode _randomizeEcosystemKey = KeyCode.Space;
-
-  [SerializeField]
-  private KeyCode _loadEcosystemSeedKey = KeyCode.L;
 
   [Space]
   [SerializeField]
@@ -2462,6 +2456,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     public void OnBeforeSerialize() {
+      if (speciesData == null) return;
       _serializedSocialData = new SocialData[speciesData.Length * speciesData.Length];
       for (int i = 0; i < speciesData.Length; i++) {
         for (int j = 0; j < speciesData.Length; j++) {
@@ -2471,6 +2466,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     public void OnAfterDeserialize() {
+      if (_serializedSocialData == null) return;
       socialData = new SocialData[speciesData.Length, speciesData.Length];
       for (int i = 0; i < speciesData.Length; i++) {
         for (int j = 0; j < speciesData.Length; j++) {
@@ -3357,10 +3353,6 @@ public class TextureSimulator : MonoBehaviour {
       RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
     }
 
-    if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
-      RandomizeSimulation(_ecosystemSeed);
-    }
-
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
       RandomizeSimulation(forcePositionReset: false);
     }
@@ -3370,7 +3362,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (Input.GetKeyDown(_saveEcosystemKey)) {
-      File.WriteAllText(_currentSimDescription.name + ".json", JsonUtility.ToJson(_currentSimDescription, prettyPrint: true));
+      File.WriteAllText(_currentSimDescription.name + ".json", JsonUtility.ToJson(_currentSimDescription, prettyPrint: false));
     }
 
     if (Input.GetKeyDown(_loadEcosystemKey)) {

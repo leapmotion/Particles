@@ -1059,7 +1059,9 @@ public class TextureSimulator : MonoBehaviour {
     initDisplayMeshes();
     _displayBlock = new MaterialPropertyBlock();
     _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorA.filterMode = FilterMode.Point;
     _displayColorB = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorA.filterMode = FilterMode.Point;
     _handActors.Fill(() => new HandActor(this));
   }
 
@@ -2832,7 +2834,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors, bool forceTrueAlpha) {
-    _displayColorArray.Fill(new Color(0, 0, 0, 0));
+    if (forceTrueAlpha) {
+      _displayColorArray.Fill(new Color(0, 0, 0, 0));
+    }
+
     foreach (var rect in layout) {
       Color color = colors[rect.species];
       for (int dx = 0; dx < rect.width; dx++) {
@@ -2845,7 +2850,7 @@ public class TextureSimulator : MonoBehaviour {
           Color toAssign = color;
           if (!forceTrueAlpha) {
             Color existing = _displayColorArray[index];
-            toAssign.a = existing.a;
+            toAssign *= existing.a;
           }
 
           _displayColorArray[index] = toAssign;

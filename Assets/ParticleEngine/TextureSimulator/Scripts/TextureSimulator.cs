@@ -710,6 +710,9 @@ public class TextureSimulator : MonoBehaviour {
   [Space]
   [SerializeField]
   private bool _linkToPresets = false;
+
+  [SerializeField]
+  private KeyCode _applyLinkedSliders = KeyCode.A;
   
   [SerializeField]
   private RandomEcosystemSettings _randomEcosystemSettings;
@@ -3434,6 +3437,10 @@ public class TextureSimulator : MonoBehaviour {
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       RestartSimulation();
+    }
+
+    if (Input.GetKeyDown(_applyLinkedSliders)) {
+      ApplySliderValues();
     }
 
     if (Input.GetKeyDown(_ranzomizeColorsKey)) {

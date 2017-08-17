@@ -3696,7 +3696,7 @@ public class TextureSimulator : MonoBehaviour {
     //We are going to keep building new command buffers
     //until the state of the textures equals the original
     //state.  If there is no fancy conditional logic involved
-    //then this will always wind up being 2 buffers.
+    //then this will always wind up being 1 or 2 buffers.
 
     int bufferIndex = 0;
     do {

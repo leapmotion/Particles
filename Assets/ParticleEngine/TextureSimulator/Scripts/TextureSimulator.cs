@@ -966,6 +966,8 @@ public class TextureSimulator : MonoBehaviour {
     Squash
   }
 
+  public System.Action OnPresetLoaded;
+
   public float simulationAge {
     get {
       return _currSimulationTime;
@@ -2520,7 +2522,12 @@ public class TextureSimulator : MonoBehaviour {
   public void RestartSimulation(EcosystemPreset preset) {
     var presetDesc = getPresetDescription(preset);
     copyDescriptionToSlidersIfLinked(presetDesc);
+
     RestartSimulation(presetDesc, ResetBehavior.SmoothTransition);
+
+    if (OnPresetLoaded != null) {
+      OnPresetLoaded();
+    }
   }
 
   /// <summary>

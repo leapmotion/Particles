@@ -5,6 +5,7 @@
     _Size     ("Size", Range(0, 0.5)) = 0.01
     _TrailLength ("Trail Length", Range(0, 10000)) = 1000
     _Brightness ("Brightness", Float) = 1
+    _LightDir ("Light Direction", Vector) = (0.577, 0.577, 0.577, 0)
   }
 
   CGINCLUDE
@@ -25,7 +26,6 @@
     float4 position : SV_POSITION;
     float4 color : COLOR;
     float3 normal : NORMAL;
-    float3 lightDir : TEXCOORD0;
   };
 
   sampler2D _ParticlePositions;
@@ -49,6 +49,7 @@
   half _Size;
   half _TrailLength;
   half _Brightness;
+  half4 _LightDir;
 
   float nrand(float2 n) {
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -126,12 +127,11 @@
     o.position = UnityObjectToClipPos(v.vertex);
     o.normal = v.normal;
     o.color = color;
-    o.lightDir = UnityWorldSpaceLightDir(v.vertex);
     return o;
   }
 
   fixed4 frag(v2f i) : SV_Target {
-    half NdotL = dot(i.normal, i.lightDir);
+    half NdotL = dot(i.normal, _LightDir);
 
     NdotL = tex2D(_ToonRamp, float2(NdotL * 0.5 + 0.5, 0));
 

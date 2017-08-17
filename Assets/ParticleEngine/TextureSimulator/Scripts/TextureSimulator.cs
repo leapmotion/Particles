@@ -2408,11 +2408,14 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region RESET LOGIC
+
+  [System.Serializable]
   public struct SocialData {
     public float socialForce;
     public float socialRange;
   }
 
+  [System.Serializable]
   public struct SpeciesData {
     public int forceSteps;
     public float drag;
@@ -2420,26 +2423,50 @@ public class TextureSimulator : MonoBehaviour {
     public Color color;
   }
 
+  [System.Serializable]
   public struct ParticleSpawn {
     public Vector3 position;
     public Vector3 velocity;
     public int species;
   }
 
+  [System.Serializable]
   public struct SpeciesRect {
     public int x, y, width, height;
     public int species;
   }
 
-  public class SimulationDescription {
+  [System.Serializable]
+  public class SimulationDescription : ISerializationCallbackReceiver {
     public string name;
     public bool isRandomDescription;
     public SocialData[,] socialData;
     public SpeciesData[] speciesData;
     public List<ParticleSpawn> toSpawn;
 
+    [SerializeField]
+    private SocialData[] _serializedSocialData;
+
     public SimulationDescription(bool isRandomDescription) {
       this.isRandomDescription = isRandomDescription;
+    }
+
+    public void OnBeforeSerialize() {
+      _serializedSocialData = new SocialData[speciesData.Length * speciesData.Length];
+      for (int i = 0; i < speciesData.Length; i++) {
+        for (int j = 0; j < speciesData.Length; j++) {
+          _serializedSocialData[j * speciesData.Length + i] = socialData[i, j];
+        }
+      }
+    }
+
+    public void OnAfterDeserialize() {
+      socialData = new SocialData[speciesData.Length, speciesData.Length];
+      for (int i = 0; i < speciesData.Length; i++) {
+        for (int j = 0; j < speciesData.Length; j++) {
+          socialData[i, j] = _serializedSocialData[j * speciesData.Length + i];
+        }
+      }
     }
   }
 

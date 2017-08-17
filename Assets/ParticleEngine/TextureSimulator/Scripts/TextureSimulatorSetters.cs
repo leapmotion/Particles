@@ -62,8 +62,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "Capillary":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Capillary);
         break;
-       case "NewTest":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.NewTest);
+       case "Worms":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Worms);
         break;
        default:
         Debug.LogError("No ecosystem with name " + name);
@@ -166,7 +166,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   public void LoadRandomEcosystem(LabelController controller) {
     var name = _sim.GetComponent<NameGenerator>().GenerateName();
     controller.SetLabel(name);
-    _sim.RandomizeSimulation(name);
+    _sim.RandomizeSimulation(name, TextureSimulator.ResetBehavior.SmoothTransition);
   }
 
   private void setSkyColor(Color c) {

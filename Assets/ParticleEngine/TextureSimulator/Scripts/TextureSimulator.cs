@@ -611,6 +611,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private AnimationCurve _speedToTrailLength;
 
+  [SerializeField]
+  private KeyCode _ranzomizeColorsKey = KeyCode.C;
+
   //#######################//
   ///      Ecosystems      //
   //#######################//
@@ -2538,7 +2541,7 @@ public class TextureSimulator : MonoBehaviour {
       _currentSimDescription.speciesData[i].color = newRandomColors[i];
     }
 
-
+    RestartSimulation(_currentSimDescription, ResetBehavior.None);
   }
 
   /// <summary>
@@ -3366,6 +3369,10 @@ public class TextureSimulator : MonoBehaviour {
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       RestartSimulation();
+    }
+
+    if (Input.GetKeyDown(_ranzomizeColorsKey)) {
+      RandomizeSimulationColors();
     }
 
     if (Input.GetKeyDown(_saveEcosystemKey)) {

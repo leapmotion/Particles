@@ -2513,7 +2513,7 @@ public class TextureSimulator : MonoBehaviour {
   /// initial conditions.
   /// </summary>
   public void RestartSimulation(EcosystemPreset preset) {
-    RestartSimulation(getPresetDescription(preset), ResetBehavior.ResetPositions);
+    RestartSimulation(getPresetDescription(preset), ResetBehavior.SmoothTransition);
   }
 
   /// <summary>

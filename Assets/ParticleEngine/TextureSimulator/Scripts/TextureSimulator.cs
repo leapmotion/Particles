@@ -16,7 +16,6 @@ public class TextureSimulator : MonoBehaviour {
   public const int MAX_SPECIES = 31;
 
   public const int TAIL_RAMP_RESOLUTION = 128;
-  public const int INSTANCE_BATCH_SIZE = 100;
 
   //#### Simulation Keywords ####
   public const string KEYWORD_INFLUENCE_STASIS = "SPHERE_MODE_STASIS";
@@ -1014,7 +1013,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public MaterialPropertyBlock displayProperties {
     get {
-      throw new System.Exception();
+      return _displayBlock;
     }
   }
 

@@ -862,8 +862,8 @@ MonoBehaviour:
   _socialHandSpecies: 0
   _socialHandForceFactor: 25
   _fieldCenter: {fileID: 4870151900081912}
-  _fieldRadius: 0.95
-  _fieldForce: 0.1
+  _fieldRadius: 1.5
+  _fieldForce: 0.0605
   _headRadius: 0.15
   _simulationEnabled: 1
   _dynamicTimestepEnabled: 1
@@ -939,6 +939,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+  _ranzomizeColorsKey: 99
   _saveEcosystemKey: 286
   _loadEcosystemKey: 287
   _ecosystemAssetToLoad: {fileID: 0}
@@ -946,7 +947,7 @@ MonoBehaviour:
   _loadPresetEcosystemKey: 114
   _randomizeEcosystemKey: 32
   _presetEcosystemSettings:
-    _ecosystemPreset: 4
+    _ecosystemPreset: 17
     _maxForceSteps: 7
     _maxSocialForce: 0.003
     _maxSocialRange: 0.5

@@ -166,7 +166,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   public void LoadRandomEcosystem(LabelController controller) {
     var name = _sim.GetComponent<NameGenerator>().GenerateName();
     controller.SetLabel(name);
-    _sim.RandomizeSimulation(name);
+    _sim.RandomizeSimulation(name, TextureSimulator.ResetBehavior.SmoothTransition);
   }
 
   private void setSkyColor(Color c) {

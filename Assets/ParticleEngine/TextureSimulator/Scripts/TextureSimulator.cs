@@ -1671,7 +1671,7 @@ public class TextureSimulator : MonoBehaviour {
 		float bloodFear 		= -0.002f;
 		float bloodPullLove		=  0.00003f;
 		float bloodFearRange	=  0.02f;
-		float pushForce 		=  0.02f;
+		//float pushForce 		=  0.02f;
 		float capillaryWidth 	=  0.03f;
 		float xRange 			=  1.6f;
 

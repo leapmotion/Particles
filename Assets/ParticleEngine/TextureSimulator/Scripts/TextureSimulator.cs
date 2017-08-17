@@ -3702,10 +3702,10 @@ public class TextureSimulator : MonoBehaviour {
     do {
       CommandBuffer buffer = new CommandBuffer();
       buffer.name = "Particle Simulation " + bufferIndex;
+      buildSimulationCommands(bufferIndex, buffer);
+
       bufferIndex++;
       _simulationCommands.Add(buffer);
-
-      buildSimulationCommands(bufferIndex, buffer);
     } while (_positionSrc != startPos ||
             _velocitySrc != startVel ||
             _socialQueueSrc != startSoc);

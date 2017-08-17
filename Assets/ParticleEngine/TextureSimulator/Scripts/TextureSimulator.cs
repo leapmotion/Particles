@@ -55,6 +55,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int PASS_STEP_SOCIAL_QUEUE = 4;
   public const int PASS_SHADER_DEBUG = 5;
   public const int PASS_COPY = 6;
+  public const int PASS_RANDOM_INIT = 7;
 
   #region INSPECTOR
   [SerializeField]
@@ -560,9 +561,6 @@ public class TextureSimulator : MonoBehaviour {
   [MinValue(0)]
   [SerializeField]
   private float _resetRange = 1;
-
-  [SerializeField]
-  private AnimationCurve _resetColorCurve;
 
   [SerializeField]
   private AnimationCurve _resetSocialCurve;
@@ -2585,11 +2583,11 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     var colorArray = simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray();
-    refillColorArrays(layout, colorArray);
-
+    
     if (forcePositionReset) {
       Debug.Log("Layout generated using " + layout.Count + " rectangles.");
 
+      refillColorArrays(layout, colorArray, forceTrueAlpha: true);
       resetParticleTextures(layout, simulationDescription.toSpawn);
 
       uploadColorTexture(_displayColorA);
@@ -2605,6 +2603,13 @@ public class TextureSimulator : MonoBehaviour {
       _simulationMat.SetFloat("_ResetRange", _resetRange);
       _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
+      bool isIncreasingParticleCount = simulationDescription.toSpawn.Count > _currentSimDescription.toSpawn.Count;
+      if (isIncreasingParticleCount) {
+        refillColorArrays(layout, colorArray, forceTrueAlpha: false);
+      } else {
+        refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+      }
+
       //Don't upload color to A yet because we need to lerp
       uploadColorTexture(_displayColorB);
       _particleMat.EnableKeyword("COLOR_LERP");
@@ -2614,17 +2619,35 @@ public class TextureSimulator : MonoBehaviour {
       bool hasUploadedNewSocialMesh = false;
       while (Time.time < endTime) {
         float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
-        float colorPercent = _resetColorCurve.Evaluate(percent);
-        _displayBlock.SetFloat("_ColorLerp", colorPercent);
+        float resetPercent = _resetSocialCurve.Evaluate(percent);
+        _simulationMat.SetFloat("_ResetPercent", resetPercent);
+
+        if (!hasUploadedNewSocialMesh || isIncreasingParticleCount) {
+          _displayBlock.SetFloat("_ColorLerp", resetPercent);
+        }
 
         float socialPercent = _resetSocialCurve.Evaluate(percent);
         if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
           hasUploadedNewSocialMesh = true;
           resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
           _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
-        }
 
-        _simulationMat.SetFloat("_ResetPercent", socialPercent);
+          if (isIncreasingParticleCount) {
+            refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+            uploadColorTexture(_displayColorA);
+          }
+
+          Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+          randomTexture.filterMode = FilterMode.Point;
+          randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere));
+          randomTexture.Apply();
+          
+          blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
+          Graphics.CopyTexture(_socialTemp, _positionSrc);
+          Graphics.CopyTexture(_socialTemp, _positionDst);
+
+          DestroyImmediate(randomTexture);
+        }
 
         yield return null;
       }
@@ -2808,7 +2831,7 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
-  private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors) {
+  private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors, bool forceTrueAlpha) {
     _displayColorArray.Fill(new Color(0, 0, 0, 0));
     foreach (var rect in layout) {
       Color color = colors[rect.species];
@@ -2818,7 +2841,14 @@ public class TextureSimulator : MonoBehaviour {
           int y = dy + rect.y;
 
           int index = y * 64 + x;
-          _displayColorArray[index] = color;
+
+          Color toAssign = color;
+          if (!forceTrueAlpha) {
+            Color existing = _displayColorArray[index];
+            toAssign.a = existing.a;
+          }
+
+          _displayColorArray[index] = toAssign;
         }
       }
     }
@@ -3516,14 +3546,14 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void blitCopy(Texture src, RenderTexture dst) {
+  private void blitCopy(Texture src, RenderTexture dst, int pass = PASS_COPY) {
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
     RenderTexture.active = dst;
     GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
 
     _simulationMat.SetTexture("_CopySource", src);
-    _simulationMat.SetPass(PASS_COPY);
+    _simulationMat.SetPass(pass);
 
     GL.Begin(GL.QUADS);
 

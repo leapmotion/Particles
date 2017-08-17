@@ -2584,6 +2584,11 @@ public class TextureSimulator : MonoBehaviour {
       uploadColorTexture(_displayColorB);
 
       resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+
+      _commandIndex = 0;
+      Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
+      Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
+      Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
     } else {
       _simulationMat.SetFloat("_ResetRange", _resetRange);
       _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
@@ -2604,6 +2609,7 @@ public class TextureSimulator : MonoBehaviour {
         if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
           hasUploadedNewSocialMesh = true;
           resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+          _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
         }
 
         _simulationMat.SetFloat("_ResetPercent", socialPercent);
@@ -2616,19 +2622,12 @@ public class TextureSimulator : MonoBehaviour {
       uploadColorTexture(_displayColorA);
       _particleMat.DisableKeyword("COLOR_LERP");
     }
-
-    //TODO: more shader constants here
-    _simulationMat.SetFloat("_ResetPercent", 0);
+    
     _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
+    _simulationMat.SetFloat("_ResetPercent", 0);
     _currScaledTime = 0;
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
-
-    //TODO: reset command buffer state correctly
-    _commandIndex = 0;
-    Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
-    Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
-    Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
 
     _currentSimDescription = simulationDescription;
     _resetCoroutine = null;
@@ -2798,6 +2797,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors) {
+    _displayColorArray.Fill(new Color(0, 0, 0, 0));
     foreach (var rect in layout) {
       Color color = colors[rect.species];
       for (int dx = 0; dx < rect.width; dx++) {
@@ -3494,11 +3494,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void displaySimulation() {
-    int leftToDraw = _currentSimDescription.toSpawn.Count;
-    int meshIndex = 0;
-    while (leftToDraw > 0) {
-      Graphics.DrawMesh(_displayMeshes[meshIndex++], transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
-      leftToDraw -= _particlesPerMesh;
+    foreach (var mesh in _displayMeshes) {
+      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
   }
 

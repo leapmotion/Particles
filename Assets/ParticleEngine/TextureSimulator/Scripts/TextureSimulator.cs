@@ -2862,7 +2862,7 @@ public class TextureSimulator : MonoBehaviour {
   private void uploadColorTexture(Texture2D texture) {
     texture.SetPixels(_displayColorArray);
     texture.Apply();
-    _particleMat.SetTexture(texture == _displayColorA ? "_ColorA" : "_ColorB", texture);
+    _displayBlock.SetTexture(texture == _displayColorA ? "_ColorA" : "_ColorB", texture);
   }
 
   private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {

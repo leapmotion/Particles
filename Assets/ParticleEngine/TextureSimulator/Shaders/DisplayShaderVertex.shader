@@ -1,9 +1,5 @@
-﻿Shader "Particle Demo/DisplayShader Instanced" {
+﻿Shader "Particle Demo/DisplayShader Vertex" {
   Properties {
-    _ColorA   ("Color A", 2D) = "white" {}
-    _ColorB   ("Color B", 2D) = "white" {}
-    _ColorLerp("Color Lerp", Range(0, 1)) = 1
-    _Lerp     ("Prev to Curr", Range(0, 1)) = 1
     _ToonRamp ("Toon Ramp", 2D) = "white" {}
     _TailRamp ("Tail Ramp", 2D) = "white" {}
     _Size     ("Size", Range(0, 0.5)) = 0.01

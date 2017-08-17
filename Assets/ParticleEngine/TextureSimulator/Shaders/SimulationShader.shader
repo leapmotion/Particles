@@ -355,6 +355,15 @@
   half4 copy(v2f_p i) : SV_Target{
     return tex2Dlod0(_CopySource, i.uv.xy);
   }
+
+  half4 randomizeInit(v2f_p i) : SV_Target{
+    float4 particle = tex2Dlod0(_ParticlePositions, i.uv.xy);
+    if (!any(particle)) {
+      particle = tex2Dlod0(_CopySource, i.uv.xy);
+    }
+    return particle;
+  }
+
   ENDCG
 
   SubShader {
@@ -421,6 +430,14 @@
       CGPROGRAM
       #pragma vertex vert_p
       #pragma fragment copy
+      ENDCG
+    }
+
+    //Pass 7: randomize init
+    Pass {
+      CGPROGRAM
+      #pragma vertex vert_p
+      #pragma fragment randomizeInit
       ENDCG
     }
   }

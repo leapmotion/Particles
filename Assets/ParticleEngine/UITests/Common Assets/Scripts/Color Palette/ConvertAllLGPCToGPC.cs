@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
-using UnityEditor.SceneManagement;
 using Leap.Unity.Query;
 using Leap.Unity.GraphicalRenderer;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
 
 public class ConvertAllLGPCToGPC : MonoBehaviour {
 
@@ -47,3 +49,5 @@ public class ConvertAllLGPCToGPC : MonoBehaviour {
   }
 
 }
+
+#endif

@@ -625,7 +625,7 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private TextAsset _ecosystemAssetToLoad;
-  
+
   [Range(0, 2)]
   [SerializeField]
   private float _spawnRadius = 1;
@@ -708,6 +708,9 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [Space]
+  [SerializeField]
+  private bool _linkToPresets = false;
+  
   [SerializeField]
   private RandomEcosystemSettings _randomEcosystemSettings;
   public RandomEcosystemSettings randomEcosystemSettings {
@@ -2541,6 +2544,21 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     RestartSimulation(_currentSimDescription, ResetBehavior.None);
+  }
+
+  public void ApplySliderValues() {
+    if (_currentSimDescription.isRandomDescription) {
+      RandomizeSimulation(_currentSimDescription.name, ResetBehavior.None);
+    } else {
+      var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), _currentSimDescription.name);
+      var presetDesc = getPresetDescription(preset);
+
+
+
+
+
+
+    }
   }
 
   /// <summary>

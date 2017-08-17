@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.Query;
+using Leap.Unity.GraphicalRenderer;
+
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEditor.SceneManagement;
-#endif
-using Leap.Unity.Query;
-using Leap.Unity.GraphicalRenderer;
 
 public class ConvertAllLGPCToGPC : MonoBehaviour {
 
@@ -33,7 +33,6 @@ public class ConvertAllLGPCToGPC : MonoBehaviour {
   //  Debug.Log("Converted!");
   //}
 
-#if UNITY_EDITOR
   private static void ConvertLGPC(ZZOLD_LeapGraphicPaletteController lgpc) {
     GameObject obj = lgpc.gameObject;
 
@@ -48,6 +47,7 @@ public class ConvertAllLGPCToGPC : MonoBehaviour {
     gpc.palette = palette;
     gpc.restingColorIdx = idx;
   }
-#endif
 
 }
+
+#endif

@@ -115,12 +115,12 @@
     float4 particle, velocity;
     sampleParticle(texcoord, particle, velocity);
 
-    calculateParticleColor(color, velocity);
-
     calculateParticleShape(v.vertex, velocity);
       
     v.vertex.xyz *= color.a;
     v.vertex.xyz += particle.xyz;
+
+    calculateParticleColor(color, velocity);
 
     v2f o;
     o.position = UnityObjectToClipPos(v.vertex);

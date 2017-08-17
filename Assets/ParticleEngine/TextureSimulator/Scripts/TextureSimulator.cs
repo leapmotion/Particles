@@ -968,6 +968,30 @@ public class TextureSimulator : MonoBehaviour {
 
   public System.Action OnPresetLoaded;
 
+  public RenderTexture positionTexture0 {
+    get {
+      return _positionSrc;
+    }
+  }
+
+  public RenderTexture positionTexture1 {
+    get {
+      return _positionDst;
+    }
+  }
+
+  public RenderTexture velocityTexture0 {
+    get {
+      return _velocitySrc;
+    }
+  }
+
+  public RenderTexture velocityTexture1 {
+    get {
+      return _velocityDst;
+    }
+  }
+
   public float simulationAge {
     get {
       return _currSimulationTime;

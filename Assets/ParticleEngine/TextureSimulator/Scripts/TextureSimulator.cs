@@ -1147,7 +1147,7 @@ public class TextureSimulator : MonoBehaviour {
 	Nova,
 	EnergyConserving,
 	Capillary,
-	NewTest,
+	Worms,
     TEST_OneParticle,
     TEST_TwoParticles,
     TEST_ThreeParticles,
@@ -1730,96 +1730,62 @@ public class TextureSimulator : MonoBehaviour {
 
 
    //---------------------------------------------
-    // New Test
+    // Worms
     //---------------------------------------------
-    else if (preset == EcosystemPreset.NewTest) 
+    else if (preset == EcosystemPreset.Worms) 
 	{
-		currentSimulationSpeciesCount = 4;
-		particlesToSimulate = 40;
-
-		colors[0] = new Color( 0.9f, 0.2f, 0.2f );
-		colors[1] = new Color( 0.2f, 0.9f, 0.2f );
-		colors[2] = new Color( 0.2f, 0.2f, 0.9f );
-		colors[3] = new Color( 0.9f, 0.4f, 0.2f );
-
-		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
-		{
-        	speciesData[s] = new Vector3(0.1f, 1, 0.1f);
-
-			float epsilon = 0.0001f; //Alex: this is a bandaid for a side effect
-
-			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
-			{
-				socialData[s, o] = new Vector2(0.0f, epsilon);
-			}
-		}
-
-		float nextLove = 0.001f;
-		float nextRange = 0.5f;
-
-		socialData[0, 1] = new Vector2(nextLove, nextRange);
-		socialData[1, 2] = new Vector2(nextLove, nextRange);
-		socialData[2, 0] = new Vector2(nextLove, nextRange);
-		socialData[3, 0] = new Vector2(nextLove, nextRange);
-
-		//particlePositions[0] = new Vector3(-0.2f, -0.17f, 0.0f);
-		//particlePositions[1] = new Vector3(0.2f, -0.17f, 0.0f);
-		//particlePositions[2] = new Vector3(0.0f, 0.20f, 0.0f);
-		//particlePositions[3] = new Vector3(0.0f, 0.20f, 0.0f);
-
-		float r = 0.3f;
-		for (int p = 0; p < particlesToSimulate; p++) 
-		{
-			float x = -r * 0.5f + Random.value * r;
-			float y = -r * 0.5f + Random.value * r;
-			float z = -r * 0.5f + Random.value * r;
-
-			particlePositions	[p] = new Vector3( x, y, z );
-			particleSpecies		[p] = p % currentSimulationSpeciesCount;
-			particleVelocities	[p] = Vector3.zero;
-		}
-	
-
-/*
-		currentSimulationSpeciesCount = 4;
+		currentSimulationSpeciesCount = 9;
 
 		particlesToSimulate = 1000;
 
-		colors[0] = new Color( 0.9f, 0.2f, 0.2f );
-		colors[1] = new Color( 0.2f, 0.9f, 0.2f );
-		colors[2] = new Color( 0.2f, 0.2f, 0.9f );
-		colors[3] = new Color( 0.9f, 0.6f, 0.2f );
+		colors[8] = new Color( 0.9f, 0.9f, 0.9f ); 
+		colors[7] = new Color( 0.9f, 0.9f, 0.0f ); 
+		colors[6] = new Color( 0.8f, 0.3f, 0.0f ); 
+		colors[5] = new Color( 0.7f, 0.4f, 0.2f ); 
+		colors[4] = new Color( 0.5f, 0.3f, 0.2f ); 
+		colors[3] = new Color( 0.4f, 0.2f, 0.2f ); 
+		colors[2] = new Color( 0.3f, 0.2f, 0.2f ); 
+		colors[1] = new Color( 0.2f, 0.2f, 0.2f ); 
+		colors[0] = new Color( 0.1f, 0.1f, 0.1f );
 
 		float drag 			= 0.1f;
 		float steps 		= 0;
 		float collision		= 0.01f;
 
-		speciesData[0] = new Vector3( drag, steps, collision );
-		speciesData[1] = new Vector3( drag, steps, collision );
-		speciesData[2] = new Vector3( drag, steps, collision );
-		speciesData[3] = new Vector3( drag, steps, collision );
+		for (int s=0; s<currentSimulationSpeciesCount; s++)
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		}
 
-		socialData[ 0, 0 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 0, 1 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 0, 2 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 0, 3 ] = new Vector2( 0.0f, 0.2f );	
+		float prevLove  =  0.002f;
+		float selfHate  = -0.01f;
+		float nextLove  =  0.005f;
 
-		socialData[ 1, 0 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 1, 1 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 1, 2 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 1, 3 ] = new Vector2( 0.0f, 0.2f );	
+		float selfRange  = 0.15f;
+		float otherRange = 0.1f;
 
-		socialData[ 2, 0 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 2, 1 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 2, 2 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 2, 3 ] = new Vector2( 0.0f, 0.2f );	
 
-		socialData[ 3, 0 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 3, 1 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 3, 2 ] = new Vector2( 0.0f, 0.2f );	
-		socialData[ 3, 3 ] = new Vector2( 0.0f, 0.2f );	
+		for (int s=0; s<currentSimulationSpeciesCount; s++)
+		{
+			for (int o=0; o<currentSimulationSpeciesCount; o++)
+			{
+				socialData[ s, o ] = new Vector2( 0.0f, otherRange );	
+			}
 
-		float r = 0.3f;
+			int prev = s - 1;
+			int next = s + 1;
+
+			if ( prev < 0 ) { prev = currentSimulationSpeciesCount - 1; }
+			if ( next > currentSimulationSpeciesCount - 1 ) { prev = 0; }
+
+			socialData[ s, s 	] = new Vector2( selfHate,	selfRange 	);	
+			socialData[ s, prev ] = new Vector2( prevLove, 	otherRange 	);	
+			socialData[ s, next ] = new Vector2( nextLove, 	otherRange 	);	
+		}
+
+
+		float circleRadius = 1.0f;
+		float r = 0.7f;
      	for (int p = 0; p < particlesToSimulate; p++) 
 		{
 			float x = -r * 0.5f + Random.value * r;
@@ -1828,9 +1794,22 @@ public class TextureSimulator : MonoBehaviour {
 
 			particlePositions	[p] = new Vector3( x, y, z );
 			particleVelocities	[p] = Vector3.zero;
-			particleSpecies		[p] = p % 4; 
+			particleSpecies		[p] = p % currentSimulationSpeciesCount; 
+
+
+
+
+			float fraction = (float)p / (float)particlesToSimulate;
+			float radian = fraction * Mathf.PI * 2.0f;
+
+			Vector3 right = Vector3.right 	* Mathf.Sin( radian );
+			Vector3 up    = Vector3.up    	* Mathf.Cos( radian );
+			Vector3 front = Vector3.forward	* 0.01f  * Random.value;
+
+			particlePositions	[p] = circleRadius * right + circleRadius * up + front;
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % currentSimulationSpeciesCount; 
 		}	
-*/
 	}
 
 

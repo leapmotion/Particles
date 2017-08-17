@@ -1,5 +1,8 @@
 ﻿Shader "Particle Demo/DisplayShader Instanced" {
   Properties {
+    _ColorA   ("Color A", 2D) = "white" {}
+    _ColorB   ("Color B", 2D) = "white" {}
+    _ColorLerp("Color Lerp", Range(0, 1)) = 1
     _Lerp     ("Prev to Curr", Range(0, 1)) = 1
     _ToonRamp ("Toon Ramp", 2D) = "white" {}
     _TailRamp ("Tail Ramp", 2D) = "white" {}
@@ -14,14 +17,12 @@
   #pragma multi_compile _ ENABLE_INTERPOLATION
   #pragma multi_compile FISH_TAIL SQUASH_TAIL
   #pragma multi_compile _ COLOR_LERP
-  #pragma multi_compile_instancing
-  #pragma instancing_options assumeuniformscaling
   #pragma target 2.0
 
   struct appdata {
     float4 vertex : POSITION;
     float3 normal : NORMAL;
-    UNITY_VERTEX_INPUT_INSTANCE_ID
+    float4 texcoord : TEXCOORD0;
   };
 
   struct v2f {
@@ -39,6 +40,9 @@
   sampler2D _TailRamp;
   sampler2D _ToonRamp;
 
+  sampler2D _ColorA;
+  sampler2D _ColorB;
+
   uint _InstanceOffset;
 
   half _Lerp;
@@ -49,18 +53,6 @@
   half _Size;
   half _TrailLength;
   half _Brightness;
-
-  UNITY_INSTANCING_CBUFFER_START(MyProperties)
-  UNITY_DEFINE_INSTANCED_PROP(half4, _Uv)
-
-#ifdef COLOR_LERP
-  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorA)
-  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorB)
-#else
-  UNITY_DEFINE_INSTANCED_PROP(half4, _ColorA)
-#endif
-  
-  UNITY_INSTANCING_CBUFFER_END
 
   float nrand(float2 n) {
     return frac(sin(dot(n.xy, float2(12.9898, 78.233)))* 43758.5453);
@@ -107,23 +99,22 @@
 
     float squash = sqrt(1.0 / (1.0 + velLength));
     vertex.xyz *= squash;
-    vertex.xyz += velocity.xyz * dot(velocity.xyz, v.vertex.xyz) / velLength;
+    vertex.xyz += velocity.xyz * dot(velocity.xyz, vertex.xyz) / velLength;
 #endif
   }
 
-  v2f vert(appdata v) {
-    UNITY_SETUP_INSTANCE_ID(v);
+  int _Threshold;
 
-    half4 texcoord = UNITY_ACCESS_INSTANCED_PROP(_Uv);
+  v2f vert(appdata v) {
+    float4 texcoord = v.texcoord;
 
 #ifdef COLOR_LERP
-    half4 colorA = UNITY_ACCESS_INSTANCED_PROP(_ColorA);
-    half4 colorB = UNITY_ACCESS_INSTANCED_PROP(_ColorB);
+    half4 colorA = tex2Dlod(_ColorA, v.texcoord);
+    half4 colorB = tex2Dlod(_ColorB, v.texcoord);
     half4 color = lerp(colorA, colorB, _ColorLerp);
 #else
-    half4 color = UNITY_ACCESS_INSTANCED_PROP(_ColorA);
+    half4 color = tex2Dlod(_ColorA, v.texcoord);
 #endif
-    
 
     float4 particle, velocity;
     sampleParticle(texcoord, particle, velocity);
@@ -147,7 +138,7 @@
 
     NdotL = tex2D(_ToonRamp, float2(NdotL * 0.5 + 0.5, 0));
 
-    return i.color * NdotL;
+    return i.color;// *NdotL;
   }
   ENDCG
 

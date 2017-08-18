@@ -16,6 +16,10 @@ public class GraphicPaletteController : MonoBehaviour {
   private bool _paletteWasNull = true;
   private Color _targetColor;
 
+  [Header("Palette Filter")]
+
+  public PaletteControllerFilter filter = null;
+
   [Header("Palette Colors")]
 
   public int restingColorIdx;
@@ -47,17 +51,26 @@ public class GraphicPaletteController : MonoBehaviour {
   protected virtual void Update() {
     if (palette == null) return;
     if (graphic == null) return;
-
-    if (!Application.isPlaying) {
-      setColor(restingColorIdx);
-      return;
+    
+    if (Application.isPlaying) {
+      _targetColor = updateTargetColor();
+    }
+    else {
+      _targetColor = palette[restingColorIdx];
     }
 
-    _targetColor = updateTargetColor();
+    if (filter != null) {
+      _targetColor = filter.FilterGraphicPaletteTargetColor(_targetColor);
+    }
 
-    Color curColor = getColor();
-    if (curColor != _targetColor) {
-      setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
+    if (Application.isPlaying) {
+      Color curColor = getColor();
+      if (curColor != _targetColor) {
+        setColor(Color.Lerp(curColor, _targetColor, colorChangeSpeed * Time.deltaTime));
+      }
+    }
+    else {
+      setColor(_targetColor);
     }
   }
 

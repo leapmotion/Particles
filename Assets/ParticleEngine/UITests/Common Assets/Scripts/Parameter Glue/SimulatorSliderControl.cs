@@ -38,7 +38,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     outputFormat = "F2";
   }
 
-  void Awake() {
+  protected virtual void Awake() {
     simulator.OnEcosystemEndedTransition += onEcosystemEndedTransition;
 
     slider.HorizontalSlideEvent += onSlideEvent;
@@ -63,7 +63,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     simulator.ApplySliderValues();
   }
 
-  void Update() {
+  protected virtual void Update() {
     if (_firstUpdate) {
       refreshSimValue();
 

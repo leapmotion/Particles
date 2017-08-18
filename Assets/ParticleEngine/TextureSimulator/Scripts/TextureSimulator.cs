@@ -561,6 +561,10 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private float _resetRange = 1;
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetHeadRange = 0.6f;
+
   [SerializeField]
   private AnimationCurve _resetSocialCurve;
 
@@ -2702,6 +2706,7 @@ public class TextureSimulator : MonoBehaviour {
         float startTime = Time.time;
         float endTime = Time.time + _resetTime;
         bool hasUploadedNewSocialMesh = false;
+        float headRadiusAtStart = _headRadius;
         while (Time.time < endTime) {
           float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
           float resetPercent = _resetSocialCurve.Evaluate(percent);
@@ -2709,6 +2714,10 @@ public class TextureSimulator : MonoBehaviour {
 
           if (!hasUploadedNewSocialMesh || isIncreasingParticleCount) {
             _displayBlock.SetFloat("_ColorLerp", resetPercent);
+          }
+
+          if (isIncreasingParticleCount) {
+            _headRadius = Mathf.Lerp(headRadiusAtStart, _resetHeadRange, resetPercent);
           }
 
           float socialPercent = _resetSocialCurve.Evaluate(percent);

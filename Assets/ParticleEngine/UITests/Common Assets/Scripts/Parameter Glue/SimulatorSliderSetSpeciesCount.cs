@@ -21,4 +21,9 @@ public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
     simulatorSetters.SetSpeciesCount(sliderValue);
   }
 
+  protected override bool getShouldRefreshWithSimulatorValue(out float value) {
+    value = simulatorSetters.GetSpeciesCount();
+    return true;
+  }
+
 }

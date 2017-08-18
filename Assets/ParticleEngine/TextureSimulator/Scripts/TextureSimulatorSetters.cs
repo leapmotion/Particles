@@ -5,10 +5,14 @@ public class TextureSimulatorSetters : MonoBehaviour {
   [SerializeField]
   private Material _skybox;
 
-  private TextureSimulator _sim;
-
-  void Awake() {
-    _sim = GetComponent<TextureSimulator>();
+  private TextureSimulator _backingSim;
+  private TextureSimulator _sim {
+    get {
+      if (_backingSim == null) {
+        _backingSim = GetComponent<TextureSimulator>();
+      }
+      return _backingSim;
+    }
   }
 
   public void SetEcosystem(string name) {
@@ -73,6 +77,10 @@ public class TextureSimulatorSetters : MonoBehaviour {
 
   public void SetSpeciesCount(float count) {
     _sim.randomEcosystemSettings.speciesCount = Mathf.RoundToInt(count);
+  }
+
+  public float GetSpeciesCount() {
+    return _sim.currentSpeciesCount;
   }
 
   public void SetParticleCount(int count) {

@@ -31,9 +31,14 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
 
   void Awake() {
-    maybeRefreshSimValue();
+    simulator.OnPresetLoaded = onPresetLoaded;
 
     slider.HorizontalSlideEvent += onSlideEvent;
+  }
+
+  private void onPresetLoaded() {
+    Debug.Log("Species loaded");
+    maybeRefreshSimValue();
   }
 
   private void onSlideEvent(float value) {

@@ -967,6 +967,8 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   public System.Action OnPresetLoaded;
+  public System.Action OnEcosystemBeginTransition;
+  public System.Action OnEcosystemEndedTransition;
 
   public RenderTexture positionTexture0 {
     get {
@@ -2633,6 +2635,10 @@ public class TextureSimulator : MonoBehaviour {
 
   private Coroutine _resetCoroutine;
   private IEnumerator restartCoroutine(SimulationDescription simulationDescription, ResetBehavior resetBehavior) {
+    if (OnEcosystemBeginTransition != null) {
+      OnEcosystemBeginTransition();
+    }
+
     if (_currentSimDescription == null) {
       resetBehavior = ResetBehavior.ResetPositions;
     }
@@ -2746,6 +2752,10 @@ public class TextureSimulator : MonoBehaviour {
 
     _currentSimDescription = simulationDescription;
     _resetCoroutine = null;
+
+    if (OnEcosystemEndedTransition != null) {
+      OnEcosystemEndedTransition();
+    }
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {

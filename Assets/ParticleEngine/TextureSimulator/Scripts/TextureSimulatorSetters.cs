@@ -114,16 +114,13 @@ public class TextureSimulatorSetters : MonoBehaviour {
   public float GetMaxRange() {
     return _sim.randomEcosystemSettings.maxSocialRange;
   }
-
-  private float _dragDiff = -1;
+  
   public void SetDrag(float drag) {
-    if (_dragDiff < 0F) _dragDiff = _sim.randomEcosystemSettings.maxDrag - _sim.randomEcosystemSettings.minDrag;
-    _sim.randomEcosystemSettings.minDrag = Mathf.Clamp01(drag - _dragDiff * 0.5f);
-    _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + _dragDiff * 0.5f);
+    _sim.randomEcosystemSettings.dragCenter = drag;
   }
 
   public float GetDrag() {
-    return _sim.randomEcosystemSettings.minDrag + _sim.randomEcosystemSettings.maxDrag / 2F;
+    return _sim.randomEcosystemSettings.dragCenter;
   }
 
   public void SetParticleSize(float particleSize) {

@@ -767,17 +767,20 @@ public class TextureSimulator : MonoBehaviour {
       set { _maxSocialRange = value; }
     }
 
-    [MinMax(0, 1)]
+    [Range(0, 1)]
     [SerializeField]
-    private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-    public float minDrag {
-      get { return _dragRange.x; }
-      set { _dragRange.x = value; }
+    private float _dragCenter = 0.175f;
+    public float dragCenter {
+      get { return _dragCenter; }
+      set { _dragCenter = value; }
     }
 
-    public float maxDrag {
-      get { return _dragRange.y; }
-      set { _dragRange.y = value; }
+    [Range(0, 0.5f)]
+    [SerializeField]
+    private float _dragSpread = 0.125f;
+    public float dragSpread {
+      get { return _dragSpread; }
+      set { _dragSpread = value; }
     }
 
     [MinMax(0, 0.05f)]
@@ -2399,7 +2402,7 @@ public class TextureSimulator : MonoBehaviour {
     Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
-        drag = Random.Range(setting.minDrag, setting.maxDrag),
+        drag = Mathf.Clamp01(Random.Range(setting.dragCenter - setting.dragSpread, setting.dragCenter + setting.dragSpread)),
         forceSteps = Mathf.FloorToInt(Random.Range(0.0f, setting.maxForceSteps)),
         collisionForce = Random.Range(setting.minCollision, setting.maxCollision)
       };
@@ -2611,7 +2614,7 @@ public class TextureSimulator : MonoBehaviour {
       float forceFactor = _randomEcosystemSettings.maxSocialForce / maxForce;
       float rangeFactor = _randomEcosystemSettings.maxSocialRange / maxRange;
       float stepFactor = _randomEcosystemSettings.maxForceSteps / maxSteps;
-      float dragFactor = (_randomEcosystemSettings.maxDrag + _randomEcosystemSettings.minDrag) * 0.5f / maxDrag;
+      float dragFactor = _randomEcosystemSettings.dragCenter / maxDrag;
 
       for (int i = 0; i < presetDesc.speciesData.Length; i++) {
         for (int j = 0; j < presetDesc.speciesData.Length; j++) {
@@ -2870,8 +2873,7 @@ public class TextureSimulator : MonoBehaviour {
     _randomEcosystemSettings.maxSocialForce = maxForce;
     _randomEcosystemSettings.maxSocialRange = maxRange;
     _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
-    _randomEcosystemSettings.minDrag = maxDrag;
-    _randomEcosystemSettings.maxDrag = maxDrag;
+    _randomEcosystemSettings.dragCenter = maxDrag;
   }
 
   private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {

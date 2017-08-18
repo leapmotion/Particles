@@ -20,6 +20,7 @@ public class SimulatorSliderSetMaxForceSteps : SimulatorSliderControl {
   }
 
   protected override float GetSimulatorValue() {
+    Debug.Log("Got sim value, it was " + simulatorSetters.GetMaxForceSteps());
     return simulatorSetters.GetMaxForceSteps();
   }
 

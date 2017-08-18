@@ -29,6 +29,8 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
   private SliderRefreshMode _refreshMode = SliderRefreshMode.EveryUpdate;
 
+  private bool _firstUpdate = true;
+
   protected override void Reset() {
     base.Reset();
 
@@ -62,6 +64,12 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
 
   void Update() {
+    if (_firstUpdate) {
+      refreshSimValue();
+
+      _firstUpdate = false;
+    }
+
     if (_refreshMode == SliderRefreshMode.EveryUpdate) {
       refreshSimValue();
     }

@@ -40,6 +40,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     simulator.OnEcosystemEndedTransition += onEcosystemEndedTransition;
 
     slider.HorizontalSlideEvent += onSlideEvent;
+    slider.OnUnpress += onUnpress;
   }
 
   void Start() {
@@ -56,6 +57,10 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     value = filterSliderValue(value);
 
     SetSimulatorValue(value);
+  }
+
+  private void onUnpress() {
+    simulator.ApplySliderValues();
   }
 
   void Update() {

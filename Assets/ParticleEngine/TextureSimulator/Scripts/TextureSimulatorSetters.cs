@@ -88,7 +88,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   }
 
   public int GetParticleCount() {
-    return _sim.currentSimulationDescription.toSpawn.Count;
+    return _sim.randomEcosystemSettings.particleCount;
   }
 
   public void SetMaxForce(float maxForce) {

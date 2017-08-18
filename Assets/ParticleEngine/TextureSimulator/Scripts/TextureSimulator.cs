@@ -2598,10 +2598,10 @@ public class TextureSimulator : MonoBehaviour {
       var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), _currentSimDescription.name);
       var presetDesc = getPresetDescription(preset);
 
-      float maxForce = 0;
-      float maxRange = 0;
-      float maxSteps = 0;
-      float maxDrag = 0;
+      float maxForce = float.Epsilon;
+      float maxRange = float.Epsilon;
+      float maxSteps = float.Epsilon;
+      float maxDrag = float.Epsilon;
       for (int i = 0; i < presetDesc.speciesData.Length; i++) {
         for (int j = 0; j < presetDesc.speciesData.Length; j++) {
           maxForce = Mathf.Max(maxForce, presetDesc.socialData[i, j].socialForce);

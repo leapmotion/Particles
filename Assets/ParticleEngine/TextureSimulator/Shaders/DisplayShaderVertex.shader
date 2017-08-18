@@ -118,7 +118,7 @@
 
     calculateParticleShape(v.vertex, velocity);
       
-    v.vertex.xyz *= color.a;
+    //v.vertex.xyz *= color.a;
     v.vertex.xyz += particle.xyz;
 
     calculateParticleColor(color, velocity);

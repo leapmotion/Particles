@@ -41,9 +41,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
 
     slider.HorizontalSlideEvent += onSlideEvent;
     slider.OnUnpress += onUnpress;
-  }
 
-  void Start() {
     _refreshMode = GetRefreshMode();
   }
 

@@ -80,7 +80,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   }
 
   public float GetSpeciesCount() {
-    return _sim.currentSpeciesCount;
+    return _sim.randomEcosystemSettings.speciesCount;
   }
 
   public void SetParticleCount(int count) {

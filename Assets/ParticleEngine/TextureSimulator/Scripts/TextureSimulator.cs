@@ -978,6 +978,8 @@ public class TextureSimulator : MonoBehaviour {
   public System.Action OnEcosystemBeginTransition;
   public System.Action OnEcosystemEndedTransition;
 
+  public bool isPerformingTransition { get; private set; }
+
   public RenderTexture positionTexture0 {
     get {
       return _positionSrc;
@@ -1071,12 +1073,6 @@ public class TextureSimulator : MonoBehaviour {
     } finally {
       colors.Clear();
       Pool<List<Color>>.Recycle(colors);
-    }
-  }
-
-  public int currentSpeciesCount {
-    get {
-      return _currentSimDescription.toSpawn.Query().CountUnique(t => t.species);
     }
   }
 
@@ -2597,7 +2593,7 @@ public class TextureSimulator : MonoBehaviour {
     if (_randomEcosystemSettings.particleCount != _currentSimDescription.toSpawn.Count) {
       resetBehavior = ResetBehavior.SmoothTransition;
     }
-    if (_randomEcosystemSettings.speciesCount != currentSpeciesCount) {
+    if (_randomEcosystemSettings.speciesCount != _currentSimDescription.toSpawn.Query().CountUnique(t => t.species)) {
       resetBehavior = ResetBehavior.SmoothTransition;
     }
 
@@ -2659,6 +2655,8 @@ public class TextureSimulator : MonoBehaviour {
 
   private Coroutine _resetCoroutine;
   private IEnumerator restartCoroutine(SimulationDescription simulationDescription, ResetBehavior resetBehavior) {
+    isPerformingTransition = true;
+
     if (OnEcosystemBeginTransition != null) {
       OnEcosystemBeginTransition();
     }
@@ -2784,6 +2782,8 @@ public class TextureSimulator : MonoBehaviour {
     if (OnEcosystemEndedTransition != null) {
       OnEcosystemEndedTransition();
     }
+
+    isPerformingTransition = false;
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {

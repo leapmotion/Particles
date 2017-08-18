@@ -9,6 +9,6 @@ public class SetTextGraphicWithSpeciesCount : SetTextGraphicWithSimulatorParam {
   public override string GetTextValue() {
     if (simulator == null) return "(Simulation not configured)";
 
-    return simulator.currentSpeciesCount.ToString();
+    return simulator.randomEcosystemSettings.speciesCount.ToString();
   }
 }

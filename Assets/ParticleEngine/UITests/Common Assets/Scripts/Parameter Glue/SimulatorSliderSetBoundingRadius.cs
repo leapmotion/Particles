@@ -5,8 +5,16 @@ using UnityEngine;
 
 public class SimulatorSliderSetBoundingRadius : SimulatorSliderControl {
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetBoundingRadius(sliderValue);
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetBoundingRadius();
+  }
+
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
   }
 
 }

@@ -5,8 +5,16 @@ using UnityEngine;
 
 public class SimulatorSliderSetDrag : SimulatorSliderControl {
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetDrag(sliderValue);
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetDrag();
+  }
+
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
   }
 
 }

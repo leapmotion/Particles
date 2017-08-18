@@ -17,13 +17,15 @@ public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
     return Mathf.Round(slider.HorizontalSliderValue);
   }
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetSpeciesCount(sliderValue);
   }
 
-  protected override bool getShouldRefreshWithSimulatorValue(out float value) {
-    value = simulatorSetters.GetSpeciesCount();
-    return true;
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetSpeciesCount();
   }
 
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
+  }
 }

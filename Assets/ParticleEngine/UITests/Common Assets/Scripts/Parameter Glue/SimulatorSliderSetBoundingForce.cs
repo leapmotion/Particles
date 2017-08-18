@@ -5,8 +5,16 @@ using UnityEngine;
 
 public class SimulatorSliderSetBoundingForce : SimulatorSliderControl {
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetBoundingForce(sliderValue);
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetBoundingForce();
+  }
+
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
   }
 
 }

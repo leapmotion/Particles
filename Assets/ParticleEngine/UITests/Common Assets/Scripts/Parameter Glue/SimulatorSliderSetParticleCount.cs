@@ -9,7 +9,15 @@ public class SimulatorSliderSetParticleCount : SimulatorSliderControl {
     return Mathf.RoundToInt(sliderValue);
   }
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetParticleCount();
+  }
+
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetParticleCount((int)sliderValue);
   }
 

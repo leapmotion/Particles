@@ -87,16 +87,32 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.particleCount = count;
   }
 
+  public int GetParticleCount() {
+    return _sim.currentSimulationDescription.toSpawn.Count;
+  }
+
   public void SetMaxForce(float maxForce) {
     _sim.randomEcosystemSettings.maxSocialForce = maxForce;
+  }
+
+  public float GetMaxForce() {
+    return _sim.randomEcosystemSettings.maxSocialForce;
   }
 
   public void SetMaxForceSteps(float maxForceSteps) {
     _sim.randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxForceSteps);
   }
 
+  public float GetMaxForceSteps() {
+    return _sim.randomEcosystemSettings.maxForceSteps;
+  }
+
   public void SetMaxRange(float maxRange) {
     _sim.randomEcosystemSettings.maxSocialRange = maxRange;
+  }
+
+  public float GetMaxRange() {
+    return _sim.randomEcosystemSettings.maxSocialRange;
   }
 
   private float _dragDiff = -1;
@@ -106,28 +122,40 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + _dragDiff * 0.5f);
   }
 
-  public float GetParticleSize() {
-    return _sim.displayProperties.GetFloat("_Size");
+  public float GetDrag() {
+    return _sim.randomEcosystemSettings.minDrag + _sim.randomEcosystemSettings.maxDrag / 2F;
   }
 
   public void SetParticleSize(float particleSize) {
     _sim.displayProperties.SetFloat("_Size", particleSize);
   }
 
-  public float GetTrailSize() {
-    return _sim.displayProperties.GetFloat("_TrailLength");
+  public float GetParticleSize() {
+    return _sim.displayProperties.GetFloat("_Size");
   }
 
   public void SetTrailSize(float trailSize) {
     _sim.displayProperties.SetFloat("_TrailLength", trailSize);
   }
 
+  public float GetTrailSize() {
+    return _sim.displayProperties.GetFloat("_TrailLength");
+  }
+
   public void SetBoundingForce(float boundingForce) {
     _sim.fieldForce = boundingForce;
   }
 
+  public float GetBoundingForce() {
+    return _sim.fieldForce;
+  }
+
   public void SetBoundingRadius(float boundingRadius) {
     _sim.fieldRadius = boundingRadius;
+  }
+
+  public float GetBoundingRadius() {
+    return _sim.fieldRadius;
   }
 
   public void SetTimescale(float timescale) {
@@ -151,6 +179,10 @@ public class TextureSimulatorSetters : MonoBehaviour {
 
   public void SetColorMode(TextureSimulator.ColorMode mode) {
     _sim.colorMode = mode;
+  }
+
+  public TextureSimulator.ColorMode GetColorMode() {
+    return _sim.colorMode;
   }
 
   public void SetSkyRed(float red) {

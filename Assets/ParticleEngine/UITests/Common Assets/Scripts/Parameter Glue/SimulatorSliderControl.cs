@@ -22,6 +22,12 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
       onSlideEvent(newValue);
     }
   }
+  
+  public enum SliderRefreshMode {
+    EveryUpdate,
+    OnEcosystemLoad
+  }
+  private SliderRefreshMode _refreshMode = SliderRefreshMode.EveryUpdate;
 
   protected override void Reset() {
     base.Reset();
@@ -31,53 +37,53 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
 
   void Awake() {
-    simulator.OnPresetLoaded = onPresetLoaded;
+    simulator.OnEcosystemEndedTransition += onEcosystemEndedTransition;
 
     slider.HorizontalSlideEvent += onSlideEvent;
   }
 
-  private void onPresetLoaded() {
-    Debug.Log("Species loaded");
-    maybeRefreshSimValue();
+  void Start() {
+    _refreshMode = GetRefreshMode();
+  }
+
+  private void onEcosystemEndedTransition() {
+    if (_refreshMode == SliderRefreshMode.OnEcosystemLoad) {
+      refreshSimValue();
+    }
   }
 
   private void onSlideEvent(float value) {
     value = filterSliderValue(value);
 
-    setSimulatorValue(value);
+    SetSimulatorValue(value);
   }
 
   void Update() {
-    maybeRefreshSimValue();
+    if (_refreshMode == SliderRefreshMode.EveryUpdate) {
+      refreshSimValue();
+    }
 
     if (textOutput != null) {
       textOutput.text = slider.HorizontalSliderValue.ToString(outputFormat);
     }
   }
 
-  private void maybeRefreshSimValue() {
+  private void refreshSimValue() {
     float sliderValue = slider.HorizontalSliderValue;
-    float simValue;
-    bool shouldRefresh = getShouldRefreshWithSimulatorValue(out simValue);
-    if (shouldRefresh && sliderValue != simValue) {
+    float simValue = GetSimulatorValue();
+    if (sliderValue != simValue) {
       slider.HorizontalSliderValue = simValue;
     }
-  }
-
-  /// <summary>
-  /// Implement this method to return whether the slider should refresh its own value
-  /// with the simulation's value. The method must also provide what the simulation's
-  /// value is.
-  /// </summary>
-  protected virtual bool getShouldRefreshWithSimulatorValue(out float value) {
-    value = 0F;
-    return false;
   }
 
   protected virtual float filterSliderValue(float sliderValue) {
     return sliderValue;
   }
 
-  protected abstract void setSimulatorValue(float sliderValue);
+  protected abstract void SetSimulatorValue(float sliderValue);
+
+  protected abstract float GetSimulatorValue();
+
+  protected abstract SliderRefreshMode GetRefreshMode();
 
 }

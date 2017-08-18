@@ -2733,7 +2733,7 @@ public class TextureSimulator : MonoBehaviour {
 
             Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
             randomTexture.filterMode = FilterMode.Point;
-            randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _spawnRadius));
+            randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _fieldRadius));
             randomTexture.Apply();
 
             blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);

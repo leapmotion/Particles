@@ -65,7 +65,7 @@ public class LeapGraphicButtonPaletteController : GraphicPaletteController {
 
   protected override Color updateTargetColor() {
     var targetColor = restingColor;
-
+    
     if (!_pressPulsator.isResting) {
       if (_pressPulsator.value < 1.0F) {
         targetColor = Color.Lerp(restingColor, pressedColor, _pressPulsator.value);

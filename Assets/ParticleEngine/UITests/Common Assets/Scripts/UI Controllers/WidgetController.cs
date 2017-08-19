@@ -39,7 +39,7 @@ public class WidgetController : MonoBehaviour {
   private bool _aligningWidgetVisual = false;
   private Pose _widgetVisualTargetPose;
 
-  private bool _firstFixedUpdate = true;
+  //private bool _firstFixedUpdate = true;
 
   void Start() {
     _panelWidgetDeltaPos = panelPivot.position - widget.rigidbody.position;

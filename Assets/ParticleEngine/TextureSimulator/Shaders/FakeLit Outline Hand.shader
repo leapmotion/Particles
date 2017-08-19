@@ -61,7 +61,7 @@
   ENDCG
 
 	SubShader {
-		Tags { "Queue"="Transparent" "RenderType"="Transparent" }
+		Tags { "Queue"="Transparent" "RenderType"="Opaque" }
 		LOD 100
 
     Pass {

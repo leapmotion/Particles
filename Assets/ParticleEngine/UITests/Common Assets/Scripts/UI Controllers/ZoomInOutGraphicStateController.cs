@@ -73,16 +73,17 @@ public class ZoomInOutGraphicStateController : MonoBehaviour {
     }
   }
   private void setGraphicState(bool enabled, LeapGraphic graphic) {
-    var alpha = enabled ? 1F : 0F;
+    //var alpha = enabled ? 1F : 0F;
 
-    if (graphic is LeapTextGraphic) {
-      var text = graphic as LeapTextGraphic;
-      text.color = text.color.WithAlpha(alpha);
-    }
-    else {
-      //graphic.SetRuntimeTint(graphic.GetRuntimeTint().WithAlpha(alpha));
-      graphic.enabled = enabled;
-    }
+    graphic.enabled = enabled;
+
+    //if (graphic is LeapTextGraphic) {
+    //  var text = graphic as LeapTextGraphic;
+    //  text.color = text.color.WithAlpha(alpha);
+    //}
+    //else {
+    //  //graphic.SetRuntimeTint(graphic.GetRuntimeTint().WithAlpha(alpha));
+    //}
 
   }
 

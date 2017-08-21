@@ -51,14 +51,29 @@ public class TextureSimulatorSetters : MonoBehaviour {
 	  case "EnergyConserving":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.EnergyConserving);
         break;
-      case "TEST_OneParticle":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_OneParticle);
+       case "Tutorial_2_Attract":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Attract);
         break;
-      case "TEST_TwoParticles":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_TwoParticles);
+       case "Tutorial_2_Repel":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Repel);
         break;
-      case "TEST_ThreeParticles":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeParticles);
+       case "Tutorial_2_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Chase);
+        break;
+      case "Tutorial_3_Attract_Line":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Line);
+        break;
+      case "Tutorial_3_Attract_Loop":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Loop);
+        break;
+      case "Tutorial_100_Attract":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Attract );
+        break;
+      case "Tutorial_100_Repel":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Repel );
+        break;
+      case "Tutorial_1000_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_1000_Chase );
         break;
       case "Comets":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);

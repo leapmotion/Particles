@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: ParticleMaterialVertex
   m_Shader: {fileID: 4800000, guid: 7aa42c6e7d4a7cb459c18b6551f00de2, type: 3}
-  m_ShaderKeywords: COLOR_SPECIES ENABLE_INTERPOLATION SQUASH_TAIL
+  m_ShaderKeywords: COLOR_SPECIES_MAGNITUDE ENABLE_INTERPOLATION SQUASH_TAIL
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 0

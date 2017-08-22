@@ -13,6 +13,13 @@ public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
     outputFormat = "F0";
   }
 
+  protected override void Update() {
+    base.Update();
+
+    // Species count slider isn't valid while a Preset ecosystem is loaded.
+    slider.controlEnabled = simulator.currentSimulationDescription.isRandomDescription;
+  }
+
   protected override float filterSliderValue(float sliderValue) {
     return Mathf.Round(slider.HorizontalSliderValue);
   }

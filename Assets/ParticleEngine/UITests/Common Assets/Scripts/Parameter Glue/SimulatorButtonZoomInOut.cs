@@ -7,7 +7,7 @@ public class SimulatorButtonZoomInOut : SimulatorButtonControl {
 
   public ZoomInOutGraphicStateController stateController;
 
-  private float _targetScale = 1.0F;
+  public SimulationZoomController zoomController;
 
   protected override void Reset() {
     base.Reset();
@@ -18,20 +18,7 @@ public class SimulatorButtonZoomInOut : SimulatorButtonControl {
   public override void onPress() {
     stateController.ToggleState();
 
-    if (stateController.isZoomedOut) {
-      _targetScale = 0.2F;
-    }
-    else {
-      _targetScale = 1F;
-    }
-  }
-
-  void Update() {
-    float scale = simulator.transform.localScale.x;
-
-    scale = Mathf.Lerp(scale, _targetScale, 5F * Time.deltaTime);
-
-    simulator.transform.localScale = Vector3.one * scale;
+    zoomController.ToggleZoom();
   }
 
 }

@@ -75,6 +75,12 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "Tutorial_1000_Chase":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_1000_Chase );
         break;
+      case "Tutorial_3000_3_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_3_Chase );
+        break;
+      case "Tutorial_4000_Orbit":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_4000_Orbit );
+        break;
       case "Comets":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
         break;

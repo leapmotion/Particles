@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
+using Leap.Unity.Animation;
 using Leap.Unity.Interaction;
 using Leap.Unity.GraphicalRenderer;
 
@@ -14,11 +15,22 @@ public class UserTestController : MonoBehaviour {
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
   public StreamingFolder ecosystemFolder;
+  public StreamingFolder dataFolder;
+  public StreamingFolder musicFolder;
+
+  [Header("Audio Settings")]
+  public AudioSource mainAudioSource;
+  public AudioSource secondAudioSource;
+  public float transitionTime = 1;
 
   private List<string> _ecosystemPaths;
   private List<string> _scriptPaths = new List<string>();
+  private LoadData _currLoadData;
   private int _currEcosystem = -1;
   private int _currScript = 0;
+
+  private Tween _audioTween;
+  private string _currAudioPath;
 
   void Start() {
     _ecosystemPaths = Directory.GetFiles(ecosystemFolder.Path).
@@ -26,27 +38,7 @@ public class UserTestController : MonoBehaviour {
                                 OrderBy(p => p).
                                 ToList();
 
-    //foreach (var ecosystemPath in ecosystemPaths) {
-    //  string ecosystemName = Path.GetFileNameWithoutExtension(ecosystemPath);
-
-    //  var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(ecosystemPath));
-    //  sim.RestartSimulation(desc, TextureSimulator.ResetBehavior.SmoothTransition);
-    //  Debug.Log("Loaded ecosystem for " + ecosystemName);
-
-    //  for (int scriptIndex = 0; scriptIndex < 100; scriptIndex++) {
-    //    string scriptPath = Path.Combine(textFolder.Path, ecosystemName + " " + scriptIndex + ".txt");
-    //    if (!File.Exists(scriptPath)) {
-    //      scriptPath = Path.Combine(textFolder.Path, ecosystemName + " 0" + scriptIndex + ".txt");
-    //    }
-
-    //    if (!File.Exists(scriptPath)) {
-    //      continue;
-    //    }
-
-    //    Debug.Log("Loaded text for " + Path.GetFileName(scriptPath));
-    //    textLabel.text = File.ReadAllText(scriptPath);
-    //  }
-    //}
+    sim.OnEcosystemMidTransition += onSimulationTransitionMid;
   }
 
   void Update() {
@@ -63,6 +55,11 @@ public class UserTestController : MonoBehaviour {
     }
   }
 
+  [ContextMenu("Generate Example Json")]
+  private void generateExampleJson() {
+    File.WriteAllText("Example.json", JsonUtility.ToJson(new LoadData(), prettyPrint: true));
+  }
+
   public void OnNext() {
     if (_currScript == _scriptPaths.Count - 1 && _currEcosystem == _ecosystemPaths.Count - 1) {
       return;
@@ -74,7 +71,7 @@ public class UserTestController : MonoBehaviour {
       _currScript = 0;
 
       loadScripts();
-      transition(TextureSimulator.ResetBehavior.ResetPositions);
+      transition(forceReset: false);
     }
 
     updateText();
@@ -91,7 +88,7 @@ public class UserTestController : MonoBehaviour {
       loadScripts();
       _currScript = _scriptPaths.Count - 1;
 
-      transition(TextureSimulator.ResetBehavior.ResetPositions);
+      transition(forceReset: true);
     }
 
     updateText();
@@ -99,7 +96,7 @@ public class UserTestController : MonoBehaviour {
 
   public void OnRestart() {
     _currScript = 0;
-    transition(TextureSimulator.ResetBehavior.ResetPositions);
+    transition(forceReset: true);
     updateText();
   }
 
@@ -113,15 +110,77 @@ public class UserTestController : MonoBehaviour {
                              ToList();
   }
 
-  private void transition(TextureSimulator.ResetBehavior resetBehavior) {
+  private void transition(bool forceReset = false) {
+    string dataPath = Path.Combine(dataFolder.Path, Path.GetFileName(_ecosystemPaths[_currEcosystem]));
+    _currLoadData = JsonUtility.FromJson<LoadData>(File.ReadAllText(dataPath));
+
     var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(_ecosystemPaths[_currEcosystem]));
-    sim.RestartSimulation(desc, resetBehavior);
+    if (forceReset) {
+      sim.RestartSimulation(desc, TextureSimulator.ResetBehavior.ResetPositions);
+    } else {
+      sim.RestartSimulation(desc, _currLoadData.transitionBehavior);
+    }
+
+    StartCoroutine(loadAudioCoroutine());
+  }
+
+  private IEnumerator loadAudioCoroutine() {
+    if (_currLoadData.backgroundMusic == _currAudioPath) {
+      Debug.Log("Did not load audio because it was the same.");
+      yield break;
+    }
+
+    _currAudioPath = _currLoadData.backgroundMusic;
+
+    string path = Path.Combine(musicFolder.Path, _currLoadData.backgroundMusic);
+    Debug.Log("Loading audio from: " + path);
+
+    WWW www = new WWW("file://" + path);
+    yield return www;
+
+    if (www.isDone && string.IsNullOrEmpty(www.error)) {
+      secondAudioSource.clip = www.GetAudioClip(false, true, AudioType.WAV);
+      secondAudioSource.volume = 0;
+      secondAudioSource.Play();
+      secondAudioSource.loop = true;
+      Debug.Log("Loaded audio!");
+    } else {
+      secondAudioSource.clip = null;
+      Debug.Log("Failed to load audio: " + www.error);
+    }
+
+    www.Dispose();
+
+    if (_audioTween.isValid) {
+      _audioTween.Stop();
+    }
+
+    _audioTween = Tween.Single().
+                        Value(1, 0, t => mainAudioSource.volume = t).
+                        Value(0, 1, t => secondAudioSource.volume = t).
+                        OverTime(transitionTime).
+                        OnReachEnd(() => {
+                          mainAudioSource.Stop();
+                          Utils.Swap(ref mainAudioSource, ref secondAudioSource);
+                        }).
+                        Play();
   }
 
   private void updateText() {
     textLabel.text = File.ReadAllText(_scriptPaths[_currScript]);
   }
 
+  private void onSimulationTransitionMid() {
+    sim.transform.localScale = Vector3.one * _currLoadData.simulationScale;
+    sim.colorMode = _currLoadData.colorMode;
+  }
 
+  public class LoadData {
+    public TextureSimulator.ResetBehavior transitionBehavior = TextureSimulator.ResetBehavior.FadeInOut;
+    public TextureSimulator.ColorMode colorMode = TextureSimulator.ColorMode.BySpecies;
+    public float simulationScale = 1;
+    public float timeScale = 1;
+    public string backgroundMusic = "";
+  }
 
 }

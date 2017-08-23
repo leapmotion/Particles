@@ -979,6 +979,7 @@ public class TextureSimulator : MonoBehaviour {
 
   public System.Action OnPresetLoaded;
   public System.Action OnEcosystemBeginTransition;
+  public System.Action OnEcosystemMidTransition;
   public System.Action OnEcosystemEndedTransition;
 
   public bool isPerformingTransition { get; private set; }
@@ -3000,6 +3001,9 @@ public class TextureSimulator : MonoBehaviour {
         uploadColorTexture(_displayColorB);
 
         resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+        if (OnEcosystemMidTransition != null) {
+          OnEcosystemMidTransition();
+        }
         break;
       case ResetBehavior.ResetPositions:
         refillColorArrays(layout, colorArray, forceTrueAlpha: true);
@@ -3014,6 +3018,9 @@ public class TextureSimulator : MonoBehaviour {
         Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
         Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
         Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
+        if (OnEcosystemMidTransition != null) {
+          OnEcosystemMidTransition();
+        }
         break;
       case ResetBehavior.FadeInOut:
       case ResetBehavior.SmoothTransition:
@@ -3083,6 +3090,10 @@ public class TextureSimulator : MonoBehaviour {
             Graphics.CopyTexture(_socialTemp, _positionDst);
 
             DestroyImmediate(randomTexture);
+
+            if (OnEcosystemMidTransition != null) {
+              OnEcosystemMidTransition();
+            }
           }
 
           yield return null;

@@ -15,31 +15,49 @@ public class UserTestController : MonoBehaviour {
   public StreamingFolder ecosystemFolder;
 
   IEnumerator Start() {
+    while (!isButtonPressed) {
+      yield return null;
+    }
+    while (isButtonPressed) {
+      yield return null;
+    }
+
     var ecosystemPaths = Directory.GetFiles(ecosystemFolder.Path).
-                                   OrderBy(p => int.Parse(p.Split()[0])).
+                                   Where(p => p.EndsWith(".json")).
+                                   OrderBy(p => int.Parse(p.Split().Last().Replace(".json", ""))).
                                    ToList();
 
     foreach (var ecosystemPath in ecosystemPaths) {
-      string ecosystemName = ecosystemPath.Split()[1].Replace(".json", "");
+      string ecosystemName = Path.GetFileNameWithoutExtension(ecosystemPath);
 
       var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(ecosystemPath));
       sim.RestartSimulation(desc, TextureSimulator.ResetBehavior.SmoothTransition);
 
       for (int scriptIndex = 0; scriptIndex < 100; scriptIndex++) {
-        string scriptPath = scriptIndex + " " + ecosystemName + ".txt";
+        string scriptPath = Path.Combine(textFolder.Path, ecosystemName + " " + scriptIndex + ".txt");
+        if (!File.Exists(scriptPath)) {
+          scriptPath = Path.Combine(textFolder.Path, ecosystemName + " 0" + scriptIndex + ".txt");
+        }
+
         if (!File.Exists(scriptPath)) {
           continue;
         }
 
         textLabel.text = File.ReadAllText(scriptPath);
 
-        while (!nextButton.isPressed) {
+        while (!isButtonPressed) {
           yield return null;
         }
-        while (nextButton.isPressed) {
+        while (isButtonPressed) {
           yield return null;
         }
       }
+    }
+  }
+
+  private bool isButtonPressed {
+    get {
+      return nextButton.isPressed || Input.GetKey(KeyCode.F10);
     }
   }
 }

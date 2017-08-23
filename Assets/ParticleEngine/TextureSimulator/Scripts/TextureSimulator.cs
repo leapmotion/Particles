@@ -622,6 +622,9 @@ public class TextureSimulator : MonoBehaviour {
   //#######################//
   [Header("Ecosystems")]
   [SerializeField]
+  private bool _loadEcosystemOnStart = true;
+
+  [SerializeField]
   private KeyCode _saveEcosystemKey = KeyCode.F5;
 
   [SerializeField]
@@ -1096,7 +1099,7 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Awake() {
-    initDisplayMeshes();
+    initMeshes();
     _displayBlock = new MaterialPropertyBlock();
     _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorA.filterMode = FilterMode.Point;
@@ -1126,8 +1129,6 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetTexture("_SocialTemp", _socialTemp);
 
-    RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
-
     buildSimulationCommands();
 
     updateShaderData();
@@ -1135,6 +1136,10 @@ public class TextureSimulator : MonoBehaviour {
     updateKeywords();
 
     RebuildTrailTexture();
+
+    if (_loadEcosystemOnStart) {
+      RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
+    }
   }
 
   void Update() {
@@ -3252,10 +3257,6 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    if (_blitMeshInteraction == null) {
-      _blitMeshInteraction = new Mesh();
-      _blitMeshInteraction.name = "BlitMesh Interaction";
-    }
     _blitMeshInteraction.Clear();
     _blitMeshInteraction.SetVertices(verts);
     _blitMeshInteraction.SetTriangles(tris, 0, calculateBounds: true);
@@ -3300,10 +3301,6 @@ public class TextureSimulator : MonoBehaviour {
       uv0.Add(new Vector4(uvx0, uvy1, socialSteps, dragMult));
     }
 
-    if (_blitMeshParticle == null) {
-      _blitMeshParticle = new Mesh();
-      _blitMeshParticle.name = "BlitMesh Particle";
-    }
     _blitMeshParticle.Clear();
     _blitMeshParticle.SetVertices(verts);
     _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
@@ -3333,10 +3330,6 @@ public class TextureSimulator : MonoBehaviour {
     uv0.Add(new Vector4(1, 1, 0, 0));
     uv0.Add(new Vector4(0, 1, 0, 0));
 
-    if (_blitMeshQuad == null) {
-      _blitMeshQuad = new Mesh();
-      _blitMeshQuad.name = "BitMesh Quad";
-    }
     _blitMeshQuad.Clear();
     _blitMeshQuad.SetVertices(verts);
     _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
@@ -3711,7 +3704,7 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void initDisplayMeshes() {
+  private void initMeshes() {
     var particleVerts = _particleMesh.vertices;
     var particleTris = _particleMesh.triangles;
     var particleNormals = _particleMesh.normals;
@@ -3762,6 +3755,15 @@ public class TextureSimulator : MonoBehaviour {
     currMesh.SetUVs(0, uvs);
     currMesh.SetTriangles(tris, 0, calculateBounds: true);
     currMesh.UploadMeshData(markNoLogerReadable: true);
+
+    _blitMeshInteraction = new Mesh();
+    _blitMeshInteraction.name = "BlitMesh Interaction";
+
+    _blitMeshQuad = new Mesh();
+    _blitMeshQuad.name = "BitMesh Quad";
+
+    _blitMeshParticle = new Mesh();
+    _blitMeshParticle.name = "BlitMesh Particle";
   }
 
   private RenderTexture createParticleTexture() {

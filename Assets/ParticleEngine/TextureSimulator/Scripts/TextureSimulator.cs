@@ -2858,7 +2858,7 @@ public class TextureSimulator : MonoBehaviour {
   /// Restarts the simulation using a specific preset to choose the
   /// initial conditions.
   /// </summary>
-  public void RestartSimulation(EcosystemPreset preset, ResetBehavior resetBehavior = ResetBehavior.ResetPositions) {
+  public void RestartSimulation(EcosystemPreset preset, ResetBehavior resetBehavior = ResetBehavior.FadeInOut) {
     var presetDesc = getPresetDescription(preset);
     copyDescriptionToSlidersIfLinked(presetDesc);
 
@@ -3041,7 +3041,10 @@ public class TextureSimulator : MonoBehaviour {
         while (Time.time < endTime) {
           float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
           float resetPercent = _resetSocialCurve.Evaluate(percent);
-          _simulationMat.SetFloat("_ResetPercent", resetPercent);
+
+          if (resetBehavior != ResetBehavior.FadeInOut) {
+            _simulationMat.SetFloat("_ResetPercent", resetPercent);
+          }
 
           if (!hasUploadedNewSocialMesh || isIncreasingParticleCount || resetBehavior == ResetBehavior.FadeInOut) {
             _displayBlock.SetFloat("_ColorLerp", resetPercent);
@@ -3061,6 +3064,10 @@ public class TextureSimulator : MonoBehaviour {
               refillColorArrays(layout, colorArray, forceTrueAlpha: true);
               uploadColorTexture(_displayColorA);
               resetParticleTextures(layout, simulationDescription.toSpawn);
+              _commandIndex = 0;
+              Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
+              Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
+              Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
             } else if (isIncreasingParticleCount) {
               refillColorArrays(layout, colorArray, forceTrueAlpha: true);
               uploadColorTexture(_displayColorA);
@@ -3802,7 +3809,7 @@ public class TextureSimulator : MonoBehaviour {
   
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
-      RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
+      RestartSimulation(_presetEcosystemSettings.ecosystemPreset, ResetBehavior.ResetPositions);
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {

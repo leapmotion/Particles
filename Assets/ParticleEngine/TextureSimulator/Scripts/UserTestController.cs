@@ -24,7 +24,7 @@ public class UserTestController : MonoBehaviour {
 
     var ecosystemPaths = Directory.GetFiles(ecosystemFolder.Path).
                                    Where(p => p.EndsWith(".json")).
-                                   OrderBy(p => int.Parse(p.Split().Last().Replace(".json", ""))).
+                                   OrderBy(p => p).
                                    ToList();
 
     foreach (var ecosystemPath in ecosystemPaths) {
@@ -32,6 +32,7 @@ public class UserTestController : MonoBehaviour {
 
       var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(ecosystemPath));
       sim.RestartSimulation(desc, TextureSimulator.ResetBehavior.SmoothTransition);
+      Debug.Log("Loaded ecosystem for " + ecosystemName);
 
       for (int scriptIndex = 0; scriptIndex < 100; scriptIndex++) {
         string scriptPath = Path.Combine(textFolder.Path, ecosystemName + " " + scriptIndex + ".txt");
@@ -43,6 +44,7 @@ public class UserTestController : MonoBehaviour {
           continue;
         }
 
+        Debug.Log("Loaded text for " + Path.GetFileName(scriptPath));
         textLabel.text = File.ReadAllText(scriptPath);
 
         while (!isButtonPressed) {

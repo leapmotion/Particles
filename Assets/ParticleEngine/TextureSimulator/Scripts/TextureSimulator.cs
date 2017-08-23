@@ -2735,11 +2735,11 @@ public class TextureSimulator : MonoBehaviour {
   /// Restarts the simulation using a specific preset to choose the
   /// initial conditions.
   /// </summary>
-  public void RestartSimulation(EcosystemPreset preset) {
+  public void RestartSimulation(EcosystemPreset preset, ResetBehavior resetBehavior = ResetBehavior.ResetPositions) {
     var presetDesc = getPresetDescription(preset);
     copyDescriptionToSlidersIfLinked(presetDesc);
 
-    RestartSimulation(presetDesc, ResetBehavior.SmoothTransition);
+    RestartSimulation(presetDesc, resetBehavior);
 
     if (OnPresetLoaded != null) {
       OnPresetLoaded();

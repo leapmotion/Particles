@@ -50,6 +50,9 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   private void onEcosystemEndedTransition() {
     if (_refreshMode == SliderRefreshMode.OnEcosystemLoad) {
       refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value in OnEcosystemLoad: " + slider.HorizontalSliderValue);
+      }
     }
   }
 
@@ -66,12 +69,18 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   protected virtual void Update() {
     if (_firstUpdate) {
       refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value on FIRST update: " + slider.HorizontalSliderValue);
+      }
 
       _firstUpdate = false;
     }
 
     if (_refreshMode == SliderRefreshMode.EveryUpdate) {
       refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value in Update: " + slider.HorizontalSliderValue);
+      }
     }
 
     if (textOutput != null) {

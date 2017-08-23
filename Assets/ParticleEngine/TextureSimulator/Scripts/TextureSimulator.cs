@@ -2683,7 +2683,8 @@ public class TextureSimulator : MonoBehaviour {
   public enum ResetBehavior {
     None,
     SmoothTransition,
-    ResetPositions
+    ResetPositions,
+    FadeInOut,
   }
 
   [System.Serializable]
@@ -2897,15 +2898,20 @@ public class TextureSimulator : MonoBehaviour {
         Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
         Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
         break;
+      case ResetBehavior.FadeInOut:
       case ResetBehavior.SmoothTransition:
         _simulationMat.SetFloat("_ResetRange", _resetRange);
         _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
         bool isIncreasingParticleCount = simulationDescription.toSpawn.Count > _currentSimDescription.toSpawn.Count;
-        if (isIncreasingParticleCount) {
-          refillColorArrays(layout, colorArray, forceTrueAlpha: false);
+        if(resetBehavior == ResetBehavior.FadeInOut) {
+          _displayColorArray.Fill(new Color(0, 0, 0, 0));
         } else {
-          refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+          if (isIncreasingParticleCount) {
+            refillColorArrays(layout, colorArray, forceTrueAlpha: false);
+          } else {
+            refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+          }
         }
 
         //Don't upload color to A yet because we need to lerp
@@ -2920,11 +2926,11 @@ public class TextureSimulator : MonoBehaviour {
           float resetPercent = _resetSocialCurve.Evaluate(percent);
           _simulationMat.SetFloat("_ResetPercent", resetPercent);
 
-          if (!hasUploadedNewSocialMesh || isIncreasingParticleCount) {
+          if (!hasUploadedNewSocialMesh || isIncreasingParticleCount || resetBehavior == ResetBehavior.FadeInOut) {
             _displayBlock.SetFloat("_ColorLerp", resetPercent);
           }
 
-          if (isIncreasingParticleCount) {
+          if (isIncreasingParticleCount || resetBehavior == ResetBehavior.FadeInOut) {
             _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _headRadius, resetPercent);
           }
 
@@ -2934,7 +2940,11 @@ public class TextureSimulator : MonoBehaviour {
             resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
             _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
 
-            if (isIncreasingParticleCount) {
+            if (resetBehavior == ResetBehavior.FadeInOut) {
+              refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+              uploadColorTexture(_displayColorA);
+              resetParticleTextures(layout, simulationDescription.toSpawn);
+            } else if (isIncreasingParticleCount) {
               refillColorArrays(layout, colorArray, forceTrueAlpha: true);
               uploadColorTexture(_displayColorA);
             }

@@ -132,7 +132,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 7536080}
   m_LocalRotation: {x: 0.31346828, y: -0, z: -0, w: 0.94959867}
-  m_LocalPosition: {x: 0, y: 0, z: 0.3875}
+  m_LocalPosition: {x: 0, y: 0, z: 0.39567333}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1392464775}
@@ -141,7 +141,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -0.23449709}
+  m_AnchoredPosition: {x: 0, y: 0.106398135}
   m_SizeDelta: {x: 0.7, y: 0.25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7536082
@@ -563,7 +563,7 @@ MonoBehaviour:
     _entries: []
   _controlEnabled: 1
   startingPositionMode: 1
-  minMaxHeight: {x: 0, y: 0.04}
+  minMaxHeight: {x: 0, y: 0.03}
   restingHeight: 0.9
   _springForce: 0.1
   _OnPress:
@@ -2067,7 +2067,7 @@ MonoBehaviour:
     _entries: []
   _controlEnabled: 1
   startingPositionMode: 1
-  minMaxHeight: {x: 0, y: 0.04}
+  minMaxHeight: {x: 0, y: 0.03}
   restingHeight: 0.9
   _springForce: 0.1
   _OnPress:
@@ -2219,7 +2219,7 @@ MonoBehaviour:
     _entries: []
   _controlEnabled: 1
   startingPositionMode: 1
-  minMaxHeight: {x: 0, y: 0.04}
+  minMaxHeight: {x: 0, y: 0.03}
   restingHeight: 0.9
   _springForce: 0.1
   _OnPress:
@@ -3506,7 +3506,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1755270561}
   m_LocalRotation: {x: 0.49665138, y: -0, z: -0, w: 0.86795014}
-  m_LocalPosition: {x: 0, y: -0.3798952, z: 0.27482665}
+  m_LocalPosition: {x: 0, y: -0.039, z: 0.283}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1872739408}
@@ -3691,7 +3691,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1770299936}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.165, z: 0}
+  m_LocalPosition: {x: 0, y: -0.374, z: 0.074}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 265326965}

@@ -3,15 +3,15 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using Leap.Unity;
 using Leap.Unity.Interaction;
+using Leap.Unity.GraphicalRenderer;
 
 public class UserTestController : MonoBehaviour {
 
   public TextureSimulator sim;
   public InteractionButton nextButton;
-  public Text textLabel;
+  public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
   public StreamingFolder ecosystemFolder;
 

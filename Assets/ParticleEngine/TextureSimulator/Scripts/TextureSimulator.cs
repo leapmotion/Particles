@@ -1210,7 +1210,8 @@ public class TextureSimulator : MonoBehaviour {
     Tutorial_100_Attract,
     Tutorial_100_Repel,
     Tutorial_1000_Chase,
-    TEST_ThreeSpecies
+    Tutorial_3000_3_Chase,
+    Tutorial_4000_Orbit
   }
 
   private SimulationDescription getPresetDescription(EcosystemPreset preset) {
@@ -1532,7 +1533,7 @@ public class TextureSimulator : MonoBehaviour {
 
 		for (int p = 0; p < particlesToSimulate; p++) 
 		{
-			particlePositions	[p] = new Vector3( -spread * 0.5f + (float)( p * spread ), 0.0f, 0.0f );
+			particlePositions	[p] = new Vector3( -spread * 0.5f + (float)( p * spread ), Random.value * 0.01f, 0.0f );
  			particleVelocities	[p] = Vector3.zero;
 			particleSpecies		[p] = p;
 		}
@@ -1741,14 +1742,14 @@ public class TextureSimulator : MonoBehaviour {
     // This is a controlled test scenario which is the same as
     // Test3 in terms of species, but it has lots of particles
     //----------------------------------------------------------------
-    else if (preset == EcosystemPreset.TEST_ThreeSpecies) 
+    else if (preset == EcosystemPreset.Tutorial_3000_3_Chase ) 
 	{
 		currentSimulationSpeciesCount = 3;
 		particlesToSimulate = 3000;
 		
-		colors[0] = new Color(0.7f, 0.2f, 0.2f);
-		colors[1] = new Color(0.4f, 0.4f, 0.0f);
-		colors[2] = new Color(0.1f, 0.2f, 0.7f);
+		colors[0] = new Color(0.9f, 0.0f, 0.0f);
+		colors[1] = new Color(0.9f, 0.9f, 0.0f);
+		colors[2] = new Color(0.0f, 0.0f, 0.9f);
 
 		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
 		{
@@ -1796,6 +1797,121 @@ public class TextureSimulator : MonoBehaviour {
 		}
 	}
 
+	//--------------------------------------------------------
+	// Orbit
+	//--------------------------------------------------------
+    else if (preset == EcosystemPreset.Tutorial_4000_Orbit ) 
+	{
+		int sun 						= 0;
+		int earth 						= 1;
+		int moon						= 2;
+		int venus						= 3;
+		int mars						= 4;
+		currentSimulationSpeciesCount 	= 5;
+
+		colors[ sun   ] = new Color( 1.0f, 1.0f, 0.3f );
+		colors[ earth ] = new Color( 0.2f, 0.5f, 0.9f );
+		colors[ moon  ] = new Color( 0.4f, 0.7f, 0.3f );
+		colors[ venus ] = new Color( 0.6f, 0.4f, 0.7f );
+		colors[ mars  ] = new Color( 0.8f, 0.4f, 0.4f );
+
+		float startRadius	=  1.0f;
+		float drag 			=  0.01f;
+		float steps			=  0;
+		float collision 	=  0.01f;
+		float sunFear		= -0.05f;
+		float selfLove		=  0.001f;
+		float chaseLove		=  0.0005f;
+		float chaseFear		= -0.0004f;
+		float otherAvoid	= -0.0004f;
+		float otherRange	=  0.3f;
+		float sunFearRange	=  1.0f;
+		float selfLoveRange	=  0.5f;
+		float chaseRange	=  1.0f;
+		float sunSelfLove	=  0.0005f;
+		float sunSelfRange  =  1.0f;
+		float spin 			= 0.8f;
+
+ 		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+        	speciesData[s] = new Vector3( drag, steps, collision );
+      	}
+
+		socialData[ sun, sun ] = new Vector2( sunSelfLove, sunSelfRange );
+
+		socialData [ earth, earth ] = new Vector2( selfLove,  	selfLoveRange 	);	
+		socialData [ earth, sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ earth, moon  ] = new Vector2( chaseLove, 	chaseRange		);	
+
+		socialData [ moon,  moon  ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ moon,  sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ moon,  earth ] = new Vector2( chaseFear, 	chaseRange		);	
+
+		socialData [ venus, venus ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ venus, sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ venus, mars  ] = new Vector2( chaseLove, 	chaseRange		);	
+
+		socialData [ mars,  mars  ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ mars,  sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ mars,  venus ] = new Vector2( chaseFear, 	chaseRange		);	
+
+
+
+		socialData [ mars,  earth ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ mars,  moon  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ venus, earth ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ venus, moon  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ earth, mars  ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ earth, venus ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ moon, mars   ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ moon, venus  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		particlesToSimulate = 3000;
+
+     	for (int p = 0; p < 1000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = sun; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+     	for (int p = 1000; p < 1500; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = earth; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+     	for (int p = 1500; p < 2000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = moon; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+    	for (int p = 2000; p < 2500; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = venus; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+    	for (int p = 2500; p < 3000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = mars; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+	}
+
+
+
+
+
+
 	//----------------------------------------------------------------
     // This is a controlled test scenario which is the same as
     // Test3 in terms of species, but it has lots of particles
@@ -1804,6 +1920,7 @@ public class TextureSimulator : MonoBehaviour {
 	{
 		currentSimulationSpeciesCount = 3;
 		particlesToSimulate = 3000;
+
 
 
 		//----------------------------------------------------------------

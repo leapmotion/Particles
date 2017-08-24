@@ -121,6 +121,9 @@ public class UserTestController : MonoBehaviour {
       sim.RestartSimulation(desc, _currLoadData.transitionBehavior);
     }
 
+    sim.handCollisionEnabled = _currLoadData.collisionEnabled;
+    sim.handInfluenceEnabled = _currLoadData.graspingEnabled;
+
     StartCoroutine(loadAudioCoroutine());
   }
 
@@ -181,6 +184,8 @@ public class UserTestController : MonoBehaviour {
     public float simulationScale = 1;
     public float timeScale = 1;
     public string backgroundMusic = "";
+    public bool graspingEnabled = true;
+    public bool collisionEnabled = true;
   }
 
 }

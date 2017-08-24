@@ -61,7 +61,7 @@
     half4 position = tex2D(_Positions, i.uv);
 
     position += velocity * 0.01;
-    position.z = 0;
+    //position.z = 0;
     return position;
   }
 

@@ -124,7 +124,7 @@ public class BasicPointParticles : MonoBehaviour {
   }
 
   public void SetSize(float per) {
-    displayMat.SetFloat("_Size", per.Map(0, 1, 0, 20));
+    displayMat.SetFloat("_Size", per.Map(0, 1, 0, 100));
   }
 
   //private void Update() {

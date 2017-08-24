@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -53,6 +54,7 @@ public class TextureSimulator : MonoBehaviour {
   public const int PASS_STEP_SOCIAL_QUEUE = 4;
   public const int PASS_SHADER_DEBUG = 5;
   public const int PASS_COPY = 6;
+  public const int PASS_RANDOM_INIT = 7;
 
   #region INSPECTOR
   [SerializeField]
@@ -559,8 +561,9 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private float _resetRange = 1;
 
+  [MinValue(0)]
   [SerializeField]
-  private AnimationCurve _resetColorCurve;
+  private float _resetHeadRange = 0.6f;
 
   [SerializeField]
   private AnimationCurve _resetSocialCurve;
@@ -611,10 +614,22 @@ public class TextureSimulator : MonoBehaviour {
   [SerializeField]
   private AnimationCurve _speedToTrailLength;
 
+  [SerializeField]
+  private KeyCode _ranzomizeColorsKey = KeyCode.C;
+
   //#######################//
   ///      Ecosystems      //
   //#######################//
   [Header("Ecosystems")]
+  [SerializeField]
+  private KeyCode _saveEcosystemKey = KeyCode.F5;
+
+  [SerializeField]
+  private KeyCode _loadEcosystemKey = KeyCode.F6;
+
+  [SerializeField]
+  private TextAsset _ecosystemAssetToLoad;
+
   [Range(0, 2)]
   [SerializeField]
   private float _spawnRadius = 1;
@@ -624,16 +639,10 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   [SerializeField]
-  private string _ecosystemSeed;
-
-  [SerializeField]
   private KeyCode _loadPresetEcosystemKey = KeyCode.R;
 
   [SerializeField]
   private KeyCode _randomizeEcosystemKey = KeyCode.Space;
-
-  [SerializeField]
-  private KeyCode _loadEcosystemSeedKey = KeyCode.L;
 
   [Space]
   [SerializeField]
@@ -704,6 +713,12 @@ public class TextureSimulator : MonoBehaviour {
 
   [Space]
   [SerializeField]
+  private bool _linkToPresets = false;
+
+  [SerializeField]
+  private KeyCode _applyLinkedSliders = KeyCode.A;
+  
+  [SerializeField]
   private RandomEcosystemSettings _randomEcosystemSettings;
   public RandomEcosystemSettings randomEcosystemSettings {
     get { return _randomEcosystemSettings; }
@@ -711,6 +726,15 @@ public class TextureSimulator : MonoBehaviour {
 
   [System.Serializable]
   public class RandomEcosystemSettings {
+
+    [Range(1, MAX_PARTICLES)]
+    [SerializeField]
+    private int _particleCount = MAX_PARTICLES;
+    public int particleCount {
+      get { return _particleCount; }
+      set { _particleCount = value; }
+    }
+
     [Range(1, MAX_SPECIES)]
     [SerializeField]
     private int _speciesCount = 10;
@@ -743,17 +767,20 @@ public class TextureSimulator : MonoBehaviour {
       set { _maxSocialRange = value; }
     }
 
-    [MinMax(0, 1)]
+    [Range(0, 1)]
     [SerializeField]
-    private Vector2 _dragRange = new Vector2(0.05f, 0.3f);
-    public float minDrag {
-      get { return _dragRange.x; }
-      set { _dragRange.x = value; }
+    private float _dragCenter = 0.175f;
+    public float dragCenter {
+      get { return _dragCenter; }
+      set { _dragCenter = value; }
     }
 
-    public float maxDrag {
-      get { return _dragRange.y; }
-      set { _dragRange.y = value; }
+    [Range(0, 0.5f)]
+    [SerializeField]
+    private float _dragSpread = 0.125f;
+    public float dragSpread {
+      get { return _dragSpread; }
+      set { _dragSpread = value; }
     }
 
     [MinMax(0, 0.05f)]
@@ -884,10 +911,15 @@ public class TextureSimulator : MonoBehaviour {
   private float _currScaledTime = 0;
   private float _currSimulationTime = 0;
   private float _prevSimulationTime = 0;
+  private float _headRadiusTransitionDelta = 0;
 
   //Display
-  private List<Mesh> _renderMeshes = new List<Mesh>();
+  private int _particlesPerMesh;
+  private List<Mesh> _displayMeshes = new List<Mesh>();
   private MaterialPropertyBlock _displayBlock;
+  private Texture2D _displayColorA;
+  private Texture2D _displayColorB;
+  private Color[] _displayColorArray = new Color[4096];
 
   //Hand interaction
   private Vector4[] _capsuleA = new Vector4[128];
@@ -940,6 +972,36 @@ public class TextureSimulator : MonoBehaviour {
   public enum TrailMode {
     Fish,
     Squash
+  }
+
+  public System.Action OnPresetLoaded;
+  public System.Action OnEcosystemBeginTransition;
+  public System.Action OnEcosystemEndedTransition;
+
+  public bool isPerformingTransition { get; private set; }
+
+  public RenderTexture positionTexture0 {
+    get {
+      return _positionSrc;
+    }
+  }
+
+  public RenderTexture positionTexture1 {
+    get {
+      return _positionDst;
+    }
+  }
+
+  public RenderTexture velocityTexture0 {
+    get {
+      return _velocitySrc;
+    }
+  }
+
+  public RenderTexture velocityTexture1 {
+    get {
+      return _velocityDst;
+    }
   }
 
   public float simulationAge {
@@ -1014,12 +1076,6 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  public int currentSpeciesCount {
-    get {
-      return _currentSimDescription.toSpawn.Query().CountUnique(t => t.species);
-    }
-  }
-
   public void RebuildTrailTexture() {
     if (!Application.isPlaying) {
       return;
@@ -1040,7 +1096,12 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Awake() {
+    initDisplayMeshes();
     _displayBlock = new MaterialPropertyBlock();
+    _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorA.filterMode = FilterMode.Point;
+    _displayColorB = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorB.filterMode = FilterMode.Point;
     _handActors.Fill(() => new HandActor(this));
   }
 
@@ -1109,7 +1170,8 @@ public class TextureSimulator : MonoBehaviour {
           }
         }
 
-        _displayBlock.SetFloat("_Lerp", Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
+        float lerpValue = Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime);
+        _displayBlock.SetFloat("_Lerp", lerpValue);
       } else {
         _currSimulationTime = _prevSimulationTime = _currScaledTime;
         stepSimulation(1);
@@ -1135,13 +1197,21 @@ public class TextureSimulator : MonoBehaviour {
     Layers,
     Fluidy,
     BlackHole,
-	  Nova,
-	  EnergyConserving,
-    TEST_OneParticle,
-    TEST_TwoParticles,
-    TEST_ThreeParticles,
-    TEST_ThreeSpecies,
-    Comets
+	Nova,
+	EnergyConserving,
+	Capillary,
+    Comets,
+	Worms,
+    Tutorial_2_Attract,
+    Tutorial_2_Repel,
+    Tutorial_2_Chase,
+    Tutorial_3_Attract_Line,
+    Tutorial_3_Attract_Loop,
+    Tutorial_100_Attract,
+    Tutorial_100_Repel,
+    Tutorial_1000_Chase,
+    Tutorial_3000_3_Chase,
+    Tutorial_4000_Orbit
   }
 
   private SimulationDescription getPresetDescription(EcosystemPreset preset) {
@@ -1230,7 +1300,6 @@ public class TextureSimulator : MonoBehaviour {
         socialData[redSpecies, s] = new Vector2(redLoveOfOthers, loveRange);
       }
     }
-
     //---------------------------------------------
     // Chase
     //---------------------------------------------
@@ -1368,138 +1437,319 @@ public class TextureSimulator : MonoBehaviour {
       colors[8] = new Color(0.2f, 0.1f, 0.5f);
     }
 
-    //---------------------------------------------
-    // This is a controlled test scenario with
-    // only ONE particle! (Yea, boring, I know).
-    //---------------------------------------------
-    else if (preset == EcosystemPreset.TEST_OneParticle) {
-      currentSimulationSpeciesCount = 1;
-      particlesToSimulate = 1;
+	else if ( preset == EcosystemPreset.Tutorial_2_Attract ) 
+	{
+		currentSimulationSpeciesCount = 2;
+		particlesToSimulate = 2;
+		
+		int   steps		= 0;
+		float drag 		= 0.1f;
+		float collision	= 0.02f;
+		float force		= 0.0f;
+		float range		= 0.5f;
+		float love 		= 0.0005f;
+		float spread 	= 0.4f;
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+		
+		for (int i = 0; i < currentSimulationSpeciesCount; i++) 
+		{
+        	speciesData[i] = new Vector3( drag, steps, collision );
+		}
 
-      int ONE_species = 0;
-      int ONE_steps = 1;
-      float ONE_drag = 0.1f;
-      float ONE_collision = 0.0f;
-      float ONE_force = 0.0f;
-      float ONE_range = 0.0f;
-      float ONE_red = 0.0f;
-      float ONE_green = 0.0f;
-      float ONE_blue = 0.0f;
+		socialData[ 0, 0 ] = new Vector2( force, range );
+		socialData[ 0, 1 ] = new Vector2( love,  range );
+		socialData[ 1, 1 ] = new Vector2( force, range );
+		socialData[ 1, 0 ] = new Vector2( love,  range );
 
-      colors[ONE_species] = new Color(ONE_red, ONE_green, ONE_blue);
-      speciesData[ONE_species] = new Vector3(ONE_drag, ONE_steps, ONE_collision);
-      socialData[ONE_species, ONE_species] = new Vector2(setting.maxSocialForce * ONE_force, setting.maxSocialRange * ONE_range);
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particlePositions	[p] = new Vector3( -spread * 0.5f + (float)( p * spread ), 0.0f, 0.0f );
+ 			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p;
+		}
+	}
 
-      particlePositions[0] = new Vector3(0.0f, 0.0f, 0.0f);
+	else if (preset == EcosystemPreset.Tutorial_2_Repel) 
+	{
+		currentSimulationSpeciesCount = 2;
+		particlesToSimulate = 2;
+		
+		int   steps		= 0;
+		float drag 		= 0.1f;
+		float collision	= 0.02f;
+		float force		= 0.0f;
+		float range		= 0.7f;
+		float hate 		= -0.0005f;
+		float spread 	= 0.2f;
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+		
+		for (int i = 0; i < currentSimulationSpeciesCount; i++) 
+		{
+        	speciesData[i] = new Vector3( drag, steps, collision );
+		}
+
+		socialData[ 0, 0 ] = new Vector2( force, range );
+		socialData[ 0, 1 ] = new Vector2( hate,  range );
+		socialData[ 1, 1 ] = new Vector2( force, range );
+		socialData[ 1, 0 ] = new Vector2( hate,  range );
+
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particlePositions	[p] = new Vector3( -spread * 0.5f + (float)( p * spread ), 0.0f, 0.0f );
+ 			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p;
+		}
     }
 
-    //---------------------------------------------
-    // This is a controlled test scenario with
-    // two particles that have mutual attraction
-    //---------------------------------------------
-    else if (preset == EcosystemPreset.TEST_TwoParticles) {
-      currentSimulationSpeciesCount = 2;
-      particlesToSimulate = 2;
+	else if (preset == EcosystemPreset.Tutorial_2_Chase ) 
+	{
+		currentSimulationSpeciesCount = 2;
+		particlesToSimulate = 2;
+		
+		int   steps		= 0;
+		float drag 		= 0.1f;
+		float collision	= 0.02f;
+		float range		= 0.9f;
+		float love 		= 0.0005f;
+		float hate 		= -0.0005f;
+		float spread 	= 0.2f;
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+		
+		for (int i = 0; i < currentSimulationSpeciesCount; i++) 
+		{
+        	speciesData[i] = new Vector3( drag, steps, collision );
+		}
 
-      int Test2_ONE_species = 0;
-      int Test2_ONE_steps = 0;
-      float Test2_ONE_drag = 0.1f;
-      float Test2_ONE_collision = 0.02f;
-      float Test2_ONE_force = 0.0f;
-      float Test2_ONE_range = 0.5f;
-      float Test2_ONE_red = 1.0f;
-      float Test2_ONE_green = 0.0f;
-      float Test2_ONE_blue = 0.0f;
-      float Test2_ONE_love = 0.0005f;
+		socialData[ 0, 0 ] = new Vector2( 0.0f, range );
+		socialData[ 0, 1 ] = new Vector2( love, range );
+		socialData[ 1, 1 ] = new Vector2( 0.0f, range );
+		socialData[ 1, 0 ] = new Vector2( hate, range );
 
-      int Test2_TWO_species = 1;
-      int Test2_TWO_steps = 0;
-      float Test2_TWO_drag = 0.1f;
-      float Test2_TWO_collision = 0.02f;
-      float Test2_TWO_force = 0.0f;
-      float Test2_TWO_range = 0.5f;
-      float Test2_TWO_red = 0.0f;
-      float Test2_TWO_green = 1.0f;
-      float Test2_TWO_blue = 0.0f;
-      float Test2_TWO_love = 0.0005f;
-
-      colors[Test2_ONE_species] = new Color(Test2_ONE_red, Test2_ONE_green, Test2_ONE_blue);
-      colors[Test2_TWO_species] = new Color(Test2_TWO_red, Test2_TWO_green, Test2_TWO_blue);
-
-      speciesData[Test2_ONE_species] = new Vector3(Test2_ONE_drag, Test2_ONE_steps, Test2_ONE_collision);
-      speciesData[Test2_TWO_species] = new Vector3(Test2_TWO_drag, Test2_TWO_steps, Test2_TWO_collision);
-
-      socialData[Test2_ONE_species, Test2_ONE_species] = new Vector2(Test2_ONE_force, Test2_ONE_range);
-      socialData[Test2_ONE_species, Test2_TWO_species] = new Vector2(Test2_ONE_love, Test2_ONE_range);
-
-      socialData[Test2_TWO_species, Test2_TWO_species] = new Vector2(Test2_TWO_force, Test2_TWO_range);
-      socialData[Test2_TWO_species, Test2_ONE_species] = new Vector2(Test2_TWO_love, Test2_ONE_range);
-
-      particlePositions[0] = new Vector3(-0.2f, 0.0f, 0.0f);
-      particlePositions[1] = new Vector3(0.2f, 0.0f, 0.0f);
-
-      //float selfLove   	=  0.3f;
-      //float selfRange  	=  0.3f;
-
-      particleVelocities[0] = Vector3.zero;
-      particleVelocities[1] = Vector3.zero;
-
-      particleSpecies[0] = Test2_ONE_species;
-      particleSpecies[1] = Test2_TWO_species;
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particlePositions	[p] = new Vector3( -spread * 0.5f + (float)( p * spread ), Random.value * 0.01f, 0.0f );
+ 			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p;
+		}
     }
+    
+	else if (preset == EcosystemPreset.Tutorial_3_Attract_Line ) 
+	{
+		currentSimulationSpeciesCount = 3;
+		particlesToSimulate = 3;
 
-    //---------------------------------------------
-    // This is a controlled test scenario with
-    // three particles that have mutual attraction
-    //---------------------------------------------
-    else if (preset == EcosystemPreset.TEST_ThreeParticles) {
-      currentSimulationSpeciesCount = 3;
-      particlesToSimulate = 3;
+		int   steps		= 0;
+		float drag 		= 0.1f;
+		float collision	= 0.02f;
+		float epsilon 	= 0.0001f; //Alex: this is a bandaid for a side effect
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+		colors[2] = new Color( 0.0f, 0.0f, 1.0f );
 
-      colors[0] = new Color(0.7f, 0.2f, 0.2f);
-      colors[1] = new Color(0.6f, 0.6f, 0.0f);
-      colors[2] = new Color(0.1f, 0.2f, 0.7f);
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		
+		
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+		  		socialData[s, o] = new Vector2( 0.0f, epsilon );
+			}
+		}
 
-      for (int s = 0; s < currentSimulationSpeciesCount; s++) {
-        speciesData[s] = new Vector3(0.1f, 1, 0.1f);
+		float nextLove = 0.001f;
+		float nextRange = 0.5f;
+		
+		socialData[ 0, 1 ] = new Vector2( nextLove, 	nextRange );
+		socialData[ 1, 2 ] = new Vector2( nextLove, 	nextRange );
+		socialData[ 2, 0 ] = new Vector2( 0.0f, 		nextRange );
+		
+		particlePositions[0] = new Vector3( -0.2f, -0.17f, 0.0f );
+		particlePositions[1] = new Vector3(  0.2f, -0.17f, 0.0f );
+		particlePositions[2] = new Vector3(  0.0f,  0.20f, 0.0f );
+		
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particleSpecies[p] = p;
+			particleVelocities[p] = Vector3.zero;
+		}
+	}
 
-        float epsilon = 0.0001f; //Alex: this is a bandaid for a side effect
+  
+	else if (preset == EcosystemPreset.Tutorial_3_Attract_Loop ) 
+	{
+		currentSimulationSpeciesCount = 3;
+		particlesToSimulate = 3;
 
-        for (int o = 0; o < currentSimulationSpeciesCount; o++) {
-          socialData[s, o] = new Vector2(0.0f, epsilon);
-        }
-      }
+		int   steps		= 0;
+		float drag 		= 0.1f;
+		float collision	= 0.02f;
+		float epsilon 	= 0.0001f; //Alex: this is a bandaid for a side effect
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+		colors[2] = new Color( 0.0f, 0.0f, 1.0f );
 
-      float nextLove = 0.001f;
-      float nextRange = 0.5f;
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		
+		
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+		  		socialData[s, o] = new Vector2( 0.0f, epsilon );
+			}
+		}
 
-      socialData[0, 1] = new Vector2(nextLove, nextRange);
-      socialData[1, 2] = new Vector2(nextLove, nextRange);
-      socialData[2, 0] = new Vector2(nextLove, nextRange);
+		float nextLove = 0.001f;
+		float nextRange = 0.5f;
+		
+		socialData[ 0, 1 ] = new Vector2( nextLove,	nextRange );
+		socialData[ 1, 2 ] = new Vector2( nextLove,	nextRange );
+		socialData[ 2, 0 ] = new Vector2( nextLove,	nextRange );
+		
+		particlePositions[0] = new Vector3( -0.2f, -0.17f, 0.0f );
+		particlePositions[1] = new Vector3(  0.2f, -0.17f, 0.0f );
+		particlePositions[2] = new Vector3(  0.0f,  0.20f, 0.0f );
+		
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			particleSpecies[p] = p;
+			particleVelocities[p] = Vector3.zero;
+		}
+	}
 
-      particlePositions[0] = new Vector3(-0.2f, -0.17f, 0.0f);
-      particlePositions[1] = new Vector3(0.2f, -0.17f, 0.0f);
-      particlePositions[2] = new Vector3(0.0f, 0.20f, 0.0f);
 
-      for (int p = 0; p < particlesToSimulate; p++) {
-        particleSpecies[p] = p;
-        particleVelocities[p] = Vector3.zero;
-      }
-    }
+
+	else if (preset == EcosystemPreset.Tutorial_100_Attract ) 
+	{
+		currentSimulationSpeciesCount = 1;
+		particlesToSimulate = 100;
+
+		int   steps			= 0;
+		float drag 			= 0.1f;
+		float collision		= 0.02f;
+		float force			= 0.001f;
+		float range			= 1.0f;
+		float startRange	= 1.0f;
+		
+		colors[0] = new Color( 0.6f, 0.5f, 0.4f );
+
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+		  		socialData[s, o] = new Vector2( force, range );
+			}
+		}
+
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -startRange * 0.5f + Random.value * startRange;
+			float y = -startRange * 0.5f + Random.value * startRange;
+			float z = -startRange * 0.5f + Random.value * startRange;
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleSpecies		[p] = 0;
+			particleVelocities	[p] = Vector3.zero;
+		}
+	}
+
+	else if (preset == EcosystemPreset.Tutorial_100_Repel ) 
+	{
+		currentSimulationSpeciesCount = 1;
+		particlesToSimulate = 100;
+
+		int   steps			= 0;
+		float drag 			= 0.1f;
+		float collision		= 0.02f;
+		float force			= -0.001f;
+		float range			= 1.0f;
+		float startRange	= 0.3f;
+		
+		colors[0] = new Color( 0.6f, 0.5f, 0.4f );
+
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+		  		socialData[s, o] = new Vector2( force, range );
+			}
+		}
+
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -startRange * 0.5f + Random.value * startRange;
+			float y = -startRange * 0.5f + Random.value * startRange;
+			float z = -startRange * 0.5f + Random.value * startRange;
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleSpecies		[p] = 0;
+			particleVelocities	[p] = Vector3.zero;
+		}
+	}
+
+
+
+	else if (preset == EcosystemPreset.Tutorial_1000_Chase ) 
+	{
+		currentSimulationSpeciesCount = 2;
+		particlesToSimulate = 1000;
+
+		int   steps			= 0;
+		float drag 			= 0.1f;
+		float collision		= 0.02f;
+		float love			= 0.001f;
+		float hate			= -0.001f;
+		float loveRange		= 0.2f;
+		float hateRange		= 0.8f;
+		float startRange	= 0.8f;
+		
+		colors[0] = new Color( 1.0f, 0.0f, 0.0f );
+		colors[1] = new Color( 1.0f, 1.0f, 0.0f );
+
+		speciesData[0] = new Vector3( drag, steps, collision );
+		speciesData[1] = new Vector3( drag, steps, collision );
+
+		socialData[ 0, 0 ] = new Vector2( 0.0f, 0.0f );
+		socialData[ 1, 1 ] = new Vector2( 0.0f, 0.0f );
+		socialData[ 0, 1 ] = new Vector2( love, loveRange );
+		socialData[ 1, 0 ] = new Vector2( hate, hateRange );
+
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -startRange * 0.5f + Random.value * startRange;
+			float y = -startRange * 0.5f + Random.value * startRange;
+			float z = -startRange * 0.5f + Random.value * startRange;
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleSpecies		[p] = p % currentSimulationSpeciesCount;
+			particleVelocities	[p] = Vector3.zero;
+		}
+	}
+
 
 
     //----------------------------------------------------------------
     // This is a controlled test scenario which is the same as
     // Test3 in terms of species, but it has lots of particles
     //----------------------------------------------------------------
-    else if (preset == EcosystemPreset.TEST_ThreeSpecies) 
+    else if (preset == EcosystemPreset.Tutorial_3000_3_Chase ) 
 	{
 		currentSimulationSpeciesCount = 3;
 		particlesToSimulate = 3000;
 		
-		colors[0] = new Color(0.7f, 0.2f, 0.2f);
-		colors[1] = new Color(0.4f, 0.4f, 0.0f);
-		colors[2] = new Color(0.1f, 0.2f, 0.7f);
+		colors[0] = new Color(0.9f, 0.0f, 0.0f);
+		colors[1] = new Color(0.9f, 0.9f, 0.0f);
+		colors[2] = new Color(0.0f, 0.0f, 0.9f);
 
 		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
 		{
@@ -1547,6 +1797,121 @@ public class TextureSimulator : MonoBehaviour {
 		}
 	}
 
+	//--------------------------------------------------------
+	// Orbit
+	//--------------------------------------------------------
+    else if (preset == EcosystemPreset.Tutorial_4000_Orbit ) 
+	{
+		int sun 						= 0;
+		int earth 						= 1;
+		int moon						= 2;
+		int venus						= 3;
+		int mars						= 4;
+		currentSimulationSpeciesCount 	= 5;
+
+		colors[ sun   ] = new Color( 1.0f, 1.0f, 0.3f );
+		colors[ earth ] = new Color( 0.2f, 0.5f, 0.9f );
+		colors[ moon  ] = new Color( 0.4f, 0.7f, 0.3f );
+		colors[ venus ] = new Color( 0.6f, 0.4f, 0.7f );
+		colors[ mars  ] = new Color( 0.8f, 0.4f, 0.4f );
+
+		float startRadius	=  1.0f;
+		float drag 			=  0.01f;
+		float steps			=  0;
+		float collision 	=  0.01f;
+		float sunFear		= -0.05f;
+		float selfLove		=  0.001f;
+		float chaseLove		=  0.0005f;
+		float chaseFear		= -0.0004f;
+		float otherAvoid	= -0.0004f;
+		float otherRange	=  0.3f;
+		float sunFearRange	=  1.0f;
+		float selfLoveRange	=  0.5f;
+		float chaseRange	=  1.0f;
+		float sunSelfLove	=  0.0005f;
+		float sunSelfRange  =  1.0f;
+		float spin 			= 0.8f;
+
+ 		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+        	speciesData[s] = new Vector3( drag, steps, collision );
+      	}
+
+		socialData[ sun, sun ] = new Vector2( sunSelfLove, sunSelfRange );
+
+		socialData [ earth, earth ] = new Vector2( selfLove,  	selfLoveRange 	);	
+		socialData [ earth, sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ earth, moon  ] = new Vector2( chaseLove, 	chaseRange		);	
+
+		socialData [ moon,  moon  ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ moon,  sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ moon,  earth ] = new Vector2( chaseFear, 	chaseRange		);	
+
+		socialData [ venus, venus ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ venus, sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ venus, mars  ] = new Vector2( chaseLove, 	chaseRange		);	
+
+		socialData [ mars,  mars  ] = new Vector2( selfLove,  	selfLoveRange	);	
+		socialData [ mars,  sun   ] = new Vector2( sunFear,   	sunFearRange	);	
+		socialData [ mars,  venus ] = new Vector2( chaseFear, 	chaseRange		);	
+
+
+
+		socialData [ mars,  earth ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ mars,  moon  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ venus, earth ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ venus, moon  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ earth, mars  ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ earth, venus ] = new Vector2( otherAvoid, 	otherRange );	
+
+		socialData [ moon, mars   ] = new Vector2( otherAvoid, 	otherRange );	
+		socialData [ moon, venus  ] = new Vector2( otherAvoid, 	otherRange );	
+
+		particlesToSimulate = 3000;
+
+     	for (int p = 0; p < 1000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = sun; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+     	for (int p = 1000; p < 1500; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = earth; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+     	for (int p = 1500; p < 2000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = moon; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+    	for (int p = 2000; p < 2500; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = venus; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+
+    	for (int p = 2500; p < 3000; p++) 
+		{
+			particlePositions	[p] = Random.insideUnitSphere * startRadius;
+			particleSpecies		[p] = mars; 
+			particleVelocities	[p] = new Vector3( particlePositions[p].y * spin, particlePositions[p].x * -spin, 0.0f );
+		}
+	}
+
+
+
+
+
+
 	//----------------------------------------------------------------
     // This is a controlled test scenario which is the same as
     // Test3 in terms of species, but it has lots of particles
@@ -1555,6 +1920,7 @@ public class TextureSimulator : MonoBehaviour {
 	{
 		currentSimulationSpeciesCount = 3;
 		particlesToSimulate = 3000;
+
 
 
 		//----------------------------------------------------------------
@@ -1608,6 +1974,201 @@ public class TextureSimulator : MonoBehaviour {
 		socialData [2, 1] = new Vector2(  0.002f, 	0.274f );	
 		socialData [2, 2] = new Vector2( -0.001f, 	0.272f );	
 	}
+    //---------------------------------------------
+    // Capillary
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Capillary) 
+	{
+		currentSimulationSpeciesCount = 3;
+
+		int blood = 0;
+		int vesel = 1;
+		int pulll = 2;
+
+		colors[ blood ] = new Color( 0.9f, 0.0f, 0.0f );
+		colors[ vesel ] = new Color( 0.5f, 0.4f, 0.4f );
+		colors[ pulll ] = new Color( 0.4f, 0.4f, 0.9f );
+
+		int numBloodPartiles = 50;
+		int numVeselPartiles = 100;
+		int numPulllPartiles = 20;
+
+		particlesToSimulate = numBloodPartiles + numVeselPartiles + numPulllPartiles;
+
+		float bloodDrag 		=  0.01f;
+		float veselDrag 		=  0.9f;
+		float pulllDrag 		=  0.9f;
+
+		float bloodCollision 	=  0.002f;
+		float veselCollision 	=  0.0f;
+		float veselSelfLove		=  0.0f;
+		float veselRange		=  0.03f;
+		float bloodSelfLove		=  0.0001f;
+		float bloodSelfRange 	=  0.05f;
+
+		float bloodPullRange 	= 0.3f;
+
+		float bloodFear 		= -0.002f;
+		float bloodPullLove		=  0.00003f;
+		float bloodFearRange	=  0.02f;
+		//float pushForce 		=  0.02f;
+		float capillaryWidth 	=  0.03f;
+		float xRange 			=  1.6f;
+
+		speciesData[ blood ] = new Vector3( bloodDrag, 0, bloodCollision );
+		speciesData[ vesel ] = new Vector3( veselDrag, 0, veselCollision );
+		speciesData[ pulll ] = new Vector3( pulllDrag, 0, 0.0f );
+
+		socialData[ blood, blood ] = new Vector2( bloodSelfLove, bloodSelfRange );	
+		socialData[ blood, vesel ] = new Vector2( bloodFear, 	 bloodFearRange );	
+		socialData[ blood, pulll ] = new Vector2( bloodPullLove, bloodPullRange );	
+
+		socialData[ vesel, blood ] = new Vector2( 0.0f, 0.2f );	
+		socialData[ vesel, vesel ] = new Vector2( veselSelfLove, veselRange );	
+		socialData[ vesel, pulll ] = new Vector2( 0.0f, 0.1f );	
+
+		socialData[ pulll, blood ] = new Vector2( -0.0001f, 0.2f );	
+		socialData[ pulll, vesel ] = new Vector2( -0.0001f, 0.2f );	
+		socialData[ pulll, pulll ] = new Vector2(  0.0001f, 0.3f );	
+
+		//----------------------------------------------------
+		// blood
+		//----------------------------------------------------
+    	for (int p0 = 0; p0 < numBloodPartiles; p0++) 
+		{
+			float f = (float)p0 / (float)numBloodPartiles;
+			float x = -xRange * 0.5f + xRange * f;
+			particlePositions	[p0] = new Vector3( x, 0.0f, 0.0f );
+			particleSpecies		[p0] = blood; 
+			particleVelocities	[p0] = Vector3.zero;;
+		}	
+
+		//----------------------------------------------------
+		// capillary
+		//----------------------------------------------------
+    	for (int p1 = numBloodPartiles; p1 < ( numBloodPartiles + numVeselPartiles ); p1++) 
+		{
+			float f = (float)( p1 - numBloodPartiles ) / (float)numVeselPartiles;
+
+			float y = capillaryWidth;
+
+			if ( f >= 0.5f )
+			{
+				f -= 0.5f;
+				y = -capillaryWidth;
+			}
+
+			float x = -xRange * 0.5f + xRange * f * 2.0f;
+
+			particlePositions	[p1] = new Vector3( x, y, 0.0f );
+			particleVelocities	[p1] = Vector3.zero;
+			particleSpecies		[p1] = vesel; 
+		}	
+
+
+		//----------------------------------------------------
+		// pull
+		//----------------------------------------------------
+    	for (int p2 = ( numBloodPartiles + numVeselPartiles ); p2 < particlesToSimulate; p2++) 
+		{
+			float f = (float)( p2 - ( numBloodPartiles + numVeselPartiles ) )/ (float)numPulllPartiles;
+
+			float x = xRange * 0.54f;
+
+			float y = -0.1f + xRange * f * 0.2f;
+
+			particlePositions	[p2] = new Vector3( x, y, 0.0f );
+			particleVelocities	[p2] = Vector3.zero;
+			particleSpecies		[p2] = pulll; 
+		}	
+	}
+
+
+
+   //---------------------------------------------
+    // Worms
+    //---------------------------------------------
+    else if (preset == EcosystemPreset.Worms) 
+	{
+		currentSimulationSpeciesCount = 9;
+
+		particlesToSimulate = 2000;
+
+		colors[8] = new Color( 0.9f, 0.9f, 0.9f ); 
+		colors[7] = new Color( 0.9f, 0.9f, 0.0f ); 
+		colors[6] = new Color( 0.8f, 0.3f, 0.0f ); 
+		colors[5] = new Color( 0.7f, 0.4f, 0.2f ); 
+		colors[4] = new Color( 0.5f, 0.3f, 0.2f ); 
+		colors[3] = new Color( 0.4f, 0.2f, 0.2f ); 
+		colors[2] = new Color( 0.3f, 0.2f, 0.2f ); 
+		colors[1] = new Color( 0.2f, 0.2f, 0.2f ); 
+		colors[0] = new Color( 0.1f, 0.1f, 0.1f );
+
+		float drag 			= 0.1f;
+		float steps 		= 0;
+		float collision		= 0.01f;
+
+		for (int s=0; s<currentSimulationSpeciesCount; s++)
+		{
+			speciesData[s] = new Vector3( drag, steps, collision );
+		}
+
+		float prevLove  	=  0.002f;
+		float selfHate  	= -0.01f;
+		float nextLove  	=  0.005f;
+		float selfRange		=  0.15f;
+		float otherRange 	=  0.1f;
+
+
+
+		for (int s=0; s<currentSimulationSpeciesCount; s++)
+		{
+			for (int o=0; o<currentSimulationSpeciesCount; o++)
+			{
+				socialData[ s, o ] = new Vector2( 0.0f, otherRange );	
+			}
+
+			int prev = s - 1;
+			int next = s + 1;
+
+			if ( prev < 0 ) { prev = currentSimulationSpeciesCount - 1; }
+			if ( next > currentSimulationSpeciesCount - 1 ) { next = 0; }
+
+			socialData[ s, s 	] = new Vector2( selfHate,	selfRange 	);	
+			socialData[ s, prev ] = new Vector2( prevLove, 	otherRange 	);	
+			socialData[ s, next ] = new Vector2( nextLove, 	otherRange 	);	
+		}
+
+
+		float circleRadius = 1.0f;
+		float r = 0.7f;
+     	for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			float x = -r * 0.5f + Random.value * r;
+			float y = -r * 0.5f + Random.value * r;
+			float z = -r * 0.5f + Random.value * r;
+
+			particlePositions	[p] = new Vector3( x, y, z );
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % currentSimulationSpeciesCount; 
+
+
+
+
+			float fraction = (float)p / (float)particlesToSimulate;
+			float radian = fraction * Mathf.PI * 2.0f;
+
+			Vector3 right = Vector3.right 	* Mathf.Sin( radian );
+			Vector3 up    = Vector3.up    	* Mathf.Cos( radian );
+			Vector3 front = Vector3.forward	* 0.01f  * Random.value;
+
+			particlePositions	[p] = circleRadius * right + circleRadius * up + front;
+			particleVelocities	[p] = Vector3.zero;
+			particleSpecies		[p] = p % currentSimulationSpeciesCount; 
+		}	
+	}
+
+
 
     //----------------------------------------------------------------
     // This is a controlled test scenario which is the same as
@@ -2058,7 +2619,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
 
-    SimulationDescription description = new SimulationDescription();
+    SimulationDescription description = new SimulationDescription(isRandomDescription: false);
     description.name = preset.ToString();
     description.socialData = new SocialData[MAX_SPECIES, MAX_SPECIES];
     description.speciesData = new SpeciesData[MAX_SPECIES];
@@ -2114,15 +2675,21 @@ public class TextureSimulator : MonoBehaviour {
   private SimulationDescription getRandomEcosystemDescription(string seed) {
     var setting = _randomEcosystemSettings;
 
-    SimulationDescription desc = new SimulationDescription() {
+    SimulationDescription desc = new SimulationDescription(isRandomDescription: true) {
+      name = seed,
       socialData = new SocialData[MAX_SPECIES, MAX_SPECIES],
       speciesData = new SpeciesData[MAX_SPECIES],
       toSpawn = new List<ParticleSpawn>()
     };
 
+    //We first generate a bunch of 'meta seeds' which will be used for seeds for
+    //each of the following steps.  We do this so that even if the length of the steps
+    //change, it will not have an effect on the results of the following steps.
     Random.InitState(seed.GetHashCode());
-    desc.name = seed;
+    List<int> metaSeeds = new List<int>().FillEach(10, () => Random.Range(int.MinValue, int.MaxValue));
+    int currMetaSeed = 0;
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
         desc.socialData[s, o] = new SocialData() {
@@ -2132,15 +2699,17 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
+    Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i] = new SpeciesData() {
-        drag = Random.Range(setting.minDrag, setting.maxDrag),
-        forceSteps = Random.Range(0, setting.maxForceSteps),
+        drag = Mathf.Clamp01(Random.Range(setting.dragCenter - setting.dragSpread, setting.dragCenter + setting.dragSpread)),
+        forceSteps = Mathf.FloorToInt(Random.Range(0.0f, setting.maxForceSteps)),
         collisionForce = Random.Range(setting.minCollision, setting.maxCollision)
       };
     }
 
-    for (int i = 0; i < MAX_PARTICLES; i++) {
+    Random.InitState(metaSeeds[currMetaSeed++]);
+    for (int i = 0; i < _randomEcosystemSettings.particleCount; i++) {
       desc.toSpawn.Add(new ParticleSpawn() {
         position = Random.insideUnitSphere * _spawnRadius,
         velocity = Vector3.zero,
@@ -2148,7 +2717,7 @@ public class TextureSimulator : MonoBehaviour {
       });
     }
 
-    // Perform color randomization last so that it has no effect on particle interaction.
+    Random.InitState(metaSeeds[currMetaSeed++]);
     var colors = getRandomColors();
     for (int i = 0; i < MAX_SPECIES; i++) {
       desc.speciesData[i].color = colors[i];
@@ -2195,11 +2764,14 @@ public class TextureSimulator : MonoBehaviour {
   #endregion
 
   #region RESET LOGIC
+
+  [System.Serializable]
   public struct SocialData {
     public float socialForce;
     public float socialRange;
   }
 
+  [System.Serializable]
   public struct SpeciesData {
     public int forceSteps;
     public float drag;
@@ -2207,22 +2779,59 @@ public class TextureSimulator : MonoBehaviour {
     public Color color;
   }
 
+  [System.Serializable]
   public struct ParticleSpawn {
     public Vector3 position;
     public Vector3 velocity;
     public int species;
   }
 
+  [System.Serializable]
   public struct SpeciesRect {
     public int x, y, width, height;
     public int species;
   }
 
-  public class SimulationDescription {
+  public enum ResetBehavior {
+    None,
+    SmoothTransition,
+    ResetPositions
+  }
+
+  [System.Serializable]
+  public class SimulationDescription : ISerializationCallbackReceiver {
     public string name;
+    public bool isRandomDescription;
     public SocialData[,] socialData;
     public SpeciesData[] speciesData;
     public List<ParticleSpawn> toSpawn;
+
+    [SerializeField]
+    private SocialData[] _serializedSocialData;
+
+    public SimulationDescription(bool isRandomDescription) {
+      this.isRandomDescription = isRandomDescription;
+    }
+
+    public void OnBeforeSerialize() {
+      if (speciesData == null) return;
+      _serializedSocialData = new SocialData[speciesData.Length * speciesData.Length];
+      for (int i = 0; i < speciesData.Length; i++) {
+        for (int j = 0; j < speciesData.Length; j++) {
+          _serializedSocialData[j * speciesData.Length + i] = socialData[i, j];
+        }
+      }
+    }
+
+    public void OnAfterDeserialize() {
+      if (_serializedSocialData == null) return;
+      socialData = new SocialData[speciesData.Length, speciesData.Length];
+      for (int i = 0; i < speciesData.Length; i++) {
+        for (int j = 0; j < speciesData.Length; j++) {
+          socialData[i, j] = _serializedSocialData[j * speciesData.Length + i];
+        }
+      }
+    }
   }
 
   /// <summary>
@@ -2230,22 +2839,35 @@ public class TextureSimulator : MonoBehaviour {
   /// most recently restarted.
   /// </summary>
   public void RestartSimulation() {
-    RestartSimulation(_currentSimDescription, forcePositionReset: false);
+    //If we had generated a random simulation, re-generate it so that new settings
+    //can take effect.  We assume the name of the description is it's seed!
+    if (_currentSimDescription.isRandomDescription) {
+      RandomizeSimulation(_currentSimDescription.name, ResetBehavior.SmoothTransition);
+    } else {
+      RestartSimulation(_currentSimDescription, ResetBehavior.SmoothTransition);
+    }
   }
 
   /// <summary>
   /// Restarts the simulation using a specific preset to choose the
   /// initial conditions.
   /// </summary>
-  public void RestartSimulation(EcosystemPreset preset) {
-    RestartSimulation(getPresetDescription(preset));
+  public void RestartSimulation(EcosystemPreset preset, ResetBehavior resetBehavior = ResetBehavior.ResetPositions) {
+    var presetDesc = getPresetDescription(preset);
+    copyDescriptionToSlidersIfLinked(presetDesc);
+
+    RestartSimulation(presetDesc, resetBehavior);
+
+    if (OnPresetLoaded != null) {
+      OnPresetLoaded();
+    }
   }
 
   /// <summary>
   /// Restarts the simulation using a random description.
   /// </summary>
-  public void RandomizeSimulation(bool forcePositionReset = true) {
-    RestartSimulation(getRandomEcosystemDescription(), forcePositionReset);
+  public void RandomizeSimulation(ResetBehavior resetBehavior) {
+    RestartSimulation(getRandomEcosystemDescription(), resetBehavior);
   }
 
   /// <summary>
@@ -2253,50 +2875,97 @@ public class TextureSimulator : MonoBehaviour {
   /// the seed value.  The same seed value should always result in the same
   /// simulation description.
   /// </summary>
-  public void RandomizeSimulation(string seed, bool forcePositionReset = true) {
-    RestartSimulation(getRandomEcosystemDescription(seed), forcePositionReset);
+  public void RandomizeSimulation(string seed, ResetBehavior resetBehavior) {
+    RestartSimulation(getRandomEcosystemDescription(seed), resetBehavior);
   }
 
   /// <summary>
   /// Randomizes the simulation colors of the current simulation.
   /// </summary>
   public void RandomizeSimulationColors() {
-    uploadSpeciesColors(getRandomColors().Query().Select(t => (Vector4)t).ToArray());
+    var newRandomColors = getRandomColors();
+    for (int i = 0; i < _currentSimDescription.speciesData.Length; i++) {
+      _currentSimDescription.speciesData[i].color = newRandomColors[i];
+    }
+
+    RestartSimulation(_currentSimDescription, ResetBehavior.None);
+  }
+
+  public void ApplySliderValues() {
+    ResetBehavior resetBehavior = ResetBehavior.None;
+    if (_randomEcosystemSettings.particleCount != _currentSimDescription.toSpawn.Count) {
+      resetBehavior = ResetBehavior.SmoothTransition;
+    }
+    if (_randomEcosystemSettings.speciesCount != _currentSimDescription.toSpawn.Query().CountUnique(t => t.species)) {
+      resetBehavior = ResetBehavior.SmoothTransition;
+    }
+
+    if (_currentSimDescription.isRandomDescription) {
+      RandomizeSimulation(_currentSimDescription.name, resetBehavior);
+    } else {
+      var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), _currentSimDescription.name);
+      var presetDesc = getPresetDescription(preset);
+
+      float maxForce = float.Epsilon;
+      float maxRange = float.Epsilon;
+      int maxSteps = 0;
+      float maxDrag = float.Epsilon;
+      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
+        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
+          maxForce = Mathf.Max(maxForce, presetDesc.socialData[i, j].socialForce);
+          maxRange = Mathf.Max(maxRange, presetDesc.socialData[i, j].socialRange);
+        }
+        maxSteps = Mathf.Max(maxSteps, presetDesc.speciesData[i].forceSteps);
+        maxDrag = Mathf.Max(maxDrag, presetDesc.speciesData[i].drag);
+      }
+
+      float forceFactor = _randomEcosystemSettings.maxSocialForce / maxForce;
+      float rangeFactor = _randomEcosystemSettings.maxSocialRange / maxRange;
+      float dragFactor = _randomEcosystemSettings.dragCenter / maxDrag;
+
+      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
+        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
+          presetDesc.socialData[i, j].socialForce *= forceFactor;
+          presetDesc.socialData[i, j].socialRange *= rangeFactor;
+        }
+
+        float percent;
+        if (maxSteps == 0) {
+          percent = 1;
+        } else {
+          percent = Mathf.InverseLerp(0, maxSteps, presetDesc.speciesData[i].forceSteps);
+        }
+
+        int result = Mathf.FloorToInt(Mathf.Lerp(0, _randomEcosystemSettings.maxForceSteps - 1, percent));
+        presetDesc.speciesData[i].forceSteps = result;
+        presetDesc.speciesData[i].drag *= dragFactor;
+      }
+
+      RestartSimulation(presetDesc, resetBehavior);
+    }
   }
 
   /// <summary>
   /// Restar the simulation using the given description to describe the
   /// initial state of the simulation.
   /// </summary>
-  public void RestartSimulation(SimulationDescription simulationDescription, bool forcePositionReset = true) {
+  public void RestartSimulation(SimulationDescription simulationDescription, ResetBehavior resetBehavior) {
     if (_resetCoroutine != null) {
       StopCoroutine(_resetCoroutine);
     }
-    _resetCoroutine = StartCoroutine(restartCoroutine(simulationDescription, forcePositionReset));
+    _resetCoroutine = StartCoroutine(restartCoroutine(simulationDescription, resetBehavior));
   }
 
   private Coroutine _resetCoroutine;
-  private IEnumerator restartCoroutine(SimulationDescription simulationDescription, bool forcePositionReset = true) {
-    bool isLayoutDifferent = true;
+  private IEnumerator restartCoroutine(SimulationDescription simulationDescription, ResetBehavior resetBehavior) {
+    isPerformingTransition = true;
 
-    if (_currentSimDescription != null && !forcePositionReset) {
-      List<int> originalSpeciesMap = new List<int>();
-      _currentSimDescription.toSpawn.Query().Select(t => t.species).FillList(originalSpeciesMap);
-      originalSpeciesMap.Sort();
+    if (OnEcosystemBeginTransition != null) {
+      OnEcosystemBeginTransition();
+    }
 
-      List<int> newSpeciesMap = new List<int>();
-      simulationDescription.toSpawn.Query().Select(t => t.species).FillList(newSpeciesMap);
-      newSpeciesMap.Sort();
-
-      if (originalSpeciesMap.Count == newSpeciesMap.Count) {
-        isLayoutDifferent = false;
-        for (int i = 0; i < originalSpeciesMap.Count; i++) {
-          if (originalSpeciesMap[i] != newSpeciesMap[i]) {
-            isLayoutDifferent = true;
-            break;
-          }
-        }
-      }
+    if (_currentSimDescription == null) {
+      resetBehavior = ResetBehavior.ResetPositions;
     }
 
     List<SpeciesRect> layout = new List<SpeciesRect>();
@@ -2316,62 +2985,108 @@ public class TextureSimulator : MonoBehaviour {
       calculateLayoutGeneral(simulationDescription.toSpawn, layout);
     }
 
-    if (isLayoutDifferent) {
-      Debug.Log("Layout generated using " + layout.Count + " rectangles.");
+    var colorArray = simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray();
 
-      resetParticleTextures(layout, simulationDescription.toSpawn);
+    switch (resetBehavior) {
+      case ResetBehavior.None:
+        refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+        uploadColorTexture(_displayColorA);
+        uploadColorTexture(_displayColorB);
 
-      resetRenderMeshes(simulationDescription, layout);
+        resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+        break;
+      case ResetBehavior.ResetPositions:
+        refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+        resetParticleTextures(layout, simulationDescription.toSpawn);
 
-      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
+        uploadColorTexture(_displayColorA);
+        uploadColorTexture(_displayColorB);
 
-      resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
-    } else {
-      _simulationMat.SetFloat("_ResetRange", _resetRange);
-      _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
+        resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
 
-      float startTime = Time.time;
-      float endTime = Time.time + _resetTime;
-      bool hasUploadedNewSocialMesh = false;
-      while(Time.time < endTime) {
-        float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
-        float colorPercent = _resetColorCurve.Evaluate(percent);
-        var lerpedColors = _currentSimDescription.speciesData.Query().
-                                                              Zip(simulationDescription.speciesData.Query(),
-                                                                  (a, b) => (Vector4)Color.Lerp(a.color, b.color, colorPercent)).
-                                                              ToArray();
+        _commandIndex = 0;
+        Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
+        Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
+        Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
+        break;
+      case ResetBehavior.SmoothTransition:
+        _simulationMat.SetFloat("_ResetRange", _resetRange);
+        _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
-        uploadSpeciesColors(lerpedColors);
-
-        float socialPercent = _resetSocialCurve.Evaluate(percent);
-        if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
-          hasUploadedNewSocialMesh = true;
-          resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+        bool isIncreasingParticleCount = simulationDescription.toSpawn.Count > _currentSimDescription.toSpawn.Count;
+        if (isIncreasingParticleCount) {
+          refillColorArrays(layout, colorArray, forceTrueAlpha: false);
+        } else {
+          refillColorArrays(layout, colorArray, forceTrueAlpha: true);
         }
 
-        _simulationMat.SetFloat("_ResetPercent", socialPercent);
+        //Don't upload color to A yet because we need to lerp
+        uploadColorTexture(_displayColorB);
+        _particleMat.EnableKeyword("COLOR_LERP");
 
-        yield return null;
-      }
+        float startTime = Time.time;
+        float endTime = Time.time + _resetTime;
+        bool hasUploadedNewSocialMesh = false;
+        while (Time.time < endTime) {
+          float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
+          float resetPercent = _resetSocialCurve.Evaluate(percent);
+          _simulationMat.SetFloat("_ResetPercent", resetPercent);
 
-      uploadSpeciesColors(simulationDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray());
+          if (!hasUploadedNewSocialMesh || isIncreasingParticleCount) {
+            _displayBlock.SetFloat("_ColorLerp", resetPercent);
+          }
+
+          if (isIncreasingParticleCount) {
+            _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _headRadius, resetPercent);
+          }
+
+          float socialPercent = _resetSocialCurve.Evaluate(percent);
+          if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
+            hasUploadedNewSocialMesh = true;
+            resetBlitMeshes(layout, simulationDescription.speciesData, simulationDescription.socialData, !isUsingOptimizedLayout);
+            _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
+
+            if (isIncreasingParticleCount) {
+              refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+              uploadColorTexture(_displayColorA);
+            }
+
+            Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+            randomTexture.filterMode = FilterMode.Point;
+            randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _fieldRadius));
+            randomTexture.Apply();
+
+            blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
+            Graphics.CopyTexture(_socialTemp, _positionSrc);
+            Graphics.CopyTexture(_socialTemp, _positionDst);
+
+            DestroyImmediate(randomTexture);
+          }
+
+          yield return null;
+        }
+
+        //Finish by uploading colors to channel A
+        //both channels now have the new color
+        uploadColorTexture(_displayColorA);
+        _particleMat.DisableKeyword("COLOR_LERP");
+        break;
     }
-
-    //TODO: more shader constants here
-    _simulationMat.SetFloat("_ResetPercent", 0);
+    
     _simulationMat.SetFloat(PROP_SIMULATION_FRACTION, 1.0f / layout.Count);
+    _simulationMat.SetFloat("_ResetPercent", 0);
     _currScaledTime = 0;
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
 
-    //TODO: reset command buffer state correctly
-    _commandIndex = 0;
-    Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
-    Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
-    Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-
     _currentSimDescription = simulationDescription;
     _resetCoroutine = null;
+
+    if (OnEcosystemEndedTransition != null) {
+      OnEcosystemEndedTransition();
+    }
+
+    isPerformingTransition = false;
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
@@ -2458,6 +3173,28 @@ public class TextureSimulator : MonoBehaviour {
     return;
   }
 
+  private void copyDescriptionToSlidersIfLinked(SimulationDescription desc) {
+    if (!_linkToPresets) return;
+
+    float maxForce = 0;
+    float maxRange = 0;
+    float maxSteps = 1;
+    float maxDrag = 0;
+    for (int i = 0; i < desc.speciesData.Length; i++) {
+      for (int j = 0; j < desc.speciesData.Length; j++) {
+        maxForce = Mathf.Max(maxForce, desc.socialData[i, j].socialForce);
+        maxRange = Mathf.Max(maxRange, desc.socialData[i, j].socialRange);
+      }
+      maxSteps = Mathf.Max(maxSteps, desc.speciesData[i].forceSteps + 1);
+      maxDrag = Mathf.Max(maxDrag, desc.speciesData[i].drag);
+    }
+
+    _randomEcosystemSettings.maxSocialForce = maxForce;
+    _randomEcosystemSettings.maxSocialRange = maxRange;
+    _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
+    _randomEcosystemSettings.dragCenter = maxDrag;
+  }
+
   private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {
     TextureFormat format;
     switch (_textureFormat) {
@@ -2537,67 +3274,36 @@ public class TextureSimulator : MonoBehaviour {
     DestroyImmediate(tex);
   }
 
-  private void uploadSpeciesColors(Vector4[] colors) {
-    _displayBlock.SetVectorArray(PROP_SPECIES_COLOR, colors);
-  }
+  private void refillColorArrays(List<SpeciesRect> layout, Vector4[] colors, bool forceTrueAlpha) {
+    if (forceTrueAlpha) {
+      _displayColorArray.Fill(new Color(0, 0, 0, 0));
+    }
 
-  private void resetRenderMeshes(SimulationDescription desc, List<SpeciesRect> layout) {
-    _renderMeshes.Clear();
-
-    var sourceVerts = _particleMesh.vertices;
-    var sourceTris = _particleMesh.triangles;
-
-    List<Vector3> bakedVerts = new List<Vector3>();
-    List<int> bakedTris = new List<int>();
-    List<Vector4> bakedUvs = new List<Vector4>();
-
-    Mesh bakedMesh = null;
     foreach (var rect in layout) {
-      for (int dx = rect.x; dx < rect.x + rect.width; dx++) {
-        for (int dy = rect.y; dy < rect.y + rect.height; dy++) {
-          if (bakedVerts.Count + sourceVerts.Length > 60000) {
-            bakedMesh.SetVertices(bakedVerts);
-            bakedMesh.SetTriangles(bakedTris, 0);
-            bakedMesh.SetUVs(0, bakedUvs);
-            bakedMesh.RecalculateNormals();
-            bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-            bakedMesh = null;
+      Color color = colors[rect.species];
+      for (int dx = 0; dx < rect.width; dx++) {
+        for (int dy = 0; dy < rect.height; dy++) {
+          int x = dx + rect.x;
+          int y = dy + rect.y;
 
-            bakedVerts.Clear();
-            bakedTris.Clear();
-            bakedUvs.Clear();
+          int index = y * 64 + x;
+
+          Color toAssign = color;
+          if (!forceTrueAlpha) {
+            Color existing = _displayColorArray[index];
+            toAssign *= existing.a;
           }
 
-          if (bakedMesh == null) {
-            sourceTris = _particleMesh.triangles;
-            bakedMesh = new Mesh();
-            bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-            _renderMeshes.Add(bakedMesh);
-          }
-
-          bakedVerts.AddRange(sourceVerts);
-          bakedTris.AddRange(sourceTris);
-
-          for (int k = 0; k < sourceVerts.Length; k++) {
-            bakedUvs.Add(new Vector4((dx + 0.5f) / _textureDimension,
-                                     (dy + 0.5f) / _textureDimension,
-                                     0,
-                                     rect.species));
-          }
-
-          for (int k = 0; k < sourceTris.Length; k++) {
-            sourceTris[k] += sourceVerts.Length;
-          }
+          _displayColorArray[index] = toAssign;
         }
       }
     }
+  }
 
-    bakedMesh.hideFlags = HideFlags.HideAndDontSave;
-    bakedMesh.SetVertices(bakedVerts);
-    bakedMesh.SetTriangles(bakedTris, 0);
-    bakedMesh.SetUVs(0, bakedUvs);
-    bakedMesh.RecalculateNormals();
-    bakedMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
+  private void uploadColorTexture(Texture2D texture) {
+    texture.SetPixels(_displayColorArray);
+    texture.Apply();
+    _displayBlock.SetTexture(texture == _displayColorA ? "_ColorA" : "_ColorB", texture);
   }
 
   private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {
@@ -3082,7 +3788,7 @@ public class TextureSimulator : MonoBehaviour {
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
-      _simulationMat.SetFloat("_HeadRadius", _headRadius / transform.lossyScale.x);
+      _simulationMat.SetFloat("_HeadRadius", (_headRadius + _headRadiusTransitionDelta) / transform.lossyScale.x);
     }
 
     _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
@@ -3090,23 +3796,89 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
   }
-
+  
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
       RestartSimulation(_presetEcosystemSettings.ecosystemPreset);
     }
 
-    if (Input.GetKeyDown(_loadEcosystemSeedKey)) {
-      RandomizeSimulation(_ecosystemSeed);
-    }
-
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
-      RandomizeSimulation(forcePositionReset: false);
+      RandomizeSimulation(ResetBehavior.SmoothTransition);
     }
 
     if (Input.GetKeyDown(_resetParticlePositionsKey)) {
       RestartSimulation();
     }
+
+    if (Input.GetKeyDown(_applyLinkedSliders)) {
+      ApplySliderValues();
+    }
+
+    if (Input.GetKeyDown(_ranzomizeColorsKey)) {
+      RandomizeSimulationColors();
+    }
+
+    if (Input.GetKeyDown(_saveEcosystemKey)) {
+      File.WriteAllText(_currentSimDescription.name + ".json", JsonUtility.ToJson(_currentSimDescription, prettyPrint: false));
+    }
+
+    if (Input.GetKeyDown(_loadEcosystemKey)) {
+      var description = JsonUtility.FromJson<SimulationDescription>(_ecosystemAssetToLoad.text);
+      RestartSimulation(description, ResetBehavior.ResetPositions);
+    }
+  }
+
+  private void initDisplayMeshes() {
+    var particleVerts = _particleMesh.vertices;
+    var particleTris = _particleMesh.triangles;
+    var particleNormals = _particleMesh.normals;
+
+    List<Vector3> verts = new List<Vector3>();
+    List<Vector3> normals = new List<Vector3>();
+    List<Vector4> uvs = new List<Vector4>();
+    List<int> tris = new List<int>();
+
+    Mesh currMesh = null;
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+      float x = (i % 64) / 64.0f;
+      float y = (i / 64) / 64.0f;
+
+      if (currMesh != null && verts.Count + _particleMesh.vertexCount >= 65536) {
+        if (_particlesPerMesh == 0) {
+          _particlesPerMesh = i;
+        }
+
+        currMesh.SetVertices(verts);
+        currMesh.SetNormals(normals);
+        currMesh.SetUVs(0, uvs);
+        currMesh.SetTriangles(tris, 0, calculateBounds: true);
+        currMesh.UploadMeshData(markNoLogerReadable: true);
+        currMesh = null;
+      }
+
+      if (currMesh == null) {
+        currMesh = new Mesh();
+        currMesh.name = "Particle Mesh";
+        currMesh.hideFlags = HideFlags.HideAndDontSave;
+        _displayMeshes.Add(currMesh);
+
+        verts.Clear();
+        normals.Clear();
+        tris.Clear();
+        uvs.Clear();
+      }
+
+      tris.AddRange(particleTris.Query().Select(t => t + verts.Count).ToArray());
+      verts.AddRange(particleVerts);
+      normals.AddRange(particleNormals);
+      uvs.Append(particleVerts.Length, new Vector4(x, y, 0, 0));
+    }
+
+    currMesh.SetVertices(verts);
+    currMesh.SetNormals(normals);
+    currMesh.SetUVs(0, uvs);
+    currMesh.SetTriangles(tris, 0, calculateBounds: true);
+    currMesh.UploadMeshData(markNoLogerReadable: true);
   }
 
   private RenderTexture createParticleTexture() {
@@ -3140,7 +3912,10 @@ public class TextureSimulator : MonoBehaviour {
 
     for (int i = 0; i < _stepsPerTick; i++) {
       Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
-      _commandIndex = (_commandIndex + 1) % _simulationCommands.Count;
+      _commandIndex++;
+      if (_commandIndex == _simulationCommands.Count) {
+        _commandIndex = 0;
+      }
     }
   }
 
@@ -3223,19 +3998,19 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void displaySimulation() {
-    foreach (var mesh in _renderMeshes) {
+    foreach (var mesh in _displayMeshes) {
       Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
   }
 
-  private void blitCopy(Texture src, RenderTexture dst) {
+  private void blitCopy(Texture src, RenderTexture dst, int pass = PASS_COPY) {
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
     RenderTexture.active = dst;
-    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 1, 0, 0));
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: new Color(0, 0, 0, 0));
 
     _simulationMat.SetTexture("_CopySource", src);
-    _simulationMat.SetPass(PASS_COPY);
+    _simulationMat.SetPass(pass);
 
     GL.Begin(GL.QUADS);
 
@@ -3264,16 +4039,16 @@ public class TextureSimulator : MonoBehaviour {
     //We are going to keep building new command buffers
     //until the state of the textures equals the original
     //state.  If there is no fancy conditional logic involved
-    //then this will always wind up being 2 buffers.
+    //then this will always wind up being 1 or 2 buffers.
 
     int bufferIndex = 0;
     do {
       CommandBuffer buffer = new CommandBuffer();
       buffer.name = "Particle Simulation " + bufferIndex;
+      buildSimulationCommands(bufferIndex, buffer);
+
       bufferIndex++;
       _simulationCommands.Add(buffer);
-
-      buildSimulationCommands(bufferIndex, buffer);
     } while (_positionSrc != startPos ||
             _velocitySrc != startVel ||
             _socialQueueSrc != startSoc);

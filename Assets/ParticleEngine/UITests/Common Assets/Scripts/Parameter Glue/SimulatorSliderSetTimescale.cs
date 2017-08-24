@@ -5,16 +5,15 @@ using UnityEngine;
 
 public class SimulatorSliderSetTimescale : SimulatorSliderControl {
 
-  protected override bool refreshWithSimulatorValue(out float value) {
-    value = simulatorSetters.GetTimescale();
-    return true;
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.EveryUpdate;
   }
 
-  //protected override float filterSliderValue(float sliderValue) {
-  //  return Mathf.Round(sliderValue * 10F) / 10F;
-  //}
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetTimescale();
+  }
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetTimescale(sliderValue);
   }
 

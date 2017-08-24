@@ -12,6 +12,25 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   public LeapTextGraphic textOutput;
   public string outputFormat = "F2";
 
+  public float value {
+    get {
+      return slider.HorizontalSliderValue;
+    }
+    set {
+      float newValue = filterSliderValue(value);
+      slider.HorizontalSliderValue = newValue;
+      onSlideEvent(newValue);
+    }
+  }
+  
+  public enum SliderRefreshMode {
+    EveryUpdate,
+    OnEcosystemLoad
+  }
+  private SliderRefreshMode _refreshMode = SliderRefreshMode.EveryUpdate;
+
+  private bool _firstUpdate = true;
+
   protected override void Reset() {
     base.Reset();
 
@@ -19,44 +38,72 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     outputFormat = "F2";
   }
 
-  void Start() {
-    maybeRefreshSimValue();
+  protected virtual void Awake() {
+    simulator.OnEcosystemEndedTransition += onEcosystemEndedTransition;
 
     slider.HorizontalSlideEvent += onSlideEvent;
+    slider.OnUnpress += onUnpress;
+
+    _refreshMode = GetRefreshMode();
+  }
+
+  private void onEcosystemEndedTransition() {
+    if (_refreshMode == SliderRefreshMode.OnEcosystemLoad) {
+      refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value in OnEcosystemLoad: " + slider.HorizontalSliderValue);
+      }
+    }
   }
 
   private void onSlideEvent(float value) {
     value = filterSliderValue(value);
 
-    setSimulatorValue(value);
+    SetSimulatorValue(value);
   }
 
-  void Update() {
-    maybeRefreshSimValue();
+  private void onUnpress() {
+    simulator.ApplySliderValues();
+  }
+
+  protected virtual void Update() {
+    if (_firstUpdate) {
+      refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value on FIRST update: " + slider.HorizontalSliderValue);
+      }
+
+      _firstUpdate = false;
+    }
+
+    if (_refreshMode == SliderRefreshMode.EveryUpdate) {
+      refreshSimValue();
+      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+        Debug.Log("Max Force slider refreshing Sim value in Update: " + slider.HorizontalSliderValue);
+      }
+    }
 
     if (textOutput != null) {
       textOutput.text = slider.HorizontalSliderValue.ToString(outputFormat);
     }
   }
 
-  private void maybeRefreshSimValue() {
+  private void refreshSimValue() {
     float sliderValue = slider.HorizontalSliderValue;
-    float simValue;
-    bool shouldRefresh = refreshWithSimulatorValue(out simValue);
-    if (shouldRefresh && sliderValue != simValue) {
+    float simValue = GetSimulatorValue();
+    if (sliderValue != simValue) {
       slider.HorizontalSliderValue = simValue;
     }
-  }
-
-  protected virtual bool refreshWithSimulatorValue(out float value) {
-    value = 0F;
-    return false;
   }
 
   protected virtual float filterSliderValue(float sliderValue) {
     return sliderValue;
   }
 
-  protected abstract void setSimulatorValue(float sliderValue);
+  protected abstract void SetSimulatorValue(float sliderValue);
+
+  protected abstract float GetSimulatorValue();
+
+  protected abstract SliderRefreshMode GetRefreshMode();
 
 }

@@ -7,7 +7,15 @@ using System;
 
 public class SimulatorSliderSetParticleSize : SimulatorSliderControl {
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetParticleSize();
+  }
+
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetParticleSize(sliderValue);
   }
 

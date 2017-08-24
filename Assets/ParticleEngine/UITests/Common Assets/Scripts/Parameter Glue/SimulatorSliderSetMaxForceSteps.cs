@@ -15,8 +15,15 @@ public class SimulatorSliderSetMaxForceSteps : SimulatorSliderControl {
     return Mathf.Round(sliderValue);
   }
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetMaxForceSteps(sliderValue);
   }
 
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetMaxForceSteps();
+  }
+
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
+  }
 }

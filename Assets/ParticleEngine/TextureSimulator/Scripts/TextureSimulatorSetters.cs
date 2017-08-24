@@ -5,10 +5,14 @@ public class TextureSimulatorSetters : MonoBehaviour {
   [SerializeField]
   private Material _skybox;
 
-  private TextureSimulator _sim;
-
-  void Awake() {
-    _sim = GetComponent<TextureSimulator>();
+  private TextureSimulator _backingSim;
+  private TextureSimulator _sim {
+    get {
+      if (_backingSim == null) {
+        _backingSim = GetComponent<TextureSimulator>();
+      }
+      return _backingSim;
+    }
   }
 
   public void SetEcosystem(string name) {
@@ -47,17 +51,44 @@ public class TextureSimulatorSetters : MonoBehaviour {
 	  case "EnergyConserving":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.EnergyConserving);
         break;
-      case "TEST_OneParticle":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_OneParticle);
+       case "Tutorial_2_Attract":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Attract);
         break;
-      case "TEST_TwoParticles":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_TwoParticles);
+       case "Tutorial_2_Repel":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Repel);
         break;
-      case "TEST_ThreeParticles":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.TEST_ThreeParticles);
+       case "Tutorial_2_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Chase);
+        break;
+      case "Tutorial_3_Attract_Line":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Line);
+        break;
+      case "Tutorial_3_Attract_Loop":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Loop);
+        break;
+      case "Tutorial_100_Attract":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Attract );
+        break;
+      case "Tutorial_100_Repel":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Repel );
+        break;
+      case "Tutorial_1000_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_1000_Chase );
+        break;
+      case "Tutorial_3000_3_Chase":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_3_Chase );
+        break;
+      case "Tutorial_4000_Orbit":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_4000_Orbit );
         break;
       case "Comets":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
+        break;
+      case "Capillary":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Capillary);
+        break;
+       case "Worms":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Worms);
         break;
        default:
         Debug.LogError("No ecosystem with name " + name);
@@ -69,52 +100,80 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.randomEcosystemSettings.speciesCount = Mathf.RoundToInt(count);
   }
 
-  public void SetParticleCount(float count) {
-    //TODO
-    //_sim.particlesToSimulate = Mathf.RoundToInt(Mathf.Lerp(1, TextureSimulator.MAX_PARTICLES, count));
+  public float GetSpeciesCount() {
+    return _sim.randomEcosystemSettings.speciesCount;
+  }
+
+  public void SetParticleCount(int count) {
+    _sim.randomEcosystemSettings.particleCount = count;
+  }
+
+  public int GetParticleCount() {
+    return _sim.randomEcosystemSettings.particleCount;
   }
 
   public void SetMaxForce(float maxForce) {
     _sim.randomEcosystemSettings.maxSocialForce = maxForce;
   }
 
+  public float GetMaxForce() {
+    return _sim.randomEcosystemSettings.maxSocialForce;
+  }
+
   public void SetMaxForceSteps(float maxForceSteps) {
     _sim.randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxForceSteps);
+  }
+
+  public float GetMaxForceSteps() {
+    return _sim.randomEcosystemSettings.maxForceSteps;
   }
 
   public void SetMaxRange(float maxRange) {
     _sim.randomEcosystemSettings.maxSocialRange = maxRange;
   }
 
-  private float _dragDiff = -1;
+  public float GetMaxRange() {
+    return _sim.randomEcosystemSettings.maxSocialRange;
+  }
+  
   public void SetDrag(float drag) {
-    if (_dragDiff < 0F) _dragDiff = _sim.randomEcosystemSettings.maxDrag - _sim.randomEcosystemSettings.minDrag;
-    _sim.randomEcosystemSettings.minDrag = Mathf.Clamp01(drag - _dragDiff * 0.5f);
-    _sim.randomEcosystemSettings.maxDrag = Mathf.Clamp01(drag + _dragDiff * 0.5f);
+    _sim.randomEcosystemSettings.dragCenter = drag;
   }
 
-  public float GetParticleSize() {
-    return _sim.displayProperties.GetFloat("_Size");
+  public float GetDrag() {
+    return _sim.randomEcosystemSettings.dragCenter;
   }
 
   public void SetParticleSize(float particleSize) {
     _sim.displayProperties.SetFloat("_Size", particleSize);
   }
 
-  public float GetTrailSize() {
-    return _sim.displayProperties.GetFloat("_TrailLength");
+  public float GetParticleSize() {
+    return _sim.displayProperties.GetFloat("_Size");
   }
 
   public void SetTrailSize(float trailSize) {
     _sim.displayProperties.SetFloat("_TrailLength", trailSize);
   }
 
+  public float GetTrailSize() {
+    return _sim.displayProperties.GetFloat("_TrailLength");
+  }
+
   public void SetBoundingForce(float boundingForce) {
     _sim.fieldForce = boundingForce;
   }
 
+  public float GetBoundingForce() {
+    return _sim.fieldForce;
+  }
+
   public void SetBoundingRadius(float boundingRadius) {
     _sim.fieldRadius = boundingRadius;
+  }
+
+  public float GetBoundingRadius() {
+    return _sim.fieldRadius;
   }
 
   public void SetTimescale(float timescale) {
@@ -140,6 +199,10 @@ public class TextureSimulatorSetters : MonoBehaviour {
     _sim.colorMode = mode;
   }
 
+  public TextureSimulator.ColorMode GetColorMode() {
+    return _sim.colorMode;
+  }
+
   public void SetSkyRed(float red) {
     Color c = _skybox.GetColor("_MiddleColor");
     c.r = red;
@@ -161,7 +224,7 @@ public class TextureSimulatorSetters : MonoBehaviour {
   public void LoadRandomEcosystem(LabelController controller) {
     var name = _sim.GetComponent<NameGenerator>().GenerateName();
     controller.SetLabel(name);
-    _sim.RandomizeSimulation(name);
+    _sim.RandomizeSimulation(name, TextureSimulator.ResetBehavior.SmoothTransition);
   }
 
   private void setSkyColor(Color c) {

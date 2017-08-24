@@ -9,6 +9,11 @@ public class SetTextGraphicWithSpeciesName : SetTextGraphicWithSimulatorParam {
   public override string GetTextValue() {
     if (simulator == null) return "(Simulation not configured)";
 
-    return simulator.currentSimulationDescription.name;
+    if (simulator.currentSimulationDescription.isRandomDescription) {
+      return simulator.currentSimulationDescription.name;
+    }
+    else {
+      return simulator.currentSimulationDescription.name + " (Preset)";
+    }
   }
 }

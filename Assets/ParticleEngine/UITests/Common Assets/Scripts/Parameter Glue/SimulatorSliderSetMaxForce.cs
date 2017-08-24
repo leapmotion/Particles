@@ -5,8 +5,16 @@ using UnityEngine;
 
 public class SimulatorSliderSetMaxForce : SimulatorSliderControl {
 
-  protected override void setSimulatorValue(float sliderValue) {
+  protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetMaxForce(sliderValue);
+  }
+
+  protected override float GetSimulatorValue() {
+    return simulatorSetters.GetMaxForce();
+  }
+
+  protected override SliderRefreshMode GetRefreshMode() {
+    return SliderRefreshMode.OnEcosystemLoad;
   }
 
 }

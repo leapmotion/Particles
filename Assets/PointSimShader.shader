@@ -42,7 +42,7 @@
 
     velocity.xyz *= 0.999;
 
-    for (uint j = 0; j < 10; j++) {
+    for (uint j = 0; j < 2; j++) {
       half4 target = _Targets[j];
       half3 toTarget = target.xyz - position.xyz;
       velocity.xyz += _Force * toTarget / (0.1 + dot(toTarget, toTarget));

@@ -6,8 +6,8 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: MatDisplay
-  m_Shader: {fileID: 4800000, guid: f526870dd03955341b2ead0e2e411288, type: 3}
+  m_Name: PointDisplay
+  m_Shader: {fileID: 4800000, guid: 44e5a410235eb5f43b9759abf8657a64, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -66,6 +66,7 @@ Material:
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _Size: 2.977668
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1

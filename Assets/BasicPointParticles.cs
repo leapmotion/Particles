@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Query;
+using UnityEngine.Rendering;
 
 public class BasicPointParticles : MonoBehaviour {
 
@@ -44,6 +45,10 @@ public class BasicPointParticles : MonoBehaviour {
     }
 
     generateMeshes();
+
+    CommandBuffer buffer = new CommandBuffer();
+    dothisNow(buffer);
+    GetComponent<Camera>().AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
   }
 
   private void generateMeshes() {
@@ -124,7 +129,11 @@ public class BasicPointParticles : MonoBehaviour {
   }
 
   public void SetSize(float per) {
-    displayMat.SetFloat("_Size", per.Map(0, 1, 0, 100));
+    displayMat.SetFloat("_Size", per.Map(0, 1, 0, 20));
+  }
+
+  public void SetBright(float per) {
+    displayMat.SetFloat("_Bright", per.Map(0, 1, 0, 0.01f));
   }
 
   //private void Update() {
@@ -136,9 +145,39 @@ public class BasicPointParticles : MonoBehaviour {
   //  }
   //}
 
-  void OnPostRender() {
-    displayMat.mainTexture = pos0;
-    displayMat.SetPass(0);
-    Graphics.DrawProcedural(MeshTopology.Points, pos0.width * pos0.height);
+  //void OnPostRender() {
+  //  var origin = RenderTexture.active;
+
+  //  var lowRes = RenderTexture.GetTemporary(Screen.width / 2, Screen.height / 2, 0, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear, 1);
+  //  RenderTexture.active = lowRes;
+  //  GL.Clear(clearDepth: true, clearColor: true, backgroundColor: Color.black);
+
+  //  displayMat.mainTexture = pos0;
+  //  displayMat.SetPass(0);
+  //  Graphics.DrawProcedural(MeshTopology.Points, pos0.width * pos0.height);
+
+  //  RenderTexture.active = origin;
+  //  Graphics.Blit(lowRes, (RenderTexture)null);
+
+  //  RenderTexture.ReleaseTemporary(lowRes);
+  //}
+
+  void OnGUI() {
+    GUILayout.Label(":::::::::::::::::::::::::::::::::::::   " + Mathf.RoundToInt(1.0f / Time.smoothDeltaTime));
+  }
+
+  void dothisNow(CommandBuffer buffer) {
+    RenderTargetIdentifier id = new RenderTargetIdentifier(123);
+
+    buffer.GetTemporaryRT(123, Screen.width / 4, Screen.height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
+
+    buffer.SetRenderTarget(id);
+    buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
+
+    buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, pos0.width * pos0.height);
+    
+    buffer.Blit(id, BuiltinRenderTextureType.CameraTarget);
+
+    buffer.ReleaseTemporaryRT(123);
   }
 }

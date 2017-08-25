@@ -1,6 +1,7 @@
 ﻿Shader "Unlit/PointDisplayShader"{
 	Properties { 
     _MainTex ("Positions", 2D) = "" {}
+    _Velocity ("Velocity", 2D) = "" {}
     _Size    ("Size", Range(0, 10)) = 0.05
     _Bright  ("Brightness", Range(0, 0.1)) = 0.1
   }
@@ -28,9 +29,11 @@
       struct v2f {
         float4 pos : SV_POSITION;
         float size : PSIZE;
+        float3 color : COLOR;
       };
 
       sampler2D _MainTex;
+      sampler2D _Velocity;
       half _Size;
       half _Bright;
 
@@ -44,15 +47,17 @@
         uv.w = 0;
 
         float4 position = tex2Dlod(_MainTex, uv);
+        float4 velocity = tex2Dlod(_Velocity, uv);
 
         v2f o;
         o.pos = UnityObjectToClipPos(position);
         o.size = _Size;
+        o.color = abs(velocity.rgb) * _Bright;
         return o;
       }
 			
 			fixed4 frag (v2f i) : SV_Target {
-        return fixed4(_Bright, _Bright, _Bright, 1);
+        return fixed4(i.color, 1);
 			}
 			ENDCG
 		}

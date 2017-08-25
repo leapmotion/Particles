@@ -1875,6 +1875,7 @@ MonoBehaviour:
   vel1: {fileID: 8400000, guid: 97b40c1e60e74d34abe38267e8f2f4cb, type: 2}
   displayMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
+  gammaBlit: {fileID: 2100000, guid: d685a257c7ff2d947856690bf1c4db79, type: 2}
   targets:
   - {fileID: 2026686811}
   - {fileID: 1366933249}

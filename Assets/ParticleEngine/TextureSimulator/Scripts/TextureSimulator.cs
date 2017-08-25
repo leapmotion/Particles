@@ -3193,6 +3193,8 @@ public class TextureSimulator : MonoBehaviour {
     _randomEcosystemSettings.maxSocialRange = maxRange;
     _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
     _randomEcosystemSettings.dragCenter = maxDrag;
+    _randomEcosystemSettings.particleCount = desc.toSpawn.Count;
+    _randomEcosystemSettings.speciesCount = desc.toSpawn.Query().CountUnique(t => t.species);
   }
 
   private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {

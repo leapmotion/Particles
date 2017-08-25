@@ -111,7 +111,7 @@ public class BasicPointParticles : MonoBehaviour {
     currMesh = null;
   }
 
-  private void FixedUpdate() {
+  private void Update() {
     if (simulate) {
       targets.Query().Select(t => (Vector4)t.position).FillArray(targetPositions);
       simulateMat.SetVectorArray("_Targets", targetPositions);
@@ -167,17 +167,17 @@ public class BasicPointParticles : MonoBehaviour {
   }
 
   void dothisNow(CommandBuffer buffer) {
-    RenderTargetIdentifier id = new RenderTargetIdentifier(123);
+    //RenderTargetIdentifier id = new RenderTargetIdentifier(123);
 
-    buffer.GetTemporaryRT(123, Screen.width / 4, Screen.height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
+    //buffer.GetTemporaryRT(123, Screen.width / 4, Screen.height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
 
-    buffer.SetRenderTarget(id);
-    buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
+    //buffer.SetRenderTarget(id);
+    //buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
 
     buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, pos0.width * pos0.height);
     
-    buffer.Blit(id, BuiltinRenderTextureType.CameraTarget);
+    //buffer.Blit(id, BuiltinRenderTextureType.CameraTarget);
 
-    buffer.ReleaseTemporaryRT(123);
+    //buffer.ReleaseTemporaryRT(123);
   }
 }

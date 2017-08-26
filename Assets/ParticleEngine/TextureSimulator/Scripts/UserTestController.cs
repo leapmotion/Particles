@@ -95,6 +95,9 @@ public class UserTestController : MonoBehaviour {
   }
 
   public void OnRestart() {
+    //No reset before we started!
+    if (_currEcosystem < 0) return;
+
     _currScript = 0;
     transition(forceReset: true);
     updateText();

@@ -3057,7 +3057,7 @@ public class TextureSimulator : MonoBehaviour {
             _displayBlock.SetFloat("_ColorLerp", resetPercent);
           }
 
-          if (isIncreasingParticleCount || resetBehavior == ResetBehavior.FadeInOut) {
+          if (isIncreasingParticleCount && resetBehavior != ResetBehavior.FadeInOut) {
             _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _headRadius, resetPercent);
           }
 
@@ -3075,21 +3075,23 @@ public class TextureSimulator : MonoBehaviour {
               Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
               Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
               Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-            } else if (isIncreasingParticleCount) {
-              refillColorArrays(layout, colorArray, forceTrueAlpha: true);
-              uploadColorTexture(_displayColorA);
+            } else {
+              if (isIncreasingParticleCount) {
+                refillColorArrays(layout, colorArray, forceTrueAlpha: true);
+                uploadColorTexture(_displayColorA);
+              }
+
+              Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+              randomTexture.filterMode = FilterMode.Point;
+              randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _fieldRadius));
+              randomTexture.Apply();
+
+              blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
+              Graphics.CopyTexture(_socialTemp, _positionSrc);
+              Graphics.CopyTexture(_socialTemp, _positionDst);
+
+              DestroyImmediate(randomTexture);
             }
-
-            Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
-            randomTexture.filterMode = FilterMode.Point;
-            randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _fieldRadius));
-            randomTexture.Apply();
-
-            blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
-            Graphics.CopyTexture(_socialTemp, _positionSrc);
-            Graphics.CopyTexture(_socialTemp, _positionDst);
-
-            DestroyImmediate(randomTexture);
 
             if (OnEcosystemMidTransition != null) {
               OnEcosystemMidTransition();

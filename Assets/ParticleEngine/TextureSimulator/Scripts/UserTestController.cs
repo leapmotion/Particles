@@ -182,6 +182,10 @@ public class UserTestController : MonoBehaviour {
   private void onSimulationTransitionMid() {
     sim.transform.localScale = Vector3.one * _currLoadData.simulationScale;
     sim.colorMode = _currLoadData.colorMode;
+
+    if (sim.particleMesh != meshes[_currLoadData.meshDetail]) {
+      sim.particleMesh = meshes[_currLoadData.meshDetail];
+    }
   }
 
   public class LoadData {
@@ -192,6 +196,7 @@ public class UserTestController : MonoBehaviour {
     public string backgroundMusic = "";
     public bool graspingEnabled = true;
     public bool collisionEnabled = true;
+    public int meshDetail = 1;
   }
 
 }

@@ -18,6 +18,9 @@ public class UserTestController : MonoBehaviour {
   public StreamingFolder dataFolder;
   public StreamingFolder musicFolder;
 
+  [Header("Mesh Settings")]
+  public Mesh[] meshes;
+
   [Header("Audio Settings")]
   public AudioSource mainAudioSource;
   public AudioSource secondAudioSource;

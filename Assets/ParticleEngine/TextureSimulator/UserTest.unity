@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.04078947, g: 0.03837051, b: 0.04124689, a: 1}
+  m_IndirectSpecularColor: {r: 0.040765867, g: 0.03834687, b: 0.04122296, a: 1}
 --- !u!157 &3
 LightmapSettings:
   m_ObjectHideFlags: 0
@@ -1322,6 +1322,11 @@ MonoBehaviour:
   musicFolder:
     _assetFolder: {fileID: 102900000, guid: d283cbf61224c69479285189636d1a23, type: 3}
     _relativePath: UserTesting\Music
+  meshes:
+  - {fileID: 4300000, guid: f959653ac902f924ab209f2a0c707bb9, type: 3}
+  - {fileID: 4300000, guid: 6f9fe5daf6ff3e64d9e0d0f49793d16a, type: 3}
+  - {fileID: 4300000, guid: c2ad509010f0af845a8d743f17b3ac63, type: 3}
+  - {fileID: 4300000, guid: 3095418101d6eaf478b6b64b8d6062f4, type: 3}
   mainAudioSource: {fileID: 832229820}
   secondAudioSource: {fileID: 1540079305}
   transitionTime: 1

@@ -3863,6 +3863,7 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void buildDisplayMeshes() {
+    _displayMeshes.Clear();
     var particleVerts = _particleMesh.vertices;
     var particleTris = _particleMesh.triangles;
     var particleNormals = _particleMesh.normals;

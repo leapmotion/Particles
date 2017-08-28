@@ -148,7 +148,7 @@ public class UserTestController : MonoBehaviour {
     yield return www;
 
     if (www.isDone && string.IsNullOrEmpty(www.error)) {
-      secondAudioSource.clip = www.GetAudioClip(threeD: false, stream: false);
+      secondAudioSource.clip = www.GetAudioClip(threeD: false, stream: true);
       secondAudioSource.volume = 0;
       secondAudioSource.Play();
       secondAudioSource.loop = true;

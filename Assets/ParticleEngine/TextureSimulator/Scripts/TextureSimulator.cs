@@ -1202,6 +1202,7 @@ public class TextureSimulator : MonoBehaviour {
 	Capillary,
     Comets,
 	Worms,
+    SolarSystem,
     Tutorial_2_Attract,
     Tutorial_2_Repel,
     Tutorial_2_Chase,
@@ -1210,9 +1211,8 @@ public class TextureSimulator : MonoBehaviour {
     Tutorial_100_Attract,
     Tutorial_100_Repel,
     Tutorial_1000_Chase,
-    Tutorial_3000_3_Chase,
-    Tutorial_4000_Orbit
-  }
+    Tutorial_3000_3_Chase
+   }
 
   private SimulationDescription getPresetDescription(EcosystemPreset preset) {
     var setting = _presetEcosystemSettings;
@@ -1756,14 +1756,14 @@ public class TextureSimulator : MonoBehaviour {
         	speciesData[s] = new Vector3(0.1f, 1, 0.01f);
       	}
 
-		float Test4_selfForce = 0.001f;
-		float Test4_selfRange = 0.3f;
+		float Test4_selfForce = 0.002f;
+		float Test4_selfRange = 0.5f;
 		
 		float Test4_loveForce = 0.002f;
 		float Test4_loveRange = 0.5f;
 		
-		float Test4_hateForce = -0.0022f;
-		float Test4_hateRange = 0.8f;
+		float Test4_hateForce = -0.004f;
+		float Test4_hateRange = 0.5f;
 		
 		socialData[0, 0] = new Vector2(Test4_selfForce, Test4_selfRange);
 		socialData[1, 1] = new Vector2(Test4_selfForce, Test4_selfRange);
@@ -1800,7 +1800,7 @@ public class TextureSimulator : MonoBehaviour {
 	//--------------------------------------------------------
 	// Orbit
 	//--------------------------------------------------------
-    else if (preset == EcosystemPreset.Tutorial_4000_Orbit ) 
+    else if (preset == EcosystemPreset.SolarSystem ) 
 	{
 		int sun 						= 0;
 		int earth 						= 1;

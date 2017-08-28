@@ -628,7 +628,7 @@ public class TextureSimulator : MonoBehaviour {
   private KeyCode _loadEcosystemKey = KeyCode.F6;
 
   [SerializeField]
-  private TextAsset _ecosystemAssetToLoad;
+  private StreamingFolder _loadingFolder;
 
   [Range(0, 2)]
   [SerializeField]
@@ -3193,6 +3193,8 @@ public class TextureSimulator : MonoBehaviour {
     _randomEcosystemSettings.maxSocialRange = maxRange;
     _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
     _randomEcosystemSettings.dragCenter = maxDrag;
+    _randomEcosystemSettings.particleCount = desc.toSpawn.Count;
+    _randomEcosystemSettings.speciesCount = desc.toSpawn.Query().CountUnique(t => t.species);
   }
 
   private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {
@@ -3823,7 +3825,8 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (Input.GetKeyDown(_loadEcosystemKey)) {
-      var description = JsonUtility.FromJson<SimulationDescription>(_ecosystemAssetToLoad.text);
+      var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
+      var description = JsonUtility.FromJson<SimulationDescription>(File.ReadAllText(file));
       RestartSimulation(description, ResetBehavior.ResetPositions);
     }
   }

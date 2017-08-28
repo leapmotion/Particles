@@ -581,6 +581,13 @@ public class TextureSimulator : MonoBehaviour {
 
   [SerializeField]
   private Mesh _particleMesh;
+  public Mesh particleMesh {
+    get { return _particleMesh; }
+    set {
+      _particleMesh = value;
+      buildDisplayMeshes();
+    }
+  }
 
   [SerializeField]
   private Material _particleMat;
@@ -1100,7 +1107,9 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Awake() {
-    initMeshes();
+    initBlitMeshes();
+    buildDisplayMeshes();
+
     _displayBlock = new MaterialPropertyBlock();
     _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorA.filterMode = FilterMode.Point;
@@ -3853,7 +3862,7 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  private void initMeshes() {
+  private void buildDisplayMeshes() {
     var particleVerts = _particleMesh.vertices;
     var particleTris = _particleMesh.triangles;
     var particleNormals = _particleMesh.normals;
@@ -3904,7 +3913,9 @@ public class TextureSimulator : MonoBehaviour {
     currMesh.SetUVs(0, uvs);
     currMesh.SetTriangles(tris, 0, calculateBounds: true);
     currMesh.UploadMeshData(markNoLogerReadable: true);
+  }
 
+  private void initBlitMeshes() {
     _blitMeshInteraction = new Mesh();
     _blitMeshInteraction.name = "BlitMesh Interaction";
 

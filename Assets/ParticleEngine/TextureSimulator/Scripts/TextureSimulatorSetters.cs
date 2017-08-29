@@ -51,6 +51,24 @@ public class TextureSimulatorSetters : MonoBehaviour {
 	  case "EnergyConserving":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.EnergyConserving);
         break;
+      case "SolarSystem":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.SolarSystem );
+        break;
+      case "Comets":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
+        break;
+      case "Capillary":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Capillary);
+        break;
+       case "Worms":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Worms);
+        break;
+       case "StringTheory":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.StringTheory);
+        break;
+       case "OrbFlow":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.OrbFlow);
+        break;
        case "Tutorial_2_Attract":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Attract);
         break;
@@ -78,17 +96,8 @@ public class TextureSimulatorSetters : MonoBehaviour {
       case "Tutorial_3000_3_Chase":
         _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_3_Chase );
         break;
-      case "Tutorial_4000_Orbit":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_4000_Orbit );
-        break;
-      case "Comets":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
-        break;
-      case "Capillary":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Capillary);
-        break;
-       case "Worms":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Worms);
+     case "Tutorial_3000_2_Ranges":
+        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_2_Ranges );
         break;
        default:
         Debug.LogError("No ecosystem with name " + name);

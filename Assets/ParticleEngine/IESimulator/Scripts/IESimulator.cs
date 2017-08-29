@@ -15,9 +15,15 @@ public class IESimulator : MonoBehaviour {
   [SerializeField]
   private StreamingFolder _loadingFolder;
 
+  [SerializeField]
+  private float _scale = 1;
+  private float _prevScale = 1;
+
+  [SerializeField]
+  private bool logicEnabled = true;
+
   private List<IEParticle> _particles = new List<IEParticle>();
   private TextureSimulator.SimulationDescription _desc;
-  private float _currScale = 1;
 
   public void LoadDescription(TextureSimulator.SimulationDescription desc) {
     _desc = desc;
@@ -39,7 +45,8 @@ public class IESimulator : MonoBehaviour {
       _particles.Add(particle.GetComponent<IEParticle>());
     }
 
-    ScaleBy(_currScale);
+    ScaleBy(_scale);
+    _prevScale = _scale;
   }
 
   private void Update() {
@@ -52,13 +59,24 @@ public class IESimulator : MonoBehaviour {
 
   private void ScaleBy(float ratio) {
     foreach (var particle in _particles) {
-      particle.transform.position *= ratio;
+      particle.rigidbody.position *= ratio;
+      particle.transform.position = particle.rigidbody.position;
+
       particle.rigidbody.velocity *= ratio;
       particle.transform.localScale *= ratio;
     }
   }
 
   private void FixedUpdate() {
+    if (_scale != _prevScale) {
+      ScaleBy(_scale / _prevScale);
+      _prevScale = _scale;
+    }
+
+    if (!logicEnabled) {
+      return;
+    }
+
     foreach (var particle in _particles) {
       Vector3 collisionForce = Vector3.zero;
       Vector3 socialForce = Vector3.zero;
@@ -71,19 +89,19 @@ public class IESimulator : MonoBehaviour {
         float distance = toOther.magnitude;
         toOther = distance < 0.0001 ? Vector3.zero : toOther / distance;
 
-        if (distance < PARTICLE_DIAMETER * _currScale) {
-          float penetration = 1 - distance / (PARTICLE_DIAMETER * _currScale);
+        if (distance < PARTICLE_DIAMETER * _scale) {
+          float penetration = 1 - distance / (PARTICLE_DIAMETER * _scale);
           float collisionScalar = (_desc.speciesData[particle.species].collisionForce + _desc.speciesData[other.species].collisionForce) * 0.5f;
-          collisionForce -= toOther * penetration * collisionScalar * _currScale;
+          collisionForce -= toOther * penetration * collisionScalar;
         }
 
-        if (distance < _desc.socialData[particle.species, other.species].socialRange * _currScale) {
-          socialForce += toOther * _desc.socialData[particle.species, other.species].socialForce * _currScale;
+        if (distance < _desc.socialData[particle.species, other.species].socialRange * _scale) {
+          socialForce += toOther * _desc.socialData[particle.species, other.species].socialForce;
           socialInteractions++;
         }
       }
 
-      particle.rigidbody.velocity += collisionForce / Time.fixedDeltaTime;
+      particle.rigidbody.velocity += _scale * collisionForce / Time.fixedDeltaTime;
 
       if (socialInteractions > 0) {
         particle.forceBuffer.PushFront(socialForce / socialInteractions);
@@ -93,7 +111,7 @@ public class IESimulator : MonoBehaviour {
 
       if (particle.forceBuffer.Count > _desc.speciesData[particle.species].forceSteps) {
         particle.forceBuffer.PopBack(out socialForce);
-        particle.rigidbody.velocity += socialForce / Time.fixedDeltaTime;
+        particle.rigidbody.velocity += _scale * socialForce / Time.fixedDeltaTime;
       }
 
       particle.rigidbody.velocity *= (1.0f - _desc.speciesData[particle.species].drag);

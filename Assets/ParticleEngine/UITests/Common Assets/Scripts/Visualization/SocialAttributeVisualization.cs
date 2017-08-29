@@ -1,4 +1,5 @@
-﻿using Leap.Unity.Attributes;
+﻿using Leap.Unity;
+using Leap.Unity.Attributes;
 using Leap.Unity.GraphicalRenderer;
 using System;
 using System.Collections;
@@ -96,8 +97,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
   /// index is attracted to the observed species index. -1 indicates maximum repulsion,
   /// 1 indicated maximum attraction.
   /// </summary>
-  private float getAttraction(int observerSpeciesIdx, int observedSpeciesIdx) {
-    return _socialData[observedSpeciesIdx, observedSpeciesIdx].socialForce
+  private float getAttraction(int observingSpeciesIdx, int observedSpeciesIdx) {
+    return _socialData[observingSpeciesIdx, observedSpeciesIdx].socialForce
            / simulatorSetters.GetMaxForce();
   }
 
@@ -163,12 +164,13 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
           if (attraction > 0f) {
             graphic.SetMesh(attractionMesh);
-            graphic.SetRuntimeTint(Color.white);
           }
           else {
             graphic.SetMesh(repulsionMesh);
-            graphic.SetRuntimeTint(Color.black);
           }
+          graphic.SetRuntimeTint(Color.Lerp(Color.black, Color.white, attraction.Map(-1, 1, 0, 1)));
+
+          graphic.SetBlendShapeAmount(1f - Mathf.Abs(attraction));
 
           layoutAttributeGraphic(graphic, row, col);
           
@@ -201,10 +203,10 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
   #region Layout
 
-  float _numRows;
+  int _numRows;
   float _rowWidth;
 
-  float _numCols;
+  int _numCols;
   float _colWidth;
 
   private void refreshLayout() {
@@ -228,10 +230,13 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void fitGraphicToCell(LeapMeshGraphic meshGraphic, int row, int col) {
-    Vector2 cellMin = new Vector2(row * _rowWidth / rectTransform.rect.height,
-                                  col * _colWidth / rectTransform.rect.width);
-    Vector2 cellMax = new Vector2((row + 1) * _rowWidth / rectTransform.rect.height,
-                                  (col + 1) * _colWidth / rectTransform.rect.width);
+    // Invert row order (origin at top-left instead of Unity default bottom-left).
+    row = _numRows - 1 - row;
+
+    Vector2 cellMin = new Vector2(col * _colWidth / rectTransform.rect.width,
+                                  row * _rowWidth / rectTransform.rect.height);
+    Vector2 cellMax = new Vector2((col + 1) * _colWidth / rectTransform.rect.width,
+                                  (row + 1) * _rowWidth / rectTransform.rect.height);
 
     var graphicRect = ensureGraphicHasRect(meshGraphic);
     graphicRect.anchorMin = cellMin;

@@ -13,6 +13,9 @@ public class IESimulator : MonoBehaviour {
   private GameObject _particlePrefab;
 
   [SerializeField]
+  private Material _materialTemplate;
+
+  [SerializeField]
   private StreamingFolder _loadingFolder;
 
   [SerializeField]
@@ -33,11 +36,18 @@ public class IESimulator : MonoBehaviour {
     }
     _particles.Clear();
 
+    var materials = _desc.speciesData.Query().Select(t => {
+      var mat = Instantiate(_materialTemplate);
+      mat.color = t.color;
+      return mat;
+    }).ToArray();
+
     foreach (var obj in desc.toSpawn) {
       GameObject particle = Instantiate(_particlePrefab);
       particle.transform.SetParent(transform);
       particle.transform.localPosition = obj.position;
       particle.transform.localRotation = Quaternion.identity;
+      particle.GetComponent<Renderer>().sharedMaterial = materials[obj.species];
       particle.GetComponent<Rigidbody>().velocity = obj.velocity;
       particle.GetComponent<IEParticle>().species = obj.species;
       particle.SetActive(true);

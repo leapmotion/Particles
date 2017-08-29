@@ -1154,7 +1154,8 @@ MonoBehaviour:
   _loadingFolder:
     _assetFolder: {fileID: 102900000, guid: a091356c55bc94d4fb821df4f52be76f, type: 3}
     _relativePath: LoadingFolder
-  _scale: 7
+  _scale: 6
+  _scaleFactor: 0.02
   logicEnabled: 1
 --- !u!4 &264063043
 Transform:

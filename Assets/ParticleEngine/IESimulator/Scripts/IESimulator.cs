@@ -22,6 +22,10 @@ public class IESimulator : MonoBehaviour {
   private float _scale = 1;
   private float _prevScale = 1;
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _scaleFactor = 0.01f;
+
   [SerializeField]
   private bool logicEnabled = true;
 
@@ -64,6 +68,14 @@ public class IESimulator : MonoBehaviour {
       var path = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
       var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(path));
       LoadDescription(desc);
+    }
+
+    if (Input.GetKey(KeyCode.UpArrow)) {
+      _scale *= (1 + _scaleFactor);
+    }
+
+    if (Input.GetKey(KeyCode.DownArrow)) {
+      _scale /= (1 + _scaleFactor);
     }
   }
 

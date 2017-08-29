@@ -1,6 +1,8 @@
 ﻿using Leap.Unity;
+using Leap.Unity.Animation;
 using Leap.Unity.Attributes;
 using Leap.Unity.GraphicalRenderer;
+using Leap.Unity.Query;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +16,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   public TextureSimulator simulator;
   public TextureSimulatorSetters simulatorSetters;
 
-  public enum VisualizationMode { SocialForces }
+  public enum VisualizationMode { SocialForces, SocialVision }
   [SerializeField, OnEditorChange("mode")]
   private VisualizationMode _mode = VisualizationMode.SocialForces;
   public VisualizationMode mode {
@@ -25,6 +27,11 @@ public class SocialAttributeVisualization : MonoBehaviour {
       refreshDisplay();
     }
   }
+
+  [Tooltip("Index values receives from the modeController are converted to their "
+         + "VisualizationMode enum value, and the visualization will set itself to that "
+         + "mode.")]
+  public RadioToggleGroup modeController;
   
   [Header("Visualization Bindings")]
   [Tooltip("The rect transform in which to build the visualization.")]
@@ -43,13 +50,20 @@ public class SocialAttributeVisualization : MonoBehaviour {
   [Tooltip("The mesh to use for LeapMeshGraphics that label species. Species are further "
          + "identified by their runtime tint.")]
   public Mesh speciesLabelMesh;
+  public MeshDisplayParams speciesLabelMeshParams;
 
   [Header("Social Forces")]
   public Mesh attractionMesh;
+  public MeshDisplayParams attractionMeshParams;
+  public Color attractionColor = Color.white;
+
   public Mesh repulsionMesh;
+  public MeshDisplayParams repulsionMeshParams;
+  public Color repulsionColor = Color.black;
 
   [Header("Social Vision")]
   public Mesh visionRangeMesh;
+  public MeshDisplayParams visionRangeMeshParams;
 
   #endregion
 
@@ -71,6 +85,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
   void Start() {
     simulator.OnEcosystemEndedTransition += onEcosystemChanged;
+
+    modeController.OnIndexToggled += onModeIndexToggled;
   }
 
   #endregion
@@ -79,27 +95,81 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
   private TextureSimulator.SimulationDescription _simDescription;
   private TextureSimulator.SocialData[,] _socialData;
-  
+  private float _effectiveMaxForce;
+  private float _effectiveMaxRange;
+
   private int _numSpecies = 0;
   private int _numSocialAttributes { get { return _numSpecies * _numSpecies; } }
 
   private void onEcosystemChanged() {
     _simDescription    = simulator.currentSimulationDescription;
     _socialData = simulator.currentSimulationDescription.socialData;
+    _effectiveMaxForce = getEffectiveMaxForce();
+    _effectiveMaxRange = getEffectiveMaxRange();
 
     _numSpecies = (int)(simulatorSetters.GetSpeciesCount());
 
     refreshDisplay();
   }
 
+  private float getEffectiveMaxForce() {
+    if (simulator.currentSimulationDescription.isRandomDescription) {
+      return simulatorSetters.GetMaxForce();
+    }
+    else {
+      // It's a preset... have to scan all the forces to find the maximum value.
+      float maximum = float.NegativeInfinity;
+      for (int i = 0; i < _socialData.GetLength(0); i++) {
+        for (int j = 0; j < _socialData.GetLength(1); j++) {
+          float testForce = Mathf.Abs(_socialData[i, j].socialForce);
+          if (testForce > maximum) {
+            maximum = testForce;
+          }
+        }
+      }
+
+      return maximum;
+    }
+  }
+
+  private float getEffectiveMaxRange() {
+    if (simulator.currentSimulationDescription.isRandomDescription) {
+      return simulatorSetters.GetMaxRange();
+    }
+    else {
+      // It's a preset... have to scan all the forces to find the maximum value.
+      float maximum = float.NegativeInfinity;
+      for (int i = 0; i < _socialData.GetLength(0); i++) {
+        for (int j = 0; j < _socialData.GetLength(1); j++) {
+          float testForce = _socialData[i, j].socialRange;
+          if (testForce > maximum) {
+            maximum = testForce;
+          }
+        }
+      }
+
+      return maximum;
+    }
+  }
+
   /// <summary>
   /// Gets a normalized value from -1 to 1 indicating how strongly the observer species
   /// index is attracted to the observed species index. -1 indicates maximum repulsion,
-  /// 1 indicated maximum attraction.
+  /// 1 indicates maximum attraction.
   /// </summary>
   private float getAttraction(int observingSpeciesIdx, int observedSpeciesIdx) {
     return _socialData[observingSpeciesIdx, observedSpeciesIdx].socialForce
-           / simulatorSetters.GetMaxForce();
+           / _effectiveMaxForce;
+  }
+
+  /// <summary>
+  /// Gets a normalized value from -1 to 1 indicating how wide the observer's vision 
+  /// range is toward the observed species. 0 indicates minimum vision range, 1 indicates
+  /// maximum vision range.
+  /// </summary>
+  private float getVision(int observingSpeciesIdx, int observedSpeciesIdx) {
+    return _socialData[observingSpeciesIdx, observedSpeciesIdx].socialRange
+           / _effectiveMaxRange;
   }
 
   #endregion
@@ -109,6 +179,10 @@ public class SocialAttributeVisualization : MonoBehaviour {
   private List<LeapMeshGraphic> rowSpeciesGraphics; // N
   private List<LeapMeshGraphic> colSpeciesGraphics; // N
   private List<LeapMeshGraphic> attributeGraphics;  // NxN
+
+  private void onModeIndexToggled(int toggleIndex) {
+    mode = (VisualizationMode)toggleIndex;
+  }
 
   private void refreshDisplay() {
     refreshLayout();
@@ -125,6 +199,10 @@ public class SocialAttributeVisualization : MonoBehaviour {
         rowsLabelGraphic.text = "Force Experiencer";
         colsLabelGraphic.text = "Observed Neighbor";
         break;
+      case VisualizationMode.SocialVision:
+        rowsLabelGraphic.text = "Observer";
+        colsLabelGraphic.text = "Observed Neighbor";
+        break;
     }
   }
 
@@ -139,12 +217,14 @@ public class SocialAttributeVisualization : MonoBehaviour {
       Color speciesColor = _simDescription.speciesData[i].color;
       
       rowSpeciesGraphics[i].SetMesh(speciesLabelMesh);
+      rowSpeciesGraphics[i].RefreshMeshData();
       rowSpeciesGraphics[i].SetRuntimeTint(speciesColor);
-      layoutRowSpeciesGraphic(rowSpeciesGraphics[i], i);
+      layoutRowSpeciesGraphic(rowSpeciesGraphics[i], i, speciesLabelMeshParams);
 
       colSpeciesGraphics[i].SetMesh(speciesLabelMesh);
+      colSpeciesGraphics[i].RefreshMeshData();
       colSpeciesGraphics[i].SetRuntimeTint(speciesColor);
-      layoutColSpeciesGraphic(colSpeciesGraphics[i], i);
+      layoutColSpeciesGraphic(colSpeciesGraphics[i], i, speciesLabelMeshParams);
     }
   }
 
@@ -162,18 +242,39 @@ public class SocialAttributeVisualization : MonoBehaviour {
         case VisualizationMode.SocialForces:
           float attraction = getAttraction(row, col);
 
+          MeshDisplayParams targetParams;
           if (attraction > 0f) {
             graphic.SetMesh(attractionMesh);
+            targetParams = attractionMeshParams;
           }
           else {
             graphic.SetMesh(repulsionMesh);
+            targetParams = repulsionMeshParams;
           }
-          graphic.SetRuntimeTint(Color.Lerp(Color.black, Color.white, attraction.Map(-1, 1, 0, 1)));
+          graphic.RefreshMeshData();
 
-          graphic.SetBlendShapeAmount(1f - Mathf.Abs(attraction));
+          // 0 = max repulsion. 1 = max attraction.
+          // The easing curve applied to the value pushes values near 1 closer to 1 and
+          // values near 0 closer to 0.
+          float attractionRepulsionAmount = Ease.Quadratic.InOut(attraction.Map(-1, 1, 0, 1));
 
-          layoutAttributeGraphic(graphic, row, col);
+          graphic.SetRuntimeTint(Color.Lerp(repulsionColor, attractionColor, attractionRepulsionAmount));
+          graphic.SetBlendShapeAmount(1f - Mathf.Abs(attractionRepulsionAmount.Map(0, 1, -1, 1)));
+
+          layoutAttributeGraphic(graphic, row, col, targetParams);
           
+          break;
+        case VisualizationMode.SocialVision:
+          float socialVisionRange = getVision(row, col);
+
+          graphic.SetMesh(visionRangeMesh);
+          graphic.RefreshMeshData();
+
+          graphic.SetRuntimeTint(Color.Lerp(Color.black, Color.white, 0.8f)) ;
+          graphic.SetBlendShapeAmount(socialVisionRange.Map(0, 1, 0, 1));
+
+          layoutAttributeGraphic(graphic, row, col, visionRangeMeshParams);
+
           break;
       }
     }
@@ -196,18 +297,18 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void deleteMeshGraphic(LeapGraphic graphic) {
-    Destroy(graphic);
+    Destroy(graphic.gameObject);
   }
 
   #endregion
 
   #region Layout
 
-  int _numRows;
-  float _rowWidth;
+  private int _numRows;
+  private float _rowWidth;
 
-  int _numCols;
-  float _colWidth;
+  private int _numCols;
+  private float _colWidth;
 
   private void refreshLayout() {
     _numRows = _numSpecies + 1; // labels take up a row
@@ -217,19 +318,23 @@ public class SocialAttributeVisualization : MonoBehaviour {
     _colWidth = rectTransform.rect.width / _numRows;
   }
 
-  private void layoutRowSpeciesGraphic(LeapMeshGraphic rowSpeciesGraphic, int row) {
-    fitGraphicToCell(rowSpeciesGraphic, row + 1, 0);
+  private void layoutRowSpeciesGraphic(LeapMeshGraphic rowSpeciesGraphic, int row,
+                                       MeshDisplayParams? meshParams = null) {
+    fitGraphicToCell(rowSpeciesGraphic, row + 1, 0, meshParams);
   }
 
-  private void layoutColSpeciesGraphic(LeapMeshGraphic colSpeciesGraphic, int col) {
-    fitGraphicToCell(colSpeciesGraphic, 0, col + 1);
+  private void layoutColSpeciesGraphic(LeapMeshGraphic colSpeciesGraphic, int col,
+                                       MeshDisplayParams? meshParams = null) {
+    fitGraphicToCell(colSpeciesGraphic, 0, col + 1, meshParams);
   }
 
-  private void layoutAttributeGraphic(LeapMeshGraphic attributeGraphic, int row, int col) {
-    fitGraphicToCell(attributeGraphic, row + 1, col + 1);
+  private void layoutAttributeGraphic(LeapMeshGraphic attributeGraphic, int row, int col,
+                                      MeshDisplayParams? meshParams = null) {
+    fitGraphicToCell(attributeGraphic, row + 1, col + 1, meshParams);
   }
 
-  private void fitGraphicToCell(LeapMeshGraphic meshGraphic, int row, int col) {
+  private void fitGraphicToCell(LeapMeshGraphic meshGraphic, int row, int col,
+                                MeshDisplayParams? meshParams) {
     // Invert row order (origin at top-left instead of Unity default bottom-left).
     row = _numRows - 1 - row;
 
@@ -243,6 +348,19 @@ public class SocialAttributeVisualization : MonoBehaviour {
     graphicRect.anchorMax = cellMax;
     graphicRect.anchoredPosition = Vector2.zero;
     graphicRect.sizeDelta = Vector2.zero;
+    
+    float boundsWidth = meshGraphic.mesh.bounds.size.CompMax();
+    float cellWidth   = (cellMax - cellMin).CompMin();
+    float targetScale = cellWidth / boundsWidth * 0.20f;
+
+    Quaternion rotation = Quaternion.identity;
+    if (meshParams.HasValue) {
+      targetScale *= meshParams.Value.scale;
+      rotation = Quaternion.Euler(meshParams.Value.rotation);
+    }
+
+    graphicRect.localScale = Vector3.one * targetScale;
+    graphicRect.localRotation = rotation;
   }
 
   private RectTransform ensureGraphicHasRect(LeapGraphic graphic) {
@@ -286,6 +404,17 @@ public class SocialAttributeVisualization : MonoBehaviour {
     rectTransform.anchoredPosition = Vector2.zero;
     rectTransform.sizeDelta = Vector2.zero;
     return rectTransform;
+  }
+
+  [System.Serializable]
+  public struct MeshDisplayParams {
+    public Vector3 rotation;
+    public float scale;
+
+    public MeshDisplayParams(Vector3 eulerRotation, float scale) {
+      this.rotation = eulerRotation;
+      this.scale = scale;
+    }
   }
 
   #endregion

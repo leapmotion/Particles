@@ -50,9 +50,9 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   private void onEcosystemEndedTransition() {
     if (_refreshMode == SliderRefreshMode.OnEcosystemLoad) {
       refreshSimValue();
-      if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
-        Debug.Log("Max Force slider refreshing Sim value in OnEcosystemLoad: " + slider.HorizontalSliderValue);
-      }
+      //if (this.transform.parent.parent.parent.name.Equals("Max Force Control")) {
+      //  Debug.Log("Max Force slider refreshing Sim value in OnEcosystemLoad: " + slider.HorizontalSliderValue);
+      //}
     }
   }
 

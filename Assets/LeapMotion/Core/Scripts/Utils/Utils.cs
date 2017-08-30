@@ -215,6 +215,28 @@ namespace Leap.Unity {
 
     #endregion
 
+    #region String Utils
+    /// <summary>
+    /// Trims a specific number of characters off of the end of the
+    /// provided string.  When the number of trimmed characters is
+    /// equal to or greater than the length of the string, the empty
+    /// string is always returned.
+    /// </summary>
+    public static string TrimEnd(this string str, int characters) {
+      return str.Substring(0, Mathf.Max(0, str.Length - characters));
+    }
+
+    /// <summary>
+    /// Trims a specific number of characters off of the begining of
+    /// the provided string.  When the number of trimmed characters is
+    /// equal to or greater than the length of the string, the empty
+    /// string is always returned.
+    /// </summary>
+    public static string TrimStart(this string str, int characters) {
+      return str.Substring(Mathf.Min(str.Length, characters));
+    }
+    #endregion
+
     #region Math Utils
 
     public static int Repeat(int x, int m) {
@@ -267,6 +289,18 @@ namespace Leap.Unity {
           || float.IsNaN(v.z);
     }
 
+    public static bool IsBetween(this float f, float f0, float f1) {
+      if (f0 > f1) Utils.Swap(ref f0, ref f1);
+
+      return f0 <= f && f <= f1;
+    }
+
+    public static bool IsBetween(this double d, double d0, double d1) {
+      if (d0 > d1) Utils.Swap(ref d0, ref d1);
+
+      return d0 <= d && d <= d1;
+    }
+
     #endregion
 
     #region Value Mapping Utils
@@ -295,7 +329,7 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector2 Map(this Vector2 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector2(value.x.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.y.Map(valueMin, valueMax, resultMin, resultMax));
+                        value.y.Map(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -304,7 +338,7 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector2 MapUnclamped(this Vector2 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector2(value.x.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
+                        value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -313,8 +347,8 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector3 Map(this Vector3 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector3(value.x.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.y.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.z.Map(valueMin, valueMax, resultMin, resultMax));
+                        value.y.Map(valueMin, valueMax, resultMin, resultMax),
+                        value.z.Map(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -323,8 +357,8 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector3 MapUnclamped(this Vector3 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector3(value.x.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.z.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
+                        value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
+                        value.z.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -333,9 +367,9 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector4 Map(this Vector4 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector4(value.x.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.y.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.z.Map(valueMin, valueMax, resultMin, resultMax),
-                         value.w.Map(valueMin, valueMax, resultMin, resultMax));
+                        value.y.Map(valueMin, valueMax, resultMin, resultMax),
+                        value.z.Map(valueMin, valueMax, resultMin, resultMax),
+                        value.w.Map(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -344,9 +378,9 @@ namespace Leap.Unity {
     /// </summary>
     public static Vector4 MapUnclamped(this Vector4 value, float valueMin, float valueMax, float resultMin, float resultMax) {
       return new Vector4(value.x.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.z.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
-                         value.w.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
+                        value.y.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
+                        value.z.MapUnclamped(valueMin, valueMax, resultMin, resultMax),
+                        value.w.MapUnclamped(valueMin, valueMax, resultMin, resultMax));
     }
 
     /// <summary>
@@ -416,48 +450,6 @@ namespace Leap.Unity {
     /// </summary>
     public static float CompSum(this Vector4 v) {
       return v.x + v.y + v.z + v.w;
-    }
-
-    /// <summary>
-    /// Returns the largest component of the input vector.
-    /// </summary>
-    public static float CompMax(this Vector2 v) {
-      return Mathf.Max(v.x, v.y);
-    }
-
-    /// <summary>
-    /// Returns the largest component of the input vector.
-    /// </summary>
-    public static float CompMax(this Vector3 v) {
-      return Mathf.Max(Mathf.Max(v.x, v.y), v.z);
-    }
-
-    /// <summary>
-    /// Returns the largest component of the input vector.
-    /// </summary>
-    public static float CompMax(this Vector4 v) {
-      return Mathf.Max(Mathf.Max(Mathf.Max(v.x, v.y), v.z), v.w);
-    }
-
-    /// <summary>
-    /// Returns the smallest component of the input vector.
-    /// </summary>
-    public static float CompMin(this Vector2 v) {
-      return Mathf.Min(v.x, v.y);
-    }
-
-    /// <summary>
-    /// Returns the smallest component of the input vector.
-    /// </summary>
-    public static float CompMin(this Vector3 v) {
-      return Mathf.Min(Mathf.Min(v.x, v.y), v.z);
-    }
-
-    /// <summary>
-    /// Returns the smallest component of the input vector.
-    /// </summary>
-    public static float CompMin(this Vector4 v) {
-      return Mathf.Min(Mathf.Min(Mathf.Min(v.x, v.y), v.z), v.w);
     }
 
     #endregion
@@ -749,6 +741,18 @@ namespace Leap.Unity {
       }
 
       return Array.IndexOf(_incompressibleFormats, format) < 0;
+    }
+
+    #endregion
+
+    #region Rect Utils
+    
+    /// <summary>
+    /// Returns a new Rect with the argument padding as a margin relative to each
+    /// border of the provided Rect.
+    /// </summary>
+    public static Rect PadInner(this Rect r, float padding) {
+      return new Rect(r.x + padding, r.y + padding, r.width - (padding * 2), r.height - (padding * 2));
     }
 
     #endregion

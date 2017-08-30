@@ -926,7 +926,7 @@ public class TextureSimulator : MonoBehaviour {
   private Vector4[] _capsuleB = new Vector4[128];
 
   private Vector4[] _spheres = new Vector4[2];
-  private Vector4[] _sphereVels = new Vector4[2];
+  private Matrix4x4[] _sphereDeltas = new Matrix4x4[2];
 
   private HandActor[] _handActors = new HandActor[2];
   private Hand _prevLeft, _prevRight;
@@ -3621,13 +3621,13 @@ public class TextureSimulator : MonoBehaviour {
     int sphereCount = 0;
     if (_handActors[0].active) {
       _spheres[sphereCount] = _handActors[0].sphere;
-      _sphereVels[sphereCount] = _handActors[0].velocity;
+      _sphereDeltas[sphereCount] = _handActors[0].deltaMatrix;
       sphereCount++;
     }
 
     if (_handActors[1].active) {
       _spheres[sphereCount] = _handActors[1].sphere;
-      _sphereVels[sphereCount] = _handActors[1].velocity;
+      _sphereDeltas[sphereCount] = _handActors[1].deltaMatrix;
       sphereCount++;
     }
 
@@ -3640,15 +3640,12 @@ public class TextureSimulator : MonoBehaviour {
       sphere.w = w / transform.lossyScale.x;
       _spheres[i] = sphere;
 
-      Vector4 velocity = _sphereVels[i];
-      velocity = transform.InverseTransformVector(velocity);
-      velocity.w = _sphereVels[i].w;
-      _sphereVels[i] = velocity;
+      _sphereDeltas[i] = _sphereDeltas[i] * transform.worldToLocalMatrix;
     }
 
     _simulationMat.SetInt("_SphereCount", sphereCount);
     _simulationMat.SetVectorArray("_Spheres", _spheres);
-    _simulationMat.SetVectorArray("_SphereVelocities", _sphereVels);
+    _simulationMat.SetMatrixArray("_SphereDeltas", _sphereDeltas);
     _simulationMat.SetFloat("_SphereForce", influenceForce);
   }
 
@@ -3738,6 +3735,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private class HandActor {
     public Vector3 position, prevPosition;
+    public Quaternion rotation, prevRotation;
     public bool active;
 
     private SmoothedFloat _smoothedGrab = new SmoothedFloat();
@@ -3750,6 +3748,8 @@ public class TextureSimulator : MonoBehaviour {
 
     private Vector3 _prevTrackedPosition;
     private Vector3 _currTrackedPosition;
+    private Quaternion _prevTrackedRotation;
+    private Quaternion _currTrackedRotation;
 
     private float[] _curls = new float[4];
 
@@ -3768,11 +3768,10 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    public Vector4 velocity {
+    public Matrix4x4 deltaMatrix {
       get {
-        Vector4 vel = position - prevPosition;
-        vel.w = _influence;
-        return vel;
+        //return Matrix4x4.TRS(prevPosition, prevRotation, Vector3.one).inverse * Matrix4x4.TRS(position, rotation, Vector3.zero);
+        return Matrix4x4.TRS(position, rotation, Vector3.one) * Matrix4x4.TRS(prevPosition, prevRotation, Vector3.one).inverse;
       }
     }
 
@@ -3782,9 +3781,11 @@ public class TextureSimulator : MonoBehaviour {
 
     public void UpdateHand(Hand hand) {
       _prevTrackedPosition = _currTrackedPosition;
+      _prevTrackedRotation = _currTrackedRotation;
 
       if (hand != null) {
         _currTrackedPosition = getPositionFromHand(hand);
+        _currTrackedRotation = hand.Rotation.ToQuaternion();
       }
 
       if (active && _sim._showHandInfluenceBubble) {
@@ -3796,7 +3797,9 @@ public class TextureSimulator : MonoBehaviour {
 
     public void UpdateState(Hand hand, float framePercent) {
       prevPosition = position;
+      prevRotation = rotation;
       position = Vector3.Lerp(_prevTrackedPosition, _currTrackedPosition, framePercent);
+      rotation = Quaternion.Slerp(_prevTrackedRotation, _currTrackedRotation, framePercent);
 
       float rawGrab;
       if (hand != null) {
@@ -3832,7 +3835,7 @@ public class TextureSimulator : MonoBehaviour {
               minOtherCurl = Mathf.Min(minOtherCurl, curl);
               maxOtherCurl = Mathf.Max(maxOtherCurl, curl);
             }
-            
+
             float pointingDelta = minOtherCurl - _curls[i];
 
             //If the distance between our curl and the next highest curl is

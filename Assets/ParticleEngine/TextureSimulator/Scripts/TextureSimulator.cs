@@ -3640,7 +3640,7 @@ public class TextureSimulator : MonoBehaviour {
       sphere.w = w / transform.lossyScale.x;
       _spheres[i] = sphere;
 
-      _sphereDeltas[i] = _sphereDeltas[i] * transform.worldToLocalMatrix;
+      _sphereDeltas[i] = transform.worldToLocalMatrix * _sphereDeltas[i] * transform.localToWorldMatrix;
     }
 
     _simulationMat.SetInt("_SphereCount", sphereCount);

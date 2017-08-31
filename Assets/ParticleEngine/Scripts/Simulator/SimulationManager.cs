@@ -32,10 +32,11 @@ public class SimulationManager : MonoBehaviour {
   ///      Field      //
   //##################//
   [Header("Field")]
+  [Tooltip("Must be a child of this component.")]
   [SerializeField]
   private Transform _fieldCenter;
-  public Transform fieldCenter {
-    get { return _fieldCenter; }
+  public Vector3 fieldCenter {
+    get { return _fieldCenter.localPosition; }
   }
 
   [Range(0, 2)]
@@ -138,6 +139,9 @@ public class SimulationManager : MonoBehaviour {
   [OnEditorChange("RebuildTrailTexture")]
   [SerializeField]
   private AnimationCurve _speedToTrailLength;
+  public AnimationCurve speedToTrailLength {
+    get { return _speedToTrailLength; }
+  }
 
   [SerializeField]
   private KeyCode _ranzomizeColorsKey = KeyCode.C;
@@ -168,11 +172,14 @@ public class SimulationManager : MonoBehaviour {
   public System.Action OnEcosystemMidTransition;
   public System.Action OnEcosystemEndedTransition;
 
-  public bool isPerformingTransition { get; private set; }
+  public bool isPerformingTransition { get; set; }
 
-  public EcosystemDescription currentSimulationDescription {
+  public EcosystemDescription currentDescription {
     get {
-      return _currentSimDescription;
+      throw new System.NotImplementedException();
+    }
+    set {
+      throw new System.NotImplementedException();
     }
   }
 

@@ -235,7 +235,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _handInfluenceType; }
     set {
       _handInfluenceType = value;
-      updateKeywords();
+      UpdateShaderKeywords();
     }
   }
   public void SetHandInfluenceType(HandInfluenceType influenceType) {
@@ -421,7 +421,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _dynamicTimestepEnabled; }
     set {
       _dynamicTimestepEnabled = value;
-      updateKeywords();
+      UpdateShaderKeywords();
     }
   }
 
@@ -461,7 +461,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _stochasticSamplingEnabled; }
     set {
       _stochasticSamplingEnabled = value;
-      updateKeywords();
+      UpdateShaderKeywords();
     }
   }
 
@@ -481,7 +481,7 @@ public class TextureSimulator : MonoBehaviour {
     get { return _stochasticCycleCount; }
     set {
       _stochasticCycleCount = value;
-      updateKeywords();
+      UpdateShaderKeywords();
     }
   }
 
@@ -566,13 +566,14 @@ public class TextureSimulator : MonoBehaviour {
   private int _shaderDebugData1;
   #endregion
 
+  //General
+  private SimulationManager _manager;
+
   //Simulation
   private List<CommandBuffer> _simulationCommands = new List<CommandBuffer>();
   private int _commandIndex = 0;
 
   private int _textureDimension;
-
-  private SimulationDescription _currentSimDescription = null;
 
   private RenderTexture _positionSrc, _velocitySrc, _positionDst, _velocityDst;
   private RenderTexture _socialQueueSrc, _socialQueueDst;
@@ -706,6 +707,85 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public void UpdateShaderKeywords() {
+    _particleMat.DisableKeyword(KEYWORD_BY_SPECIES);
+    _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
+    _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
+
+    switch (_manager.colorMode) {
+      case ColorMode.BySpecies:
+        _particleMat.EnableKeyword(KEYWORD_BY_SPECIES);
+        break;
+      case ColorMode.BySpeciesWithMagnitude:
+        _particleMat.EnableKeyword(KEYWORD_BY_SPEED);
+        break;
+      case ColorMode.ByVelocity:
+        _particleMat.EnableKeyword(KEYWORD_BY_VELOCITY);
+        break;
+    }
+
+    if (_dynamicTimestepEnabled) {
+      _particleMat.EnableKeyword(KEYWORD_ENABLE_INTERPOLATION);
+    } else {
+      _particleMat.DisableKeyword(KEYWORD_ENABLE_INTERPOLATION);
+    }
+
+    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_FORCE);
+    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_STASIS);
+
+    switch (_handInfluenceType) {
+      case HandInfluenceType.Force:
+        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_FORCE);
+        break;
+      case HandInfluenceType.Stasis:
+        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_STASIS);
+        break;
+      default:
+        throw new System.Exception();
+    }
+
+    _particleMat.DisableKeyword(KEYWORD_TAIL_FISH);
+    _particleMat.DisableKeyword(KEYWORD_TAIL_SQUASH);
+
+    switch (_manager.trailMode) {
+      case TrailMode.Fish:
+        _particleMat.EnableKeyword(KEYWORD_TAIL_FISH);
+        break;
+      case TrailMode.Squash:
+        _particleMat.EnableKeyword(KEYWORD_TAIL_SQUASH);
+        break;
+    }
+
+    if (_stochasticSamplingEnabled) {
+      _simulationMat.EnableKeyword(KEYWORD_STOCHASTIC);
+
+      Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
+      coordinates.filterMode = FilterMode.Point;
+      coordinates.wrapMode = TextureWrapMode.Clamp;
+
+      List<Color> colors = new List<Color>();
+      for (int i = 0; i < _stochasticCycleCount; i++) {
+
+        List<Color> block = new List<Color>();
+        for (int dx = 0; dx < 16; dx++) {
+          for (int dy = 0; dy < 16; dy++) {
+            block.Add(new Color(dx / 64.0f, dy / 64.0f, 0, 0));
+          }
+        }
+        block.Shuffle();
+
+        colors.AddRange(block);
+      }
+
+      coordinates.SetPixels(colors.ToArray());
+      coordinates.Apply();
+      _simulationMat.SetTexture(PROP_STOCHASTIC, coordinates);
+    } else {
+      _simulationMat.DisableKeyword(KEYWORD_STOCHASTIC);
+    }
+  }
+
+
   public void RebuildTrailTexture() {
     if (!Application.isPlaying) {
       return;
@@ -714,7 +794,7 @@ public class TextureSimulator : MonoBehaviour {
     Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
     for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
       float speed = i / (float)TAIL_RAMP_RESOLUTION;
-      float length = _speedToTrailLength.Evaluate(speed);
+      float length = _manager.speedToTrailLength.Evaluate(speed);
       ramp.SetPixel(i, 0, new Color(length, length, length, length));
     }
     ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
@@ -726,6 +806,8 @@ public class TextureSimulator : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Awake() {
+    _manager = GetComponentInParent<SimulationManager>();
+
     initBlitMeshes();
     buildDisplayMeshes();
 
@@ -762,17 +844,14 @@ public class TextureSimulator : MonoBehaviour {
 
     updateShaderData();
 
-    updateKeywords();
+    UpdateShaderKeywords();
 
     RebuildTrailTexture();
   }
 
   void Update() {
     if (_enableSpeciesDebugColors) {
-      Color[] colors = new Color[MAX_SPECIES];
-      colors.Fill(Color.black);
-      colors[_debugSpeciesNumber] = Color.white;
-      _particleMat.SetColorArray("_Colors", colors);
+      throw new System.NotImplementedException();
     }
 
     updateShaderData();
@@ -784,8 +863,8 @@ public class TextureSimulator : MonoBehaviour {
       _handActors[1].UpdateHand(Hands.Right);
     }
 
-    if (_simulationEnabled) {
-      _currScaledTime += Time.deltaTime * _simulationTimescale;
+    if (_manager.simulationEnabled) {
+      _currScaledTime += Time.deltaTime * _manager.simulationTimescale;
       if (_dynamicTimestepEnabled) {
         while (_currSimulationTime < _currScaledTime) {
           _prevSimulationTime = _currSimulationTime;
@@ -806,14 +885,14 @@ public class TextureSimulator : MonoBehaviour {
       }
     }
 
-    if (_displayParticles) {
+    if (_manager.displayParticles) {
       displaySimulation();
     }
   }
   #endregion
-  
+
   #region RESET LOGIC
-  
+
   [System.Serializable]
   public struct SpeciesRect {
     public int x, y, width, height;
@@ -824,28 +903,28 @@ public class TextureSimulator : MonoBehaviour {
   /// Restar the simulation using the given description to describe the
   /// initial state of the simulation.
   /// </summary>
-  public void RestartSimulation(SimulationDescription simulationDescription, ResetBehavior resetBehavior) {
+  public void RestartSimulation(EcosystemDescription ecosystemDescription, ResetBehavior resetBehavior) {
     if (_resetCoroutine != null) {
       StopCoroutine(_resetCoroutine);
     }
-    _resetCoroutine = StartCoroutine(restartCoroutine(simulationDescription, resetBehavior));
+    _resetCoroutine = StartCoroutine(restartCoroutine(ecosystemDescription, resetBehavior));
   }
 
   private Coroutine _resetCoroutine;
   private IEnumerator restartCoroutine(EcosystemDescription ecosystemDescription, ResetBehavior resetBehavior) {
-    isPerformingTransition = true;
+    _manager.isPerformingTransition = true;
 
-    if (OnEcosystemBeginTransition != null) {
-      OnEcosystemBeginTransition();
+    if (_manager.OnEcosystemBeginTransition != null) {
+      _manager.OnEcosystemBeginTransition();
     }
 
-    if (_currentSimDescription == null) {
+    if (_manager.currentDescription == null) {
       resetBehavior = ResetBehavior.ResetPositions;
     }
 
     List<SpeciesRect> layout = new List<SpeciesRect>();
 
-    bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(ecosystemDescription.toSpawn, layout);
+    bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(ecosystemDescription.particles, layout);
 
     if (isUsingOptimizedLayout) {
       _simulationMat.DisableKeyword(KEYWORD_SAMPLING_GENERAL);
@@ -857,7 +936,7 @@ public class TextureSimulator : MonoBehaviour {
       _simulationMat.DisableKeyword(KEYWORD_SAMPLING_UNIFORM);
       _simulationMat.EnableKeyword(KEYWORD_SAMPLING_GENERAL);
 
-      calculateLayoutGeneral(ecosystemDescription.toSpawn, layout);
+      calculateLayoutGeneral(ecosystemDescription.particles, layout);
     }
 
     var colorArray = ecosystemDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray();
@@ -869,13 +948,13 @@ public class TextureSimulator : MonoBehaviour {
         uploadColorTexture(_displayColorB);
 
         resetBlitMeshes(layout, ecosystemDescription.speciesData, ecosystemDescription.socialData, !isUsingOptimizedLayout);
-        if (OnEcosystemMidTransition != null) {
-          OnEcosystemMidTransition();
+        if (_manager.OnEcosystemMidTransition != null) {
+          _manager.OnEcosystemMidTransition();
         }
         break;
       case ResetBehavior.ResetPositions:
         refillColorArrays(layout, colorArray, forceTrueAlpha: true);
-        resetParticleTextures(layout, ecosystemDescription.toSpawn);
+        resetParticleTextures(layout, ecosystemDescription.particles);
 
         uploadColorTexture(_displayColorA);
         uploadColorTexture(_displayColorB);
@@ -886,8 +965,8 @@ public class TextureSimulator : MonoBehaviour {
         Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
         Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
         Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-        if (OnEcosystemMidTransition != null) {
-          OnEcosystemMidTransition();
+        if (_manager.OnEcosystemMidTransition != null) {
+          _manager.OnEcosystemMidTransition();
         }
         break;
       case ResetBehavior.FadeInOut:
@@ -895,7 +974,8 @@ public class TextureSimulator : MonoBehaviour {
         _simulationMat.SetFloat("_ResetRange", _resetRange);
         _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
-        bool isIncreasingParticleCount = ecosystemDescription.toSpawn.Count > _currentSimDescription.toSpawn.Count;
+        bool isIncreasingParticleCount = ecosystemDescription.particles.Count >
+                                         _manager.currentDescription.particles.Count;
         if (resetBehavior == ResetBehavior.FadeInOut) {
           _displayColorArray.Fill(new Color(0, 0, 0, 0));
         } else {
@@ -926,7 +1006,7 @@ public class TextureSimulator : MonoBehaviour {
           }
 
           if (isIncreasingParticleCount && resetBehavior != ResetBehavior.FadeInOut) {
-            _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _headRadius, resetPercent);
+            _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _manager.headRadius, resetPercent);
           }
 
           float socialPercent = _resetSocialCurve.Evaluate(percent);
@@ -938,7 +1018,7 @@ public class TextureSimulator : MonoBehaviour {
             if (resetBehavior == ResetBehavior.FadeInOut) {
               refillColorArrays(layout, colorArray, forceTrueAlpha: true);
               uploadColorTexture(_displayColorA);
-              resetParticleTextures(layout, ecosystemDescription.toSpawn);
+              resetParticleTextures(layout, ecosystemDescription.particles);
               _commandIndex = 0;
               Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
               Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
@@ -951,7 +1031,7 @@ public class TextureSimulator : MonoBehaviour {
 
               Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
               randomTexture.filterMode = FilterMode.Point;
-              randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _fieldRadius));
+              randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _manager.fieldRadius));
               randomTexture.Apply();
 
               blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
@@ -961,8 +1041,8 @@ public class TextureSimulator : MonoBehaviour {
               DestroyImmediate(randomTexture);
             }
 
-            if (OnEcosystemMidTransition != null) {
-              OnEcosystemMidTransition();
+            if (_manager.OnEcosystemMidTransition != null) {
+              _manager.OnEcosystemMidTransition();
             }
           }
 
@@ -982,22 +1062,22 @@ public class TextureSimulator : MonoBehaviour {
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
 
-    _currentSimDescription = ecosystemDescription;
+    _manager.currentDescription = ecosystemDescription;
     _resetCoroutine = null;
 
-    if (OnEcosystemEndedTransition != null) {
-      OnEcosystemEndedTransition();
+    if (_manager.OnEcosystemEndedTransition != null) {
+      _manager.OnEcosystemEndedTransition();
     }
 
-    isPerformingTransition = false;
+    _manager.isPerformingTransition = false;
   }
 
-  private bool tryCalculateOptimizedLayout(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
+  private bool tryCalculateOptimizedLayout(List<ParticleDescription> toSpawn, List<SpeciesRect> layout) {
     //TODO: implement optimize layout
     return false;
   }
 
-  private void calculateLayoutGeneral(List<ParticleSpawn> toSpawn, List<SpeciesRect> layout) {
+  private void calculateLayoutGeneral(List<ParticleDescription> toSpawn, List<SpeciesRect> layout) {
     toSpawn.Sort((a, b) => a.species.CompareTo(b.species));
 
     int existing = toSpawn.Count;
@@ -1076,7 +1156,7 @@ public class TextureSimulator : MonoBehaviour {
     return;
   }
 
-  private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleSpawn> toSpawn) {
+  private void resetParticleTextures(List<SpeciesRect> layout, List<ParticleDescription> toSpawn) {
     TextureFormat format;
     switch (_textureFormat) {
       case RenderTextureFormat.ARGBFloat:
@@ -1093,7 +1173,7 @@ public class TextureSimulator : MonoBehaviour {
 
     Color[] positionColors = new Color[_textureDimension * _textureDimension];
     Color[] velocityColors = new Color[_textureDimension * _textureDimension];
-    var speciesMap = new IEnumerator<ParticleSpawn>[MAX_SPECIES];
+    var speciesMap = new IEnumerator<ParticleDescription>[MAX_SPECIES];
     for (int i = 0; i < MAX_SPECIES; i++) {
       int j = i;
       speciesMap[i] = toSpawn.Query().Where(t => t.species == j).GetEnumerator();
@@ -1187,7 +1267,10 @@ public class TextureSimulator : MonoBehaviour {
     _displayBlock.SetTexture(texture == _displayColorA ? "_ColorA" : "_ColorB", texture);
   }
 
-  private void resetBlitMeshes(List<SpeciesRect> layout, SpeciesData[] speciesData, SocialData[,] socialData, bool includeRectUv) {
+  private void resetBlitMeshes(List<SpeciesRect> layout,
+                               SpeciesDescription[] speciesData,
+                               SocialDescription[,] socialData,
+                               bool includeRectUv) {
     List<Vector3> verts = new List<Vector3>();
     List<int> tris = new List<int>();
     List<Vector4> uv0 = new List<Vector4>();
@@ -1654,16 +1737,14 @@ public class TextureSimulator : MonoBehaviour {
   }
 
   private void updateShaderData() {
-    _simulationMat.SetVector("_FieldCenter", _fieldCenter.localPosition);
-    _simulationMat.SetFloat("_FieldRadius", _fieldRadius);
-    _simulationMat.SetFloat("_FieldForce", _fieldForce);
+    _simulationMat.SetVector("_FieldCenter", _manager.fieldCenter);
+    _simulationMat.SetFloat("_FieldRadius", _manager.fieldRadius);
+    _simulationMat.SetFloat("_FieldForce", _manager.fieldForce);
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
-      _simulationMat.SetFloat("_HeadRadius", (_headRadius + _headRadiusTransitionDelta) / transform.lossyScale.x);
+      _simulationMat.SetFloat("_HeadRadius", (_manager.headRadius + _headRadiusTransitionDelta) / transform.lossyScale.x);
     }
-
-    _simulationMat.SetFloat("_SpawnRadius", _spawnRadius);
 
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
@@ -1671,9 +1752,9 @@ public class TextureSimulator : MonoBehaviour {
 
   private void buildDisplayMeshes() {
     _displayMeshes.Clear();
-    var particleVerts = _particleMesh.vertices;
-    var particleTris = _particleMesh.triangles;
-    var particleNormals = _particleMesh.normals;
+    var particleVerts = _manager.particleMesh.vertices;
+    var particleTris = _manager.particleMesh.triangles;
+    var particleNormals = _manager.particleMesh.normals;
 
     List<Vector3> verts = new List<Vector3>();
     List<Vector3> normals = new List<Vector3>();
@@ -1685,7 +1766,7 @@ public class TextureSimulator : MonoBehaviour {
       float x = (i % 64) / 64.0f;
       float y = (i / 64) / 64.0f;
 
-      if (currMesh != null && verts.Count + _particleMesh.vertexCount >= 65536) {
+      if (currMesh != null && verts.Count + _manager.particleMesh.vertexCount >= 65536) {
         if (_particlesPerMesh == 0) {
           _particlesPerMesh = i;
         }
@@ -1763,90 +1844,12 @@ public class TextureSimulator : MonoBehaviour {
       doHandInfluenceStateUpdate(framePercent);
     }
 
-    for (int i = 0; i < _stepsPerTick; i++) {
+    for (int i = 0; i < _manager.stepsPerTick; i++) {
       Graphics.ExecuteCommandBuffer(_simulationCommands[_commandIndex]);
       _commandIndex++;
       if (_commandIndex == _simulationCommands.Count) {
         _commandIndex = 0;
       }
-    }
-  }
-
-  private void updateKeywords() {
-    _particleMat.DisableKeyword(KEYWORD_BY_SPECIES);
-    _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
-    _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
-
-    switch (_colorMode) {
-      case ColorMode.BySpecies:
-        _particleMat.EnableKeyword(KEYWORD_BY_SPECIES);
-        break;
-      case ColorMode.BySpeciesWithMagnitude:
-        _particleMat.EnableKeyword(KEYWORD_BY_SPEED);
-        break;
-      case ColorMode.ByVelocity:
-        _particleMat.EnableKeyword(KEYWORD_BY_VELOCITY);
-        break;
-    }
-
-    if (_dynamicTimestepEnabled) {
-      _particleMat.EnableKeyword(KEYWORD_ENABLE_INTERPOLATION);
-    } else {
-      _particleMat.DisableKeyword(KEYWORD_ENABLE_INTERPOLATION);
-    }
-
-    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_FORCE);
-    _simulationMat.DisableKeyword(KEYWORD_INFLUENCE_STASIS);
-
-    switch (_handInfluenceType) {
-      case HandInfluenceType.Force:
-        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_FORCE);
-        break;
-      case HandInfluenceType.Stasis:
-        _simulationMat.EnableKeyword(KEYWORD_INFLUENCE_STASIS);
-        break;
-      default:
-        throw new System.Exception();
-    }
-
-    _particleMat.DisableKeyword(KEYWORD_TAIL_FISH);
-    _particleMat.DisableKeyword(KEYWORD_TAIL_SQUASH);
-
-    switch (_trailMode) {
-      case TrailMode.Fish:
-        _particleMat.EnableKeyword(KEYWORD_TAIL_FISH);
-        break;
-      case TrailMode.Squash:
-        _particleMat.EnableKeyword(KEYWORD_TAIL_SQUASH);
-        break;
-    }
-
-    if (_stochasticSamplingEnabled) {
-      _simulationMat.EnableKeyword(KEYWORD_STOCHASTIC);
-
-      Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
-      coordinates.filterMode = FilterMode.Point;
-      coordinates.wrapMode = TextureWrapMode.Clamp;
-
-      List<Color> colors = new List<Color>();
-      for (int i = 0; i < _stochasticCycleCount; i++) {
-
-        List<Color> block = new List<Color>();
-        for (int dx = 0; dx < 16; dx++) {
-          for (int dy = 0; dy < 16; dy++) {
-            block.Add(new Color(dx / 64.0f, dy / 64.0f, 0, 0));
-          }
-        }
-        block.Shuffle();
-
-        colors.AddRange(block);
-      }
-
-      coordinates.SetPixels(colors.ToArray());
-      coordinates.Apply();
-      _simulationMat.SetTexture(PROP_STOCHASTIC, coordinates);
-    } else {
-      _simulationMat.DisableKeyword(KEYWORD_STOCHASTIC);
     }
   }
 

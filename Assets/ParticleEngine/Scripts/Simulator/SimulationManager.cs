@@ -222,11 +222,18 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
-  [OnEditorChange("RebuildTrailTexture")]
+  [OnEditorChange("speedToTrailLength")]
   [SerializeField]
   private AnimationCurve _speedToTrailLength;
   public AnimationCurve speedToTrailLength {
     get { return _speedToTrailLength; }
+    set {
+      _speedToTrailLength = value;
+
+      if (_textureSimulator != null) {
+        _textureSimulator.RebuildTrailTexture();
+      }
+    }
   }
 
   [SerializeField]

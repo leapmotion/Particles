@@ -80,7 +80,7 @@
   uniform int _CapsuleCount;
 
   uniform half4 _Spheres[2];
-  uniform half4 _SphereVelocities[2];
+  uniform half4x4 _SphereDeltas[2];
   uniform int _SphereCount;
   uniform half _SphereForce;
 
@@ -170,9 +170,12 @@
         half3 toSphere = _Spheres[i] - particle.xyz;
         if (length(toSphere) < _Spheres[i].w) {
 #ifdef SPHERE_MODE_STASIS
-          sphereForce += _SphereVelocities[i];
+          //sphereForce += _SphereVelocities[i];
+          float3 newPos = mul(_SphereDeltas[i], float4(particle.xyz, 1));
+          sphereForce += float4(newPos.xyz - particle.xyz, 1);
+          //sphereForce += mul(_SphereDeltas[i], float4(0, 0, 0, 1));
 #else
-          sphereForce.w += _SphereVelocities[i].w;
+          //sphereForce.w += _SphereVelocities[i].w;
 #endif
           sphereForce.xyz += toSphere * _SphereForce;
           spheres++;
@@ -182,6 +185,9 @@
       if (spheres > 0.5) {
         sphereForce /= spheres;
 #ifdef SPHERE_MODE_STASIS
+        //Hack here for now
+        sphereForce.w = 1;
+
         velocity.xyz = sphereForce.xyz * sphereForce.w * 100;
         velocity.w *= lerp(1, 0.5, sphereForce.w);
 #else

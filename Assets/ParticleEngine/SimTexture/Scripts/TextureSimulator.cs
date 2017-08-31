@@ -1466,11 +1466,11 @@ public class TextureSimulator : MonoBehaviour {
       Vector4 sphere = _spheres[i];
       float w = sphere.w;
 
-      sphere = transform.InverseTransformPoint(sphere);
-      sphere.w = w / transform.lossyScale.x;
+      sphere = _manager.displayAnchor.InverseTransformPoint(sphere);
+      sphere.w = w / _manager.displayAnchor.lossyScale.x;
       _spheres[i] = sphere;
 
-      _sphereDeltas[i] = transform.worldToLocalMatrix * _sphereDeltas[i] * transform.localToWorldMatrix;
+      _sphereDeltas[i] = _manager.displayAnchor.worldToLocalMatrix * _sphereDeltas[i] * _manager.displayAnchor.localToWorldMatrix;
     }
 
     _simulationMat.SetInt("_SphereCount", sphereCount);
@@ -1501,14 +1501,14 @@ public class TextureSimulator : MonoBehaviour {
     //Then transform capsules into local space
     for (int i = 0; i < capsuleCount; i++) {
       Vector4 v = _capsuleA[i];
-      Vector4 tv = transform.InverseTransformPoint(v);
-      tv.w = v.w / transform.lossyScale.x;
+      Vector4 tv = _manager.displayAnchor.InverseTransformPoint(v);
+      tv.w = v.w / _manager.displayAnchor.lossyScale.x;
 
       _capsuleA[i] = tv;
-      _capsuleB[i] = transform.InverseTransformPoint(_capsuleB[i]);
+      _capsuleB[i] = _manager.displayAnchor.InverseTransformPoint(_capsuleB[i]);
     }
 
-    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / (_handCollisionThickness / transform.lossyScale.x));
+    _simulationMat.SetFloat("_HandCollisionInverseThickness", 1.0f / (_handCollisionThickness / _manager.displayAnchor.lossyScale.x));
     _simulationMat.SetFloat("_HandCollisionExtraForce", _extraHandCollisionForce);
     _simulationMat.SetInt("_SocialHandSpecies", _socialHandSpecies);
     _simulationMat.SetFloat("_SocialHandForceFactor", _socialHandEnabled ? _socialHandForceFactor : 0);
@@ -1765,8 +1765,8 @@ public class TextureSimulator : MonoBehaviour {
     _displayBlock.SetFloat("_Size", _manager.particleSize);
 
     if (_provider != null) {
-      _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));
-      _simulationMat.SetFloat("_HeadRadius", (_manager.headRadius + _headRadiusTransitionDelta) / transform.lossyScale.x);
+      _simulationMat.SetVector("_HeadPos", _manager.displayAnchor.InverseTransformPoint(_provider.transform.position));
+      _simulationMat.SetFloat("_HeadRadius", (_manager.headRadius + _headRadiusTransitionDelta) / _manager.displayAnchor.lossyScale.x);
     }
 
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
@@ -1824,7 +1824,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private void displaySimulation() {
     foreach (var mesh in _displayMeshes) {
-      Graphics.DrawMesh(mesh, transform.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
+      Graphics.DrawMesh(mesh, _manager.displayAnchor.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
     }
   }
 

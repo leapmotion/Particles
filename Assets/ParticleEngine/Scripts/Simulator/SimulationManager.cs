@@ -180,7 +180,7 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
-  [MinValue(0)]
+  [Range(0, 0.05f)]
   [SerializeField]
   private float _particleSize = 0.02f;
   public float particleSize {

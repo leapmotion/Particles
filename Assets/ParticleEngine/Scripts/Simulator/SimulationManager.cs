@@ -174,6 +174,12 @@ public class SimulationManager : MonoBehaviour {
   private bool _loadEcosystemOnStart = true;
 
   [SerializeField]
+  private EcosystemPreset _presetToLoad = EcosystemPreset.BlackHole;
+
+  [SerializeField]
+  private SimulationMethod _methodToUse = SimulationMethod.Texture;
+
+  [SerializeField]
   private KeyCode _saveEcosystemKey = KeyCode.F5;
 
   [SerializeField]
@@ -185,8 +191,7 @@ public class SimulationManager : MonoBehaviour {
   [SerializeField]
   private KeyCode _loadPresetEcosystemKey = KeyCode.R;
 
-  [SerializeField]
-  private EcosystemPreset _presetToLoad = EcosystemPreset.BlackHole;
+
 
   [SerializeField]
   private StreamingFolder _loadingFolder;
@@ -328,6 +333,12 @@ public class SimulationManager : MonoBehaviour {
     _textureSimulator = GetComponentInChildren<TextureSimulator>();
     _ieSimulator = GetComponentInChildren<IESimulator_TEMP>();
     _generator = GetComponentInChildren<GeneratorManager>();
+  }
+
+  private void Start() {
+    if (_loadEcosystemOnStart) {
+      RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions, (SimulationMethodTransition)_methodToUse);
+    }
   }
   #endregion
 

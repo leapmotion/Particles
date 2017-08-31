@@ -946,7 +946,7 @@ public class TextureSimulator_OLD : MonoBehaviour {
 
   #region PUBLIC API
 
-  public TextureSimulator() {
+  public TextureSimulator_OLD() {
     _textureDimension = Mathf.RoundToInt(Mathf.Sqrt(MAX_PARTICLES));
     if (_textureDimension * _textureDimension != MAX_PARTICLES) {
       Debug.LogError("Max particles must be a square number.");
@@ -1115,7 +1115,7 @@ public class TextureSimulator_OLD : MonoBehaviour {
     _displayColorA.filterMode = FilterMode.Point;
     _displayColorB = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorB.filterMode = FilterMode.Point;
-    _handActors.Fill(() => new HandActor(this));
+    //_handActors.Fill(() => new HandActor(this));
   }
 
   void Start() {

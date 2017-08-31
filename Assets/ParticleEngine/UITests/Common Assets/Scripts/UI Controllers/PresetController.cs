@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class PresetController : MonoBehaviour {
 
-  public TextureSimulator simulator;
+  public SimulationManager simManager;
 
   [SerializeField, OnEditorChange("presetIdx")]
   private int _curPresetIdx = 0;
@@ -18,8 +18,8 @@ public class PresetController : MonoBehaviour {
   private string[] _presetNames;
 
   private void Reset() {
-    if (simulator == null) {
-      simulator = FindObjectOfType<TextureSimulator>();
+    if (simManager == null) {
+      simManager = FindObjectOfType<SimulationManager>();
     }
   }
 
@@ -32,11 +32,11 @@ public class PresetController : MonoBehaviour {
   }
 
   private void initPresets() {
-    _numPresets = System.Enum.GetNames(typeof(TextureSimulator.EcosystemPreset)).Length;
+    _numPresets = System.Enum.GetNames(typeof(EcosystemPreset)).Length;
     _presetNames = new string[_numPresets];
 
     for (int i = 0; i < _numPresets; i++) {
-      _presetNames[i] = ((TextureSimulator.EcosystemPreset)i).ToString();
+      _presetNames[i] = ((EcosystemPreset)i).ToString();
     }
 
     // Make sure presetIdx is still valid.
@@ -52,7 +52,7 @@ public class PresetController : MonoBehaviour {
   }
 
   public void LoadPreset() {
-    simulator.RestartSimulation((TextureSimulator.EcosystemPreset)curPresetIdx);
+    simManager.RestartSimulation((EcosystemPreset)curPresetIdx);
   }
 
 

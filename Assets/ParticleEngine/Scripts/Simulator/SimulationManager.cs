@@ -115,6 +115,17 @@ public class SimulationManager : MonoBehaviour {
     set { _displayParticles = value; }
   }
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _displayScale = 1;
+  public float displayScale {
+    get { return _displayScale; }
+    set {
+      _displayScale = value;
+      //TODO: push values
+    }
+  }
+
   [SerializeField]
   private Mesh _particleMesh;
   public Mesh particleMesh {
@@ -125,6 +136,17 @@ public class SimulationManager : MonoBehaviour {
       if (_textureSimulator != null) {
         _textureSimulator.BuildDisplayMeshes();
       }
+    }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _particleSize = 0.02f;
+  public float particleSize {
+    get { return _particleSize; }
+    set {
+      _particleSize = value;
+      //TODO, push values
     }
   }
 
@@ -139,6 +161,17 @@ public class SimulationManager : MonoBehaviour {
       if (_textureSimulator != null) {
         _textureSimulator.UpdateShaderKeywords();
       }
+    }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _trailSize = 0.02f;
+  public float trailSize {
+    get { return _trailSize; }
+    set {
+      _trailSize = value;
+      //TODO: push values
     }
   }
 
@@ -213,8 +246,19 @@ public class SimulationManager : MonoBehaviour {
   public EcosystemDescription currentDescription { get; private set; }
   public SimulationMethod currentSimulationMethod { get; private set; }
 
+  public float simulationAge {
+    get {
+      //TODO
+      return 0;
+    }
+  }
+
   public Color GetSpeciesColor(int speciesIdx) {
     return currentDescription.speciesData[speciesIdx].color;
+  }
+
+  public void ApplySliderValues() {
+    //TODO
   }
 
   /// <summary>

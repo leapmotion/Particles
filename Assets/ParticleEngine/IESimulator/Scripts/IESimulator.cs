@@ -30,9 +30,9 @@ public class IESimulator : MonoBehaviour {
   private bool logicEnabled = true;
 
   private List<IEParticle> _particles = new List<IEParticle>();
-  private TextureSimulator.SimulationDescription _desc;
+  private EcosystemDescription _desc;
 
-  public void LoadDescription(TextureSimulator.SimulationDescription desc) {
+  public void LoadDescription(EcosystemDescription desc) {
     _desc = desc;
 
     foreach (var obj in _particles) {
@@ -46,7 +46,7 @@ public class IESimulator : MonoBehaviour {
       return mat;
     }).ToArray();
 
-    foreach (var obj in desc.toSpawn) {
+    foreach (var obj in desc.particles) {
       GameObject particle = Instantiate(_particlePrefab);
       particle.transform.SetParent(transform);
       particle.transform.localPosition = obj.position;
@@ -66,7 +66,7 @@ public class IESimulator : MonoBehaviour {
   private void Update() {
     if (Input.GetKeyDown(KeyCode.F6)) {
       var path = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
-      var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(path));
+      var desc = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(path));
       LoadDescription(desc);
     }
 
@@ -139,9 +139,4 @@ public class IESimulator : MonoBehaviour {
       particle.rigidbody.velocity *= (1.0f - _desc.speciesData[particle.species].drag);
     }
   }
-
-
-
-
-
 }

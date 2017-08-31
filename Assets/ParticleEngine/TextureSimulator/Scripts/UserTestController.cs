@@ -10,7 +10,9 @@ using Leap.Unity.GraphicalRenderer;
 
 public class UserTestController : MonoBehaviour {
 
-  public TextureSimulator sim;
+  public SimulationManager simManager;
+  public TextureSimulator texSimulator;
+
   public InteractionButton nextButton;
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
@@ -41,7 +43,7 @@ public class UserTestController : MonoBehaviour {
                                 OrderBy(p => p).
                                 ToList();
 
-    sim.OnEcosystemMidTransition += onSimulationTransitionMid;
+    simManager.OnEcosystemMidTransition += onSimulationTransitionMid;
   }
 
   void Update() {
@@ -120,15 +122,15 @@ public class UserTestController : MonoBehaviour {
     string dataPath = Path.Combine(dataFolder.Path, Path.GetFileName(_ecosystemPaths[_currEcosystem]));
     _currLoadData = JsonUtility.FromJson<LoadData>(File.ReadAllText(dataPath));
 
-    var desc = JsonUtility.FromJson<TextureSimulator.SimulationDescription>(File.ReadAllText(_ecosystemPaths[_currEcosystem]));
+    var desc = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(_ecosystemPaths[_currEcosystem]));
     if (forceReset) {
-      sim.RestartSimulation(desc, TextureSimulator.ResetBehavior.ResetPositions);
+      simManager.RestartSimulation(desc, ResetBehavior.ResetPositions, (SimulationMethodTransition)_currLoadData.simMethod);
     } else {
-      sim.RestartSimulation(desc, _currLoadData.transitionBehavior);
+      simManager.RestartSimulation(desc, _currLoadData.transitionBehavior, (SimulationMethodTransition)_currLoadData.simMethod);
     }
 
-    sim.handCollisionEnabled = _currLoadData.collisionEnabled;
-    sim.handInfluenceEnabled = _currLoadData.graspingEnabled;
+    texSimulator.handCollisionEnabled = _currLoadData.collisionEnabled;
+    texSimulator.handInfluenceEnabled = _currLoadData.graspingEnabled;
 
     StartCoroutine(loadAudioCoroutine());
   }
@@ -180,17 +182,18 @@ public class UserTestController : MonoBehaviour {
   }
 
   private void onSimulationTransitionMid() {
-    sim.transform.localScale = Vector3.one * _currLoadData.simulationScale;
-    sim.colorMode = _currLoadData.colorMode;
+    simManager.displayScale = _currLoadData.simulationScale;
+    simManager.colorMode = _currLoadData.colorMode;
 
-    if (sim.particleMesh != meshes[_currLoadData.meshDetail]) {
-      sim.particleMesh = meshes[_currLoadData.meshDetail];
+    if (simManager.particleMesh != meshes[_currLoadData.meshDetail]) {
+      simManager.particleMesh = meshes[_currLoadData.meshDetail];
     }
   }
 
   public class LoadData {
-    public TextureSimulator.ResetBehavior transitionBehavior = TextureSimulator.ResetBehavior.FadeInOut;
-    public TextureSimulator.ColorMode colorMode = TextureSimulator.ColorMode.BySpecies;
+    public ResetBehavior transitionBehavior = ResetBehavior.FadeInOut;
+    public ColorMode colorMode = ColorMode.BySpecies;
+    public SimulationMethod simMethod = SimulationMethod.Texture;
     public float simulationScale = 1;
     public float timeScale = 1;
     public string backgroundMusic = "";

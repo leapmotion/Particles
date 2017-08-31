@@ -5,13 +5,15 @@ public class TextureSimulatorSetters : MonoBehaviour {
   [SerializeField]
   private Material _skybox;
 
-  private TextureSimulator _backingSim;
-  private TextureSimulator _sim {
+  private SimulationManager simManager {
     get {
-      if (_backingSim == null) {
-        _backingSim = GetComponent<TextureSimulator>();
-      }
-      return _backingSim;
+      return GetComponent<SimulationManager>();
+    }
+  }
+
+  private GeneratorManager genManager {
+    get {
+      return GetComponent<GeneratorManager>();
     }
   }
 
@@ -19,197 +21,197 @@ public class TextureSimulatorSetters : MonoBehaviour {
     name = name.ToLower();
     switch (name) {
       case "red menace":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.RedMenace);
+        simManager.RestartSimulation(EcosystemPreset.RedMenace);
         break;
       case "chase":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Chase);
+        simManager.RestartSimulation(EcosystemPreset.Chase);
         break;
       case "planets":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Planets);
+        simManager.RestartSimulation(EcosystemPreset.Planets);
         break;
       case "mitosis":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Mitosis);
+        simManager.RestartSimulation(EcosystemPreset.Mitosis);
         break;
       case "bodymind":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.BodyMind);
+        simManager.RestartSimulation(EcosystemPreset.BodyMind);
         break;
       case "fluidy":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Fluidy);
+        simManager.RestartSimulation(EcosystemPreset.Fluidy);
         break;
       case "globules":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Globules);
+        simManager.RestartSimulation(EcosystemPreset.Globules);
         break;
       case "Layers":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Layers);
+        simManager.RestartSimulation(EcosystemPreset.Layers);
         break;
       case "body mind":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.BodyMind);
+        simManager.RestartSimulation(EcosystemPreset.BodyMind);
         break;
-	  case "Nova":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Nova);
+      case "Nova":
+        simManager.RestartSimulation(EcosystemPreset.Nova);
         break;
-	  case "EnergyConserving":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.EnergyConserving);
+      case "EnergyConserving":
+        simManager.RestartSimulation(EcosystemPreset.EnergyConserving);
         break;
       case "SolarSystem":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.SolarSystem );
+        simManager.RestartSimulation(EcosystemPreset.SolarSystem);
         break;
       case "Comets":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Comets);
+        simManager.RestartSimulation(EcosystemPreset.Comets);
         break;
       case "Capillary":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Capillary);
+        simManager.RestartSimulation(EcosystemPreset.Capillary);
         break;
-       case "Worms":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Worms);
+      case "Worms":
+        simManager.RestartSimulation(EcosystemPreset.Worms);
         break;
-       case "StringTheory":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.StringTheory);
+      case "StringTheory":
+        simManager.RestartSimulation(EcosystemPreset.StringTheory);
         break;
-       case "OrbFlow":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.OrbFlow);
+      case "OrbFlow":
+        simManager.RestartSimulation(EcosystemPreset.OrbFlow);
         break;
-       case "Tutorial_2_Attract":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Attract);
+      case "Tutorial_2_Attract":
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_2_Attract);
         break;
-       case "Tutorial_2_Repel":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Repel);
+      case "Tutorial_2_Repel":
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_2_Repel);
         break;
-       case "Tutorial_2_Chase":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_2_Chase);
+      case "Tutorial_2_Chase":
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_2_Chase);
         break;
       case "Tutorial_3_Attract_Line":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Line);
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_3_Attract_Line);
         break;
       case "Tutorial_3_Attract_Loop":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3_Attract_Loop);
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_3_Attract_Loop);
         break;
       case "Tutorial_100_Attract":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Attract );
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_100_Attract);
         break;
       case "Tutorial_100_Repel":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_100_Repel );
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_100_Repel);
         break;
       case "Tutorial_1000_Chase":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_1000_Chase );
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_1000_Chase);
         break;
       case "Tutorial_3000_3_Chase":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_3_Chase );
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_3000_3_Chase);
         break;
-     case "Tutorial_3000_2_Ranges":
-        _sim.RestartSimulation(TextureSimulator.EcosystemPreset.Tutorial_3000_2_Ranges );
+      case "Tutorial_3000_2_Ranges":
+        simManager.RestartSimulation(EcosystemPreset.Tutorial_3000_2_Ranges);
         break;
-       default:
+      default:
         Debug.LogError("No ecosystem with name " + name);
         break;
     }
   }
 
   public void SetSpeciesCount(float count) {
-    _sim.randomEcosystemSettings.speciesCount = Mathf.RoundToInt(count);
+    genManager.speciesCount = Mathf.RoundToInt(count);
   }
 
   public float GetSpeciesCount() {
-    return _sim.randomEcosystemSettings.speciesCount;
+    return genManager.speciesCount;
   }
 
   public void SetParticleCount(int count) {
-    _sim.randomEcosystemSettings.particleCount = count;
+    genManager.particleCount = count;
   }
 
   public int GetParticleCount() {
-    return _sim.randomEcosystemSettings.particleCount;
+    return genManager.particleCount;
   }
 
   public void SetMaxForce(float maxForce) {
-    _sim.randomEcosystemSettings.maxSocialForce = maxForce;
+    genManager.maxSocialForce = maxForce;
   }
 
   public float GetMaxForce() {
-    return _sim.randomEcosystemSettings.maxSocialForce;
+    return genManager.maxSocialForce;
   }
 
   public void SetMaxForceSteps(float maxForceSteps) {
-    _sim.randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxForceSteps);
+    genManager.maxForceSteps = Mathf.RoundToInt(maxForceSteps);
   }
 
   public float GetMaxForceSteps() {
-    return _sim.randomEcosystemSettings.maxForceSteps;
+    return genManager.maxForceSteps;
   }
 
   public void SetMaxRange(float maxRange) {
-    _sim.randomEcosystemSettings.maxSocialRange = maxRange;
+    genManager.maxSocialRange = maxRange;
   }
 
   public float GetMaxRange() {
-    return _sim.randomEcosystemSettings.maxSocialRange;
+    return genManager.maxSocialRange;
   }
-  
+
   public void SetDrag(float drag) {
-    _sim.randomEcosystemSettings.dragCenter = drag;
+    genManager.dragCenter = drag;
   }
 
   public float GetDrag() {
-    return _sim.randomEcosystemSettings.dragCenter;
+    return genManager.dragCenter;
   }
 
   public void SetParticleSize(float particleSize) {
-    _sim.displayProperties.SetFloat("_Size", particleSize);
+    simManager.particleSize = particleSize;
   }
 
   public float GetParticleSize() {
-    return _sim.displayProperties.GetFloat("_Size");
+    return simManager.particleSize;
   }
 
   public void SetTrailSize(float trailSize) {
-    _sim.displayProperties.SetFloat("_TrailLength", trailSize);
+    simManager.trailSize = trailSize;
   }
 
   public float GetTrailSize() {
-    return _sim.displayProperties.GetFloat("_TrailLength");
+    return simManager.trailSize;
   }
 
   public void SetBoundingForce(float boundingForce) {
-    _sim.fieldForce = boundingForce;
+    simManager.fieldForce = boundingForce;
   }
 
   public float GetBoundingForce() {
-    return _sim.fieldForce;
+    return simManager.fieldForce;
   }
 
   public void SetBoundingRadius(float boundingRadius) {
-    _sim.fieldRadius = boundingRadius;
+    simManager.fieldRadius = boundingRadius;
   }
 
   public float GetBoundingRadius() {
-    return _sim.fieldRadius;
+    return simManager.fieldRadius;
   }
 
   public void SetTimescale(float timescale) {
-    _sim.simulationTimescale = timescale;
+    simManager.simulationTimescale = timescale;
   }
 
   public float GetTimescale() {
-    return _sim.simulationTimescale;
+    return simManager.simulationTimescale;
   }
 
   public void SetDisplayMode(string mode) {
     mode = mode.ToLower();
     if (mode.Contains("species")) {
-      _sim.colorMode = TextureSimulator.ColorMode.BySpecies;
+      simManager.colorMode = ColorMode.BySpecies;
     } else if (mode.Contains("speed")) {
-      _sim.colorMode = TextureSimulator.ColorMode.BySpeciesWithMagnitude;
+      simManager.colorMode = ColorMode.BySpeciesWithMagnitude;
     } else if (mode.Contains("direction")) {
-      _sim.colorMode = TextureSimulator.ColorMode.ByVelocity;
+      simManager.colorMode = ColorMode.ByVelocity;
     }
   }
 
-  public void SetColorMode(TextureSimulator.ColorMode mode) {
-    _sim.colorMode = mode;
+  public void SetColorMode(ColorMode mode) {
+    simManager.colorMode = mode;
   }
 
-  public TextureSimulator.ColorMode GetColorMode() {
-    return _sim.colorMode;
+  public ColorMode GetColorMode() {
+    return simManager.colorMode;
   }
 
   public void SetSkyRed(float red) {
@@ -228,12 +230,6 @@ public class TextureSimulatorSetters : MonoBehaviour {
     Color c = _skybox.GetColor("_MiddleColor");
     c.b = blue;
     setSkyColor(c);
-  }
-
-  public void LoadRandomEcosystem(LabelController controller) {
-    var name = _sim.GetComponent<NameGenerator>().GenerateName();
-    controller.SetLabel(name);
-    _sim.RandomizeSimulation(name, TextureSimulator.ResetBehavior.SmoothTransition);
   }
 
   private void setSkyColor(Color c) {

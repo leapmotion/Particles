@@ -39,7 +39,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
 
   protected virtual void Awake() {
-    simulator.OnEcosystemEndedTransition += onEcosystemEndedTransition;
+    simManager.OnEcosystemEndedTransition += onEcosystemEndedTransition;
 
     slider.HorizontalSlideEvent += onSlideEvent;
     slider.OnUnpress += onUnpress;
@@ -63,7 +63,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
   }
 
   private void onUnpress() {
-    simulator.ApplySliderValues();
+    simManager.ApplySliderValues();
   }
 
   protected virtual void Update() {

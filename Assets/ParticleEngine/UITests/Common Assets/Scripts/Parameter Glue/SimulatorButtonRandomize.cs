@@ -6,7 +6,7 @@ using UnityEngine;
 public class SimulatorButtonRandomize : SimulatorButtonControl {
 
   public override void onPress() {
-    simulator.RandomizeSimulation(TextureSimulator.ResetBehavior.SmoothTransition);
+    simManager.RandomizeSimulation(ResetBehavior.SmoothTransition);
   }
 
 }

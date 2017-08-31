@@ -4,16 +4,20 @@ using UnityEngine;
 
 public class SimulatorUIControl : MonoBehaviour {
 
-  public TextureSimulator simulator;
+  public SimulationManager simManager;
+  public GeneratorManager genManager;
+
   public TextureSimulatorSetters simulatorSetters;
 
   protected virtual void OnValidate() {
-    simulator = FindObjectOfType<TextureSimulator>();
+    simManager = FindObjectOfType<SimulationManager>();
+    genManager = FindObjectOfType<GeneratorManager>();
     simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
   }
 
   protected virtual void Reset() {
-    simulator = FindObjectOfType<TextureSimulator>();
+    simManager = FindObjectOfType<SimulationManager>();
+    genManager = FindObjectOfType<GeneratorManager>();
     simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
   }
 

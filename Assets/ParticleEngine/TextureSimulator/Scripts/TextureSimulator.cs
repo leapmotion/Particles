@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if false
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -4218,3 +4219,4 @@ public class TextureSimulator_OLD : MonoBehaviour {
   #endregion
 
 }
+#endif

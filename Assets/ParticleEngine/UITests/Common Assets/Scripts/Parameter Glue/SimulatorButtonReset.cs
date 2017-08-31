@@ -6,7 +6,7 @@ using UnityEngine;
 public class SimulatorButtonReset : SimulatorButtonControl {
 
   public override void onPress() {
-    simulator.RestartSimulation();
+    simManager.RestartSimulation();
   }
 
 }

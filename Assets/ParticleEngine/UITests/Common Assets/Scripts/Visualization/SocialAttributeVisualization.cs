@@ -13,7 +13,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   #region Inspector
   
   [Header("Simulator Bindings")]
-  public TextureSimulator simulator;
+  public SimulationManager simManager;
   public TextureSimulatorSetters simulatorSetters;
 
   public enum VisualizationMode { SocialForces, SocialVision }
@@ -70,8 +70,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
   #region Unity Events
 
   void Reset() {
-    if (simulator == null) {
-      simulator = FindObjectOfType<TextureSimulator>();
+    if (simManager == null) {
+      simManager = FindObjectOfType<SimulationManager>();
     }
 
     if (simulatorSetters == null) {
@@ -84,7 +84,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   void Start() {
-    simulator.OnEcosystemEndedTransition += onEcosystemChanged;
+    simManager.OnEcosystemEndedTransition += onEcosystemChanged;
 
     modeController.OnIndexToggled += onModeIndexToggled;
   }
@@ -93,8 +93,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
   #region Simulation Data
 
-  private TextureSimulator.SimulationDescription _simDescription;
-  private TextureSimulator.SocialData[,] _socialData;
+  private EcosystemDescription _simDescription;
+  private SocialDescription[,] _socialData;
   private float _effectiveMaxForce;
   private float _effectiveMaxRange;
 
@@ -102,8 +102,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
   private int _numSocialAttributes { get { return _numSpecies * _numSpecies; } }
 
   private void onEcosystemChanged() {
-    _simDescription    = simulator.currentSimulationDescription;
-    _socialData = simulator.currentSimulationDescription.socialData;
+    _simDescription    = simManager.currentDescription;
+    _socialData = simManager.currentDescription.socialData;
     _effectiveMaxForce = getEffectiveMaxForce();
     _effectiveMaxRange = getEffectiveMaxRange();
 
@@ -113,7 +113,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private float getEffectiveMaxForce() {
-    if (simulator.currentSimulationDescription.isRandomDescription) {
+    if (simManager.currentDescription.isRandomDescription) {
       return simulatorSetters.GetMaxForce();
     }
     else {
@@ -133,7 +133,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private float getEffectiveMaxRange() {
-    if (simulator.currentSimulationDescription.isRandomDescription) {
+    if (simManager.currentDescription.isRandomDescription) {
       return simulatorSetters.GetMaxRange();
     }
     else {

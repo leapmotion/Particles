@@ -678,7 +678,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _particlePrefab: {fileID: 1427229345}
-  _materialTemplate: {fileID: 2100000, guid: 1f078f78614c9bd44b6a46b30a9ebb52, type: 2}
+  _displayMat: {fileID: 2100000, guid: 1f078f78614c9bd44b6a46b30a9ebb52, type: 2}
 --- !u!1 &1392349244
 GameObject:
   m_ObjectHideFlags: 0

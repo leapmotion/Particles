@@ -14,7 +14,7 @@ public class IESimulator : MonoBehaviour {
   private GameObject _particlePrefab;
 
   [SerializeField]
-  private Material _materialTemplate;
+  private Material _displayMat;
   #endregion
 
   private SimulationManager _manager;
@@ -27,6 +27,8 @@ public class IESimulator : MonoBehaviour {
     //TODO: remove this and implement everything else
     resetBehavior = ResetBehavior.ResetPositions;
 
+    var block = new MaterialPropertyBlock();
+
     switch (resetBehavior) {
       case ResetBehavior.ResetPositions:
         foreach (var obj in _particles) {
@@ -34,24 +36,23 @@ public class IESimulator : MonoBehaviour {
         }
         _particles.Clear();
 
-        var materials = description.speciesData.Query().Select(t => {
-          var mat = Instantiate(_materialTemplate);
-          mat.color = t.color;
-          return mat;
-        }).ToArray();
-
         foreach (var obj in description.particles) {
           GameObject particle = Instantiate(_particlePrefab);
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;
           particle.transform.localRotation = Quaternion.identity;
           particle.transform.localScale = Vector3.one * _manager.particleSize;
+
           particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
-          particle.GetComponent<Renderer>().sharedMaterial = materials[obj.species];
+
+          particle.GetComponent<Renderer>().sharedMaterial = _displayMat;
+          block.SetColor("_Color", description.speciesData[obj.species].color);
+          particle.GetComponent<Renderer>().SetPropertyBlock(block);
+
           particle.GetComponent<Rigidbody>().velocity = obj.velocity;
           particle.GetComponent<IEParticle>().species = obj.species;
-          particle.SetActive(true);
 
+          particle.SetActive(true);
           _particles.Add(particle.GetComponent<IEParticle>());
         }
 

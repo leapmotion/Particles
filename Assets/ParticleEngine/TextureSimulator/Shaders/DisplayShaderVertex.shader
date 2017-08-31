@@ -119,7 +119,7 @@
     calculateParticleShape(v.vertex, velocity);
       
     //This line makes the particles grow/shrink when transitions happen
-    //v.vertex.xyz *= color.a;
+    v.vertex.xyz *= color.a;
 
     v.vertex.xyz += particle.xyz;
 

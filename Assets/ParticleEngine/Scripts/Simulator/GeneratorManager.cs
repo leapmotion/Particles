@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.Query;
 using Leap.Unity.Attributes;
+
 
 public class GeneratorManager : MonoBehaviour {
   public const int MAX_PARTICLES = SimulationManager.MAX_PARTICLES;
@@ -163,5 +165,100 @@ public class GeneratorManager : MonoBehaviour {
       colors.Add(newColor);
     }
     return colors.ToArray();
+  }
+
+  public EcosystemDescription GetPresetEcosystem(EcosystemPreset preset) {
+    var presetGenerator = GetComponentInChildren<PresetGenerator>();
+    var description = presetGenerator.GetPresetDescription(preset);
+    copyDescriptionToSliders(description);
+    return description;
+  }
+
+  public EcosystemDescription GetRandomEcosystem() {
+    var randomGenerator = GetComponentInChildren<RandomGenerator>();
+    var description = randomGenerator.GetRandomEcosystemDescription();
+    copyDescriptionToSliders(description);
+    return description;
+  }
+
+  public EcosystemDescription GetRandomEcosystem(string name) {
+    var randomGenerator = GetComponentInChildren<RandomGenerator>();
+    var description = randomGenerator.GetRandomEcosystemDescription(name);
+    copyDescriptionToSliders(description);
+    return description;
+  }
+
+  private void copyDescriptionToSliders(EcosystemDescription desc) {
+    float maxForce = 0;
+    float maxRange = 0;
+    float maxSteps = 1;
+    float maxDrag = 0;
+    for (int i = 0; i < desc.speciesData.Length; i++) {
+      for (int j = 0; j < desc.speciesData.Length; j++) {
+        maxForce = Mathf.Max(maxForce, desc.socialData[i, j].socialForce);
+        maxRange = Mathf.Max(maxRange, desc.socialData[i, j].socialRange);
+      }
+      maxSteps = Mathf.Max(maxSteps, desc.speciesData[i].forceSteps + 1);
+      maxDrag = Mathf.Max(maxDrag, desc.speciesData[i].drag);
+    }
+
+    maxSocialForce = maxForce;
+    maxSocialRange = maxRange;
+    maxForceSteps = Mathf.RoundToInt(maxSteps);
+    dragCenter = maxDrag;
+    particleCount = desc.particles.Count;
+    speciesCount = desc.particles.Query().CountUnique(t => t.species);
+  }
+
+  public void ApplySliderValues(ref EcosystemDescription currentDescription, out ResetBehavior requiredReset) {
+    requiredReset = ResetBehavior.None;
+    if (particleCount != currentDescription.particles.Count) {
+      requiredReset = ResetBehavior.SmoothTransition;
+    }
+    if (speciesCount != currentDescription.particles.Query().CountUnique(t => t.species)) {
+      requiredReset = ResetBehavior.SmoothTransition;
+    }
+
+    if (currentDescription.isRandomDescription) {
+      currentDescription = GetRandomEcosystem(currentDescription.name);
+    } else {
+      var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), currentDescription.name);
+      currentDescription = GetPresetEcosystem(preset);
+
+      float maxForce = float.Epsilon;
+      float maxRange = float.Epsilon;
+      int maxSteps = 0;
+      float maxDrag = float.Epsilon;
+      for (int i = 0; i < currentDescription.speciesData.Length; i++) {
+        for (int j = 0; j < currentDescription.speciesData.Length; j++) {
+          maxForce = Mathf.Max(maxForce, currentDescription.socialData[i, j].socialForce);
+          maxRange = Mathf.Max(maxRange, currentDescription.socialData[i, j].socialRange);
+        }
+        maxSteps = Mathf.Max(maxSteps, currentDescription.speciesData[i].forceSteps);
+        maxDrag = Mathf.Max(maxDrag, currentDescription.speciesData[i].drag);
+      }
+
+      float forceFactor = maxSocialForce / maxForce;
+      float rangeFactor = maxSocialRange / maxRange;
+      float dragFactor = dragCenter / maxDrag;
+
+      for (int i = 0; i < currentDescription.speciesData.Length; i++) {
+        for (int j = 0; j < currentDescription.speciesData.Length; j++) {
+          currentDescription.socialData[i, j].socialForce *= forceFactor;
+          currentDescription.socialData[i, j].socialRange *= rangeFactor;
+        }
+
+        float percent;
+        if (maxSteps == 0) {
+          percent = 1;
+        } else {
+          percent = Mathf.InverseLerp(0, maxSteps, currentDescription.speciesData[i].forceSteps);
+        }
+
+        int result = Mathf.FloorToInt(Mathf.Lerp(0, maxForceSteps - 1, percent));
+        currentDescription.speciesData[i].forceSteps = result;
+        currentDescription.speciesData[i].drag *= dragFactor;
+      }
+    }
   }
 }

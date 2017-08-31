@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.IO;
 using UnityEngine;
 using Leap.Unity;
+using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 
 public enum ColorMode {
@@ -20,6 +20,17 @@ public enum ResetBehavior {
   SmoothTransition,
   ResetPositions,
   FadeInOut,
+}
+
+public enum SimulationMethod {
+  Texture = 1,
+  InteractionEngine = 2
+}
+
+public enum SimulationMethodTransition {
+  KeepSame,
+  ToTexture = SimulationMethod.Texture,
+  ToInteractionEngine = SimulationMethod.InteractionEngine
 }
 
 public class SimulationManager : MonoBehaviour {
@@ -110,7 +121,10 @@ public class SimulationManager : MonoBehaviour {
     get { return _particleMesh; }
     set {
       _particleMesh = value;
-      //buildDisplayMeshes();
+
+      if (_textureSimulator != null) {
+        _textureSimulator.BuildDisplayMeshes();
+      }
     }
   }
 
@@ -121,7 +135,10 @@ public class SimulationManager : MonoBehaviour {
     get { return _colorMode; }
     set {
       _colorMode = value;
-      //updateKeywords();
+
+      if (_textureSimulator != null) {
+        _textureSimulator.UpdateShaderKeywords();
+      }
     }
   }
 
@@ -132,7 +149,10 @@ public class SimulationManager : MonoBehaviour {
     get { return _trailMode; }
     set {
       _trailMode = value;
-      //updateKeywords();
+
+      if (_textureSimulator != null) {
+        _textureSimulator.UpdateShaderKeywords();
+      }
     }
   }
 
@@ -160,62 +180,49 @@ public class SimulationManager : MonoBehaviour {
   private KeyCode _loadEcosystemKey = KeyCode.F6;
 
   [SerializeField]
+  private KeyCode _randomizeEcosystemKey = KeyCode.Space;
+
+  [SerializeField]
+  private KeyCode _loadPresetEcosystemKey = KeyCode.R;
+
+  [SerializeField]
+  private EcosystemPreset _presetToLoad = EcosystemPreset.BlackHole;
+
+  [SerializeField]
   private StreamingFolder _loadingFolder;
 
   #endregion
 
+  private TextureSimulator _textureSimulator;
+  private IESimulator_TEMP _ieSimulator;
+  private GeneratorManager _generator;
+
   #region PUBLIC API
+  public event System.Action OnPresetLoaded;
+  public event System.Action OnEcosystemBeginTransition;
+  public event System.Action OnEcosystemMidTransition;
+  public event System.Action OnEcosystemEndedTransition;
 
+  public bool isPerformingTransition { get; private set; }
 
-  public System.Action OnPresetLoaded;
-  public System.Action OnEcosystemBeginTransition;
-  public System.Action OnEcosystemMidTransition;
-  public System.Action OnEcosystemEndedTransition;
-
-  public bool isPerformingTransition { get; set; }
-
-  public EcosystemDescription currentDescription {
-    get {
-      throw new System.NotImplementedException();
-    }
-    set {
-      throw new System.NotImplementedException();
-    }
-  }
-
-  public float simulationAge {
-    get {
-      return _currSimulationTime;
-    }
-  }
+  public EcosystemDescription currentDescription { get; private set; }
+  public SimulationMethod currentSimulationMethod { get; private set; }
 
   public Color GetSpeciesColor(int speciesIdx) {
-    //var colors = Pool<List<Color>>.Spawn();
-    //try {
-    //  _particleMat.GetColorArray("_Colors", colors);
-    //  if (speciesIdx > colors.Count - 1) {
-    //    return Color.black;
-    //  } else {
-    //    return colors[speciesIdx];
-    //  }
-    //} finally {
-    //  colors.Clear();
-    //  Pool<List<Color>>.Recycle(colors);
-    //}
-    throw new System.NotImplementedException();
+    return currentDescription.speciesData[speciesIdx].color;
   }
 
   /// <summary>
   /// Restarts the simulation to whatever state it was in when it was
   /// most recently restarted.
   /// </summary>
-  public void RestartSimulation() {
+  public void RestartSimulation(SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
     //If we had generated a random simulation, re-generate it so that new settings
     //can take effect.  We assume the name of the description is it's seed!
-    if (_currentSimDescription.isRandomDescription) {
-      RandomizeSimulation(_currentSimDescription.name, ResetBehavior.SmoothTransition);
+    if (currentDescription.isRandomDescription) {
+      RandomizeSimulation(currentDescription.name, ResetBehavior.SmoothTransition);
     } else {
-      RestartSimulation(_currentSimDescription, ResetBehavior.SmoothTransition);
+      RestartSimulation(currentDescription, ResetBehavior.SmoothTransition);
     }
   }
 
@@ -223,9 +230,10 @@ public class SimulationManager : MonoBehaviour {
   /// Restarts the simulation using a specific preset to choose the
   /// initial conditions.
   /// </summary>
-  public void RestartSimulation(EcosystemPreset preset, ResetBehavior resetBehavior = ResetBehavior.FadeInOut) {
-    var presetDesc = getPresetDescription(preset);
-    copyDescriptionToSlidersIfLinked(presetDesc);
+  public void RestartSimulation(EcosystemPreset preset,
+                                ResetBehavior resetBehavior = ResetBehavior.FadeInOut,
+                                SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+    var presetDesc = _generator.GetPresetEcosystem(preset);
 
     RestartSimulation(presetDesc, resetBehavior);
 
@@ -237,123 +245,97 @@ public class SimulationManager : MonoBehaviour {
   /// <summary>
   /// Restarts the simulation using a random description.
   /// </summary>
-  public void RandomizeSimulation(ResetBehavior resetBehavior) {
-    RestartSimulation(getRandomEcosystemDescription(), resetBehavior);
+  public void RandomizeSimulation(ResetBehavior resetBehavior,
+                                  SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+    RestartSimulation(_generator.GetRandomEcosystem(), resetBehavior);
   }
-
 
   /// <summary>
   /// Restarts the simulation using a random description calculated using
   /// the seed value.  The same seed value should always result in the same
   /// simulation description.
   /// </summary>
-  public void RandomizeSimulation(string seed, ResetBehavior resetBehavior) {
-    RestartSimulation(getRandomEcosystemDescription(seed), resetBehavior);
+  public void RandomizeSimulation(string seed,
+                                  ResetBehavior resetBehavior,
+                                  SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+    RestartSimulation(_generator.GetRandomEcosystem(seed), resetBehavior);
   }
 
   /// <summary>
   /// Randomizes the simulation colors of the current simulation.
   /// </summary>
   public void RandomizeSimulationColors() {
-    var newRandomColors = getRandomColors();
-    for (int i = 0; i < _currentSimDescription.speciesData.Length; i++) {
-      _currentSimDescription.speciesData[i].color = newRandomColors[i];
+    var newRandomColors = _generator.GetRandomColors();
+    for (int i = 0; i < currentDescription.speciesData.Length; i++) {
+      currentDescription.speciesData[i].color = newRandomColors[i];
     }
 
-    RestartSimulation(_currentSimDescription, ResetBehavior.None);
+    RestartSimulation(currentDescription, ResetBehavior.None, SimulationMethodTransition.KeepSame);
   }
 
+  public void RestartSimulation(EcosystemDescription ecosystemDescription,
+                                ResetBehavior resetBehavior,
+                                SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+    switch (simulationTransition) {
+      case SimulationMethodTransition.KeepSame:
+        restartSimulator(currentSimulationMethod, ecosystemDescription, resetBehavior);
+        break;
+      default:
+        var newMethod = (SimulationMethod)simulationTransition;
 
-  public void ApplySliderValues() {
-    ResetBehavior resetBehavior = ResetBehavior.None;
-    if (_randomEcosystemSettings.particleCount != _currentSimDescription.toSpawn.Count) {
-      resetBehavior = ResetBehavior.SmoothTransition;
+        restartSimulator(currentSimulationMethod, EcosystemDescription.empty, resetBehavior);
+        restartSimulator(newMethod, ecosystemDescription, resetBehavior);
+
+        currentSimulationMethod = newMethod;
+        break;
     }
-    if (_randomEcosystemSettings.speciesCount != _currentSimDescription.toSpawn.Query().CountUnique(t => t.species)) {
-      resetBehavior = ResetBehavior.SmoothTransition;
-    }
 
-    if (_currentSimDescription.isRandomDescription) {
-      RandomizeSimulation(_currentSimDescription.name, resetBehavior);
-    } else {
-      var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), _currentSimDescription.name);
-      var presetDesc = getPresetDescription(preset);
-
-      float maxForce = float.Epsilon;
-      float maxRange = float.Epsilon;
-      int maxSteps = 0;
-      float maxDrag = float.Epsilon;
-      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
-        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
-          maxForce = Mathf.Max(maxForce, presetDesc.socialData[i, j].socialForce);
-          maxRange = Mathf.Max(maxRange, presetDesc.socialData[i, j].socialRange);
-        }
-        maxSteps = Mathf.Max(maxSteps, presetDesc.speciesData[i].forceSteps);
-        maxDrag = Mathf.Max(maxDrag, presetDesc.speciesData[i].drag);
-      }
-
-      float forceFactor = _randomEcosystemSettings.maxSocialForce / maxForce;
-      float rangeFactor = _randomEcosystemSettings.maxSocialRange / maxRange;
-      float dragFactor = _randomEcosystemSettings.dragCenter / maxDrag;
-
-      for (int i = 0; i < presetDesc.speciesData.Length; i++) {
-        for (int j = 0; j < presetDesc.speciesData.Length; j++) {
-          presetDesc.socialData[i, j].socialForce *= forceFactor;
-          presetDesc.socialData[i, j].socialRange *= rangeFactor;
-        }
-
-        float percent;
-        if (maxSteps == 0) {
-          percent = 1;
-        } else {
-          percent = Mathf.InverseLerp(0, maxSteps, presetDesc.speciesData[i].forceSteps);
-        }
-
-        int result = Mathf.FloorToInt(Mathf.Lerp(0, _randomEcosystemSettings.maxForceSteps - 1, percent));
-        presetDesc.speciesData[i].forceSteps = result;
-        presetDesc.speciesData[i].drag *= dragFactor;
-      }
-
-      RestartSimulation(presetDesc, resetBehavior);
+    isPerformingTransition = true;
+    if (OnEcosystemBeginTransition != null) {
+      OnEcosystemBeginTransition();
     }
   }
 
-  private void copyDescriptionToSlidersIfLinked(SimulationDescription desc) {
-    if (!_linkToPresets) return;
-
-    float maxForce = 0;
-    float maxRange = 0;
-    float maxSteps = 1;
-    float maxDrag = 0;
-    for (int i = 0; i < desc.speciesData.Length; i++) {
-      for (int j = 0; j < desc.speciesData.Length; j++) {
-        maxForce = Mathf.Max(maxForce, desc.socialData[i, j].socialForce);
-        maxRange = Mathf.Max(maxRange, desc.socialData[i, j].socialRange);
-      }
-      maxSteps = Mathf.Max(maxSteps, desc.speciesData[i].forceSteps + 1);
-      maxDrag = Mathf.Max(maxDrag, desc.speciesData[i].drag);
+  public void NotifyMidTransition(SimulationMethod method) {
+    if (method == currentSimulationMethod && OnEcosystemMidTransition != null) {
+      OnEcosystemMidTransition();
     }
+  }
 
-    _randomEcosystemSettings.maxSocialForce = maxForce;
-    _randomEcosystemSettings.maxSocialRange = maxRange;
-    _randomEcosystemSettings.maxForceSteps = Mathf.RoundToInt(maxSteps);
-    _randomEcosystemSettings.dragCenter = maxDrag;
-    _randomEcosystemSettings.particleCount = desc.toSpawn.Count;
-    _randomEcosystemSettings.speciesCount = desc.toSpawn.Query().CountUnique(t => t.species);
+  public void NotifyEndedTransition(SimulationMethod method) {
+    isPerformingTransition = false;
+
+    if (method == currentSimulationMethod) {
+      switch (method) {
+        case SimulationMethod.Texture:
+          currentDescription = _textureSimulator.currentDescription;
+          break;
+        case SimulationMethod.InteractionEngine:
+          //TODO
+          throw new System.NotImplementedException();
+      }
+
+      if (OnEcosystemEndedTransition != null) {
+        OnEcosystemEndedTransition();
+      }
+    }
   }
 
   #endregion
 
   #region UNITY MESSAGES
-
+  private void Awake() {
+    _textureSimulator = GetComponentInChildren<TextureSimulator>();
+    _ieSimulator = GetComponentInChildren<IESimulator_TEMP>();
+    _generator = GetComponentInChildren<GeneratorManager>();
+  }
   #endregion
 
   #region PRIVATE IMPLEMENTATION
 
-
   private void handleUserInput() {
     if (Input.GetKeyDown(_loadPresetEcosystemKey)) {
-      RestartSimulation(_presetEcosystemSettings.ecosystemPreset, ResetBehavior.ResetPositions);
+      RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);
     }
 
     if (Input.GetKeyDown(_randomizeEcosystemKey)) {
@@ -364,26 +346,35 @@ public class SimulationManager : MonoBehaviour {
       RestartSimulation();
     }
 
-    if (Input.GetKeyDown(_applyLinkedSliders)) {
-      ApplySliderValues();
-    }
-
     if (Input.GetKeyDown(_ranzomizeColorsKey)) {
       RandomizeSimulationColors();
     }
 
     if (Input.GetKeyDown(_saveEcosystemKey)) {
-      File.WriteAllText(_currentSimDescription.name + ".json", JsonUtility.ToJson(_currentSimDescription, prettyPrint: false));
+      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
     }
 
     if (Input.GetKeyDown(_loadEcosystemKey)) {
       var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
-      var description = JsonUtility.FromJson<SimulationDescription>(File.ReadAllText(file));
+      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(file));
       RestartSimulation(description, ResetBehavior.ResetPositions);
     }
   }
 
+  private void restartSimulator(SimulationMethod method,
+                              EcosystemDescription ecosystemDescription,
+                              ResetBehavior resetBehavior) {
+    switch (method) {
+      case SimulationMethod.InteractionEngine:
+        //TODO
+        break;
+      case SimulationMethod.Texture:
+        _textureSimulator.RestartSimulation(ecosystemDescription, resetBehavior);
+        break;
+      default:
+        throw new System.InvalidOperationException();
+    }
+  }
+
   #endregion
-
-
 }

@@ -569,6 +569,7 @@ public class TextureSimulator : MonoBehaviour {
   //General
   private SimulationManager _manager;
 
+
   //Simulation
   private List<CommandBuffer> _simulationCommands = new List<CommandBuffer>();
   private int _commandIndex = 0;
@@ -637,6 +638,8 @@ public class TextureSimulator : MonoBehaviour {
     Radius,
     Fade
   }
+
+  public EcosystemDescription currentDescription { get; private set; }
 
   public RenderTexture positionTexture0 {
     get {
@@ -785,6 +788,59 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
+  public void BuildDisplayMeshes() {
+    _displayMeshes.Clear();
+    var particleVerts = _manager.particleMesh.vertices;
+    var particleTris = _manager.particleMesh.triangles;
+    var particleNormals = _manager.particleMesh.normals;
+
+    List<Vector3> verts = new List<Vector3>();
+    List<Vector3> normals = new List<Vector3>();
+    List<Vector4> uvs = new List<Vector4>();
+    List<int> tris = new List<int>();
+
+    Mesh currMesh = null;
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+      float x = (i % 64) / 64.0f;
+      float y = (i / 64) / 64.0f;
+
+      if (currMesh != null && verts.Count + _manager.particleMesh.vertexCount >= 65536) {
+        if (_particlesPerMesh == 0) {
+          _particlesPerMesh = i;
+        }
+
+        currMesh.SetVertices(verts);
+        currMesh.SetNormals(normals);
+        currMesh.SetUVs(0, uvs);
+        currMesh.SetTriangles(tris, 0, calculateBounds: true);
+        currMesh.UploadMeshData(markNoLogerReadable: true);
+        currMesh = null;
+      }
+
+      if (currMesh == null) {
+        currMesh = new Mesh();
+        currMesh.name = "Particle Mesh";
+        currMesh.hideFlags = HideFlags.HideAndDontSave;
+        _displayMeshes.Add(currMesh);
+
+        verts.Clear();
+        normals.Clear();
+        tris.Clear();
+        uvs.Clear();
+      }
+
+      tris.AddRange(particleTris.Query().Select(t => t + verts.Count).ToArray());
+      verts.AddRange(particleVerts);
+      normals.AddRange(particleNormals);
+      uvs.Append(particleVerts.Length, new Vector4(x, y, 0, 0));
+    }
+
+    currMesh.SetVertices(verts);
+    currMesh.SetNormals(normals);
+    currMesh.SetUVs(0, uvs);
+    currMesh.SetTriangles(tris, 0, calculateBounds: true);
+    currMesh.UploadMeshData(markNoLogerReadable: true);
+  }
 
   public void RebuildTrailTexture() {
     if (!Application.isPlaying) {
@@ -809,7 +865,7 @@ public class TextureSimulator : MonoBehaviour {
     _manager = GetComponentInParent<SimulationManager>();
 
     initBlitMeshes();
-    buildDisplayMeshes();
+    BuildDisplayMeshes();
 
     _displayBlock = new MaterialPropertyBlock();
     _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
@@ -912,13 +968,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private Coroutine _resetCoroutine;
   private IEnumerator restartCoroutine(EcosystemDescription ecosystemDescription, ResetBehavior resetBehavior) {
-    _manager.isPerformingTransition = true;
-
-    if (_manager.OnEcosystemBeginTransition != null) {
-      _manager.OnEcosystemBeginTransition();
-    }
-
-    if (_manager.currentDescription == null) {
+    if (currentDescription == null) {
       resetBehavior = ResetBehavior.ResetPositions;
     }
 
@@ -948,9 +998,7 @@ public class TextureSimulator : MonoBehaviour {
         uploadColorTexture(_displayColorB);
 
         resetBlitMeshes(layout, ecosystemDescription.speciesData, ecosystemDescription.socialData, !isUsingOptimizedLayout);
-        if (_manager.OnEcosystemMidTransition != null) {
-          _manager.OnEcosystemMidTransition();
-        }
+        _manager.NotifyMidTransition(SimulationMethod.Texture);
         break;
       case ResetBehavior.ResetPositions:
         refillColorArrays(layout, colorArray, forceTrueAlpha: true);
@@ -965,9 +1013,7 @@ public class TextureSimulator : MonoBehaviour {
         Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
         Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);
         Shader.SetGlobalTexture(PROP_SOCIAL_FORCE_GLOBAL, _socialQueueSrc);
-        if (_manager.OnEcosystemMidTransition != null) {
-          _manager.OnEcosystemMidTransition();
-        }
+        _manager.NotifyMidTransition(SimulationMethod.Texture);
         break;
       case ResetBehavior.FadeInOut:
       case ResetBehavior.SmoothTransition:
@@ -975,7 +1021,7 @@ public class TextureSimulator : MonoBehaviour {
         _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
 
         bool isIncreasingParticleCount = ecosystemDescription.particles.Count >
-                                         _manager.currentDescription.particles.Count;
+                                         currentDescription.particles.Count;
         if (resetBehavior == ResetBehavior.FadeInOut) {
           _displayColorArray.Fill(new Color(0, 0, 0, 0));
         } else {
@@ -1041,9 +1087,7 @@ public class TextureSimulator : MonoBehaviour {
               DestroyImmediate(randomTexture);
             }
 
-            if (_manager.OnEcosystemMidTransition != null) {
-              _manager.OnEcosystemMidTransition();
-            }
+            _manager.NotifyMidTransition(SimulationMethod.Texture);
           }
 
           yield return null;
@@ -1062,14 +1106,10 @@ public class TextureSimulator : MonoBehaviour {
     _currSimulationTime = 0;
     _prevSimulationTime = 0;
 
-    _manager.currentDescription = ecosystemDescription;
+    currentDescription = ecosystemDescription;
     _resetCoroutine = null;
 
-    if (_manager.OnEcosystemEndedTransition != null) {
-      _manager.OnEcosystemEndedTransition();
-    }
-
-    _manager.isPerformingTransition = false;
+    _manager.NotifyEndedTransition(SimulationMethod.Texture);
   }
 
   private bool tryCalculateOptimizedLayout(List<ParticleDescription> toSpawn, List<SpeciesRect> layout) {
@@ -1748,60 +1788,6 @@ public class TextureSimulator : MonoBehaviour {
 
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);
-  }
-
-  private void buildDisplayMeshes() {
-    _displayMeshes.Clear();
-    var particleVerts = _manager.particleMesh.vertices;
-    var particleTris = _manager.particleMesh.triangles;
-    var particleNormals = _manager.particleMesh.normals;
-
-    List<Vector3> verts = new List<Vector3>();
-    List<Vector3> normals = new List<Vector3>();
-    List<Vector4> uvs = new List<Vector4>();
-    List<int> tris = new List<int>();
-
-    Mesh currMesh = null;
-    for (int i = 0; i < MAX_PARTICLES; i++) {
-      float x = (i % 64) / 64.0f;
-      float y = (i / 64) / 64.0f;
-
-      if (currMesh != null && verts.Count + _manager.particleMesh.vertexCount >= 65536) {
-        if (_particlesPerMesh == 0) {
-          _particlesPerMesh = i;
-        }
-
-        currMesh.SetVertices(verts);
-        currMesh.SetNormals(normals);
-        currMesh.SetUVs(0, uvs);
-        currMesh.SetTriangles(tris, 0, calculateBounds: true);
-        currMesh.UploadMeshData(markNoLogerReadable: true);
-        currMesh = null;
-      }
-
-      if (currMesh == null) {
-        currMesh = new Mesh();
-        currMesh.name = "Particle Mesh";
-        currMesh.hideFlags = HideFlags.HideAndDontSave;
-        _displayMeshes.Add(currMesh);
-
-        verts.Clear();
-        normals.Clear();
-        tris.Clear();
-        uvs.Clear();
-      }
-
-      tris.AddRange(particleTris.Query().Select(t => t + verts.Count).ToArray());
-      verts.AddRange(particleVerts);
-      normals.AddRange(particleNormals);
-      uvs.Append(particleVerts.Length, new Vector4(x, y, 0, 0));
-    }
-
-    currMesh.SetVertices(verts);
-    currMesh.SetNormals(normals);
-    currMesh.SetUVs(0, uvs);
-    currMesh.SetTriangles(tris, 0, calculateBounds: true);
-    currMesh.UploadMeshData(markNoLogerReadable: true);
   }
 
   private void initBlitMeshes() {

@@ -98,7 +98,7 @@ public class PresetGenerator : MonoBehaviour {
   }
 
   public EcosystemDescription GetPresetDescription(EcosystemPreset preset) {
-    GeneratorManager manager = GetComponent<GeneratorManager>();
+    GeneratorManager manager = GetComponentInParent<GeneratorManager>();
 
     Color[] colors = new Color[MAX_SPECIES];
     Vector4[,] socialData = new Vector4[MAX_SPECIES, MAX_SPECIES];

@@ -25,6 +25,8 @@ public struct ParticleDescription {
 
 [System.Serializable]
 public class EcosystemDescription : ISerializationCallbackReceiver {
+  public static readonly EcosystemDescription empty;
+
   public string name;
   public bool isRandomDescription;
   public SocialDescription[,] socialData;
@@ -35,6 +37,15 @@ public class EcosystemDescription : ISerializationCallbackReceiver {
 
   [SerializeField]
   private SocialDescription[] _serializedSocialData;
+
+  static EcosystemDescription() {
+    empty = new EcosystemDescription(isRandomDescription: false) {
+      name = "Empty",
+      socialData = new SocialDescription[0, 0],
+      speciesData = new SpeciesDescription[0],
+      particles = new List<ParticleDescription>()
+    };
+  }
 
   public EcosystemDescription(bool isRandomDescription) {
     this.isRandomDescription = isRandomDescription;

@@ -23,7 +23,7 @@ public class RandomGenerator : MonoBehaviour {
   }
 
   public EcosystemDescription GetRandomEcosystemDescription(string seed) {
-    var manager = GetComponent<GeneratorManager>();
+    var manager = GetComponentInParent<GeneratorManager>();
 
     EcosystemDescription desc = new EcosystemDescription(isRandomDescription: true) {
       name = seed,

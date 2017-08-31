@@ -145,7 +145,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 118605992}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b2f23ad601d006840b1b50102bd9fbad, type: 3}
+  m_Script: {fileID: 11500000, guid: 7a85757d6cd618049aa47004cc434a83, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _provider: {fileID: 0}
@@ -226,16 +226,6 @@ MonoBehaviour:
   _stochasticSamplingEnabled: 0
   _stochasticPercent: 0.5
   _stochasticCycleCount: 128
-  _resetTime: 0.5
-  _resetForce: 1
-  _resetRange: 1
-  _resetHeadRange: 0.6
-  _resetSocialCurve:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
   _particleMat: {fileID: 0}
   _positionDebug: {fileID: 0}
   _velocityDebug: {fileID: 0}

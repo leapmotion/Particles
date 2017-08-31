@@ -182,7 +182,7 @@ public class UserTestController : MonoBehaviour {
   }
 
   private void onSimulationTransitionMid() {
-    simManager.displayScale = _currLoadData.simulationScale;
+    simManager.displayAnchor.localScale = Vector3.one * _currLoadData.simulationScale;
     simManager.colorMode = _currLoadData.colorMode;
 
     if (simManager.particleMesh != meshes[_currLoadData.meshDetail]) {

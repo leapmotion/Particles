@@ -45,9 +45,9 @@ public class SimulationManager : MonoBehaviour {
   [Header("Field")]
   [Tooltip("Must be a child of this component.")]
   [SerializeField]
-  private Transform _fieldCenter;
+  private Vector3 _fieldCenter;
   public Vector3 fieldCenter {
-    get { return _fieldCenter.localPosition; }
+    get { return _fieldCenter; }
   }
 
   [Range(0, 2)]
@@ -115,15 +115,10 @@ public class SimulationManager : MonoBehaviour {
     set { _displayParticles = value; }
   }
 
-  [MinValue(0)]
   [SerializeField]
-  private float _displayScale = 1;
-  public float displayScale {
-    get { return _displayScale; }
-    set {
-      _displayScale = value;
-      //TODO: push values
-    }
+  private Transform _displayAnchor;
+  public Transform displayAnchor {
+    get { return _displayAnchor; }
   }
 
   [SerializeField]

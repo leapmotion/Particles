@@ -1203,8 +1203,14 @@ public class TextureSimulator : MonoBehaviour {
       _layoutDebug.material.mainTexture = layoutTex;
     }
 
-    int minSpecies = layout.Query().Min(t => t.species);
-    int maxSpecies = layout.Query().Max(t => t.species);
+    int minSpecies, maxSpecies;
+    if (layout.Count != 0) {
+      minSpecies = layout.Query().Min(t => t.species);
+      maxSpecies = layout.Query().Max(t => t.species);
+    } else {
+      minSpecies = 0;
+      maxSpecies = 1;
+    }
 
     foreach (var rect in layout) {
       var enumerator = speciesMap[rect.species];
@@ -1755,6 +1761,8 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetVector("_FieldCenter", _manager.fieldCenter);
     _simulationMat.SetFloat("_FieldRadius", _manager.fieldRadius);
     _simulationMat.SetFloat("_FieldForce", _manager.fieldForce);
+
+    _displayBlock.SetFloat("_Size", _manager.particleSize);
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", transform.InverseTransformPoint(_provider.transform.position));

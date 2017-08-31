@@ -45,6 +45,7 @@ public class IESimulator : MonoBehaviour {
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;
           particle.transform.localRotation = Quaternion.identity;
+          particle.transform.localScale = Vector3.one * _manager.particleSize;
           particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
           particle.GetComponent<Renderer>().sharedMaterial = materials[obj.species];
           particle.GetComponent<Rigidbody>().velocity = obj.velocity;
@@ -62,6 +63,7 @@ public class IESimulator : MonoBehaviour {
         throw new System.NotImplementedException();
     }
 
+    currentDescription = description;
     _manager.NotifyEndedTransition(SimulationMethod.InteractionEngine);
   }
   #endregion

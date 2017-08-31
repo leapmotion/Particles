@@ -320,13 +320,13 @@ public class SimulationManager : MonoBehaviour {
   /// Restarts the simulation to whatever state it was in when it was
   /// most recently restarted.
   /// </summary>
-  public void RestartSimulation() {
+  public void RestartSimulation(ResetBehavior resetBehavior = ResetBehavior.SmoothTransition) {
     //If we had generated a random simulation, re-generate it so that new settings
     //can take effect.  We assume the name of the description is it's seed!
     if (_currentDescription.isRandomDescription) {
-      RandomizeSimulation(_currentDescription.name, ResetBehavior.SmoothTransition);
+      RandomizeSimulation(_currentDescription.name, resetBehavior);
     } else {
-      RestartSimulation(_currentDescription, ResetBehavior.SmoothTransition);
+      RestartSimulation(_currentDescription, resetBehavior);
     }
   }
 
@@ -376,11 +376,14 @@ public class SimulationManager : MonoBehaviour {
 
   public void RestartSimulation(EcosystemDescription ecosystemDescription,
                                 ResetBehavior resetBehavior) {
-    if (_simulationMethod != _currentSimulationMethod) {
-      restartSimulator(_currentSimulationMethod, EcosystemDescription.empty, resetBehavior);
-      restartSimulator(_simulationMethod, ecosystemDescription, resetBehavior);
+    var oldMethod = _currentSimulationMethod;
+    var newMethod = _simulationMethod;
 
-      _currentSimulationMethod = _simulationMethod;
+    _currentSimulationMethod = newMethod;
+
+    if (oldMethod != newMethod) {
+      restartSimulator(oldMethod, EcosystemDescription.empty, resetBehavior);
+      restartSimulator(newMethod, ecosystemDescription, resetBehavior);
     } else {
       restartSimulator(_currentSimulationMethod, ecosystemDescription, resetBehavior);
     }
@@ -462,12 +465,12 @@ public class SimulationManager : MonoBehaviour {
 
     if (buttonOrKey("GPU", KeyCode.Alpha1) && _simulationMethod != SimulationMethod.Texture) {
       _simulationMethod = SimulationMethod.Texture;
-      RestartSimulation();
+      RestartSimulation(ResetBehavior.ResetPositions);
     }
 
     if (buttonOrKey("IE", KeyCode.Alpha2) && _simulationMethod != SimulationMethod.InteractionEngine) {
       _simulationMethod = SimulationMethod.InteractionEngine;
-      RestartSimulation();
+      RestartSimulation(ResetBehavior.ResetPositions);
     }
 
     endHorizontal();

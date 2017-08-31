@@ -3,6 +3,36 @@ using UnityEngine;
 using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 
+public enum EcosystemPreset {
+  RedMenace,
+  Chase,
+  Mitosis,
+  BodyMind,
+  Planets,
+  Globules,
+  Layers,
+  Fluidy,
+  BlackHole,
+  Nova,
+  EnergyConserving,
+  Capillary,
+  Comets,
+  Worms,
+  SolarSystem,
+  StringTheory,
+  OrbFlow,
+  Tutorial_2_Attract,
+  Tutorial_2_Repel,
+  Tutorial_2_Chase,
+  Tutorial_3_Attract_Line,
+  Tutorial_3_Attract_Loop,
+  Tutorial_100_Attract,
+  Tutorial_100_Repel,
+  Tutorial_1000_Chase,
+  Tutorial_3000_3_Chase,
+  Tutorial_3000_2_Ranges
+}
+
 public class PresetGenerator : MonoBehaviour {
   public const int MAX_PARTICLES = SimulationManager.MAX_PARTICLES;
   public const int MAX_SPECIES = SimulationManager.MAX_SPECIES;
@@ -67,37 +97,7 @@ public class PresetGenerator : MonoBehaviour {
     set { _collisionForceRange.y = value; }
   }
 
-  public enum EcosystemPreset {
-    RedMenace,
-    Chase,
-    Mitosis,
-    BodyMind,
-    Planets,
-    Globules,
-    Layers,
-    Fluidy,
-    BlackHole,
-    Nova,
-    EnergyConserving,
-    Capillary,
-    Comets,
-    Worms,
-    SolarSystem,
-    StringTheory,
-    OrbFlow,
-    Tutorial_2_Attract,
-    Tutorial_2_Repel,
-    Tutorial_2_Chase,
-    Tutorial_3_Attract_Line,
-    Tutorial_3_Attract_Loop,
-    Tutorial_100_Attract,
-    Tutorial_100_Repel,
-    Tutorial_1000_Chase,
-    Tutorial_3000_3_Chase,
-    Tutorial_3000_2_Ranges
-  }
-
-  private EcosystemDescription getPresetDescription(EcosystemPreset preset) {
+  public EcosystemDescription GetPresetDescription(EcosystemPreset preset) {
     GeneratorManager manager = GetComponent<GeneratorManager>();
 
     Color[] colors = new Color[MAX_SPECIES];
@@ -627,12 +627,14 @@ public class PresetGenerator : MonoBehaviour {
         else if (preset == EcosystemPreset.Tutorial_3000_2_Ranges) {
       currentSimulationSpeciesCount = 2;
 
-      colors[0] = new Color(1.0f, 0.9f, 0.6f);
-      colors[1] = new Color(0.5f, 0.2f, 0.8f);
+      colors[0] = new Color(1.0f, 0.4f, 0.3f);
+      colors[1] = new Color(0.2f, 0.4f, 1.0f);
 
       speciesData[0] = new Vector3(0.01f, 0, 0.01f);
       speciesData[1] = new Vector3(0.01f, 0, 0.01f);
 
+
+      // this is for testing variations...
       /*
           float forceMax = 0.001f;
           float rangeMax = 0.5f;
@@ -660,15 +662,16 @@ public class PresetGenerator : MonoBehaviour {
       */
 
       float force_0_0 = 0.001f;
-      float force_0_1 = -0.00033333f;
-      float force_1_0 = 0.00066666f;
-      float force_1_1 = -0.001f;
+      float force_1_1 = -0.002f;
 
-      float range_0_0 = 0.66666f;
-      float range_0_1 = 0.83333f;
-      float range_1_0 = 0.83333f;
-      float range_1_1 = 0.16666f;
+      float range_0_0 = 0.5f;
+      float range_1_1 = 0.5f;
 
+      float force_0_1 = -0.0002f;
+      float force_1_0 = 0.001f;
+
+      float range_0_1 = 0.5f;
+      float range_1_0 = 0.9f;
 
       socialData[0, 0] = new Vector2(force_0_0, range_0_0);
       socialData[1, 1] = new Vector2(force_1_1, range_1_1);

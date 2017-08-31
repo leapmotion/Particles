@@ -9,7 +9,7 @@ using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 using Leap.Unity.RuntimeGizmos;
 
-public class TextureSimulator : MonoBehaviour {
+public class TextureSimulator_OLD : MonoBehaviour {
   //These constants match the shader implementation, very important not to change!
   public const int MAX_PARTICLES = 4096;
   public const int MAX_FORCE_STEPS = 64;

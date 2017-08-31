@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class TextureSimulatorSetters : MonoBehaviour {
+public class SimulatorSetters : MonoBehaviour {
 
   [SerializeField]
   private Material _skybox;

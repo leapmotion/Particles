@@ -14,7 +14,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   
   [Header("Simulator Bindings")]
   public SimulationManager simManager;
-  public TextureSimulatorSetters simulatorSetters;
+  public SimulatorSetters simulatorSetters;
 
   public enum VisualizationMode { SocialForces, SocialVision }
   [SerializeField, OnEditorChange("mode")]
@@ -75,7 +75,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
     }
 
     if (simulatorSetters == null) {
-      simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
+      simulatorSetters = FindObjectOfType<SimulatorSetters>();
     }
 
     if (rectTransform == null) {

@@ -7,7 +7,7 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
 
   public SimulationManager simManager;
   public GeneratorManager genManager;
-  public TextureSimulatorSetters simulatorSetters;
+  public SimulatorSetters simulatorSetters;
   public LeapTextGraphic textGraphic;
   public string prefix;
   public string postfix;
@@ -18,7 +18,7 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
     textGraphic = GetComponent<LeapTextGraphic>();
     simManager = FindObjectOfType<SimulationManager>();
     genManager = FindObjectOfType<GeneratorManager>();
-    simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
+    simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
   protected void OnValidate() {

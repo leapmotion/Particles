@@ -7,18 +7,18 @@ public class SimulatorUIControl : MonoBehaviour {
   public SimulationManager simManager;
   public GeneratorManager genManager;
 
-  public TextureSimulatorSetters simulatorSetters;
+  public SimulatorSetters simulatorSetters;
 
   protected virtual void OnValidate() {
     simManager = FindObjectOfType<SimulationManager>();
     genManager = FindObjectOfType<GeneratorManager>();
-    simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
+    simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
   protected virtual void Reset() {
     simManager = FindObjectOfType<SimulationManager>();
     genManager = FindObjectOfType<GeneratorManager>();
-    simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
+    simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
 }

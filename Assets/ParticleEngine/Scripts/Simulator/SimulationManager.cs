@@ -24,14 +24,8 @@ public enum ResetBehavior {
 }
 
 public enum SimulationMethod {
-  Texture = 1,
-  InteractionEngine = 2
-}
-
-public enum SimulationMethodTransition {
-  KeepSame,
-  ToTexture = SimulationMethod.Texture,
-  ToInteractionEngine = SimulationMethod.InteractionEngine
+  Texture,
+  InteractionEngine
 }
 
 public class SimulationManager : MonoBehaviour {
@@ -264,7 +258,11 @@ public class SimulationManager : MonoBehaviour {
   private EcosystemPreset _presetToLoad = EcosystemPreset.BlackHole;
 
   [SerializeField]
-  private SimulationMethod _methodToUse = SimulationMethod.Texture;
+  private SimulationMethod _simulationMethod = SimulationMethod.Texture;
+  public SimulationMethod simulationMethod {
+    get { return _simulationMethod; }
+    set { _simulationMethod = value; }
+  }
 
   [SerializeField]
   private KeyCode _saveEcosystemKey = KeyCode.F5;
@@ -322,7 +320,7 @@ public class SimulationManager : MonoBehaviour {
   /// Restarts the simulation to whatever state it was in when it was
   /// most recently restarted.
   /// </summary>
-  public void RestartSimulation(SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+  public void RestartSimulation() {
     //If we had generated a random simulation, re-generate it so that new settings
     //can take effect.  We assume the name of the description is it's seed!
     if (_currentDescription.isRandomDescription) {
@@ -337,8 +335,7 @@ public class SimulationManager : MonoBehaviour {
   /// initial conditions.
   /// </summary>
   public void RestartSimulation(EcosystemPreset preset,
-                                ResetBehavior resetBehavior = ResetBehavior.FadeInOut,
-                                SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+                                ResetBehavior resetBehavior = ResetBehavior.FadeInOut) {
     var presetDesc = _generator.GetPresetEcosystem(preset);
 
     RestartSimulation(presetDesc, resetBehavior);
@@ -351,8 +348,7 @@ public class SimulationManager : MonoBehaviour {
   /// <summary>
   /// Restarts the simulation using a random description.
   /// </summary>
-  public void RandomizeSimulation(ResetBehavior resetBehavior,
-                                  SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+  public void RandomizeSimulation(ResetBehavior resetBehavior) {
     RestartSimulation(_generator.GetRandomEcosystem(), resetBehavior);
   }
 
@@ -362,8 +358,7 @@ public class SimulationManager : MonoBehaviour {
   /// simulation description.
   /// </summary>
   public void RandomizeSimulation(string seed,
-                                  ResetBehavior resetBehavior,
-                                  SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
+                                  ResetBehavior resetBehavior) {
     RestartSimulation(_generator.GetRandomEcosystem(seed), resetBehavior);
   }
 
@@ -376,24 +371,18 @@ public class SimulationManager : MonoBehaviour {
       _currentDescription.speciesData[i].color = newRandomColors[i];
     }
 
-    RestartSimulation(_currentDescription, ResetBehavior.None, SimulationMethodTransition.KeepSame);
+    RestartSimulation(_currentDescription, ResetBehavior.None);
   }
 
   public void RestartSimulation(EcosystemDescription ecosystemDescription,
-                                ResetBehavior resetBehavior,
-                                SimulationMethodTransition simulationTransition = SimulationMethodTransition.KeepSame) {
-    switch (simulationTransition) {
-      case SimulationMethodTransition.KeepSame:
-        restartSimulator(_currentSimulationMethod, ecosystemDescription, resetBehavior);
-        break;
-      default:
-        var newMethod = (SimulationMethod)simulationTransition;
+                                ResetBehavior resetBehavior) {
+    if (_simulationMethod != _currentSimulationMethod) {
+      restartSimulator(_currentSimulationMethod, EcosystemDescription.empty, resetBehavior);
+      restartSimulator(_simulationMethod, ecosystemDescription, resetBehavior);
 
-        restartSimulator(_currentSimulationMethod, EcosystemDescription.empty, resetBehavior);
-        restartSimulator(newMethod, ecosystemDescription, resetBehavior);
-
-        _currentSimulationMethod = newMethod;
-        break;
+      _currentSimulationMethod = _simulationMethod;
+    } else {
+      restartSimulator(_currentSimulationMethod, ecosystemDescription, resetBehavior);
     }
 
     isPerformingTransition = true;
@@ -432,7 +421,7 @@ public class SimulationManager : MonoBehaviour {
   #region UNITY MESSAGES
   private void Start() {
     if (_loadEcosystemOnStart) {
-      RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions, (SimulationMethodTransition)_methodToUse);
+      RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);
     }
   }
 
@@ -468,6 +457,20 @@ public class SimulationManager : MonoBehaviour {
     if (buttonOrKey("Randomize Colors", _ranzomizeColorsKey)) {
       RandomizeSimulationColors();
     }
+
+    beginHorizontal();
+
+    if (buttonOrKey("GPU", KeyCode.Alpha1) && _simulationMethod != SimulationMethod.Texture) {
+      _simulationMethod = SimulationMethod.Texture;
+      RestartSimulation();
+    }
+
+    if (buttonOrKey("IE", KeyCode.Alpha2) && _simulationMethod != SimulationMethod.InteractionEngine) {
+      _simulationMethod = SimulationMethod.InteractionEngine;
+      RestartSimulation();
+    }
+
+    endHorizontal();
 
     beginHorizontal();
 

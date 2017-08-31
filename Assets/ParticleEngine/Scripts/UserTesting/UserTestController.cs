@@ -123,10 +123,11 @@ public class UserTestController : MonoBehaviour {
     _currLoadData = JsonUtility.FromJson<LoadData>(File.ReadAllText(dataPath));
 
     var desc = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(_ecosystemPaths[_currEcosystem]));
+    simManager.simulationMethod = _currLoadData.simMethod;
     if (forceReset) {
-      simManager.RestartSimulation(desc, ResetBehavior.ResetPositions, (SimulationMethodTransition)_currLoadData.simMethod);
+      simManager.RestartSimulation(desc, ResetBehavior.ResetPositions);
     } else {
-      simManager.RestartSimulation(desc, _currLoadData.transitionBehavior, (SimulationMethodTransition)_currLoadData.simMethod);
+      simManager.RestartSimulation(desc, _currLoadData.transitionBehavior);
     }
 
     texSimulator.handCollisionEnabled = _currLoadData.collisionEnabled;

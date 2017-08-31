@@ -546,7 +546,6 @@ public class TextureSimulator : MonoBehaviour {
   //General
   private SimulationManager _manager;
 
-
   //Simulation
   private List<CommandBuffer> _simulationCommands = new List<CommandBuffer>();
   private int _commandIndex = 0;
@@ -1565,7 +1564,6 @@ public class TextureSimulator : MonoBehaviour {
 
     private SmoothedFloat _smoothedGrab = new SmoothedFloat();
     private TextureSimulator _sim;
-    private float _influence;
     private float _radiusMultiplier;
     private float _alpha;
     private float _startingAlpha;
@@ -1699,20 +1697,20 @@ public class TextureSimulator : MonoBehaviour {
           } else {
             active = hand != null && rawGrab > _sim.influenceBinarySettings.startGrabStrength;
           }
-          _influence = 1;
+          //_influence = 1;
           _radiusMultiplier = 1;
           _alpha = 1;
           break;
         case HandInfluenceMode.Radius:
           _radiusMultiplier = _sim._influenceRadiusSettings.grabStrengthToRadius.Evaluate(grab);
-          _influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
+          //_influence = _sim._influenceRadiusSettings.grabStrengthToInfluence.Evaluate(grab);
 
           _alpha = 1;
           active = _radiusMultiplier > 0;
           break;
         case HandInfluenceMode.Fade:
           _alpha = _sim._influenceFadeSettings.grabStrengthToAlpha.Evaluate(grab);
-          _influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
+          //_influence = _sim._influenceFadeSettings.grabStrengthToInfluence.Evaluate(grab);
 
           _radiusMultiplier = 1;
           active = _alpha > 0.05f;

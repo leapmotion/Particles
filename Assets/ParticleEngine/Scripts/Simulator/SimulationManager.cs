@@ -104,6 +104,44 @@ public class SimulationManager : MonoBehaviour {
   [SerializeField]
   private KeyCode _resetParticlePositionsKey = KeyCode.P;
 
+  //###########################//
+  ///      Reset Behavior      //
+  //###########################//
+  [Header("Reset Behavior")]
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetTime = 0.5f;
+  public float resetTime {
+    get { return _resetTime; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetForce = 1;
+  public float resetForce {
+    get { return _resetForce; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetRange = 1;
+  public float resetRange {
+    get { return _resetRange; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _resetHeadRange = 0.6f;
+  public float resetHeadRange {
+    get { return _resetHeadRange; }
+  }
+
+  [SerializeField]
+  private AnimationCurve _resetSocialCurve;
+  public AnimationCurve resetSocialCurve {
+    get { return _resetSocialCurve; }
+  }
+
   //####################//
   ///      Display      //
   //####################//
@@ -218,8 +256,6 @@ public class SimulationManager : MonoBehaviour {
 
   [SerializeField]
   private KeyCode _loadPresetEcosystemKey = KeyCode.R;
-
-
 
   [SerializeField]
   private StreamingFolder _loadingFolder;
@@ -416,7 +452,7 @@ public class SimulationManager : MonoBehaviour {
                               ResetBehavior resetBehavior) {
     switch (method) {
       case SimulationMethod.InteractionEngine:
-        //TODO
+        _ieSimulator.RestartSimulation(ecosystemDescription, resetBehavior);
         break;
       case SimulationMethod.Texture:
         _textureSimulator.RestartSimulation(ecosystemDescription, resetBehavior);

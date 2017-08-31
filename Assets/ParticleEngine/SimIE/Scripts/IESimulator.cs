@@ -32,6 +32,10 @@ public class IESimulator : MonoBehaviour {
   private List<IEParticle> _particles = new List<IEParticle>();
   private EcosystemDescription _desc;
 
+  public void RestartSimulation(EcosystemDescription description, ResetBehavior resetBehavior) {
+
+  }
+
   public void LoadDescription(EcosystemDescription desc) {
     _desc = desc;
 

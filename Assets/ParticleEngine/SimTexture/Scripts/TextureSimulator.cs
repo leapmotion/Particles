@@ -485,29 +485,6 @@ public class TextureSimulator : MonoBehaviour {
     }
   }
 
-  //###########################//
-  ///      Reset Behavior      //
-  //###########################//
-  [Header("Reset Behavior")]
-  [MinValue(0)]
-  [SerializeField]
-  private float _resetTime = 0.5f;
-
-  [MinValue(0)]
-  [SerializeField]
-  private float _resetForce = 1;
-
-  [MinValue(0)]
-  [SerializeField]
-  private float _resetRange = 1;
-
-  [MinValue(0)]
-  [SerializeField]
-  private float _resetHeadRange = 0.6f;
-
-  [SerializeField]
-  private AnimationCurve _resetSocialCurve;
-
   //####################//
   ///      Display      //
   //####################//
@@ -1017,8 +994,8 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ResetBehavior.FadeInOut:
       case ResetBehavior.SmoothTransition:
-        _simulationMat.SetFloat("_ResetRange", _resetRange);
-        _simulationMat.SetFloat("_ResetForce", _resetForce * -100);
+        _simulationMat.SetFloat("_ResetRange", _manager.resetRange);
+        _simulationMat.SetFloat("_ResetForce", _manager.resetForce * -100);
 
         bool isIncreasingParticleCount = ecosystemDescription.particles.Count >
                                          currentDescription.particles.Count;
@@ -1037,11 +1014,11 @@ public class TextureSimulator : MonoBehaviour {
         _particleMat.EnableKeyword("COLOR_LERP");
 
         float startTime = Time.time;
-        float endTime = Time.time + _resetTime;
+        float endTime = Time.time + _manager.resetTime;
         bool hasUploadedNewSocialMesh = false;
         while (Time.time < endTime) {
           float percent = Mathf.InverseLerp(startTime, endTime, Time.time);
-          float resetPercent = _resetSocialCurve.Evaluate(percent);
+          float resetPercent = _manager.resetSocialCurve.Evaluate(percent);
 
           if (resetBehavior != ResetBehavior.FadeInOut) {
             _simulationMat.SetFloat("_ResetPercent", resetPercent);
@@ -1052,10 +1029,10 @@ public class TextureSimulator : MonoBehaviour {
           }
 
           if (isIncreasingParticleCount && resetBehavior != ResetBehavior.FadeInOut) {
-            _headRadiusTransitionDelta = Mathf.Lerp(0, _resetHeadRange - _manager.headRadius, resetPercent);
+            _headRadiusTransitionDelta = Mathf.Lerp(0, _manager.resetHeadRange - _manager.headRadius, resetPercent);
           }
 
-          float socialPercent = _resetSocialCurve.Evaluate(percent);
+          float socialPercent = _manager.resetSocialCurve.Evaluate(percent);
           if (socialPercent > 0.99f && !hasUploadedNewSocialMesh) {
             hasUploadedNewSocialMesh = true;
             resetBlitMeshes(layout, ecosystemDescription.speciesData, ecosystemDescription.socialData, !isUsingOptimizedLayout);

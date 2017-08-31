@@ -232,7 +232,7 @@ public class SimulationManager : MonoBehaviour {
   #endregion
 
   private TextureSimulator _textureSimulator;
-  private IESimulator_TEMP _ieSimulator;
+  private IESimulator _ieSimulator;
   private GeneratorManager _generator;
 
   #region PUBLIC API
@@ -375,7 +375,7 @@ public class SimulationManager : MonoBehaviour {
   #region UNITY MESSAGES
   private void Awake() {
     _textureSimulator = GetComponentInChildren<TextureSimulator>();
-    _ieSimulator = GetComponentInChildren<IESimulator_TEMP>();
+    _ieSimulator = GetComponentInChildren<IESimulator>();
     _generator = GetComponentInChildren<GeneratorManager>();
   }
 

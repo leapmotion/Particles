@@ -20,6 +20,10 @@ public class IESimulator : MonoBehaviour {
   private SimulationManager _manager;
   private List<IEParticle> _particles = new List<IEParticle>();
 
+  private Vector3 _prevDisplayPosition;
+  private Quaternion _prevDisplayRotation;
+  private Vector3 _prevDisplayScale;
+
   #region PUBLIC API
   public EcosystemDescription currentDescription { get; private set; }
 
@@ -56,7 +60,10 @@ public class IESimulator : MonoBehaviour {
           _particles.Add(particle.GetComponent<IEParticle>());
         }
 
-        ScaleBy(_manager.displayAnchor.localScale.x);
+        TransformBy(_manager.displayAnchor.localToWorldMatrix);
+        _prevDisplayPosition = _manager.displayAnchor.localPosition;
+        _prevDisplayRotation = _manager.displayAnchor.localRotation;
+        _prevDisplayScale = _manager.displayAnchor.localScale;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
         break;
@@ -73,13 +80,29 @@ public class IESimulator : MonoBehaviour {
 
   private void Awake() {
     _manager = GetComponentInParent<SimulationManager>();
+    _prevDisplayPosition = _manager.displayAnchor.localPosition;
+    _prevDisplayRotation = _manager.displayAnchor.localRotation;
+    _prevDisplayScale = _manager.displayAnchor.localScale;
   }
 
   private void FixedUpdate() {
-    //if (_scale != _prevScale) {
-    //  ScaleBy(_scale / _prevScale);
-    //  _prevScale = _scale;
-    //}
+    bool didDisplayMove = _prevDisplayPosition != _manager.displayAnchor.localPosition ||
+                          _prevDisplayRotation != _manager.displayAnchor.localRotation ||
+                          _prevDisplayScale != _manager.displayAnchor.localScale;
+    if (didDisplayMove) {
+      Matrix4x4 originalTransform = Matrix4x4.TRS(_prevDisplayPosition,
+                                                  _prevDisplayRotation,
+                                                  _prevDisplayScale);
+      Matrix4x4 newTransform = Matrix4x4.TRS(_manager.displayAnchor.localPosition,
+                                             _manager.displayAnchor.localRotation,
+                                             _manager.displayAnchor.localScale);
+      Matrix4x4 delta = newTransform * originalTransform.inverse;
+      TransformBy(delta);
+
+      _prevDisplayPosition = _manager.displayAnchor.localPosition;
+      _prevDisplayRotation = _manager.displayAnchor.localRotation;
+      _prevDisplayScale = _manager.displayAnchor.localScale;
+    }
 
     float scale = _manager.displayAnchor.localScale.x;
 
@@ -126,13 +149,13 @@ public class IESimulator : MonoBehaviour {
   #endregion
 
   #region PRIVATE IMPLEMENTATION
-  private void ScaleBy(float ratio) {
+  private void TransformBy(Matrix4x4 transform) {
     foreach (var particle in _particles) {
-      particle.rigidbody.position *= ratio;
+      particle.rigidbody.position = transform.MultiplyPoint3x4(particle.rigidbody.position);
       particle.transform.position = particle.rigidbody.position;
 
-      particle.rigidbody.velocity *= ratio;
-      particle.transform.localScale *= ratio;
+      particle.rigidbody.velocity = transform.MultiplyVector(particle.rigidbody.velocity);
+      particle.transform.localScale *= transform.MultiplyVector(Vector3.forward).magnitude;
     }
   }
   #endregion

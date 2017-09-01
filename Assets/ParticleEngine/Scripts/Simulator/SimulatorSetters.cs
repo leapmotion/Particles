@@ -7,13 +7,13 @@ public class SimulatorSetters : MonoBehaviour {
 
   private SimulationManager simManager {
     get {
-      return GetComponent<SimulationManager>();
+      return GetComponentInChildren<SimulationManager>();
     }
   }
 
   private GeneratorManager genManager {
     get {
-      return GetComponent<GeneratorManager>();
+      return GetComponentInChildren<GeneratorManager>();
     }
   }
 

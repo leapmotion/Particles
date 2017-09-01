@@ -24,6 +24,7 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
   protected void OnValidate() {
     if (simManager == null) simManager = FindObjectOfType<SimulationManager>();
     if (genManager == null) genManager = FindObjectOfType<GeneratorManager>();
+    if (simulatorSetters == null) simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
   void Update() {

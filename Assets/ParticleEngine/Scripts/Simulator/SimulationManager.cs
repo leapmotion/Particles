@@ -187,7 +187,6 @@ public class SimulationManager : MonoBehaviour {
     get { return _particleSize; }
     set {
       _particleSize = value;
-      //TODO, push values
     }
   }
 
@@ -212,7 +211,6 @@ public class SimulationManager : MonoBehaviour {
     get { return _trailSize; }
     set {
       _trailSize = value;
-      //TODO: push values
     }
   }
 
@@ -313,7 +311,10 @@ public class SimulationManager : MonoBehaviour {
   }
 
   public void ApplySliderValues() {
-    //TODO
+    ResetBehavior resetBehavior;
+    _generator.ApplySliderValues(ref _currentDescription, out resetBehavior);
+
+    RestartSimulation(_currentDescription, resetBehavior);
   }
 
   /// <summary>

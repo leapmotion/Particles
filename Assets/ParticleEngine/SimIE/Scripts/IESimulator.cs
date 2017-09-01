@@ -23,6 +23,7 @@ public class IESimulator : MonoBehaviour {
   private Vector3 _prevDisplayPosition;
   private Quaternion _prevDisplayRotation;
   private Vector3 _prevDisplayScale;
+  private float _prevParticleSize;
 
   #region PUBLIC API
   public EcosystemDescription currentDescription { get; private set; }
@@ -64,6 +65,7 @@ public class IESimulator : MonoBehaviour {
         _prevDisplayPosition = _manager.displayAnchor.localPosition;
         _prevDisplayRotation = _manager.displayAnchor.localRotation;
         _prevDisplayScale = _manager.displayAnchor.localScale;
+        _prevParticleSize = _manager.particleSize;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
         break;
@@ -102,6 +104,14 @@ public class IESimulator : MonoBehaviour {
       _prevDisplayPosition = _manager.displayAnchor.localPosition;
       _prevDisplayRotation = _manager.displayAnchor.localRotation;
       _prevDisplayScale = _manager.displayAnchor.localScale;
+    }
+
+    bool didParticleSizeChange = _prevParticleSize != _manager.particleSize;
+    if (didParticleSizeChange) {
+      foreach (var particle in _particles) {
+        particle.transform.localScale *= _manager.particleSize / _prevParticleSize;
+      }
+      _prevParticleSize = _manager.particleSize;
     }
 
     float scale = _manager.displayAnchor.localScale.x;

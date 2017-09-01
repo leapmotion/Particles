@@ -13,7 +13,6 @@ public class UserTestController : MonoBehaviour {
   public SimulationManager simManager;
   public TextureSimulator texSimulator;
 
-  public InteractionButton nextButton;
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
   public StreamingFolder ecosystemFolder;

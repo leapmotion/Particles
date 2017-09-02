@@ -29,7 +29,7 @@ public class RandomGenerator : MonoBehaviour {
       name = seed,
       socialData = new SocialDescription[MAX_SPECIES, MAX_SPECIES],
       speciesData = new SpeciesDescription[MAX_SPECIES],
-      particles = new List<ParticleDescription>()
+      toSpawn = new List<ParticleDescription>()
     };
 
     //We first generate a bunch of 'meta seeds' which will be used for seeds for
@@ -60,7 +60,7 @@ public class RandomGenerator : MonoBehaviour {
 
     Random.InitState(metaSeeds[currMetaSeed++]);
     for (int i = 0; i < manager.particleCount; i++) {
-      desc.particles.Add(new ParticleDescription() {
+      desc.toSpawn.Add(new ParticleDescription() {
         position = Random.insideUnitSphere * manager.spawnRadius,
         velocity = Vector3.zero,
         species = i % manager.speciesCount

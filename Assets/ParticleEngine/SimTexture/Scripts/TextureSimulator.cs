@@ -950,7 +950,7 @@ public class TextureSimulator : MonoBehaviour {
 
     List<SpeciesRect> layout = new List<SpeciesRect>();
 
-    bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(ecosystemDescription.particles, layout);
+    bool isUsingOptimizedLayout = tryCalculateOptimizedLayout(ecosystemDescription.toSpawn, layout);
 
     if (isUsingOptimizedLayout) {
       _simulationMat.DisableKeyword(KEYWORD_SAMPLING_GENERAL);
@@ -962,7 +962,7 @@ public class TextureSimulator : MonoBehaviour {
       _simulationMat.DisableKeyword(KEYWORD_SAMPLING_UNIFORM);
       _simulationMat.EnableKeyword(KEYWORD_SAMPLING_GENERAL);
 
-      calculateLayoutGeneral(ecosystemDescription.particles, layout);
+      calculateLayoutGeneral(ecosystemDescription.toSpawn, layout);
     }
 
     var colorArray = ecosystemDescription.speciesData.Query().Select(s => (Vector4)s.color).ToArray();
@@ -978,7 +978,7 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ResetBehavior.ResetPositions:
         refillColorArrays(layout, colorArray, forceTrueAlpha: true);
-        resetParticleTextures(layout, ecosystemDescription.particles);
+        resetParticleTextures(layout, ecosystemDescription.toSpawn);
 
         uploadColorTexture(_displayColorA);
         uploadColorTexture(_displayColorB);
@@ -996,8 +996,8 @@ public class TextureSimulator : MonoBehaviour {
         _simulationMat.SetFloat("_ResetRange", _manager.resetRange);
         _simulationMat.SetFloat("_ResetForce", _manager.resetForce * -100);
 
-        bool isIncreasingParticleCount = ecosystemDescription.particles.Count >
-                                         currentDescription.particles.Count;
+        bool isIncreasingParticleCount = ecosystemDescription.toSpawn.Count >
+                                         currentDescription.toSpawn.Count;
         if (resetBehavior == ResetBehavior.FadeInOut) {
           _displayColorArray.Fill(new Color(0, 0, 0, 0));
         } else {
@@ -1040,7 +1040,7 @@ public class TextureSimulator : MonoBehaviour {
             if (resetBehavior == ResetBehavior.FadeInOut) {
               refillColorArrays(layout, colorArray, forceTrueAlpha: true);
               uploadColorTexture(_displayColorA);
-              resetParticleTextures(layout, ecosystemDescription.particles);
+              resetParticleTextures(layout, ecosystemDescription.toSpawn);
               _commandIndex = 0;
               Shader.SetGlobalTexture(PROP_POSITION_GLOBAL, _positionSrc);
               Shader.SetGlobalTexture(PROP_VELOCITY_GLOBAL, _velocitySrc);

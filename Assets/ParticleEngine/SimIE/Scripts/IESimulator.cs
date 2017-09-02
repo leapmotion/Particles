@@ -41,7 +41,7 @@ public class IESimulator : MonoBehaviour {
         }
         _particles.Clear();
 
-        foreach (var obj in description.particles) {
+        foreach (var obj in description.toSpawn) {
           GameObject particle = Instantiate(_particlePrefab);
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;

@@ -31,9 +31,7 @@ public class EcosystemDescription : ISerializationCallbackReceiver {
   public bool isRandomDescription;
   public SocialDescription[,] socialData;
   public SpeciesDescription[] speciesData;
-
-  [FormerlySerializedAs("toSpawn")]
-  public List<ParticleDescription> particles;
+  public List<ParticleDescription> toSpawn;
 
   [SerializeField]
   private SocialDescription[] _serializedSocialData;
@@ -43,7 +41,7 @@ public class EcosystemDescription : ISerializationCallbackReceiver {
       name = "Empty",
       socialData = new SocialDescription[0, 0],
       speciesData = new SpeciesDescription[0],
-      particles = new List<ParticleDescription>()
+      toSpawn = new List<ParticleDescription>()
     };
   }
 

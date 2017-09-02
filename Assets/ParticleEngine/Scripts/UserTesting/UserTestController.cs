@@ -122,6 +122,7 @@ public class UserTestController : MonoBehaviour {
     _currLoadData = JsonUtility.FromJson<LoadData>(File.ReadAllText(dataPath));
 
     var desc = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(_ecosystemPaths[_currEcosystem]));
+
     simManager.simulationMethod = _currLoadData.simMethod;
     if (forceReset) {
       simManager.RestartSimulation(desc, ResetBehavior.ResetPositions);
@@ -182,6 +183,10 @@ public class UserTestController : MonoBehaviour {
   }
 
   private void onSimulationTransitionMid() {
+    if (_currLoadData == null) {
+      return;
+    }
+
     simManager.displayAnchor.localScale = Vector3.one * _currLoadData.simulationScale;
     simManager.colorMode = _currLoadData.colorMode;
 

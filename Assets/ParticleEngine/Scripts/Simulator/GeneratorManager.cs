@@ -202,16 +202,16 @@ public class GeneratorManager : MonoBehaviour {
     maxSocialRange = maxRange;
     maxForceSteps = Mathf.RoundToInt(maxSteps);
     dragCenter = maxDrag;
-    particleCount = desc.particles.Count;
-    speciesCount = desc.particles.Query().CountUnique(t => t.species);
+    particleCount = desc.toSpawn.Count;
+    speciesCount = desc.toSpawn.Query().CountUnique(t => t.species);
   }
 
   public void ApplySliderValues(ref EcosystemDescription currentDescription, out ResetBehavior requiredReset) {
     requiredReset = ResetBehavior.None;
-    if (particleCount != currentDescription.particles.Count) {
+    if (particleCount != currentDescription.toSpawn.Count) {
       requiredReset = ResetBehavior.SmoothTransition;
     }
-    if (speciesCount != currentDescription.particles.Query().CountUnique(t => t.species)) {
+    if (speciesCount != currentDescription.toSpawn.Query().CountUnique(t => t.species)) {
       requiredReset = ResetBehavior.SmoothTransition;
     }
 

@@ -1558,7 +1558,7 @@ public class PresetGenerator : MonoBehaviour {
     description.name = preset.ToString();
     description.socialData = new SocialDescription[MAX_SPECIES, MAX_SPECIES];
     description.speciesData = new SpeciesDescription[MAX_SPECIES];
-    description.particles = new List<ParticleDescription>();
+    description.toSpawn = new List<ParticleDescription>();
 
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
@@ -1582,7 +1582,7 @@ public class PresetGenerator : MonoBehaviour {
         species = (i % currentSimulationSpeciesCount);
       }
 
-      description.particles.Add(new ParticleDescription() {
+      description.toSpawn.Add(new ParticleDescription() {
         position = particlePositions[i],
         velocity = particleVelocities[i],
         species = species

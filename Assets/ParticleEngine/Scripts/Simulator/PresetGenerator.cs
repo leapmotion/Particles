@@ -21,6 +21,7 @@ public enum EcosystemPreset {
   SolarSystem,
   StringTheory,
   OrbFlow,
+  DeathStar,
   Tutorial_2_Attract,
   Tutorial_2_Repel,
   Tutorial_2_Chase,
@@ -714,11 +715,93 @@ public class PresetGenerator : MonoBehaviour {
     }
 
 
+	//--------------------------------------------------------
+	// Death Star
+	//--------------------------------------------------------
+	else if (preset == EcosystemPreset.DeathStar) 
+	{
+		int core 						= 0;
+		int coreSkin 					= 1;
+		int innerSphere 				= 2;
+		int middleSphere 				= 3;
+		int outerSphere 				= 4;
+		currentSimulationSpeciesCount 	= 5;
 
-        //--------------------------------------------------------
-        // Orb Flow
-        //--------------------------------------------------------
-        else if (preset == EcosystemPreset.OrbFlow) {
+		colors[ core			] = new Color( 0.4f, 0.0f, 0.8f );
+		colors[ coreSkin		] = new Color( 0.2f, 0.3f, 0.5f );
+		colors[ innerSphere		] = new Color( 0.9f, 0.9f, 0.0f );
+		colors[ middleSphere	] = new Color( 0.9f, 0.4f, 0.0f );
+		colors[ outerSphere		] = new Color( 0.9f, 0.0f, 0.0f );
+
+		int   steps 		=  0;
+		float drag 			=  0.1f;
+		float collision 	=  0.02f;
+		
+		speciesData[ core			] = new Vector3( drag, steps, collision );
+		speciesData[ coreSkin		] = new Vector3( drag, steps, collision ); 
+		speciesData[ innerSphere	] = new Vector3( drag, steps, collision );
+		speciesData[ middleSphere	] = new Vector3( drag, steps, collision );
+		speciesData[ outerSphere	] = new Vector3( drag, steps, collision );
+	
+		//-------------------------------------------------------
+		// core loves itself
+		//-------------------------------------------------------
+		socialData[ core, core ] = new Vector2(  0.08f, 2.0f );
+
+		//-------------------------------------------------------
+		// coreSkin loves core and hates itself
+		//-------------------------------------------------------
+		socialData[ coreSkin,	coreSkin	] = new Vector2( -0.02f,  0.1f );
+		socialData[ coreSkin,	core		] = new Vector2(  0.005f, 2.0f );
+
+
+		//----------------------------------------------------------------------------
+		// spheres love coreSkin but hate core
+		//----------------------------------------------------------------------------
+		socialData[ innerSphere,	coreSkin		] = new Vector2(  0.02f,  0.6f );
+		socialData[ middleSphere,	coreSkin		] = new Vector2(  0.02f,  0.7f );
+		socialData[ outerSphere,	coreSkin		] = new Vector2(  0.02f,  0.8f );
+
+		socialData[ innerSphere,	core			] = new Vector2( -0.04f,   0.8f );
+		socialData[ middleSphere,	core			] = new Vector2( -0.04f,   0.9f );
+		socialData[ outerSphere,	core			] = new Vector2( -0.04f,   1.0f );
+
+
+		//----------------------------------------------
+		// all spheres are repelled by each other
+		//----------------------------------------------
+		float repulsion = 0.0f;
+		float range = 0.04f;
+
+		socialData[ innerSphere,	innerSphere		] = new Vector2( repulsion, range );
+		socialData[ middleSphere,	innerSphere		] = new Vector2( repulsion, range );
+		socialData[ outerSphere,	innerSphere		] = new Vector2( repulsion, range );
+
+		socialData[ innerSphere,	middleSphere	] = new Vector2( repulsion, range );
+		socialData[ middleSphere,	middleSphere	] = new Vector2( repulsion, range );
+		socialData[ outerSphere,	middleSphere	] = new Vector2( repulsion, range );
+
+		socialData[ innerSphere,	outerSphere		] = new Vector2( repulsion, range );
+		socialData[ middleSphere,	outerSphere		] = new Vector2( repulsion, range );
+		socialData[ outerSphere,	outerSphere		] = new Vector2( repulsion, range );
+
+
+		particlesToSimulate = 4000;
+		for (int p = 0; p < particlesToSimulate; p++) 
+		{
+			if 		( p <  100 	) { particleSpecies[p] = core; 			}
+			else if ( p < 1000 	) { particleSpecies[p] = coreSkin;		}
+			else if ( p < 2000 	) { particleSpecies[p] = innerSphere;	}	
+			else if ( p < 3000 	) { particleSpecies[p] = middleSphere;	}
+			else if ( p < 4000 	) { particleSpecies[p] = outerSphere;	}	
+		}
+	}
+
+
+    //--------------------------------------------------------
+    // Orb Flow
+    //--------------------------------------------------------
+    else if (preset == EcosystemPreset.OrbFlow) {
       currentSimulationSpeciesCount = 2;
 
       colors[0] = new Color(0.0f, 0.5f, 1.0f);

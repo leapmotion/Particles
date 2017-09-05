@@ -40,13 +40,6 @@ public class PresetGenerator : MonoBehaviour {
 
   public const int SPECIES_CAP_FOR_PRESETS = 10;
 
-  [SerializeField]
-  private EcosystemPreset _ecosystemPreset = EcosystemPreset.Fluidy;
-  public EcosystemPreset ecosystemPreset {
-    get { return _ecosystemPreset; }
-    set { _ecosystemPreset = value; }
-  }
-
   [Range(1, MAX_FORCE_STEPS)]
   [SerializeField]
   private int _maxForceSteps = 7;

@@ -1,9 +1,7 @@
 ﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Leap.Unity;
-using Leap.Unity.Query;
-using Leap.Unity.Attributes;
 
 public class IESimulator : MonoBehaviour {
   public const float PARTICLE_RADIUS = 0.01f;
@@ -25,10 +23,23 @@ public class IESimulator : MonoBehaviour {
   private Vector3 _prevDisplayScale;
   private float _prevParticleSize;
 
+  private Coroutine _restartCoroutine;
+
   #region PUBLIC API
   public EcosystemDescription currentDescription { get; private set; }
 
   public void RestartSimulation(EcosystemDescription description, ResetBehavior resetBehavior) {
+    if (_restartCoroutine != null) {
+      StopCoroutine(_restartCoroutine);
+    }
+    _restartCoroutine = StartCoroutine(restartCoroutine(description, resetBehavior));
+  }
+
+  private IEnumerator restartCoroutine(EcosystemDescription description, ResetBehavior resetBehavior) {
+    if (resetBehavior == ResetBehavior.SmoothTransition || resetBehavior == ResetBehavior.FadeInOut) {
+      yield return new WaitForSeconds(_manager.resetTime / 2);
+    }
+
     //TODO: remove this and implement everything else
     resetBehavior = ResetBehavior.ResetPositions;
 
@@ -75,6 +86,7 @@ public class IESimulator : MonoBehaviour {
 
     currentDescription = description;
     _manager.NotifyEndedTransition(SimulationMethod.InteractionEngine);
+    _restartCoroutine = null;
   }
   #endregion
 

@@ -1039,7 +1039,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db9837acd18280e488d3a7dbf48c273d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _ecosystemPreset: 7
   _maxForceSteps: 7
   _maxSocialForce: 0.003
   _maxSocialRange: 0.5
@@ -1135,7 +1134,7 @@ MonoBehaviour:
   _displayAnchor: {fileID: 4505397907265722}
   _particleMesh: {fileID: 4300000, guid: 6f9fe5daf6ff3e64d9e0d0f49793d16a, type: 3}
   _particleSize: 0.02
-  _colorMode: 1
+  _colorMode: 0
   _trailSize: 0.02
   _trailMode: 0
   _speedToTrailLength:

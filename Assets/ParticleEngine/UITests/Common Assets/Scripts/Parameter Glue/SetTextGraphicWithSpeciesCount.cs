@@ -7,8 +7,8 @@ using System;
 public class SetTextGraphicWithSpeciesCount : SetTextGraphicWithSimulatorParam {
 
   public override string GetTextValue() {
-    if (simulator == null) return "(Simulation not configured)";
+    if (genManager == null) return "(Generation Manager not configured)";
 
-    return simulator.randomEcosystemSettings.speciesCount.ToString();
+    return genManager.speciesCount.ToString();
   }
 }

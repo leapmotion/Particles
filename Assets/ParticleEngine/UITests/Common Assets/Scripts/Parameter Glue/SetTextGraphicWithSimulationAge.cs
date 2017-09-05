@@ -6,8 +6,8 @@ using UnityEngine;
 public class SetTextGraphicWithSimulationAge : SetTextGraphicWithSimulatorParam {
 
   public override string GetTextValue() {
-    if (simulator == null) return "0";
+    if (simManager == null) return "0";
 
-    return simulator.simulationAge.ToString();
+    return simManager.simulationAge.ToString();
   }
 }

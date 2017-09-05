@@ -5,8 +5,9 @@ using UnityEngine;
 
 public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
 
-  public TextureSimulator simulator;
-  public TextureSimulatorSetters simulatorSetters;
+  public SimulationManager simManager;
+  public GeneratorManager genManager;
+  public SimulatorSetters simulatorSetters;
   public LeapTextGraphic textGraphic;
   public string prefix;
   public string postfix;
@@ -15,12 +16,15 @@ public abstract class SetTextGraphicWithSimulatorParam : MonoBehaviour {
 
   protected virtual void Reset() {
     textGraphic = GetComponent<LeapTextGraphic>();
-    simulator = FindObjectOfType<TextureSimulator>();
-    simulatorSetters = FindObjectOfType<TextureSimulatorSetters>();
+    simManager = FindObjectOfType<SimulationManager>();
+    genManager = FindObjectOfType<GeneratorManager>();
+    simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
   protected void OnValidate() {
-    if (simulator == null) simulator = FindObjectOfType<TextureSimulator>();
+    if (simManager == null) simManager = FindObjectOfType<SimulationManager>();
+    if (genManager == null) genManager = FindObjectOfType<GeneratorManager>();
+    if (simulatorSetters == null) simulatorSetters = FindObjectOfType<SimulatorSetters>();
   }
 
   void Update() {

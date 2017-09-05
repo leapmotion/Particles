@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class SetSpeciesCountWithSliderValue : MonoBehaviour {
 
-  public TextureSimulator particleSimulator;
+  public GeneratorManager genManager;
   public InteractionSlider slider;
 
   [Header("Optional")]
@@ -29,7 +29,7 @@ public class SetSpeciesCountWithSliderValue : MonoBehaviour {
       currentValueTextGraphic.text = prefix + finalValue.ToString() + postfix;
     }
 
-    particleSimulator.randomEcosystemSettings.speciesCount = finalValue;
+    genManager.speciesCount = finalValue;
   }
 
 }

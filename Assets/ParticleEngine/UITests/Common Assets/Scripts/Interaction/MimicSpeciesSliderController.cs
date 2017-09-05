@@ -10,7 +10,7 @@ public class MimicSpeciesSliderController : MonoBehaviour {
   public class StringEvent : UnityEvent<string> { }
 
   public InteractionSlider slider;
-  public TextureSimulator particleSimulator;
+  public SimulationManager simManager;
 
   public StringEvent OnSpeciesColor;
 
@@ -22,11 +22,13 @@ public class MimicSpeciesSliderController : MonoBehaviour {
 
     int speciesIdx = slider.horizontalStepValue;
 
-    if (particleSimulator != null) {
-      Color speciesColor = particleSimulator.GetSpeciesColor(speciesIdx);
+    if (simManager != null) {
+      Color speciesColor = simManager.GetSpeciesColor(speciesIdx);
       string speciesColorString = ColorUtility.ToHtmlStringRGB(speciesColor);
       OnSpeciesColor.Invoke("#" + speciesColorString);
-      particleSimulator.socialHandSpecies = speciesIdx;
+      //simManager.socialHandSpecies = speciesIdx;
+      //TODO
+      //(i don't think we need this anymore)
     }
   }
 

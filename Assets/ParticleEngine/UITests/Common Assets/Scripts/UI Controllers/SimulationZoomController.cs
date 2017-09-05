@@ -12,36 +12,29 @@ public class SimulationZoomController : MonoBehaviour {
 
   public bool isFullyZoomedIn {
     get {
-      return Mathf.Abs(simulator.transform.localScale.x - _targetZoomedInScale) < 0.005f;
+      return Mathf.Abs(displayAnchor.transform.localScale.x - _targetZoomedInScale) < 0.005f;
     }
   }
   public bool isFullyZoomedOut {
     get {
-      return Mathf.Abs(simulator.transform.localScale.x - _targetZoomedOutScale) < 0.005f;
+      return Mathf.Abs(displayAnchor.transform.localScale.x - _targetZoomedOutScale) < 0.005f;
     }
   }
 
-  public TextureSimulator simulator;
-
-  void Reset() {
-    if (simulator == null) {
-      simulator = FindObjectOfType<TextureSimulator>();
-    }
-  }
+  public Transform displayAnchor;
 
   void Update() {
-    float scale = simulator.transform.localScale.x;
+    float scale = displayAnchor.transform.localScale.x;
 
     scale = Mathf.Lerp(scale, _targetScale, 5F * Time.deltaTime);
 
-    simulator.transform.localScale = Vector3.one * scale;
+    displayAnchor.transform.localScale = Vector3.one * scale;
   }
 
   public void ToggleZoom() {
     if (_isZoomedIn) {
       ZoomOut();
-    }
-    else {
+    } else {
       ZoomIn();
     }
     _isZoomedIn = !_isZoomedIn;

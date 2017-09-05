@@ -6,7 +6,7 @@ using UnityEngine;
 public class SimulatorButtonColorMode : SimulatorButtonControl {
 
   [Header("Which Color Mode")]
-  public TextureSimulator.ColorMode modeOnPress;
+  public ColorMode modeOnPress;
 
   public override void onPress() {
     simulatorSetters.SetColorMode(modeOnPress);

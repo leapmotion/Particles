@@ -7,13 +7,13 @@ using System;
 public class SetTextGraphicWithSpeciesName : SetTextGraphicWithSimulatorParam {
 
   public override string GetTextValue() {
-    if (simulator == null) return "(Simulation not configured)";
+    if (simManager == null) return "(Simulation not configured)";
 
-    if (simulator.currentSimulationDescription.isRandomDescription) {
-      return simulator.currentSimulationDescription.name;
+    if (simManager.currentDescription.isRandomDescription) {
+      return simManager.currentDescription.name;
     }
     else {
-      return simulator.currentSimulationDescription.name + " (Preset)";
+      return simManager.currentDescription.name + " (Preset)";
     }
   }
 }

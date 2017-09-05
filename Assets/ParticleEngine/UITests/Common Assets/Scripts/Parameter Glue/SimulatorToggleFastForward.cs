@@ -6,17 +6,18 @@ using UnityEngine;
 public class SimulatorToggleFastForward : SimulatorToggleControl {
 
   void Start() {
-    if (simulator != null) {
-      simulator.dynamicTimestepEnabled = true;
+    if (simManager != null) {
+      //TODO
+      //simManager.dynamicTimestepEnabled = true;
     }
   }
 
   protected override void onToggle() {
-    simulator.simulationTimescale = 2F;
+    simManager.simulationTimescale = 2F;
   }
 
   protected override void onUntoggle() {
-    simulator.simulationTimescale = 1F;
+    simManager.simulationTimescale = 1F;
   }
 
 }

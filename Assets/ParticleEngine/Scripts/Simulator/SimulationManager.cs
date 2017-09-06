@@ -183,6 +183,9 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
+  [SerializeField]
+  private Mesh[] _meshLods;
+
   [Range(0, 0.05f)]
   [SerializeField]
   private float _particleSize = 0.02f;
@@ -503,6 +506,16 @@ public class SimulationManager : MonoBehaviour {
 
     beginHorizontal();
 
+    for (int i = 0; i < _meshLods.Length; i++) {
+      if (buttonOrKey("LOD" + i, KeyCode.F1 + i)) {
+        particleMesh = _meshLods[i];
+      }
+    }
+
+    endHorizontal();
+
+    beginHorizontal();
+
     if (buttonOrKey("Save Ecosystem", _saveEcosystemKey)) {
       File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
     }
@@ -518,7 +531,11 @@ public class SimulationManager : MonoBehaviour {
 
   private bool buttonOrKey(string name, KeyCode key) {
     if (_inGui) {
-      return GUILayout.Button(name + " (" + key.ToString() + ")");
+      if (key == KeyCode.None) {
+        return GUILayout.Button(name + " (" + key.ToString() + ")");
+      } else {
+        return GUILayout.Button(name);
+      }
     } else {
       return Input.GetKeyDown(key);
     }

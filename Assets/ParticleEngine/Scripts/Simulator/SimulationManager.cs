@@ -504,15 +504,17 @@ public class SimulationManager : MonoBehaviour {
 
     endHorizontal();
 
-    beginHorizontal();
+    if (_meshLods != null && _meshLods.Length > 0) {
+      beginHorizontal();
 
-    for (int i = 0; i < _meshLods.Length; i++) {
-      if (buttonOrKey("LOD" + i, KeyCode.F1 + i)) {
-        particleMesh = _meshLods[i];
+      for (int i = 0; i < _meshLods.Length; i++) {
+        if (buttonOrKey("LOD" + i, KeyCode.F1 + i)) {
+          particleMesh = _meshLods[i];
+        }
       }
-    }
 
-    endHorizontal();
+      endHorizontal();
+    }
 
     beginHorizontal();
 

@@ -768,23 +768,34 @@ public class PresetGenerator : MonoBehaviour {
 
 
 		//----------------------------------------------
-		// all spheres are repelled by each other
+		// all spheres are repelled by thwie own kind
 		//----------------------------------------------
-		float repulsion = 0.0f;
-		float range = 0.04f;
+		float repulsion = -0.01f;
+		float range = 0.05f;
 
 		socialData[ innerSphere,	innerSphere		] = new Vector2( repulsion, range );
 		socialData[ middleSphere,	innerSphere		] = new Vector2( repulsion, range );
-		socialData[ outerSphere,	innerSphere		] = new Vector2( repulsion, range );
-
-		socialData[ innerSphere,	middleSphere	] = new Vector2( repulsion, range );
 		socialData[ middleSphere,	middleSphere	] = new Vector2( repulsion, range );
-		socialData[ outerSphere,	middleSphere	] = new Vector2( repulsion, range );
 
-		socialData[ innerSphere,	outerSphere		] = new Vector2( repulsion, range );
-		socialData[ middleSphere,	outerSphere		] = new Vector2( repulsion, range );
-		socialData[ outerSphere,	outerSphere		] = new Vector2( repulsion, range );
 
+		/*
+		//----------------------------------------------
+		// a bit of chasing to keep things interesting
+		//----------------------------------------------
+		float chaseForce =  0.0f;
+		float chaseRange =  0.01f;
+		float fleeForce  =  0.0f;
+		float fleeRange  =  0.01f;
+
+		socialData[ innerSphere,	middleSphere	] = new Vector2( chaseForce, 	chaseRange	);
+		socialData[ middleSphere,	innerSphere		] = new Vector2( fleeForce, 	fleeRange 	);
+
+		socialData[ middleSphere,	outerSphere		] = new Vector2( chaseForce, 	chaseRange 	);
+		socialData[ outerSphere,	middleSphere	] = new Vector2( fleeForce, 	fleeRange 	);
+
+		socialData[ outerSphere,	innerSphere		] = new Vector2( chaseForce, 	chaseRange 	);
+		socialData[ innerSphere,	outerSphere		] = new Vector2( fleeForce, 	fleeRange 	);
+		*/
 
 		particlesToSimulate = 4000;
 		for (int p = 0; p < particlesToSimulate; p++) 

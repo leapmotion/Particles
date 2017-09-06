@@ -248,6 +248,16 @@ public class SimulationManager : MonoBehaviour {
   [SerializeField]
   private KeyCode _ranzomizeColorsKey = KeyCode.C;
 
+  [SerializeField]
+  private KeyCode _zoomInKey = KeyCode.UpArrow;
+
+  [SerializeField]
+  private KeyCode _zoomOutKey = KeyCode.DownArrow;
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _zoomFactor = 0.1f;
+
   //#######################//
   ///      Ecosystems      //
   //#######################//
@@ -464,6 +474,18 @@ public class SimulationManager : MonoBehaviour {
     if (buttonOrKey("Randomize Colors", _ranzomizeColorsKey)) {
       RandomizeSimulationColors();
     }
+
+    beginHorizontal();
+
+    if (buttonOrKey("Zoom In", _zoomInKey)) {
+      _displayAnchor.localScale *= (1.0f + _zoomFactor);
+    }
+
+    if (buttonOrKey("Zoom Out", _zoomOutKey)) {
+      _displayAnchor.localScale /= (1.0f + _zoomFactor);
+    }
+
+    endHorizontal();
 
     beginHorizontal();
 

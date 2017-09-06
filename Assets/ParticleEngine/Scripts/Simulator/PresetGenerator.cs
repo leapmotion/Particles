@@ -21,7 +21,7 @@ public enum EcosystemPreset {
   SolarSystem,
   StringTheory,
   OrbFlow,
-  DeathStar,
+  Pulse,
   Tutorial_2_Attract,
   Tutorial_2_Repel,
   Tutorial_2_Chase,
@@ -718,7 +718,7 @@ public class PresetGenerator : MonoBehaviour {
 	//--------------------------------------------------------
 	// Death Star
 	//--------------------------------------------------------
-	else if (preset == EcosystemPreset.DeathStar) 
+	else if (preset == EcosystemPreset.Pulse ) 
 	{
 		int core 						= 0;
 		int coreSkin 					= 1;
@@ -727,21 +727,21 @@ public class PresetGenerator : MonoBehaviour {
 		int outerSphere 				= 4;
 		currentSimulationSpeciesCount 	= 5;
 
-		colors[ core			] = new Color( 0.4f, 0.0f, 0.8f );
-		colors[ coreSkin		] = new Color( 0.2f, 0.3f, 0.5f );
+		colors[ core			] = new Color( 1.0f, 1.0f, 1.0f );
+		colors[ coreSkin		] = new Color( 0.2f, 0.2f, 0.5f );
 		colors[ innerSphere		] = new Color( 0.9f, 0.9f, 0.0f );
 		colors[ middleSphere	] = new Color( 0.9f, 0.4f, 0.0f );
-		colors[ outerSphere		] = new Color( 0.9f, 0.0f, 0.0f );
+		colors[ outerSphere		] = new Color( 0.7f, 0.0f, 0.0f );
 
 		int   steps 		=  0;
 		float drag 			=  0.1f;
 		float collision 	=  0.02f;
 		
-		speciesData[ core			] = new Vector3( drag, steps, collision );
-		speciesData[ coreSkin		] = new Vector3( drag, steps, collision ); 
-		speciesData[ innerSphere	] = new Vector3( drag, steps, collision );
-		speciesData[ middleSphere	] = new Vector3( drag, steps, collision );
-		speciesData[ outerSphere	] = new Vector3( drag, steps, collision );
+		speciesData[ core			] = new Vector3( drag, steps, 	collision );
+		speciesData[ coreSkin		] = new Vector3( drag, 10, 		collision ); 
+		speciesData[ innerSphere	] = new Vector3( drag, steps, 	collision );
+		speciesData[ middleSphere	] = new Vector3( drag, steps, 	collision );
+		speciesData[ outerSphere	] = new Vector3( drag, steps, 	collision );
 	
 		//-------------------------------------------------------
 		// core loves itself
@@ -751,26 +751,33 @@ public class PresetGenerator : MonoBehaviour {
 		//-------------------------------------------------------
 		// coreSkin loves core and hates itself
 		//-------------------------------------------------------
-		socialData[ coreSkin,	coreSkin	] = new Vector2( -0.02f,  0.1f );
-		socialData[ coreSkin,	core		] = new Vector2(  0.005f, 2.0f );
+		socialData[ coreSkin,	coreSkin	] = new Vector2( -0.01f,  0.1f );
+		socialData[ coreSkin,	core		] = new Vector2(  0.003f, 2.0f );
+
+
+
+//test
+		//socialData[ core, innerSphere 	] = new Vector2( 0.002f, 1.0f );
+		//socialData[ core, middleSphere	] = new Vector2( -0.002f, 2.0f );
+//		socialData[ core, outerSphere 	] = new Vector2( 0.002f, 2.0f );
 
 
 		//----------------------------------------------------------------------------
 		// spheres love coreSkin but hate core
 		//----------------------------------------------------------------------------
-		socialData[ innerSphere,	coreSkin		] = new Vector2(  0.02f,  0.6f );
-		socialData[ middleSphere,	coreSkin		] = new Vector2(  0.02f,  0.7f );
-		socialData[ outerSphere,	coreSkin		] = new Vector2(  0.02f,  0.8f );
+		socialData[ innerSphere,	coreSkin		] = new Vector2(  0.01f,  0.5f );
+		socialData[ middleSphere,	coreSkin		] = new Vector2(  0.01f,  0.6f );
+		socialData[ outerSphere,	coreSkin		] = new Vector2(  0.01f,  0.7f );
 
-		socialData[ innerSphere,	core			] = new Vector2( -0.04f,   0.8f );
-		socialData[ middleSphere,	core			] = new Vector2( -0.04f,   0.9f );
-		socialData[ outerSphere,	core			] = new Vector2( -0.04f,   1.0f );
+		socialData[ innerSphere,	core			] = new Vector2( -0.04f,   0.7f );
+		socialData[ middleSphere,	core			] = new Vector2( -0.04f,   0.8f );
+		socialData[ outerSphere,	core			] = new Vector2( -0.04f,   0.9f );
 
 
 		//----------------------------------------------
-		// all spheres are repelled by thwie own kind
+		// all spheres are repelled by their own kind
 		//----------------------------------------------
-		float repulsion = -0.01f;
+		float repulsion = -0.2f;
 		float range = 0.05f;
 
 		socialData[ innerSphere,	innerSphere		] = new Vector2( repulsion, range );

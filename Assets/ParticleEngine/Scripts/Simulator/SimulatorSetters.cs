@@ -71,8 +71,8 @@ public class SimulatorSetters : MonoBehaviour {
       case "OrbFlow":
         simManager.RestartSimulation(EcosystemPreset.OrbFlow);
         break;
-      case "DeathStar":
-        simManager.RestartSimulation(EcosystemPreset.DeathStar);
+      case "Pulse":
+        simManager.RestartSimulation(EcosystemPreset.Pulse);
         break;
       case "Tutorial_2_Attract":
         simManager.RestartSimulation(EcosystemPreset.Tutorial_2_Attract);

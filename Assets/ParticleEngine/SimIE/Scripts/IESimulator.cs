@@ -46,6 +46,14 @@ public class IESimulator : MonoBehaviour {
     var block = new MaterialPropertyBlock();
 
     switch (resetBehavior) {
+      case ResetBehavior.None:
+        //If no transition, all we need to do is update the colors
+        foreach (var particle in _particles) {
+          block.SetColor("_Color", description.speciesData[particle.species].color);
+          particle.GetComponent<Renderer>().SetPropertyBlock(block);
+        }
+        _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
+        break;
       case ResetBehavior.ResetPositions:
         foreach (var obj in _particles) {
           DestroyImmediate(obj.gameObject);
@@ -79,6 +87,9 @@ public class IESimulator : MonoBehaviour {
         _prevParticleSize = _manager.particleSize;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
+        break;
+      case ResetBehavior.FadeInOut:
+      case ResetBehavior.SmoothTransition:
         break;
       default:
         throw new System.NotImplementedException();
@@ -166,6 +177,12 @@ public class IESimulator : MonoBehaviour {
       }
 
       particle.rigidbody.velocity *= (1.0f - currentDescription.speciesData[particle.species].drag);
+
+      Vector3 toCenter = _manager.fieldCenter - particle.rigidbody.position;
+      float distToCenter = toCenter.magnitude;
+      if (distToCenter > _manager.fieldRadius) {
+        particle.rigidbody.velocity += toCenter * _manager.fieldForce;
+      }
     }
   }
   #endregion

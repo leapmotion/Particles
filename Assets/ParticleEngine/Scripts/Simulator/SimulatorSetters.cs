@@ -159,11 +159,11 @@ public class SimulatorSetters : MonoBehaviour {
   }
 
   public void SetParticleSize(float particleSize) {
-    simManager.particleSize = particleSize;
+    simManager.particleRadius = particleSize;
   }
 
   public float GetParticleSize() {
-    return simManager.particleSize;
+    return simManager.particleRadius;
   }
 
   public void SetTrailSize(float trailSize) {

@@ -188,11 +188,11 @@ public class SimulationManager : MonoBehaviour {
 
   [Range(0, 0.05f)]
   [SerializeField]
-  private float _particleSize = 0.02f;
-  public float particleSize {
-    get { return _particleSize; }
+  private float _particleRadius = 0.01f;
+  public float particleRadius {
+    get { return _particleRadius; }
     set {
-      _particleSize = value;
+      _particleRadius = value;
     }
   }
 

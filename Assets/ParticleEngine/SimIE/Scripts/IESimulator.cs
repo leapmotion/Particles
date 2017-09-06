@@ -65,7 +65,7 @@ public class IESimulator : MonoBehaviour {
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;
           particle.transform.localRotation = Quaternion.identity;
-          particle.transform.localScale = Vector3.one * _manager.particleSize;
+          particle.transform.localScale = Vector3.one * _manager.particleRadius;
 
           particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
 
@@ -84,7 +84,7 @@ public class IESimulator : MonoBehaviour {
         _prevDisplayPosition = _manager.displayAnchor.localPosition;
         _prevDisplayRotation = _manager.displayAnchor.localRotation;
         _prevDisplayScale = _manager.displayAnchor.localScale;
-        _prevParticleSize = _manager.particleSize;
+        _prevParticleSize = _manager.particleRadius;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
         break;
@@ -129,12 +129,12 @@ public class IESimulator : MonoBehaviour {
       _prevDisplayScale = _manager.displayAnchor.localScale;
     }
 
-    bool didParticleSizeChange = _prevParticleSize != _manager.particleSize;
+    bool didParticleSizeChange = _prevParticleSize != _manager.particleRadius;
     if (didParticleSizeChange) {
       foreach (var particle in _particles) {
-        particle.transform.localScale *= _manager.particleSize / _prevParticleSize;
+        particle.transform.localScale *= _manager.particleRadius / _prevParticleSize;
       }
-      _prevParticleSize = _manager.particleSize;
+      _prevParticleSize = _manager.particleRadius;
     }
 
     float scale = _manager.displayAnchor.localScale.x;

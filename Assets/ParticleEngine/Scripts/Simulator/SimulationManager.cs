@@ -433,6 +433,45 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
+  public int GetRecommendedMaxParticles() {
+    switch (simulationMethod) {
+      case SimulationMethod.Texture:
+        return 4096;
+      case SimulationMethod.InteractionEngine:
+      default:
+        return 24;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool SaveEcosystem() {
+    try {
+      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
+      return true;
+    }
+    catch (System.Exception) {
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool LoadEcosystem() {
+    try {
+      var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
+      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(file));
+      RestartSimulation(description, ResetBehavior.ResetPositions);
+
+      return true;
+    }
+    catch (System.Exception) {
+      return false;
+    }
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -504,7 +543,7 @@ public class SimulationManager : MonoBehaviour {
     beginHorizontal();
 
     if (buttonOrKey("Save Ecosystem", _saveEcosystemKey)) {
-      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
+      SaveEcosystem();
     }
 
     if (buttonOrKey("Load Ecosystem", _loadEcosystemKey)) {

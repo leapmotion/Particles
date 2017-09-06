@@ -8,6 +8,11 @@ public class SimulatorSliderSetParticleCount : SimulatorSliderControl {
   protected override void Update() {
     base.Update();
 
+    // Set the slider maximum value based on the recommended setting (IE can't handle
+    // 4096 particles!)
+    slider.horizontalValueRange = new Vector2(slider.horizontalValueRange.x,
+                                              simManager.GetRecommendedMaxParticles());
+
     // Species count slider isn't valid while a Preset ecosystem is loaded.
     slider.controlEnabled = simManager.currentDescription.isRandomDescription;
   }

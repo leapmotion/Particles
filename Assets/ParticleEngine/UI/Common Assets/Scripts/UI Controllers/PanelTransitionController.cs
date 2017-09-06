@@ -45,7 +45,7 @@ public class PanelTransitionController : MonoBehaviour {
   protected virtual void Update() {
     // Linearly move current to target weights, obeying constraints along the way.
 
-    if (_curOutlineWeight == 0f) {
+    if (_curOutlineWeight < 0.80f) {
       if (_curPanelWeight > _targetPanelWeight) {
         _curPanelWeight -= speed * Time.deltaTime;
         if (_curPanelWeight < _targetPanelWeight) _curPanelWeight = _targetPanelWeight;
@@ -56,7 +56,7 @@ public class PanelTransitionController : MonoBehaviour {
       }
     }
 
-    if (_curPanelWeight == 0f) {
+    if (_curPanelWeight < 0.80f) {
       if (_curOutlineWeight > _targetOutlineWeight) {
         _curOutlineWeight -= speed * Time.deltaTime;
         if (_curOutlineWeight < _targetOutlineWeight) _curOutlineWeight = _targetOutlineWeight;
@@ -85,12 +85,11 @@ public class PanelTransitionController : MonoBehaviour {
     bool targetOutlineState = false;
 
     if (_curOutlineWeight > 0f) {
-      targetPanelState = false;
       targetOutlineState = true;
     }
-    else {
+
+    if (_curPanelWeight > 0f) {
       targetPanelState = true;
-      targetOutlineState = false;
     }
 
     if (_curOutlineWeight < 0.01f

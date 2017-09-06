@@ -33,6 +33,9 @@ public class SimulationManager : MonoBehaviour {
   public const int MAX_SPECIES = 31;
   public const int MAX_FORCE_STEPS = 64;
 
+  public const float PARTICLE_RADIUS = 0.01f;
+  public const float PARTICLE_DIAMETER = PARTICLE_RADIUS * 2;
+
   #region INSPECTOR
 
   [SerializeField]

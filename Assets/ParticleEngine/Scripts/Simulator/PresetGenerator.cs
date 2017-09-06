@@ -1638,9 +1638,17 @@ public class PresetGenerator : MonoBehaviour {
 
     for (int i = 0; i < MAX_SPECIES; i++) {
       for (int j = 0; j < MAX_SPECIES; j++) {
+        float force = socialData[i, j].x;
+        float range = socialData[i, j].y;
+
+        if (range < SimulationManager.PARTICLE_DIAMETER) {
+          range = SimulationManager.PARTICLE_DIAMETER;
+          force = 0;
+        }
+
         description.socialData[i, j] = new SocialDescription() {
-          socialForce = socialData[i, j].x,
-          socialRange = socialData[i, j].y
+          socialForce = force,
+          socialRange = range
         };
       }
 

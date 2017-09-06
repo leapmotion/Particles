@@ -19,12 +19,16 @@ public abstract class SimulatorButtonControl : SimulatorUIControl {
 
   void OnEnable() {
     button.OnPress += onPress;
+    button.OnUnpress += onUnpress;
   }
 
   void OnDisable() {
     button.OnPress -= onPress;
+    button.OnUnpress -= onUnpress;
   }
 
   public abstract void onPress();
+
+  public virtual void onUnpress() { }
 
 }

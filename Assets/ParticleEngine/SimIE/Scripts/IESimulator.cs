@@ -81,8 +81,8 @@ public class IESimulator : MonoBehaviour {
         }
 
         TransformBy(_manager.displayAnchor.localToWorldMatrix);
-        _prevDisplayPosition = _manager.displayAnchor.localPosition;
-        _prevDisplayRotation = _manager.displayAnchor.localRotation;
+        _prevDisplayPosition = _manager.displayAnchor.position;
+        _prevDisplayRotation = _manager.displayAnchor.rotation;
         _prevDisplayScale = _manager.displayAnchor.localScale;
         _prevParticleSize = _manager.particleRadius;
 
@@ -105,27 +105,27 @@ public class IESimulator : MonoBehaviour {
 
   private void Awake() {
     _manager = GetComponentInParent<SimulationManager>();
-    _prevDisplayPosition = _manager.displayAnchor.localPosition;
-    _prevDisplayRotation = _manager.displayAnchor.localRotation;
+    _prevDisplayPosition = _manager.displayAnchor.position;
+    _prevDisplayRotation = _manager.displayAnchor.rotation;
     _prevDisplayScale = _manager.displayAnchor.localScale;
   }
 
   private void FixedUpdate() {
-    bool didDisplayMove = _prevDisplayPosition != _manager.displayAnchor.localPosition ||
-                          _prevDisplayRotation != _manager.displayAnchor.localRotation ||
+    bool didDisplayMove = _prevDisplayPosition != _manager.displayAnchor.position ||
+                          _prevDisplayRotation != _manager.displayAnchor.rotation ||
                           _prevDisplayScale != _manager.displayAnchor.localScale;
     if (didDisplayMove) {
       Matrix4x4 originalTransform = Matrix4x4.TRS(_prevDisplayPosition,
                                                   _prevDisplayRotation,
                                                   _prevDisplayScale);
-      Matrix4x4 newTransform = Matrix4x4.TRS(_manager.displayAnchor.localPosition,
-                                             _manager.displayAnchor.localRotation,
+      Matrix4x4 newTransform = Matrix4x4.TRS(_manager.displayAnchor.position,
+                                             _manager.displayAnchor.rotation,
                                              _manager.displayAnchor.localScale);
       Matrix4x4 delta = newTransform * originalTransform.inverse;
       TransformBy(delta);
 
-      _prevDisplayPosition = _manager.displayAnchor.localPosition;
-      _prevDisplayRotation = _manager.displayAnchor.localRotation;
+      _prevDisplayPosition = _manager.displayAnchor.position;
+      _prevDisplayRotation = _manager.displayAnchor.rotation;
       _prevDisplayScale = _manager.displayAnchor.localScale;
     }
 

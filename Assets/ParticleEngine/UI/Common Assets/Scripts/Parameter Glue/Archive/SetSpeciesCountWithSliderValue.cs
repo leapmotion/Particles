@@ -16,8 +16,8 @@ public class SetSpeciesCountWithSliderValue : MonoBehaviour {
   public string postfix;
 
   void Update() {
-    float sliderValue = slider.HorizontalSliderValue.Map(slider.horizontalValueRange.x,
-                                                         slider.horizontalValueRange.y,
+    float sliderValue = slider.HorizontalSliderValue.Map(slider.minHorizontalValue,
+                                                         slider.maxHorizontalValue,
                                                          0F, 1F);
 
     int discretizedSliderValue = (int)(sliderValue * (slider.horizontalSteps + 1) * 1.0001F);

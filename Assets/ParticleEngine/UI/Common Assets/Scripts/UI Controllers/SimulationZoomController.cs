@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SimulationZoomController : MonoBehaviour {
 
-  public float _targetZoomedInScale = 3f;
+  public float _targetZoomedInScale = 5f;
   public float _targetZoomedOutScale = 0.2F;
 
   /// <summary>

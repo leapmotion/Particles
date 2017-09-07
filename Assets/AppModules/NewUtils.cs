@@ -56,9 +56,10 @@ public static class NewUtils {
   /// <summary>
   /// Usage is the same as FindObjectOfType, but this method will also return objects
   /// that are inactive.
+  /// 
+  /// Use this method to search for singleton-pattern objects even if they are disabled,
+  /// but be warned that it's not cheap to call!
   /// </summary>
-  /// <typeparam name="T"></typeparam>
-  /// <returns></returns>
   public static T FindObjectInHierarchy<T>() where T : UnityEngine.Object {
     T obj = Resources.FindObjectsOfTypeAll<T>().Query().FirstOrDefault();
     if (obj == null) return null;

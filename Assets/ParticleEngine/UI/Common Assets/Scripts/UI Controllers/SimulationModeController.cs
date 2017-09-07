@@ -100,7 +100,7 @@ public class SimulationModeController : MonoBehaviour {
 
   void Start() {
     normalFieldForceRange   = new Vector2(fieldForceSlider.minHorizontalValue, fieldForceSlider.maxHorizontalValue);
-    normalFieldRadiusRange  = new Vector2(fieldRadiusSlider.minHorizontalValue, fieldForceSlider.maxHorizontalValue);
+    normalFieldRadiusRange  = new Vector2(fieldRadiusSlider.minHorizontalValue, fieldRadiusSlider.maxHorizontalValue);
     normalSocialForceRange  = new Vector2(socialForceSlider.minHorizontalValue, socialForceSlider.maxHorizontalValue);
     normalSocialRadiusRange = new Vector2(socialRadiusSlider.minHorizontalValue, socialRadiusSlider.maxHorizontalValue);
     normalDragRange         = new Vector2(dragSlider.minHorizontalValue, dragSlider.maxHorizontalValue);

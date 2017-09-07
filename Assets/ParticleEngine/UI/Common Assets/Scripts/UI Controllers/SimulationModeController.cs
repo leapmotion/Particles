@@ -41,6 +41,7 @@ public class SimulationModeController : MonoBehaviour {
   public InteractionSlider socialForceSlider;
   public InteractionSlider socialRadiusSlider;
   public InteractionSlider dragSlider;
+  public InteractionSlider particleCountSlider;
 
   [Header("Zoom")]
 
@@ -92,6 +93,9 @@ public class SimulationModeController : MonoBehaviour {
     if (dragSlider == null) {
       dragSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetDrag>().GetComponent<InteractionSlider>();
     }
+    if (particleCountSlider == null) {
+      particleCountSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetParticleCount>().GetComponent<InteractionSlider>();
+    }
 
     if (zoomController == null) {
       zoomController = NewUtils.FindObjectInHierarchy<SimulationZoomController>();
@@ -134,6 +138,8 @@ public class SimulationModeController : MonoBehaviour {
     dragSlider.minHorizontalValue           = normalDragRange.x;
     dragSlider.maxHorizontalValue           = normalDragRange.y;
 
+    particleCountSlider.maxHorizontalValue = simManager.GetRecommendedMaxParticles(SimulationMethod.Texture);
+
     zoomController.ZoomTo(_normalZoomDefault);
   }
   
@@ -152,6 +158,8 @@ public class SimulationModeController : MonoBehaviour {
 
     dragSlider.minHorizontalValue           = atomicDragRange.x;
     dragSlider.maxHorizontalValue           = atomicDragRange.y;
+
+    particleCountSlider.maxHorizontalValue = simManager.GetRecommendedMaxParticles(SimulationMethod.InteractionEngine);
 
     zoomController.ZoomTo(_atomicZoomDefault);
   }

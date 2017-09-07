@@ -47,6 +47,7 @@ namespace Leap.Unity.Interaction {
     [FormerlySerializedAs("horizontalValueRange")]
     [SerializeField]
     private Vector2 _horizontalValueRange = new Vector2(0f, 1f);
+
     public float minHorizontalValue {
       get {
         return _horizontalValueRange.x;
@@ -95,6 +96,7 @@ namespace Leap.Unity.Interaction {
     [FormerlySerializedAs("verticalValueRange")]
     [SerializeField]
     private Vector2 _verticalValueRange = new Vector2(0f, 1f);
+
     public float minVerticalValue {
       get {
         return _verticalValueRange.x;

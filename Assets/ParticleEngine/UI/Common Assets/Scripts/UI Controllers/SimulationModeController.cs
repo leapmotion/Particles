@@ -10,6 +10,8 @@ public class SimulationModeController : MonoBehaviour {
 
   #region Inspector
 
+  public SimulationManager simManager;
+    
   public enum SimulationMode { Normal, Atomic }
 
   [SerializeField, OnEditorChange("mode")]
@@ -23,9 +25,11 @@ public class SimulationModeController : MonoBehaviour {
         switch (_mode) {
           case SimulationMode.Normal:
             switchToNormalMode();
+            simManager.simulationMethod = SimulationMethod.Texture;
             break;
           case SimulationMode.Atomic:
             switchToAtomicMode();
+            simManager.simulationMethod = SimulationMethod.InteractionEngine;
             break;
         }
       }
@@ -69,6 +73,10 @@ public class SimulationModeController : MonoBehaviour {
   #region Unity Events
 
   void Reset() {
+    if (simManager == null) {
+      simManager = FindObjectOfType<SimulationManager>();
+    }
+
     if (fieldForceSlider == null) {
       fieldForceSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetBoundingForce>().GetComponent<InteractionSlider>();
     }
@@ -91,11 +99,11 @@ public class SimulationModeController : MonoBehaviour {
   }
 
   void Start() {
-    normalFieldForceRange   = fieldForceSlider.horizontalValueRange;
-    normalFieldRadiusRange  = fieldRadiusSlider.horizontalValueRange;
-    normalSocialForceRange  = socialForceSlider.horizontalValueRange;
-    normalSocialRadiusRange = socialRadiusSlider.horizontalValueRange;
-    normalDragRange         = dragSlider.horizontalValueRange;
+    normalFieldForceRange   = new Vector2(fieldForceSlider.minHorizontalValue, fieldForceSlider.maxHorizontalValue);
+    normalFieldRadiusRange  = new Vector2(fieldRadiusSlider.minHorizontalValue, fieldForceSlider.maxHorizontalValue);
+    normalSocialForceRange  = new Vector2(socialForceSlider.minHorizontalValue, socialForceSlider.maxHorizontalValue);
+    normalSocialRadiusRange = new Vector2(socialRadiusSlider.minHorizontalValue, socialRadiusSlider.maxHorizontalValue);
+    normalDragRange         = new Vector2(dragSlider.minHorizontalValue, dragSlider.maxHorizontalValue);
 
     float conversionFactor = NORMAL_TO_ATOMIC_CONVERSION_FACTOR;
 
@@ -111,21 +119,39 @@ public class SimulationModeController : MonoBehaviour {
   #region Internal
 
   private void switchToNormalMode() {
-    fieldForceSlider.horizontalValueRange   = normalFieldForceRange;
-    fieldRadiusSlider.horizontalValueRange  = normalFieldRadiusRange;
-    socialForceSlider.horizontalValueRange  = normalSocialForceRange;
-    socialRadiusSlider.horizontalValueRange = normalSocialRadiusRange;
-    dragSlider.horizontalValueRange         = normalDragRange;
+    fieldForceSlider.minHorizontalValue     = normalFieldForceRange.x;
+    fieldForceSlider.maxHorizontalValue     = normalFieldForceRange.y;
+
+    fieldRadiusSlider.minHorizontalValue    = normalFieldRadiusRange.x;
+    fieldRadiusSlider.maxHorizontalValue    = normalFieldRadiusRange.y;
+
+    socialForceSlider.minHorizontalValue    = normalSocialForceRange.x;
+    socialForceSlider.maxHorizontalValue    = normalSocialForceRange.y;
+
+    socialRadiusSlider.minHorizontalValue   = normalSocialRadiusRange.x;
+    socialRadiusSlider.maxHorizontalValue   = normalSocialRadiusRange.y;
+
+    dragSlider.minHorizontalValue           = normalDragRange.x;
+    dragSlider.maxHorizontalValue           = normalDragRange.y;
 
     //zoomController.ZoomTo(_normalZoomDefault);
   }
   
   private void switchToAtomicMode() {
-    fieldForceSlider.horizontalValueRange   = atomicFieldForceRange;
-    fieldRadiusSlider.horizontalValueRange  = atomicFieldRadiusRange;
-    socialForceSlider.horizontalValueRange  = atomicSocialForceRange;
-    socialRadiusSlider.horizontalValueRange = atomicSocialRadiusRange;
-    dragSlider.horizontalValueRange         = atomicDragRange;
+    fieldForceSlider.minHorizontalValue     = atomicFieldForceRange.x;
+    fieldForceSlider.maxHorizontalValue     = atomicFieldForceRange.y;
+
+    fieldRadiusSlider.minHorizontalValue    = atomicFieldRadiusRange.x;
+    fieldRadiusSlider.maxHorizontalValue    = atomicFieldRadiusRange.y;
+
+    socialForceSlider.minHorizontalValue    = atomicSocialForceRange.x;
+    socialForceSlider.maxHorizontalValue    = atomicSocialForceRange.y;
+
+    socialRadiusSlider.minHorizontalValue   = atomicSocialRadiusRange.x;
+    socialRadiusSlider.maxHorizontalValue   = atomicSocialRadiusRange.y;
+
+    dragSlider.minHorizontalValue           = atomicDragRange.x;
+    dragSlider.maxHorizontalValue           = atomicDragRange.y;
 
     //zoomController.ZoomTo(_atomicZoomDefault);
   }

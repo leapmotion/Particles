@@ -178,10 +178,12 @@ public class IESimulator : MonoBehaviour {
 
       particle.rigidbody.velocity *= (1.0f - currentDescription.speciesData[particle.species].drag);
 
-      Vector3 toCenter = _manager.fieldCenter - particle.rigidbody.position;
+      //Transform rigidbody world position into 'simulation space'
+      Vector3 toCenter = _manager.fieldCenter - _manager.displayAnchor.InverseTransformPoint(particle.rigidbody.position);
       float distToCenter = toCenter.magnitude;
       if (distToCenter > _manager.fieldRadius) {
-        particle.rigidbody.velocity += toCenter * _manager.fieldForce;
+        //Transform velocity applied back into world space
+        particle.rigidbody.velocity += _manager.displayAnchor.TransformVector(toCenter * _manager.fieldForce);
       }
     }
   }

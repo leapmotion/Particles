@@ -75,4 +75,8 @@ public class SimulationZoomController : MonoBehaviour {
     _targetZoomInAmount = Mathf.Clamp01(_targetZoomInAmount + zoomAmount);
   }
 
+  public void ZoomTo(float zoomAmount) {
+    _targetZoomInAmount = Mathf.Clamp01(zoomAmount);
+  }
+
 }

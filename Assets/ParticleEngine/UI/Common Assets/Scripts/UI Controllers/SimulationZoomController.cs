@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SimulationZoomController : MonoBehaviour {
 
-  public float _targetZoomedInScale = 1f;
+  public float _targetZoomedInScale = 3f;
   public float _targetZoomedOutScale = 0.2F;
 
   /// <summary>
@@ -29,12 +29,12 @@ public class SimulationZoomController : MonoBehaviour {
   public Transform displayAnchor;
 
   void Update() {
-    updateTargetZoom();
+    updateTargetScale();
 
     float scale = displayAnchor.transform.localScale.x;
 
     scale = Mathf.Lerp(scale, _targetScale, 5F * Time.deltaTime);
-
+    
     displayAnchor.transform.localScale = Vector3.one * scale;
 
     if (isFullyZoomedIn && !_isZoomedIn) { _isZoomedIn = true; }
@@ -50,7 +50,7 @@ public class SimulationZoomController : MonoBehaviour {
     _isZoomedIn = !_isZoomedIn;
   }
 
-  private void updateTargetZoom()
+  private void updateTargetScale()
   {
     _targetScale = Mathf.Lerp(_targetZoomedOutScale, _targetZoomedInScale, _targetZoomInAmount);
   }

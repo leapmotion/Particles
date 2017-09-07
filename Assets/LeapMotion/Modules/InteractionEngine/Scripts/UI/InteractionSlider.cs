@@ -179,7 +179,7 @@ namespace Leap.Unity.Interaction {
         return Mathf.Lerp(_horizontalValueRange.x, _horizontalValueRange.y, _horizontalSliderPercent);
       }
       set {
-        HorizontalSliderPercent = Mathf.InverseLerp(_horizontalValueRange.x, _horizontalValueRange.y, value);
+        HorizontalSliderPercent = Mathf.InverseLerp(_horizontalValueRange.x, _horizontalValueRange.y, Mathf.Clamp(value, _horizontalValueRange.x, _horizontalValueRange.y));
       }
     }
 
@@ -189,7 +189,7 @@ namespace Leap.Unity.Interaction {
         return Mathf.Lerp(_verticalValueRange.x, _verticalValueRange.y, _verticalSliderPercent);
       }
       set {
-        VerticalSliderPercent = Mathf.InverseLerp(_verticalValueRange.x, _verticalValueRange.y, value);
+        VerticalSliderPercent = Mathf.InverseLerp(_verticalValueRange.x, _verticalValueRange.y, Mathf.Clamp(value, _verticalValueRange.x, _verticalValueRange.y));
       }
     }
 

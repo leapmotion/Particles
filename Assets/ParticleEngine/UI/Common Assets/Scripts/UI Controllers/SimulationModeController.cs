@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class SimulationModeController : MonoBehaviour {
 
-  public const float NORMAL_TO_ATOMIC_CONVERSION_FACTOR = 0.5f;
+  public const float NORMAL_TO_ATOMIC_CONVERSION_FACTOR = 0.10f;
 
   #region Inspector
 
@@ -45,7 +45,7 @@ public class SimulationModeController : MonoBehaviour {
   [Header("Zoom")]
 
   public SimulationZoomController zoomController;
-  private float _atomicZoomDefault = 0.5f;
+  private float _atomicZoomDefault = 0.9f;
   private float _normalZoomDefault = 0f;
 
   [Header("Normal Slider Ranges - Automatic On Start")]
@@ -111,7 +111,7 @@ public class SimulationModeController : MonoBehaviour {
     atomicFieldRadiusRange  = normalFieldRadiusRange  * conversionFactor;
     atomicSocialForceRange  = normalSocialForceRange  * conversionFactor;
     atomicSocialRadiusRange = normalSocialRadiusRange * conversionFactor;
-    atomicDragRange         = normalDragRange * conversionFactor * conversionFactor;
+    atomicDragRange         = normalDragRange * Mathf.Sqrt(conversionFactor);
   }
 
   #endregion
@@ -134,7 +134,7 @@ public class SimulationModeController : MonoBehaviour {
     dragSlider.minHorizontalValue           = normalDragRange.x;
     dragSlider.maxHorizontalValue           = normalDragRange.y;
 
-    //zoomController.ZoomTo(_normalZoomDefault);
+    zoomController.ZoomTo(_normalZoomDefault);
   }
   
   private void switchToAtomicMode() {
@@ -153,7 +153,7 @@ public class SimulationModeController : MonoBehaviour {
     dragSlider.minHorizontalValue           = atomicDragRange.x;
     dragSlider.maxHorizontalValue           = atomicDragRange.y;
 
-    //zoomController.ZoomTo(_atomicZoomDefault);
+    zoomController.ZoomTo(_atomicZoomDefault);
   }
 
   #endregion

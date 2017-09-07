@@ -7,6 +7,7 @@ public class SimulatorSliderSetBoundingRadius : SimulatorSliderControl {
 
   protected override void SetSimulatorValue(float sliderValue) {
     simulatorSetters.SetBoundingRadius(sliderValue);
+    genManager.spawnRadius = sliderValue;
   }
 
   protected override float GetSimulatorValue() {

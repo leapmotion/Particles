@@ -101,7 +101,7 @@ namespace Leap.Unity.Interaction {
 
     // Protected State Variables
 
-    ///<summary> The initial position of this element in local space, stored upon Awake() </summary>
+    ///<summary> The initial position of this element in local space, stored upon Start() </summary>
     protected Vector3 initialLocalPosition;
 
     ///<summary> The physical position of this element in local space; may diverge from the graphical position. </summary>
@@ -128,8 +128,11 @@ namespace Leap.Unity.Interaction {
     private Quaternion _initialLocalRotation;
     private InteractionController _lockedInteractingController = null;
 
-    protected override void Awake() {
-      base.Awake();
+    protected override void Start() {
+      if(transform == transform.root) {
+        Debug.LogError("This button has no parent!  Please ensure that it is parented to something!", this);
+        enabled = false;
+      }
 
       // Initialize Positions
       initialLocalPosition = transform.localPosition;
@@ -143,13 +146,6 @@ namespace Leap.Unity.Interaction {
       rigidbody.position = physicsPosition;
       _initialIgnoreGrasping = ignoreGrasping;
       _initialLocalRotation = transform.localRotation;
-    }
-
-    protected override void Start() {
-      if(transform == transform.root) {
-        Debug.LogError("This button has no parent!  Please ensure that it is parented to something!", this);
-        enabled = false;
-      }
 
       //Add a custom grasp controller
       OnGraspBegin += onGraspBegin;
@@ -227,9 +223,9 @@ namespace Leap.Unity.Interaction {
           Vector3 originalLocalVelocity = localPhysicsVelocity;
 
           // Spring force
-          localPhysicsVelocity += Mathf.Clamp(_springForce * 10000F * (initialLocalPosition.z - Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight) - localPhysicsPosition.z), -100f, 100f)
-                                * Time.fixedDeltaTime
-                                * Vector3.forward;
+          localPhysicsVelocity += Mathf.Clamp(_springForce * 10000F * (initialLocalPosition.z - Mathf.Lerp(minMaxHeight.x, minMaxHeight.y, restingHeight) - localPhysicsPosition.z), -100f / transform.parent.lossyScale.x, 100f / transform.parent.lossyScale.x)
+                                              * Time.fixedDeltaTime
+                                              * Vector3.forward;
 
           // Friction & Drag
           float velMag = originalLocalVelocity.magnitude;
@@ -238,12 +234,12 @@ namespace Leap.Unity.Interaction {
 
             // Friction force
             Vector3 frictionForce = resistanceDir * velMag * FRICTION_COEFFICIENT;
-            localPhysicsVelocity = localPhysicsVelocity + (frictionForce /* assume unit mass */ * Time.fixedDeltaTime);
+            localPhysicsVelocity += (frictionForce /* assume unit mass */ * Time.fixedDeltaTime * transform.parent.lossyScale.x);
 
             // Drag force
             float velSqrMag = velMag * velMag;
             Vector3 dragForce = resistanceDir * velSqrMag * DRAG_COEFFICIENT;
-            localPhysicsVelocity = localPhysicsVelocity + (dragForce /* assume unit mass */ * Time.fixedDeltaTime);
+            localPhysicsVelocity += (dragForce /* assume unit mass */ * Time.fixedDeltaTime * transform.parent.lossyScale.x);
           }
         }
 

@@ -34,6 +34,24 @@ public class PagedContentController : MonoBehaviour {
     };
   }
 
+  //private bool _firstFrame = true;
+  //private bool _secondFrame = false;
+  //void Update() {
+  //  if (_secondFrame && !_firstFrame) {
+  //    pageIdx = pageIdx;
+  //    _secondFrame = false;
+  //  }
+
+  //  if (_firstFrame) {
+  //    for (int i = 0; i < pages.Length; i++) {
+  //      if (i == pageIdx) continue;
+  //      pages[i].SetActive(true);
+  //    }
+  //    _firstFrame = false;
+  //    _secondFrame = true;
+  //  }
+  //}
+
   private void disableOtherPages(int pageIdx) {
     for (int i = 0; i < pages.Length; i++) {
       if (i == pageIdx) continue;

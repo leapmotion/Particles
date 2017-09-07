@@ -437,7 +437,11 @@ public class SimulationManager : MonoBehaviour {
   }
 
   public int GetRecommendedMaxParticles() {
-    switch (simulationMethod) {
+    return GetRecommendedMaxParticles(simulationMethod);
+  }
+
+  public int GetRecommendedMaxParticles(SimulationMethod simMethod) {
+    switch (simMethod) {
       case SimulationMethod.Texture:
         return 4096;
       case SimulationMethod.InteractionEngine:

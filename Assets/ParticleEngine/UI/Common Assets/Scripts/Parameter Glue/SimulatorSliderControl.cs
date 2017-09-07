@@ -19,9 +19,6 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     set {
       slider.HorizontalSliderValue = value;
       slider.HorizontalSliderValue = filterSliderValue(slider.HorizontalSliderValue);
-      if (this.name.Equals("Particle Count Control")) {
-        Debug.Log("Particle count control, sending slide event: " + slider.HorizontalSliderValue);
-      }
       onSlideEvent(slider.HorizontalSliderValue);
     }
   }

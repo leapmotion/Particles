@@ -1602,7 +1602,13 @@ public class TextureSimulator : MonoBehaviour {
     public Vector4 sphere {
       get {
         Vector4 s = prevPosition;
-        s.w = _sim.maxInfluenceRadius * _radiusMultiplier;
+        float sphereRadius = _sim.maxInfluenceRadius * _radiusMultiplier;
+
+        float particleRadius = SimulationManager.PARTICLE_RADIUS * _sim._manager.displayAnchor.localScale.x;
+        float lerpValue = _sim._influenceScalarByScale.Evaluate(particleRadius);
+        sphereRadius = Mathf.Lerp(sphereRadius, particleRadius * _sim._particleScaleBias, lerpValue);
+
+        s.w = sphereRadius;
         return s;
       }
     }

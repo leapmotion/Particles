@@ -983,22 +983,16 @@ MonoBehaviour:
       outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
-      time: 0.07
-      value: 0.00027463725
-      inSlope: 0.003923389
+      time: 0.02
+      value: 0.000030496623
+      inSlope: 0.0015248312
       outSlope: 0.024436053
       tangentMode: 5
     - serializedVersion: 2
-      time: 0.18570367
-      value: 0.27687693
-      inSlope: 5.6742644
-      outSlope: 5.427527
-      tangentMode: 1
-    - serializedVersion: 2
-      time: 0.29999998
+      time: 0.049999997
       value: 1
       inSlope: -0.04494776
-      outSlope: -0.0000040871755
+      outSlope: -0.0000030116032
       tangentMode: 65
     - serializedVersion: 2
       time: 1
@@ -1012,7 +1006,7 @@ MonoBehaviour:
   _particleScaleBias: 1
   _handInfluenceType: 0
   _stasisInfluenceSettings:
-    _maxRadius: 0.124
+    _maxRadius: 0.062
     _force: 0.03
     _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:

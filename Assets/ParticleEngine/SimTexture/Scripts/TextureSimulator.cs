@@ -228,14 +228,14 @@ public class TextureSimulator : MonoBehaviour {
     set { _minPointingDelta = value; }
   }
 
-  [Tooltip("The radius to lerp to when the scale gets big")]
-  [MinValue(0)]
-  [SerializeField]
-  private float _influenceScaleRadius = 0.05f;
-
-  [Tooltip("The curve to define how much to lerp to the scale radius.")]
+  [Tooltip("The curve to define how much to lerp to the particle radius given the current particle radius.")]
   [SerializeField]
   private AnimationCurve _influenceScalarByScale;
+
+  [Tooltip("When we lerp the influence radius to the particle radius, how much to bias by.")]
+  [MinValue(0)]
+  [SerializeField]
+  private float _particleScaleBias = 1;
 
   [SerializeField]
   [OnEditorChange("handInfluenceType")]

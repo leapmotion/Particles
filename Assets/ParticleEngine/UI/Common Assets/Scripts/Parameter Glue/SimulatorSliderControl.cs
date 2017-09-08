@@ -17,9 +17,9 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
       return slider.HorizontalSliderValue;
     }
     set {
-      float newValue = filterSliderValue(value);
-      slider.HorizontalSliderValue = newValue;
-      onSlideEvent(newValue);
+      slider.HorizontalSliderValue = value;
+      slider.HorizontalSliderValue = filterSliderValue(slider.HorizontalSliderValue);
+      onSlideEvent(slider.HorizontalSliderValue);
     }
   }
   

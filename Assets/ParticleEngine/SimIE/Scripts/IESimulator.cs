@@ -46,6 +46,14 @@ public class IESimulator : MonoBehaviour {
     var block = new MaterialPropertyBlock();
 
     switch (resetBehavior) {
+      case ResetBehavior.None:
+        //If no transition, all we need to do is update the colors
+        foreach (var particle in _particles) {
+          block.SetColor("_Color", description.speciesData[particle.species].color);
+          particle.GetComponent<Renderer>().SetPropertyBlock(block);
+        }
+        _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
+        break;
       case ResetBehavior.ResetPositions:
         foreach (var obj in _particles) {
           DestroyImmediate(obj.gameObject);
@@ -57,7 +65,7 @@ public class IESimulator : MonoBehaviour {
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;
           particle.transform.localRotation = Quaternion.identity;
-          particle.transform.localScale = Vector3.one * _manager.particleSize;
+          particle.transform.localScale = Vector3.one * _manager.particleRadius;
 
           particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
 
@@ -73,12 +81,15 @@ public class IESimulator : MonoBehaviour {
         }
 
         TransformBy(_manager.displayAnchor.localToWorldMatrix);
-        _prevDisplayPosition = _manager.displayAnchor.localPosition;
-        _prevDisplayRotation = _manager.displayAnchor.localRotation;
+        _prevDisplayPosition = _manager.displayAnchor.position;
+        _prevDisplayRotation = _manager.displayAnchor.rotation;
         _prevDisplayScale = _manager.displayAnchor.localScale;
-        _prevParticleSize = _manager.particleSize;
+        _prevParticleSize = _manager.particleRadius;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
+        break;
+      case ResetBehavior.FadeInOut:
+      case ResetBehavior.SmoothTransition:
         break;
       default:
         throw new System.NotImplementedException();
@@ -94,36 +105,36 @@ public class IESimulator : MonoBehaviour {
 
   private void Awake() {
     _manager = GetComponentInParent<SimulationManager>();
-    _prevDisplayPosition = _manager.displayAnchor.localPosition;
-    _prevDisplayRotation = _manager.displayAnchor.localRotation;
+    _prevDisplayPosition = _manager.displayAnchor.position;
+    _prevDisplayRotation = _manager.displayAnchor.rotation;
     _prevDisplayScale = _manager.displayAnchor.localScale;
   }
 
   private void FixedUpdate() {
-    bool didDisplayMove = _prevDisplayPosition != _manager.displayAnchor.localPosition ||
-                          _prevDisplayRotation != _manager.displayAnchor.localRotation ||
+    bool didDisplayMove = _prevDisplayPosition != _manager.displayAnchor.position ||
+                          _prevDisplayRotation != _manager.displayAnchor.rotation ||
                           _prevDisplayScale != _manager.displayAnchor.localScale;
     if (didDisplayMove) {
       Matrix4x4 originalTransform = Matrix4x4.TRS(_prevDisplayPosition,
                                                   _prevDisplayRotation,
                                                   _prevDisplayScale);
-      Matrix4x4 newTransform = Matrix4x4.TRS(_manager.displayAnchor.localPosition,
-                                             _manager.displayAnchor.localRotation,
+      Matrix4x4 newTransform = Matrix4x4.TRS(_manager.displayAnchor.position,
+                                             _manager.displayAnchor.rotation,
                                              _manager.displayAnchor.localScale);
       Matrix4x4 delta = newTransform * originalTransform.inverse;
       TransformBy(delta);
 
-      _prevDisplayPosition = _manager.displayAnchor.localPosition;
-      _prevDisplayRotation = _manager.displayAnchor.localRotation;
+      _prevDisplayPosition = _manager.displayAnchor.position;
+      _prevDisplayRotation = _manager.displayAnchor.rotation;
       _prevDisplayScale = _manager.displayAnchor.localScale;
     }
 
-    bool didParticleSizeChange = _prevParticleSize != _manager.particleSize;
+    bool didParticleSizeChange = _prevParticleSize != _manager.particleRadius;
     if (didParticleSizeChange) {
       foreach (var particle in _particles) {
-        particle.transform.localScale *= _manager.particleSize / _prevParticleSize;
+        particle.transform.localScale *= _manager.particleRadius / _prevParticleSize;
       }
-      _prevParticleSize = _manager.particleSize;
+      _prevParticleSize = _manager.particleRadius;
     }
 
     float scale = _manager.displayAnchor.localScale.x;
@@ -166,6 +177,14 @@ public class IESimulator : MonoBehaviour {
       }
 
       particle.rigidbody.velocity *= (1.0f - currentDescription.speciesData[particle.species].drag);
+
+      //Transform rigidbody world position into 'simulation space'
+      Vector3 toCenter = _manager.fieldCenter - _manager.displayAnchor.InverseTransformPoint(particle.rigidbody.position);
+      float distToCenter = toCenter.magnitude;
+      if (distToCenter > _manager.fieldRadius) {
+        //Transform velocity applied back into world space
+        particle.rigidbody.velocity += _manager.displayAnchor.TransformVector(toCenter * _manager.fieldForce);
+      }
     }
   }
   #endregion

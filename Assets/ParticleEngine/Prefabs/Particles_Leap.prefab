@@ -813,7 +813,7 @@ MonoBehaviour:
   _contactForceMode: 0
   _allowMultiGrasp: 0
   _moveObjectWhenGrasped: 1
-  graspedMovementType: 0
+  graspedMovementType: 1
   graspHoldWarpingEnabled__curIgnored: 1
   _overrideInteractionLayer: 0
   _interactionLayer:
@@ -834,7 +834,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db9837acd18280e488d3a7dbf48c273d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _ecosystemPreset: 7
   _maxForceSteps: 7
   _maxSocialForce: 0.003
   _maxSocialRange: 0.5
@@ -1192,6 +1191,11 @@ MonoBehaviour:
   _displayParticles: 1
   _displayAnchor: {fileID: 4177494162222000}
   _particleMesh: {fileID: 4300000, guid: 6f9fe5daf6ff3e64d9e0d0f49793d16a, type: 3}
+  _meshLods:
+  - {fileID: 4300000, guid: f959653ac902f924ab209f2a0c707bb9, type: 3}
+  - {fileID: 4300000, guid: 6f9fe5daf6ff3e64d9e0d0f49793d16a, type: 3}
+  - {fileID: 4300000, guid: c2ad509010f0af845a8d743f17b3ac63, type: 3}
+  - {fileID: 4300000, guid: 3095418101d6eaf478b6b64b8d6062f4, type: 3}
   _particleSize: 0.02
   _colorMode: 1
   _trailSize: 0.02
@@ -1221,6 +1225,9 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 0
   _ranzomizeColorsKey: 99
+  _zoomInKey: 273
+  _zoomOutKey: 274
+  _zoomFactor: 0.1
   _loadEcosystemOnStart: 1
   _presetToLoad: 21
   _simulationMethod: 0

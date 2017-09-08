@@ -183,13 +183,16 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
+  [SerializeField]
+  private Mesh[] _meshLods;
+
   [Range(0, 0.05f)]
   [SerializeField]
-  private float _particleSize = 0.02f;
-  public float particleSize {
-    get { return _particleSize; }
+  private float _particleRadius = 0.01f;
+  public float particleRadius {
+    get { return _particleRadius; }
     set {
-      _particleSize = value;
+      _particleRadius = value;
     }
   }
 
@@ -247,6 +250,16 @@ public class SimulationManager : MonoBehaviour {
 
   [SerializeField]
   private KeyCode _ranzomizeColorsKey = KeyCode.C;
+
+  [SerializeField]
+  private KeyCode _zoomInKey = KeyCode.UpArrow;
+
+  [SerializeField]
+  private KeyCode _zoomOutKey = KeyCode.DownArrow;
+
+  [MinValue(0)]
+  [SerializeField]
+  private float _zoomFactor = 0.1f;
 
   //#######################//
   ///      Ecosystems      //
@@ -423,6 +436,49 @@ public class SimulationManager : MonoBehaviour {
     }
   }
 
+  public int GetRecommendedMaxParticles() {
+    return GetRecommendedMaxParticles(simulationMethod);
+  }
+
+  public int GetRecommendedMaxParticles(SimulationMethod simMethod) {
+    switch (simMethod) {
+      case SimulationMethod.Texture:
+        return 4096;
+      case SimulationMethod.InteractionEngine:
+      default:
+        return 24;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool SaveEcosystem() {
+    try {
+      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
+      return true;
+    }
+    catch (System.Exception) {
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool LoadEcosystem() {
+    try {
+      var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
+      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(file));
+      RestartSimulation(description, ResetBehavior.ResetPositions);
+
+      return true;
+    }
+    catch (System.Exception) {
+      return false;
+    }
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -467,6 +523,18 @@ public class SimulationManager : MonoBehaviour {
 
     beginHorizontal();
 
+    if (buttonOrKey("Zoom In", _zoomInKey)) {
+      _displayAnchor.localScale *= (1.0f + _zoomFactor);
+    }
+
+    if (buttonOrKey("Zoom Out", _zoomOutKey)) {
+      _displayAnchor.localScale /= (1.0f + _zoomFactor);
+    }
+
+    endHorizontal();
+
+    beginHorizontal();
+
     if (buttonOrKey("GPU", KeyCode.Alpha1) && _simulationMethod != SimulationMethod.Texture) {
       _simulationMethod = SimulationMethod.Texture;
       RestartSimulation(ResetBehavior.ResetPositions);
@@ -479,10 +547,22 @@ public class SimulationManager : MonoBehaviour {
 
     endHorizontal();
 
+    if (_meshLods != null && _meshLods.Length > 0) {
+      beginHorizontal();
+
+      for (int i = 0; i < _meshLods.Length; i++) {
+        if (buttonOrKey("LOD" + i, KeyCode.F1 + i)) {
+          particleMesh = _meshLods[i];
+        }
+      }
+
+      endHorizontal();
+    }
+
     beginHorizontal();
 
     if (buttonOrKey("Save Ecosystem", _saveEcosystemKey)) {
-      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
+      SaveEcosystem();
     }
 
     if (buttonOrKey("Load Ecosystem", _loadEcosystemKey)) {
@@ -496,7 +576,11 @@ public class SimulationManager : MonoBehaviour {
 
   private bool buttonOrKey(string name, KeyCode key) {
     if (_inGui) {
-      return GUILayout.Button(name + " (" + key.ToString() + ")");
+      if (key == KeyCode.None) {
+        return GUILayout.Button(name + " (" + key.ToString() + ")");
+      } else {
+        return GUILayout.Button(name);
+      }
     } else {
       return Input.GetKeyDown(key);
     }

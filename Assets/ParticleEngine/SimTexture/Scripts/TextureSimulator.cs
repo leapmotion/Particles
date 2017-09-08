@@ -1604,7 +1604,7 @@ public class TextureSimulator : MonoBehaviour {
         Vector4 s = prevPosition;
         float sphereRadius = _sim.maxInfluenceRadius * _radiusMultiplier;
 
-        float particleRadius = SimulationManager.PARTICLE_RADIUS * _sim._manager.displayAnchor.localScale.x;
+        float particleRadius = _sim._manager.particleRadius * _sim._manager.displayAnchor.localScale.x;
         float lerpValue = _sim._influenceScalarByScale.Evaluate(particleRadius);
         sphereRadius = Mathf.Lerp(sphereRadius, particleRadius * _sim._particleScaleBias, lerpValue);
 
@@ -1634,7 +1634,8 @@ public class TextureSimulator : MonoBehaviour {
       }
 
       if (active && _sim._showHandInfluenceBubble) {
-        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
+        float radius = sphere.w;
+        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * radius * 2);
         _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
         Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }

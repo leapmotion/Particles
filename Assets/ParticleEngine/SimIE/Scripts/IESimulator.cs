@@ -28,6 +28,12 @@ public class IESimulator : MonoBehaviour {
   #region PUBLIC API
   public EcosystemDescription currentDescription { get; private set; }
 
+  public void ApplyDisplayMesh() {
+    foreach (var particle in _particles) {
+      particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
+    }
+  }
+
   public void RestartSimulation(EcosystemDescription description, ResetBehavior resetBehavior) {
     if (_restartCoroutine != null) {
       StopCoroutine(_restartCoroutine);

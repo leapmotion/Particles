@@ -1093,6 +1093,7 @@ public class TextureSimulator : MonoBehaviour {
 
     currentDescription = ecosystemDescription;
     _resetCoroutine = null;
+    _headRadiusTransitionDelta = 0;
 
     _manager.NotifyEndedTransition(SimulationMethod.Texture);
   }

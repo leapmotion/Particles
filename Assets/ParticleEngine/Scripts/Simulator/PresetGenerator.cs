@@ -22,6 +22,7 @@ public enum EcosystemPreset {
   StringTheory,
   OrbFlow,
   Pulse,
+  SemiRandom,
   Tutorial_2_Attract,
   Tutorial_2_Repel,
   Tutorial_2_Chase,
@@ -816,6 +817,11 @@ public class PresetGenerator : MonoBehaviour {
 	}
 
 
+
+
+
+
+
     //--------------------------------------------------------
     // Orb Flow
     //--------------------------------------------------------
@@ -1084,7 +1090,7 @@ public class PresetGenerator : MonoBehaviour {
         float x = -xRange * 0.5f + xRange * f;
         particlePositions[p0] = new Vector3(x, 0.0f, 0.0f);
         particleSpecies[p0] = blood;
-        particleVelocities[p0] = Vector3.zero; ;
+        particleVelocities[p0] = Vector3.zero;
       }
 
       //----------------------------------------------------
@@ -1204,14 +1210,94 @@ public class PresetGenerator : MonoBehaviour {
       }
     }
 
+	else if (preset == EcosystemPreset.SemiRandom) 
+	{
+		currentSimulationSpeciesCount = 6;
+
+		particlesToSimulate = 4000;
+
+		colors[0] = new Color( 0.8f, 0.1f, 0.1f );
+		colors[1] = new Color( 0.8f, 0.4f, 0.1f );
+		colors[2] = new Color( 0.8f, 0.8f, 0.1f );
+		colors[3] = new Color( 0.1f, 0.8f, 0.1f );
+		colors[4] = new Color( 0.1f, 0.1f, 0.8f );
+		colors[5] = new Color( 0.5f, 0.1f, 0.8f );
+
+		float drag = 0.1f;
+		float steps = 0;
+		float collision = 0.01f;
+
+		float minSocialForce = -0.01f;
+		float maxSocialForce =  0.01f;
+		float minSocialRange =  0.0f;
+		float maxSocialRange =  1.0f;
+
+        float incFactor = 0.4f;
+
+		float forceStartValue = minSocialForce + Random.value * ( maxSocialForce - minSocialForce);
+		float rangeStartValue = minSocialRange + Random.value * ( maxSocialRange - minSocialRange);
+
+		float forceMin = minSocialForce + ( maxSocialForce - minSocialForce ) * ( 0.0f + Random.value * 0.5f );
+		float rangeMin = minSocialRange + ( maxSocialRange - minSocialRange ) * ( 0.0f + Random.value * 0.5f );
+
+		float forceMax = minSocialForce + ( maxSocialForce - minSocialForce ) * ( 0.5f + Random.value * 0.5f );
+		float rangeMax = minSocialRange + ( maxSocialRange - minSocialRange ) * ( 0.5f + Random.value * 0.5f );
+
+		float forceIncAmount = ( forceMax - forceMin ) * incFactor; 
+		float rangeIncAmount = ( rangeMax - rangeMin ) * incFactor;
+
+		float forceIncValue   = -forceIncAmount * 0.5f + Random.value * forceIncAmount;
+		float rangeIncValue   = -rangeIncAmount * 0.5f + Random.value * rangeIncAmount;
+
+		float forceStartShift = -forceIncAmount * 0.5f + Random.value * forceIncAmount;
+		float rangeStartShift = -rangeIncAmount * 0.5f + Random.value * rangeIncAmount;
+
+        float f = forceStartValue;
+        float r = rangeStartValue;
 
 
-        //----------------------------------------------------------------
-        // This is a controlled test scenario which is the same as
-        // Test3 in terms of species, but it has lots of particles
-        //----------------------------------------------------------------
-        else if (preset == EcosystemPreset.Nova) {
-      currentSimulationSpeciesCount = 3;
+		for (int s = 0; s < currentSimulationSpeciesCount; s++) 
+		{
+steps = (int)( 5 * Random.value );
+
+			speciesData[s] = new Vector3( drag, steps, collision );
+
+            f += forceIncValue;
+            r += rangeIncValue;
+
+			for (int o = 0; o < currentSimulationSpeciesCount; o++) 
+			{
+	            f += forceStartShift;
+	            r += rangeStartShift;
+
+        		if ( f < forceMin ) { f = forceMax + ( f - forceMin ); } 
+        		if ( f > forceMax ) { f = forceMin + ( f - forceMax ); } 
+
+        		if ( r < rangeMin ) { r = rangeMax + ( r - rangeMin ); } 
+        		if ( r > rangeMax ) { r = rangeMin + ( r - rangeMax ); } 
+ 
+       		 	if ( f < forceMin ) { f = forceMin; }        
+       		 	if ( f > forceMax ) { f = forceMax; }     
+   
+      		 	if ( r < rangeMin ) { r = rangeMin; }        
+       		 	if ( r > rangeMax ) { r = rangeMax; }   
+
+//f = minSocialForce + Random.value * ( maxSocialForce - minSocialForce );			 
+//r = minSocialRange + Random.value * ( maxSocialRange - minSocialRange );			 
+    
+
+				socialData[ s, o ] = new Vector2( f, r );
+			}
+		}
+	}
+
+
+	//----------------------------------------------------------------
+	// This is a controlled test scenario which is the same as
+	// Test3 in terms of species, but it has lots of particles
+	//----------------------------------------------------------------
+	else if (preset == EcosystemPreset.Nova) {
+	currentSimulationSpeciesCount = 3;
 
       particlesToSimulate = 4000;
 

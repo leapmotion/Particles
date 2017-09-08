@@ -71,6 +71,9 @@ public class SimulatorSetters : MonoBehaviour {
       case "OrbFlow":
         simManager.RestartSimulation(EcosystemPreset.OrbFlow);
         break;
+      case "SemiRandom":
+        simManager.RestartSimulation(EcosystemPreset.SemiRandom);
+        break;
       case "Pulse":
         simManager.RestartSimulation(EcosystemPreset.Pulse);
         break;

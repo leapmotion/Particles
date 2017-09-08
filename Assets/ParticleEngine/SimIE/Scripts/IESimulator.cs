@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.Query;
 
 public class IESimulator : MonoBehaviour {
   public const float PARTICLE_RADIUS = 0.01f;
   public const float PARTICLE_DIAMETER = (PARTICLE_RADIUS * 2);
+  public const int MAX_PARTICLES = 24;
 
   #region INSPECTOR
   [SerializeField]
@@ -53,7 +55,7 @@ public class IESimulator : MonoBehaviour {
     switch (resetBehavior) {
       case ResetBehavior.None:
         //If no transition, all we need to do is update the colors
-        foreach (var particle in _particles) {
+        foreach (var particle in _particles.Query().Take(MAX_PARTICLES)) {
           _block.SetColor("_Color", description.speciesData[particle.species].color);
           particle.GetComponent<Renderer>().SetPropertyBlock(_block);
         }
@@ -65,7 +67,7 @@ public class IESimulator : MonoBehaviour {
         }
         _particles.Clear();
 
-        foreach (var obj in description.toSpawn) {
+        foreach (var obj in description.toSpawn.Query().Take(MAX_PARTICLES)) {
           GameObject particle = Instantiate(_particlePrefab);
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;

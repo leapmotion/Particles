@@ -243,7 +243,7 @@
 
     //Damping
     //velocity.xyz *= lerp(1, i.uv.w, velocity.w);
-    velocity.xyz *= lerp(i.uv.w, 0.95, _ResetPercent);
+    velocity.xyz *= lerp(1, lerp(i.uv.w, 0.95, _ResetPercent), velocity.w);
 
     return velocity;
   }

@@ -11,6 +11,7 @@ public class SimulationModeController : MonoBehaviour {
   #region Inspector
 
   public SimulationManager simManager;
+  public GeneratorManager genManager;
     
   public enum SimulationMode { Normal, Atomic }
 
@@ -26,10 +27,12 @@ public class SimulationModeController : MonoBehaviour {
           case SimulationMode.Normal:
             switchToNormalMode();
             simManager.simulationMethod = SimulationMethod.Texture;
+            simManager.RestartSimulation();
             break;
           case SimulationMode.Atomic:
             switchToAtomicMode();
             simManager.simulationMethod = SimulationMethod.InteractionEngine;
+            simManager.RestartSimulation();
             break;
         }
       }
@@ -158,7 +161,7 @@ public class SimulationModeController : MonoBehaviour {
 
     dragSlider.minHorizontalValue           = atomicDragRange.x;
     dragSlider.maxHorizontalValue           = atomicDragRange.y;
-
+    
     particleCountSlider.maxHorizontalValue = simManager.GetRecommendedMaxParticles(SimulationMethod.InteractionEngine);
 
     zoomController.ZoomTo(_atomicZoomDefault);

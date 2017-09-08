@@ -67,6 +67,7 @@ namespace Leap.Unity.Interaction {
       set {
         if (value != _horizontalValueRange.y) {
           _horizontalValueRange.y = value;
+
           HorizontalSlideEvent(HorizontalSliderValue);
         }
       }

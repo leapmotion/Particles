@@ -192,6 +192,9 @@ public class IESimulator : MonoBehaviour {
         particle.rigidbody.velocity += _manager.displayAnchor.TransformVector(toCenter * _manager.fieldForce);
       }
 
+
+      Vector3 simVelocity = _manager.displayAnchor.InverseTransformVector(particle.rigidbody.velocity) * Time.fixedDeltaTime;
+
       Color color;
       switch (_manager.colorMode) {
         case ColorMode.BySpecies:
@@ -199,12 +202,12 @@ public class IESimulator : MonoBehaviour {
           break;
         case ColorMode.BySpeciesWithMagnitude:
           color = currentDescription.speciesData[particle.species].color;
-          color *= particle.rigidbody.velocity.magnitude * _manager.particleBrightness;
+          color *= simVelocity.magnitude * _manager.particleBrightness;
           break;
         case ColorMode.ByVelocity:
-          color.r = Mathf.Abs(particle.rigidbody.velocity.x);
-          color.g = Mathf.Abs(particle.rigidbody.velocity.y);
-          color.b = Mathf.Abs(particle.rigidbody.velocity.z);
+          color.r = Mathf.Abs(simVelocity.x);
+          color.g = Mathf.Abs(simVelocity.y);
+          color.b = Mathf.Abs(simVelocity.z);
           color.a = 1;
           color *= _manager.particleBrightness;
           break;

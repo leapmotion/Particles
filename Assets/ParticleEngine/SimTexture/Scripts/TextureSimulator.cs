@@ -228,6 +228,15 @@ public class TextureSimulator : MonoBehaviour {
     set { _minPointingDelta = value; }
   }
 
+  [Tooltip("The radius to lerp to when the scale gets big")]
+  [MinValue(0)]
+  [SerializeField]
+  private float _influenceScaleRadius = 0.05f;
+
+  [Tooltip("The curve to define how much to lerp to the scale radius.")]
+  [SerializeField]
+  private AnimationCurve _influenceScalarByScale;
+
   [SerializeField]
   [OnEditorChange("handInfluenceType")]
   private HandInfluenceType _handInfluenceType = HandInfluenceType.Force;

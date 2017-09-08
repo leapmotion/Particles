@@ -1763,6 +1763,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_FieldForce", _manager.fieldForce);
 
     _displayBlock.SetFloat("_Size", _manager.particleRadius);
+    _displayBlock.SetFloat("_Brightness", _manager.particleBrightness);
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", _manager.displayAnchor.InverseTransformPoint(_provider.transform.position));

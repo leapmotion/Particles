@@ -216,6 +216,14 @@ public class SimulationManager : MonoBehaviour {
 
   [MinValue(0)]
   [SerializeField]
+  private float _particleBrightness = 165.24f;
+  public float particleBrightness {
+    get { return _particleBrightness; }
+    set { _particleBrightness = value; }
+  }
+
+  [MinValue(0)]
+  [SerializeField]
   private float _trailSize = 0.02f;
   public float trailSize {
     get { return _trailSize; }

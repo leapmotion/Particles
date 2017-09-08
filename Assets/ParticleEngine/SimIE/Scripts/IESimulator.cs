@@ -2,10 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.Query;
 
 public class IESimulator : MonoBehaviour {
   public const float PARTICLE_RADIUS = 0.01f;
   public const float PARTICLE_DIAMETER = (PARTICLE_RADIUS * 2);
+  public const int MAX_PARTICLES = 24;
 
   #region INSPECTOR
   [SerializeField]
@@ -24,9 +26,16 @@ public class IESimulator : MonoBehaviour {
   private float _prevParticleSize;
 
   private Coroutine _restartCoroutine;
+  private MaterialPropertyBlock _block;
 
   #region PUBLIC API
   public EcosystemDescription currentDescription { get; private set; }
+
+  public void ApplyDisplayMesh() {
+    foreach (var particle in _particles) {
+      particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
+    }
+  }
 
   public void RestartSimulation(EcosystemDescription description, ResetBehavior resetBehavior) {
     if (_restartCoroutine != null) {
@@ -43,14 +52,12 @@ public class IESimulator : MonoBehaviour {
     //TODO: remove this and implement everything else
     resetBehavior = ResetBehavior.ResetPositions;
 
-    var block = new MaterialPropertyBlock();
-
     switch (resetBehavior) {
       case ResetBehavior.None:
         //If no transition, all we need to do is update the colors
-        foreach (var particle in _particles) {
-          block.SetColor("_Color", description.speciesData[particle.species].color);
-          particle.GetComponent<Renderer>().SetPropertyBlock(block);
+        foreach (var particle in _particles.Query().Take(MAX_PARTICLES)) {
+          _block.SetColor("_Color", description.speciesData[particle.species].color);
+          particle.GetComponent<Renderer>().SetPropertyBlock(_block);
         }
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
         break;
@@ -60,7 +67,7 @@ public class IESimulator : MonoBehaviour {
         }
         _particles.Clear();
 
-        foreach (var obj in description.toSpawn) {
+        foreach (var obj in description.toSpawn.Query().Take(MAX_PARTICLES)) {
           GameObject particle = Instantiate(_particlePrefab);
           particle.transform.SetParent(transform);
           particle.transform.localPosition = obj.position;
@@ -70,8 +77,8 @@ public class IESimulator : MonoBehaviour {
           particle.GetComponent<MeshFilter>().sharedMesh = _manager.particleMesh;
 
           particle.GetComponent<Renderer>().sharedMaterial = _displayMat;
-          block.SetColor("_Color", description.speciesData[obj.species].color);
-          particle.GetComponent<Renderer>().SetPropertyBlock(block);
+          _block.SetColor("_Color", description.speciesData[obj.species].color);
+          particle.GetComponent<Renderer>().SetPropertyBlock(_block);
 
           particle.GetComponent<Rigidbody>().velocity = obj.velocity;
           particle.GetComponent<IEParticle>().species = obj.species;
@@ -108,6 +115,7 @@ public class IESimulator : MonoBehaviour {
     _prevDisplayPosition = _manager.displayAnchor.position;
     _prevDisplayRotation = _manager.displayAnchor.rotation;
     _prevDisplayScale = _manager.displayAnchor.localScale;
+    _block = new MaterialPropertyBlock();
   }
 
   private void FixedUpdate() {
@@ -185,6 +193,31 @@ public class IESimulator : MonoBehaviour {
         //Transform velocity applied back into world space
         particle.rigidbody.velocity += _manager.displayAnchor.TransformVector(toCenter * _manager.fieldForce);
       }
+
+
+      Vector3 simVelocity = _manager.displayAnchor.InverseTransformVector(particle.rigidbody.velocity) * Time.fixedDeltaTime;
+
+      Color color;
+      switch (_manager.colorMode) {
+        case ColorMode.BySpecies:
+          color = currentDescription.speciesData[particle.species].color;
+          break;
+        case ColorMode.BySpeciesWithMagnitude:
+          color = currentDescription.speciesData[particle.species].color;
+          color *= simVelocity.magnitude * _manager.particleBrightness;
+          break;
+        case ColorMode.ByVelocity:
+          color.r = Mathf.Abs(simVelocity.x);
+          color.g = Mathf.Abs(simVelocity.y);
+          color.b = Mathf.Abs(simVelocity.z);
+          color.a = 1;
+          color *= _manager.particleBrightness;
+          break;
+        default:
+          throw new System.Exception("Unsupported color mode");
+      }
+      _block.SetColor("_Color", color);
+      particle.renderer.SetPropertyBlock(_block);
     }
   }
   #endregion

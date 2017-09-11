@@ -189,7 +189,7 @@
         sphereForce.w = 1;
 
         velocity.xyz = sphereForce.xyz * sphereForce.w * 100;
-        velocity.w *= lerp(1, 0.5, sphereForce.w);
+        velocity.w *= lerp(1, 0, sphereForce.w);
 #else
         velocity.xyz += sphereForce.xyz * sphereForce.w * 100;
 #endif

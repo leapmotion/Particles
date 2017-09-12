@@ -239,7 +239,7 @@
     //Step offset for social forces
     i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
     half4 socialForce = tex2Dlod0(_ParticleSocialForces, i.uv.xy);
-    velocity.xyz += socialForce.xyz * 0.1;
+    velocity.xyz += socialForce.xyz * 0.1 * lerp(0, 1, velocity.w);
 
     //Damping
     //velocity.xyz *= lerp(1, i.uv.w, velocity.w);

@@ -213,6 +213,10 @@ public class IESimulator : MonoBehaviour {
           color.a = 1;
           color *= _manager.particleBrightness;
           break;
+        case ColorMode.ByInverseVelocity:
+          color = currentDescription.speciesData[particle.species].color;
+          color *= _manager.particleBrightness / (simVelocity.magnitude * 10 + 1);
+          break;
         default:
           throw new System.Exception("Unsupported color mode");
       }

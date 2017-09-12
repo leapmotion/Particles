@@ -167,10 +167,14 @@ public class GeneratorManager : MonoBehaviour {
     return colors.ToArray();
   }
 
-  public EcosystemDescription GetPresetEcosystem(EcosystemPreset preset) {
+  public EcosystemDescription GetPresetEcosystem(EcosystemPreset preset, bool updateSliders = true) {
     var presetGenerator = GetComponentInChildren<PresetGenerator>();
     var description = presetGenerator.GetPresetDescription(preset);
-    copyDescriptionToSliders(description);
+
+    if (updateSliders) {
+      copyDescriptionToSliders(description);
+    }
+
     return description;
   }
 
@@ -219,7 +223,7 @@ public class GeneratorManager : MonoBehaviour {
       currentDescription = GetRandomEcosystem(currentDescription.name);
     } else {
       var preset = (EcosystemPreset)System.Enum.Parse(typeof(EcosystemPreset), currentDescription.name);
-      currentDescription = GetPresetEcosystem(preset);
+      currentDescription = GetPresetEcosystem(preset, updateSliders: false);
 
       float maxForce = float.Epsilon;
       float maxRange = float.Epsilon;

@@ -864,6 +864,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rigidbody: {fileID: 54576507834311686}
+  renderer: {fileID: 0}
   interactionBehaviour: {fileID: 114110889550041856}
   species: 0
 --- !u!114 &114445136809098752
@@ -972,9 +973,40 @@ MonoBehaviour:
   _influenceForwardOffset: 0.017
   _pointingFactor: 3
   _minPointingDelta: 0.05
+  _influenceScalarByScale:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.02
+      value: 0.000030496623
+      inSlope: 0.0015248312
+      outSlope: 0.024436053
+      tangentMode: 5
+    - serializedVersion: 2
+      time: 0.049999997
+      value: 1
+      inSlope: -0.04494776
+      outSlope: -0.0000030116032
+      tangentMode: 65
+    - serializedVersion: 2
+      time: 1
+      value: 0.99999714
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 1
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
+  _particleScaleBias: 1
   _handInfluenceType: 0
   _stasisInfluenceSettings:
-    _maxRadius: 0.124
+    _maxRadius: 0.062
     _force: 0.03
     _grabStrengthSmoothing: 0.01
   _forceInfluenceSettings:
@@ -1196,8 +1228,9 @@ MonoBehaviour:
   - {fileID: 4300000, guid: 6f9fe5daf6ff3e64d9e0d0f49793d16a, type: 3}
   - {fileID: 4300000, guid: c2ad509010f0af845a8d743f17b3ac63, type: 3}
   - {fileID: 4300000, guid: 3095418101d6eaf478b6b64b8d6062f4, type: 3}
-  _particleSize: 0.02
+  _particleRadius: 0.01
   _colorMode: 1
+  _particleBrightness: 165.24
   _trailSize: 0.02
   _trailMode: 0
   _speedToTrailLength:

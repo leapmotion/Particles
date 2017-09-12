@@ -11,6 +11,12 @@ public class IEParticle : MonoBehaviour {
   new
 #endif
   public Rigidbody rigidbody;
+
+#if UNITY_EDITOR
+  new
+#endif
+  public Renderer renderer;
+
   public InteractionBehaviour interactionBehaviour;
 
   public int species;
@@ -18,6 +24,7 @@ public class IEParticle : MonoBehaviour {
 
   private void Awake() {
     rigidbody = GetComponent<Rigidbody>();
+    renderer = GetComponent<Renderer>();
     interactionBehaviour = GetComponent<InteractionBehaviour>();
   }
 }

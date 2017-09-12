@@ -9,6 +9,7 @@ public enum ColorMode {
   BySpecies,
   BySpeciesWithMagnitude,
   ByVelocity,
+  ByInverseVelocity
 }
 
 public enum TrailMode {
@@ -180,6 +181,10 @@ public class SimulationManager : MonoBehaviour {
       if (_textureSimulator != null) {
         _textureSimulator.BuildDisplayMeshes();
       }
+
+      if (_ieSimulator != null) {
+        _ieSimulator.ApplyDisplayMesh();
+      }
     }
   }
 
@@ -212,11 +217,24 @@ public class SimulationManager : MonoBehaviour {
 
   [MinValue(0)]
   [SerializeField]
+  private float _particleBrightness = 165.24f;
+  public float particleBrightness {
+    get { return _particleBrightness; }
+    set { _particleBrightness = value; }
+  }
+
+  [MinValue(0)]
+  [OnEditorChange("trailSize")]
+  [SerializeField]
   private float _trailSize = 0.02f;
   public float trailSize {
     get { return _trailSize; }
     set {
       _trailSize = value;
+
+      if (_textureSimulator != null) {
+        _textureSimulator.RebuildTrailTexture();
+      }
     }
   }
 
@@ -457,8 +475,7 @@ public class SimulationManager : MonoBehaviour {
     try {
       File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
       return true;
-    }
-    catch (System.Exception) {
+    } catch (System.Exception) {
       return false;
     }
   }
@@ -473,8 +490,7 @@ public class SimulationManager : MonoBehaviour {
       RestartSimulation(description, ResetBehavior.ResetPositions);
 
       return true;
-    }
-    catch (System.Exception) {
+    } catch (System.Exception) {
       return false;
     }
   }

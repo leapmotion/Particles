@@ -38,6 +38,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string KEYWORD_BY_SPECIES = "COLOR_SPECIES";
   public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
   public const string KEYWORD_BY_VELOCITY = "COLOR_VELOCITY";
+  public const string KEYWORD_BY_INVERSE_VELOCITY = "COLOR_INVERSE";
 
   public const string KEYWORD_ENABLE_INTERPOLATION = "ENABLE_INTERPOLATION";
 
@@ -227,6 +228,15 @@ public class TextureSimulator : MonoBehaviour {
     get { return _minPointingDelta; }
     set { _minPointingDelta = value; }
   }
+
+  [Tooltip("The curve to define how much to lerp to the particle radius given the current particle radius.")]
+  [SerializeField]
+  private AnimationCurve _influenceScalarByScale;
+
+  [Tooltip("When we lerp the influence radius to the particle radius, how much to bias by.")]
+  [MinValue(0)]
+  [SerializeField]
+  private float _particleScaleBias = 1;
 
   [SerializeField]
   [OnEditorChange("handInfluenceType")]
@@ -690,6 +700,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.DisableKeyword(KEYWORD_BY_SPECIES);
     _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
     _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
+    _particleMat.DisableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
 
     switch (_manager.colorMode) {
       case ColorMode.BySpecies:
@@ -700,6 +711,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ColorMode.ByVelocity:
         _particleMat.EnableKeyword(KEYWORD_BY_VELOCITY);
+        break;
+      case ColorMode.ByInverseVelocity:
+        _particleMat.EnableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
         break;
     }
 
@@ -826,12 +840,13 @@ public class TextureSimulator : MonoBehaviour {
     Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
     for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
       float speed = i / (float)TAIL_RAMP_RESOLUTION;
-      float length = _manager.speedToTrailLength.Evaluate(speed);
+      float length = _manager.speedToTrailLength.Evaluate(speed) * _manager.trailSize;
+      length = Mathf.Clamp(length / 200, 0, 1);
       ramp.SetPixel(i, 0, new Color(length, length, length, length));
     }
     ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
-    _particleMat.SetTexture("_TailRamp", ramp);
+    _displayBlock.SetTexture("_TailRamp", ramp);
   }
 
   #endregion
@@ -1084,6 +1099,7 @@ public class TextureSimulator : MonoBehaviour {
 
     currentDescription = ecosystemDescription;
     _resetCoroutine = null;
+    _headRadiusTransitionDelta = 0;
 
     _manager.NotifyEndedTransition(SimulationMethod.Texture);
   }
@@ -1592,7 +1608,13 @@ public class TextureSimulator : MonoBehaviour {
     public Vector4 sphere {
       get {
         Vector4 s = prevPosition;
-        s.w = _sim.maxInfluenceRadius * _radiusMultiplier;
+        float sphereRadius = _sim.maxInfluenceRadius * _radiusMultiplier;
+
+        float particleRadius = _sim._manager.particleRadius * _sim._manager.displayAnchor.localScale.x;
+        float lerpValue = _sim._influenceScalarByScale.Evaluate(particleRadius);
+        sphereRadius = Mathf.Lerp(sphereRadius, particleRadius * _sim._particleScaleBias, lerpValue);
+
+        s.w = sphereRadius;
         return s;
       }
     }
@@ -1618,7 +1640,8 @@ public class TextureSimulator : MonoBehaviour {
       }
 
       if (active && _sim._showHandInfluenceBubble) {
-        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * _sim.maxInfluenceRadius * _radiusMultiplier);
+        float radius = sphere.w;
+        var meshMat = Matrix4x4.TRS(_currTrackedPosition, Quaternion.identity, Vector3.one * radius * 2);
         _block.SetFloat("_Glossiness", _alpha * _startingAlpha);
         Graphics.DrawMesh(_sim._influenceMesh, meshMat, _sim._influenceMat, 0, null, 0, _block);
       }
@@ -1763,6 +1786,7 @@ public class TextureSimulator : MonoBehaviour {
     _simulationMat.SetFloat("_FieldForce", _manager.fieldForce);
 
     _displayBlock.SetFloat("_Size", _manager.particleRadius);
+    _displayBlock.SetFloat("_Brightness", _manager.particleBrightness);
 
     if (_provider != null) {
       _simulationMat.SetVector("_HeadPos", _manager.displayAnchor.InverseTransformPoint(_provider.transform.position));

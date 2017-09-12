@@ -76,7 +76,7 @@
 #endif
 
 #ifdef COLOR_INVERSE
-    rawColor = 0.01 * _Brightness / (length(velocity.xyz) * 5 + 1.0);
+    rawColor *= 0.01 * _Brightness / (length(velocity.xyz) * 500 + 1.0);
 #endif
   }
 

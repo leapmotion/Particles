@@ -840,12 +840,13 @@ public class TextureSimulator : MonoBehaviour {
     Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
     for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
       float speed = i / (float)TAIL_RAMP_RESOLUTION;
-      float length = _manager.speedToTrailLength.Evaluate(speed);
+      float length = _manager.speedToTrailLength.Evaluate(speed) * _manager.trailSize;
+      length = Mathf.Clamp(length / 200, 0, 1);
       ramp.SetPixel(i, 0, new Color(length, length, length, length));
     }
     ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
-    _particleMat.SetTexture("_TailRamp", ramp);
+    _displayBlock.SetTexture("_TailRamp", ramp);
   }
 
   #endregion

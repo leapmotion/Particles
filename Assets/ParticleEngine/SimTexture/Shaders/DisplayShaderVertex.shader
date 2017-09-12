@@ -3,7 +3,6 @@
     _ToonRamp ("Toon Ramp", 2D) = "white" {}
     _TailRamp ("Tail Ramp", 2D) = "white" {}
     _Size     ("Size", Range(0, 0.5)) = 0.01
-    _TrailLength ("Trail Length", Range(0, 10000)) = 1000
     _Brightness ("Brightness", Float) = 1
     _LightDir ("Light Direction", Vector) = (0.577, 0.577, 0.577, 0)
   }
@@ -47,7 +46,6 @@
   half _Metallic;
 
   half _Size;
-  half _TrailLength;
   half _Brightness;
   half4 _LightDir;
 
@@ -62,7 +60,8 @@
     particle = tex2Dlod(_ParticlePositions, texcoord);
 #endif
 
-    velocity = tex2Dlod(_ParticleVelocities, texcoord) * 0.01;
+    velocity = tex2Dlod(_ParticleVelocities, texcoord);
+    velocity.xyz *= 0.01;
   }
 
   void calculateParticleColor(inout half4 rawColor, half4 velocity) {
@@ -84,7 +83,7 @@
 #ifdef FISH_TAIL
     float speed = length(velocity.xyz);
     float3 velDir = speed < 0.00001 ? float3(0, 0, 0) : velocity.xyz / speed;
-    float trailLength = _TrailLength * tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a / 100;
+    float trailLength = 10 * tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a * velocity.w;
     float vertFactor = saturate(-dot(velDir, normalize(vertex.xyz)) - 0.2);
     vertex.xyz -= velDir * vertFactor * trailLength;
 #endif
@@ -92,8 +91,8 @@
     vertex.xyz *= _Size;
 
 #ifdef SQUASH_TAIL
-    velocity.xyz *= _TrailLength;
-    float velLength = length(velocity.xyz);
+    velocity.xyz *= tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a / 100;
+    float velLength = length(velocity.xyz) * velocity.w;
     if (velLength < 0.00001) {
       velLength = 1;
     }

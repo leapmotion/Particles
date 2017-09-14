@@ -10,6 +10,9 @@ public class AutoBoxGraphicCollider : MonoBehaviour {
   [MinValue(0F)]
   public float additionalDepth = 0.005F;
 
+  [MinValue(0F)]
+  public float additionalNegativeDepth = 0.0F;
+
 #if UNITY_EDITOR
   void Update() {
     if (Application.isPlaying) return;
@@ -29,7 +32,7 @@ public class AutoBoxGraphicCollider : MonoBehaviour {
 
       if (boxCollider != null) {
         boxCollider.size = new Vector3(boxGraphic.size.x, boxGraphic.size.y, boxGraphic.size.z + additionalDepth);
-        boxCollider.center = new Vector3(0F, 0F, -boxGraphic.size.z / 2F + additionalDepth / 2F);
+        boxCollider.center = -boxGraphic.center + new Vector3(boxGraphic.size.x / 2F, boxGraphic.size.y / 2F, -boxGraphic.size.z / 2F + additionalDepth / 2F - additionalNegativeDepth / 2F);
       }
     }
   }

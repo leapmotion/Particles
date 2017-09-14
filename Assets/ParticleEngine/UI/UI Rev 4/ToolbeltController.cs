@@ -8,8 +8,12 @@ using UnityEngine;
 
 public class ToolbeltController : MonoBehaviour {
 
-  public ToolbeltMovementController movementController;
-  public Transform toolbeltTransform;
+  [Tooltip("The controller that makes the toolbelt anchor follow the player.")]
+  public FollowingController followingController;
+
+  [Tooltip("The target transform to move when animating the position of the toolbelt "
+         + "relative to the player. This transform is manipulated in local space.")]
+  public Transform toolbeltAnchor;
   
   public InteractionButton openCloseButton;
 
@@ -44,7 +48,7 @@ public class ToolbeltController : MonoBehaviour {
 
     createOpenCloseTween();
 
-    _baseLocalTargetPose = toolbeltTransform.ToLocalPose();
+    _baseLocalTargetPose = toolbeltAnchor.ToLocalPose();
   }
 
   private void createOpenCloseTween() {
@@ -90,16 +94,15 @@ public class ToolbeltController : MonoBehaviour {
   private float _lastOpenCloseTweenTime = -1f;
 
   void Update() {
-    Debug.Log(_openCloseTweenTime);
     if (_lastOpenCloseTweenTime != _openCloseTweenTime) {
       var localClosedPose = new Pose(localClosedPosition, Quaternion.Euler(localClosedEuler));
       var localOpenPose   = new Pose(localOpenPosition,   Quaternion.Euler(localOpenEuler));
       var localUpdatePose = Pose.Interpolate(localClosedPose, localOpenPose, _openCloseTweenTime);
 
-      toolbeltTransform.transform.SetLocalPose(_baseLocalTargetPose + localUpdatePose);
+      toolbeltAnchor.transform.SetLocalPose(_baseLocalTargetPose + localUpdatePose);
 
-      toolbeltTransform.transform.localPosition = localUpdatePose.position;
-      toolbeltTransform.transform.localRotation = localUpdatePose.rotation;
+      toolbeltAnchor.transform.localPosition = localUpdatePose.position;
+      toolbeltAnchor.transform.localRotation = localUpdatePose.rotation;
 
       _lastOpenCloseTweenTime = _openCloseTweenTime;
     }

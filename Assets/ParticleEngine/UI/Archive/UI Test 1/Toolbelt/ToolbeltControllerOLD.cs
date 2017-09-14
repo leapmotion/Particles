@@ -13,7 +13,7 @@ public class ToolbeltControllerOLD : MonoBehaviour {
   }
 
   public Camera mainCamera;
-  public ToolbeltMovementController follower;
+  public FollowingController follower;
   public Animator animator;
 
   [Disable]
@@ -27,7 +27,7 @@ public class ToolbeltControllerOLD : MonoBehaviour {
 
   void Reset() {
     mainCamera = Camera.main;
-    follower = GetComponent<ToolbeltMovementController>();
+    follower = GetComponent<FollowingController>();
     animator = GetComponent<Animator>();
   }
 

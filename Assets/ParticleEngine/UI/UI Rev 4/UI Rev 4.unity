@@ -477,7 +477,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 172295474}
-  - component: {fileID: 172295475}
+  - component: {fileID: 172295476}
   m_Layer: 0
   m_Name: Toolbelt
   m_TagString: Untagged
@@ -492,14 +492,14 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 172295473}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.011884097, y: -0.60800004, z: -0.671}
+  m_LocalPosition: {x: 0, y: -0.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1785520607}
-  m_Father: {fileID: 725001678}
-  m_RootOrder: 1
+  m_Father: {fileID: 1635495932}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &172295475
+--- !u!114 &172295476
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
@@ -507,36 +507,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 172295473}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1aceea2f5c70da64e893474302ff53e6, type: 3}
+  m_Script: {fileID: 11500000, guid: fc223add0a2c07c40aebc81338a6f93c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isAttached: 1
-  _anchor: {fileID: 987950599}
-  _anchorGroup: {fileID: 0}
-  maxAnchorRange: 0.3
-  useTrajectory: 0
-  _motionlessRangeFraction: 0.4
-  _maxMotionlessRange: 0.120000005
-  _maxAttachmentAngle: 60
-  lockToAnchor: 1
-  lockWhenAttached: 1
-  matchAnchorMotionWhileAttaching: 1
-  anchorLerpCoeffPerSec: 20
-  anchorRotation: 1
-  interactionBehaviour: {fileID: 0}
-  _interactionBehaviourIsNull: 1
-  detachWhenGrasped: 0
-  _tryAnchorNearestOnGraspEnd: 1
-  isAttractedByHand: 0
-  maxAttractionReach: 0.1
-  attractionReachByDistance:
-    serializedVersion: 2
-    m_Curve: []
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  _eventTable:
-    _entries: []
+  followingController: {fileID: 1635495933}
+  toolbeltAnchor: {fileID: 172295474}
+  openCloseButton: {fileID: 1673283789}
+  _state: 0
+  openCloseTime: 0.33
+  localClosedPosition: {x: 0, y: -0.6, z: 0.07}
+  localClosedEuler: {x: 0, y: 0, z: 0}
+  localOpenPosition: {x: 0, y: -0.6, z: 0.12}
+  localOpenEuler: {x: 0, y: 0, z: 0}
 --- !u!1 &258612270
 GameObject:
   m_ObjectHideFlags: 0
@@ -1813,8 +1795,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 239e5e01cbe984c4283bbec88fb8af3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localRectangularPosition: {x: 0.35, y: 0, z: 0}
   leapSpace: {fileID: 1785520605}
+  localRectangularPosition: {x: 0.35, y: 0, z: 0}
 --- !u!114 &657485384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1949,7 +1931,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 710840278}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.12478212, y: 0.034648873, z: -0.24433354}
+  m_LocalPosition: {x: 0.12478212, y: 0.034648873, z: -0.24433355}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1904236828}
@@ -1966,8 +1948,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 239e5e01cbe984c4283bbec88fb8af3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localRectangularPosition: {x: 0.175, y: 0, z: 0}
   leapSpace: {fileID: 1785520605}
+  localRectangularPosition: {x: 0.175, y: 0, z: 0}
 --- !u!114 &710840281
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1983,36 +1965,6 @@ MonoBehaviour:
   matchActiveStateWithAttachedObjects: 1
   _eventTable:
     _entries: []
---- !u!1 &725001677
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 725001678}
-  m_Layer: 0
-  m_Name: Player Graphic Renderers
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &725001678
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 725001677}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.011884097, y: 0.008, z: 0.771}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children:
-  - {fileID: 1595623588}
-  - {fileID: 172295474}
-  m_Father: {fileID: 0}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &727850086
 Prefab:
   m_ObjectHideFlags: 0
@@ -2030,7 +1982,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0.31643483
+      value: 0.045434833
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalRotation.x
@@ -2105,8 +2057,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 239e5e01cbe984c4283bbec88fb8af3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localRectangularPosition: {x: -0.175, y: 0, z: 0}
   leapSpace: {fileID: 1785520605}
+  localRectangularPosition: {x: -0.175, y: 0, z: 0}
 --- !u!114 &813116422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2731,50 +2683,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &987950597
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  serializedVersion: 5
-  m_Component:
-  - component: {fileID: 987950598}
-  - component: {fileID: 987950599}
-  m_Layer: 0
-  m_Name: Toolbelt Anchor
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &987950598
-Transform:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 987950597}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.6, z: 0.1}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1635495932}
-  m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &987950599
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 987950597}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4a517469c92f76f4ebdf8193e696d038, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  allowMultipleObjects: 0
-  matchActiveStateWithAttachedObjects: 0
-  _eventTable:
-    _entries: []
 --- !u!1001 &1001953247
 Prefab:
   m_ObjectHideFlags: 0
@@ -3480,8 +3388,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 239e5e01cbe984c4283bbec88fb8af3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localRectangularPosition: {x: -0.35, y: 0, z: 0}
   leapSpace: {fileID: 1785520605}
+  localRectangularPosition: {x: -0.35, y: 0, z: 0}
 --- !u!43 &1085213391
 Mesh:
   m_ObjectHideFlags: 3
@@ -3731,8 +3639,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 239e5e01cbe984c4283bbec88fb8af3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  localRectangularPosition: {x: 0, y: 0, z: 0}
   leapSpace: {fileID: 1785520605}
+  localRectangularPosition: {x: 0, y: 0, z: 0}
 --- !u!4 &1146866958
 Transform:
   m_ObjectHideFlags: 0
@@ -3899,7 +3807,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0.3616665
+      value: 0.09066647
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalRotation.x
@@ -4040,7 +3948,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0.36238295
+      value: 0.09138292
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalRotation.x
@@ -4538,12 +4446,12 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1595623586}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.011884097, y: 0.008, z: 0.771}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1899001897}
-  m_Father: {fileID: 725001678}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1595623589
 MonoBehaviour:
@@ -4568,9 +4476,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1635495932}
   - component: {fileID: 1635495933}
-  - component: {fileID: 1635495934}
   m_Layer: 0
-  m_Name: Toolbelt Target Pivot
+  m_Name: Toolbelt Pivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4586,7 +4493,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 987950598}
+  - {fileID: 172295474}
   m_Father: {fileID: 552674013}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4607,26 +4514,6 @@ MonoBehaviour:
   stiffened: 0
   stiffenedMultiplier: 0.1
   locked: 0
---- !u!114 &1635495934
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1635495931}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc223add0a2c07c40aebc81338a6f93c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  movementController: {fileID: 1635495933}
-  toolbeltTransform: {fileID: 987950598}
-  openCloseButton: {fileID: 1673283789}
-  _state: 0
-  openCloseTime: 1
-  localClosedPosition: {x: 0, y: -0.6, z: 0.05}
-  localClosedEuler: {x: 0, y: 0, z: 0}
-  localOpenPosition: {x: 0, y: -0.55, z: 0.1}
-  localOpenEuler: {x: 0, y: 0, z: 0}
 --- !u!1 &1673283787
 GameObject:
   m_ObjectHideFlags: 0
@@ -5043,7 +4930,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1785520604}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.011884097, y: 0.60800004, z: 0.47100002}
+  m_LocalPosition: {x: -0.011884097, y: 0.60800004, z: 0.3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1704524166}
@@ -5295,7 +5182,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0.37777928
+      value: 0.10677922
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalRotation.x
@@ -5581,7 +5468,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalPosition.z
-      value: 0.31504646
+      value: 0.044046402
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalRotation.x

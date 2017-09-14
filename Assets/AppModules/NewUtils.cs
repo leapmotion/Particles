@@ -1,4 +1,5 @@
-﻿using Leap.Unity.Query;
+﻿using Leap.Unity;
+using Leap.Unity.Query;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -74,6 +75,28 @@ public static class NewUtils {
     #endif
 
     return obj;
+  }
+
+  #endregion
+
+  #region Math Utils
+
+  /// <summary>
+  /// Extrapolates using time values for positions a and b at extrapolatedTime.
+  /// </summary>
+  public static Vector3 TimedExtrapolate(Vector3 a, float aTime,
+                                         Vector3 b, float bTime,
+                                         float extrapolatedTime) {
+    return Vector3.LerpUnclamped(a, b, extrapolatedTime.MapUnclamped(aTime, bTime, 0f, 1f));
+  }
+
+  /// <summary>
+  /// Extrapolates using time values for rotations a and b at extrapolatedTime.
+  /// </summary>
+  public static Quaternion TimedExtrapolate(Quaternion a, float aTime,
+                                            Quaternion b, float bTime,
+                                            float extrapolatedTime) {
+    return Quaternion.SlerpUnclamped(a, b, extrapolatedTime.MapUnclamped(aTime, bTime, 0f, 1f));
   }
 
   #endregion

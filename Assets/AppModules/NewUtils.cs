@@ -1,5 +1,6 @@
 ﻿using Leap.Unity;
 using Leap.Unity.Query;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -97,6 +98,41 @@ public static class NewUtils {
                                             Quaternion b, float bTime,
                                             float extrapolatedTime) {
     return Quaternion.SlerpUnclamped(a, b, extrapolatedTime.MapUnclamped(aTime, bTime, 0f, 1f));
+  }
+
+  #endregion
+
+  #region List Utils
+
+  public static void EnsureListExists<T>(ref List<T> list) {
+    if (list == null) {
+      list = new List<T>();
+    }
+  }
+
+  public static void EnsureListCount<T>(this List<T> list, int count, Func<T> createT, Action<T> deleteT) {
+    while (list.Count < count) {
+      list.Add(createT());
+    }
+
+    while (list.Count > count) {
+      T tempT = list[list.Count - 1];
+      list.RemoveAt(list.Count - 1);
+      deleteT(tempT);
+    }
+  }
+
+  public static void EnsureListCount<T>(this List<T> list, int count) {
+    if (list.Count == count) return;
+
+    while (list.Count < count) {
+      list.Add(default(T));
+    }
+
+    while (list.Count > count) {
+      T tempT = list[list.Count - 1];
+      list.RemoveAt(list.Count - 1);
+    }
   }
 
   #endregion

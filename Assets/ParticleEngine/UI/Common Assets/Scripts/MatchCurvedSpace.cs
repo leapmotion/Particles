@@ -1,4 +1,5 @@
-﻿using Leap.Unity.Space;
+﻿using Leap.Unity.Attributes;
+using Leap.Unity.Space;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,9 +15,14 @@ public class MatchCurvedSpace : MonoBehaviour {
     }
   }
 
+  [Header("Manual Specification")]
   public Vector3 localRectangularPosition = Vector3.zero;
 
-  private void Update() {
+  [Header("Or, ILocalPositionProvider (overrides manual spec)")]
+  [ImplementsInterface(typeof(ILocalPositionProvider))]
+  public MonoBehaviour localPositionProvider = null;
+
+  private void LateUpdate() {
     if (leapSpace != null) {
       if (leapSpace.transformer != null) {
         this.transform.position =
@@ -24,7 +30,9 @@ public class MatchCurvedSpace : MonoBehaviour {
             leapSpace.transformer.TransformPoint(
               leapSpace.transform.InverseTransformPoint(
                 this.transform.parent.TransformPoint(
-                  localRectangularPosition))));
+                  localPositionProvider == null ? localRectangularPosition
+                                                : (localPositionProvider as ILocalPositionProvider)
+                                                  .GetLocalPosition(this.transform)))));
       }
     }
   }

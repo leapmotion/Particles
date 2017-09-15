@@ -47,7 +47,6 @@ namespace Leap.Unity.Interaction {
     [FormerlySerializedAs("horizontalValueRange")]
     [SerializeField]
     private Vector2 _horizontalValueRange = new Vector2(0f, 1f);
-
     public float minHorizontalValue {
       get {
         return _horizontalValueRange.x;
@@ -67,7 +66,6 @@ namespace Leap.Unity.Interaction {
       set {
         if (value != _horizontalValueRange.y) {
           _horizontalValueRange.y = value;
-
           HorizontalSlideEvent(HorizontalSliderValue);
         }
       }
@@ -97,7 +95,6 @@ namespace Leap.Unity.Interaction {
     [FormerlySerializedAs("verticalValueRange")]
     [SerializeField]
     private Vector2 _verticalValueRange = new Vector2(0f, 1f);
-
     public float minVerticalValue {
       get {
         return _verticalValueRange.x;
@@ -180,7 +177,7 @@ namespace Leap.Unity.Interaction {
         return Mathf.Lerp(_horizontalValueRange.x, _horizontalValueRange.y, _horizontalSliderPercent);
       }
       set {
-        HorizontalSliderPercent = Mathf.InverseLerp(_horizontalValueRange.x, _horizontalValueRange.y, Mathf.Clamp(value, _horizontalValueRange.x, _horizontalValueRange.y));
+        HorizontalSliderPercent = Mathf.InverseLerp(_horizontalValueRange.x, _horizontalValueRange.y, value);
       }
     }
 
@@ -190,7 +187,7 @@ namespace Leap.Unity.Interaction {
         return Mathf.Lerp(_verticalValueRange.x, _verticalValueRange.y, _verticalSliderPercent);
       }
       set {
-        VerticalSliderPercent = Mathf.InverseLerp(_verticalValueRange.x, _verticalValueRange.y, Mathf.Clamp(value, _verticalValueRange.x, _verticalValueRange.y));
+        VerticalSliderPercent = Mathf.InverseLerp(_verticalValueRange.x, _verticalValueRange.y, value);
       }
     }
 

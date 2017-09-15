@@ -9,6 +9,7 @@ public enum ColorMode {
   BySpecies,
   BySpeciesWithMagnitude,
   ByVelocity,
+  ByInverseVelocity
 }
 
 public enum TrailMode {
@@ -223,12 +224,17 @@ public class SimulationManager : MonoBehaviour {
   }
 
   [MinValue(0)]
+  [OnEditorChange("trailSize")]
   [SerializeField]
   private float _trailSize = 0.02f;
   public float trailSize {
     get { return _trailSize; }
     set {
       _trailSize = value;
+
+      if (_textureSimulator != null) {
+        _textureSimulator.RebuildTrailTexture();
+      }
     }
   }
 

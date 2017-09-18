@@ -53,10 +53,12 @@ public class LeapGraphicButtonPaletteController : GraphicPaletteController {
   private void onPress() { _pressPulsator.Pulse(); }
   private void onUnpress() { _pressPulsator.Relax(); }
 
-  protected virtual void Start() {
-    if (Application.isPlaying) _pressPulsator = Pulsator.Spawn().SetValues(0F, 1F, 1.2F).SetSpeed(20F);
-  }
+  protected override void Start() {
+    base.Start();
 
+    if (Application.isPlaying) _pressPulsator = Pulsator.Spawn().SetValues(0F, 1F, 0.8F).SetSpeed(20F);
+  }
+  
   protected virtual void OnDestroy() {
     if (_pressPulsator != null) {
       Pulsator.Recycle(_pressPulsator);

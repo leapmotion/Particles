@@ -10,7 +10,7 @@ public class GraphicPaletteController : MonoBehaviour {
 
   [Header("Graphic Alternative (MeshRenderer) -- Play Mode Only")]
 
-  public Renderer renderer;
+  public new Renderer renderer;
   public string shaderColorName = "_Color";
   private int _shaderColorID;
 

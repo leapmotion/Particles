@@ -11,15 +11,16 @@ namespace Leap.Unity.Animation {
 
     private List<IAppearVanishController> _appearVanishControllers = new List<IAppearVanishController>();
 
-    [Tooltip("If non-null, this IAppearVanishController will receive Vanish calls when "
-           + "this object receives Appear calls and Vanish calls when this object "
-           + "receives Appear calls.")]
-    [SerializeField]
-    [ImplementsInterface(typeof(IAppearVanishController))]
-    private MonoBehaviour _inverseAppearVanishObject;
-    public IAppearVanishController inverseAppearVanishObject {
-      get { return _inverseAppearVanishObject as IAppearVanishController; }
-    }
+    // TODO: Remove.
+    //[Tooltip("If non-null, this IAppearVanishController will receive Vanish calls when "
+    //       + "this object receives Appear calls and Vanish calls when this object "
+    //       + "receives Appear calls.")]
+    //[SerializeField]
+    //[ImplementsInterface(typeof(IAppearVanishController))]
+    //private MonoBehaviour _inverseAppearVanishObject;
+    //public IAppearVanishController inverseAppearVanishObject {
+    //  get { return _inverseAppearVanishObject as IAppearVanishController; }
+    //}
 
     public ReadonlyList<IAppearVanishController> appearVanishControllers {
       get { return _appearVanishControllers; }
@@ -45,7 +46,7 @@ namespace Leap.Unity.Animation {
         appearVanishController.Appear();
       }
 
-      if (inverseAppearVanishObject != null) inverseAppearVanishObject.Vanish();
+      //if (inverseAppearVanishObject != null) inverseAppearVanishObject.Vanish();
     }
 
     public void AppearNow() {
@@ -53,7 +54,7 @@ namespace Leap.Unity.Animation {
         appearVanishController.AppearNow();
       }
 
-      if (inverseAppearVanishObject != null) inverseAppearVanishObject.VanishNow();
+      //if (inverseAppearVanishObject != null) inverseAppearVanishObject.VanishNow();
     }
 
     public bool GetAppearingOrAppeared() {
@@ -77,7 +78,7 @@ namespace Leap.Unity.Animation {
         appearVanishController.Vanish();
       }
 
-      if (inverseAppearVanishObject != null) inverseAppearVanishObject.Appear();
+      //if (inverseAppearVanishObject != null) inverseAppearVanishObject.Appear();
     }
 
     public void VanishNow() {
@@ -85,7 +86,7 @@ namespace Leap.Unity.Animation {
         appearVanishController.VanishNow();
       }
 
-      if (inverseAppearVanishObject != null) inverseAppearVanishObject.AppearNow();
+      //if (inverseAppearVanishObject != null) inverseAppearVanishObject.AppearNow();
     }
 
   }

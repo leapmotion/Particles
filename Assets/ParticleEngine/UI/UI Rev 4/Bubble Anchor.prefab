@@ -36,9 +36,10 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4316486024729964}
-  - component: {fileID: 114831625133508464}
   - component: {fileID: 114850329675928932}
   - component: {fileID: 114928633249050146}
+  - component: {fileID: 114662566605184430}
+  - component: {fileID: 114645244202619484}
   m_Layer: 0
   m_Name: Bubble Anchor
   m_TagString: Untagged
@@ -68,7 +69,7 @@ Transform:
   m_GameObject: {fileID: 1002455136136568}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.3, y: 1.3, z: 1.3}
   m_Children: []
   m_Father: {fileID: 4316486024729964}
   m_RootOrder: 0
@@ -112,7 +113,22 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1002455136136568}
   m_Mesh: {fileID: 43436436089052834, guid: 164aeae6bcc15b3418e5ef8b9fd2f971, type: 2}
---- !u!114 &114831625133508464
+--- !u!114 &114645244202619484
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1870173422019186}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a517469c92f76f4ebdf8193e696d038, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allowMultipleObjects: 0
+  matchActiveStateWithAttachedObjects: 0
+  _eventTable:
+    _entries: []
+--- !u!114 &114662566605184430
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -123,6 +139,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: af3f16b825da82d46aaf593a42bd9956, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  faceAway: 1
 --- !u!114 &114850329675928932
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -137,7 +154,7 @@ MonoBehaviour:
   animTime: 0.2
   _startAppeared: 1
   localScaleTarget: {fileID: 4316486024729964}
-  _baseLocalScale: {x: 1, y: 1, z: 1}
+  baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
   deactivateSelfWhenZero: 1
   scaleCurve:

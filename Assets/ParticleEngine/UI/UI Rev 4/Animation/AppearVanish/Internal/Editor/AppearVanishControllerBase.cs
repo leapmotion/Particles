@@ -4,10 +4,10 @@ using UnityEditor;
 using UnityEngine;
 
 namespace Leap.Unity.Animation {
-
-  [CanEditMultipleObjects]
-  [CustomEditor(typeof(TweenAppearVanishController), editorForChildClasses: true)]
-  public class TweenAppearVanishControllerEditor : CustomEditorBase<TweenAppearVanishController> {
+  
+  public abstract class AppearVanishControllerEditorBase<T> : CustomEditorBase<T>
+                                                              where T : UnityEngine.Object,
+                                                                        IAppearVanishController {
 
     protected override void OnEnable() {
       base.OnEnable();
@@ -19,7 +19,7 @@ namespace Leap.Unity.Animation {
       base.OnInspectorGUI();
     }
 
-    private void drawAppearVanishButtons() {
+    protected void drawAppearVanishButtons() {
       EditorGUILayout.BeginHorizontal();
 
       if (GUILayout.Button(new GUIContent("Appear Now",

@@ -22,8 +22,8 @@ namespace Leap.Unity.Interaction.UI {
     /// Any animation curve values multiply this value to set the localScale
     /// of the target transform.
     /// </summary>
-    [Disable, SerializeField]
-    private Vector3 _baseLocalScale = Vector3.one;
+    [SerializeField]
+    public Vector3 baseLocalScale = Vector3.one;
 
     /// <summary>
     /// Enforces a minimum value of 0.0001f for each localScale axis.
@@ -60,10 +60,6 @@ namespace Leap.Unity.Interaction.UI {
       if (localScaleTarget == null) localScaleTarget = this.transform;
     }
 
-    void OnValidate() {
-      _baseLocalScale = this.transform.localScale;
-    }
-
     #endregion
 
     #region Scale Appear/Vanish
@@ -84,12 +80,12 @@ namespace Leap.Unity.Interaction.UI {
 
     private Vector3 getTargetScale(float time) {
       if (!nonUniformScale) {
-        return _baseLocalScale * scaleCurve.Evaluate(time);
+        return baseLocalScale * scaleCurve.Evaluate(time);
       }
       else {
-        return new Vector3(_baseLocalScale.x * xScaleCurve.Evaluate(time),
-                           _baseLocalScale.y * yScaleCurve.Evaluate(time),
-                           _baseLocalScale.z * zScaleCurve.Evaluate(time));
+        return new Vector3(baseLocalScale.x * xScaleCurve.Evaluate(time),
+                           baseLocalScale.y * yScaleCurve.Evaluate(time),
+                           baseLocalScale.z * zScaleCurve.Evaluate(time));
       }
     }
 

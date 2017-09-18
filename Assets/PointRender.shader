@@ -1,4 +1,6 @@
-﻿Shader "Unlit/PointDisplayShader"{
+﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+
+Shader "Unlit/PointDisplayShader"{
 	Properties { 
     _MainTex ("Positions", 2D) = "" {}
     _Velocity ("Velocity", 2D) = "" {}
@@ -49,9 +51,12 @@
         float4 position = tex2Dlod(_MainTex, uv);
         float4 velocity = tex2Dlod(_Velocity, uv);
 
+        float4 worldPos = mul(unity_ObjectToWorld, position);
+        float distToCamera = length(_WorldSpaceCameraPos - worldPos);
+
         v2f o;
         o.pos = UnityObjectToClipPos(position);
-        o.size = _Size;
+        o.size = _Size / distToCamera;
         o.color = _Bright;
         return o;
       }

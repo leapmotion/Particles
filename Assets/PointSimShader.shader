@@ -9,17 +9,18 @@
   CGINCLUDE
   #include "UnityCG.cginc"
 
-  sampler2D_float _Positions;
-  sampler2D_float _Velocities;
+  sampler2D_float _PrevPositions;
+  sampler2D_float _CurrPositions;
 
   sampler2D_float _Noise;
+  sampler2D_float _RadiusDistribution;
 
   float _Force;
   float _Timestep;
 
   float4x4 _PlanetRotations[10];
   float4 _Planets[10];
-  int _PlanetCount;
+  uint _PlanetCount;
 
   float _MinDiscRadius;
   float _MaxDiscRadius;
@@ -48,42 +49,40 @@
     return o;
   }
 
-  float4 integrateVelocity(v2f i) : SV_Target {
-    float4 velocity = tex2D(_Velocities, i.uv);
-    float4 position = tex2D(_Positions, i.uv);
+  float4 integratePositions(v2f i) : SV_Target {
+    float4 prevPos = tex2D(_PrevPositions, i.uv);
+    float4 currPos = tex2D(_CurrPositions, i.uv);
 
+    float3 accel = float3(0, 0, 0);
     for (uint j = 0; j < _PlanetCount; j++) {
       float4 target = _Planets[j];
-      float3 toTarget = target.xyz - position.xyz;
-      velocity.xyz += _Timestep * _Force * normalize(toTarget) / dot(toTarget, toTarget);
+      float3 toTarget = target.xyz - currPos.xyz;
+      accel += normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
     }
 
-    return velocity;
+    return float4(currPos.xyz * 2 - prevPos.xyz + accel * _Timestep * _Timestep * _Force, 1);
   }
 
-  float4 integratePositions(v2f i) : SV_Target{
-    float4 velocity = tex2D(_Velocities, i.uv);
-    float4 position = tex2D(_Positions, i.uv);
-
-    position += velocity * _Timestep;
-    return position;
-  }
-
-  fragOut initDisc(v2f i) : SV_Target {
+  fragOut initDisc(v2f i) {
     float4 rand = tex2D(_Noise, i.uv);
+    float4 rand2 = tex2D(_Noise, i.uv + float2(0.5, 0.5)) * 2 - 1;
 
     uint index = (uint)(rand.x * _PlanetCount);
+    if (index == _PlanetCount) {
+      index = 0;
+    }
 
     float4 planetPos = _Planets[index];
     float4x4 planetRot = _PlanetRotations[index];
 
-    float discRadius = lerp(_MinDiscRadius, _MaxDiscRadius, rand.y);
+    float radiusValue = tex2D(_RadiusDistribution, rand.y).r;
+    float discRadius = sqrt(lerp(_MinDiscRadius * _MinDiscRadius, _MaxDiscRadius * _MaxDiscRadius, radiusValue));
     float discHeight = ((rand.z * 2) - 1) * _MaxDiscHeight;
     float discAngle = rand.w * 3.14159 * 2;
 
-    float dx = discRadius * cos(discAngle);
-    float dy = discHeight;
-    float dz = discRadius * sin(discAngle);
+    float dx = rand2.x * 0.01 + discRadius * cos(discAngle);
+    float dy = rand2.y * 0.01 + discHeight;
+    float dz = rand2.z * 0.01 + discRadius * sin(discAngle);
 
     float vx = sin(discAngle);
     float vy = -dy * 0.5;
@@ -101,8 +100,8 @@
     discPos += planetPos;
 
     fragOut o;
-    o.dest0 = float4(discPos, 1);
-    o.dest1 = float4(discVel, 1);
+    o.dest0 = float4(discPos - discVel * _Timestep, 1);
+    o.dest1 = float4(discPos, 1);
     return o;
   }
 
@@ -120,19 +119,11 @@
 		Pass {
 			CGPROGRAM
 			#pragma vertex vert
-			#pragma fragment integrateVelocity
-      ENDCG
-		}
-
-    //Pass 1: integrate velocities
-		Pass {
-			CGPROGRAM
-			#pragma vertex vert
 			#pragma fragment integratePositions
       ENDCG
 		}
 
-    //Pass 2: init galaxy states
+    //Pass 1: init galaxy states
 		Pass {
 			CGPROGRAM
 			#pragma vertex vert

@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 public class BasicPointParticles : MonoBehaviour {
 
   public bool render = true;
+  public bool useQuads = true;
   public bool simulate = true;
   public bool loop = true;
   public int loopTime = 10;
@@ -21,12 +22,15 @@ public class BasicPointParticles : MonoBehaviour {
   public float minDiscRadius = 0.01f;
   public float maxDiscRadius = 1;
   public float maxDiscHeight = 1;
+  public AnimationCurve radiusDistribution;
 
   [Header("References")]
-  public RenderTexture pos0, pos1;
-  public RenderTexture vel0, vel1;
+  public RenderTexture prevPos;
+  public RenderTexture currPos;
+  public RenderTexture nextPos;
 
   public Material displayMat;
+  public Material quadMat;
   public Material simulateMat;
   public Material gammaBlit;
 
@@ -36,13 +40,13 @@ public class BasicPointParticles : MonoBehaviour {
   private Matrix4x4[] planetRotations;
 
   private void Start() {
-    simulateMat.SetTexture("_Positions", pos0);
-    simulateMat.SetTexture("_Velocities", vel0);
+    prevPos.Create();
+    currPos.Create();
+    nextPos.Create();
 
-    pos0.Create();
-    vel0.Create();
-    pos0.DiscardContents();
-    vel0.DiscardContents();
+    prevPos.DiscardContents();
+    currPos.DiscardContents();
+    nextPos.DiscardContents();
 
     planetPositions = new Vector4[planets.Length];
     planetRotations = new Matrix4x4[planets.Length];
@@ -52,6 +56,14 @@ public class BasicPointParticles : MonoBehaviour {
     }
 
     initGalaxies();
+  }
+
+  private void OnEnable() {
+    Camera.onPostRender += drawStars;
+  }
+
+  private void OnDisable() {
+    Camera.onPostRender -= drawStars;
   }
 
   private void updateShaderConstants() {
@@ -69,16 +81,25 @@ public class BasicPointParticles : MonoBehaviour {
   }
 
   private void initGalaxies() {
+    Texture2D tex = new Texture2D(512, 1, TextureFormat.RFloat, mipmap: false, linear: true);
+    for (int i = 0; i < tex.width; i++) {
+      tex.SetPixel(i, 0, new Color(radiusDistribution.Evaluate(i / 512.0f), 0, 0, 0));
+    }
+    tex.Apply();
+    tex.filterMode = FilterMode.Bilinear;
+    tex.wrapMode = TextureWrapMode.Clamp;
+    simulateMat.SetTexture("_RadiusDistribution", tex);
+
     updateShaderConstants();
 
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
     RenderBuffer[] buffer = new RenderBuffer[2];
-    buffer[0] = pos0.colorBuffer;
-    buffer[1] = vel0.colorBuffer;
-    Graphics.SetRenderTarget(buffer, pos0.depthBuffer);
+    buffer[0] = prevPos.colorBuffer;
+    buffer[1] = currPos.colorBuffer;
+    Graphics.SetRenderTarget(buffer, prevPos.depthBuffer);
 
-    simulateMat.SetPass(2);
+    simulateMat.SetPass(1);
 
     GL.Begin(GL.QUADS);
     GL.TexCoord2(0, 0);
@@ -101,20 +122,21 @@ public class BasicPointParticles : MonoBehaviour {
       for (int i = 0; i < frameSkip; i++) {
         updateShaderConstants();
 
-        vel1.DiscardContents();
-        Graphics.Blit(vel0, vel1, simulateMat, 0);
-        simulateMat.SetTexture("_Velocities", vel1);
-        Utils.Swap(ref vel0, ref vel1);
+        nextPos.DiscardContents();
+        Graphics.Blit(null, nextPos, simulateMat, 0);
 
-        pos1.DiscardContents();
-        Graphics.Blit(pos0, pos1, simulateMat, 1);
-        simulateMat.SetTexture("_Positions", pos1);
-        Utils.Swap(ref pos0, ref pos1);
+        var tmp = prevPos;
+        prevPos = currPos;
+        currPos = nextPos;
+        nextPos = tmp;
+
+        simulateMat.SetTexture("_PrevPositions", prevPos);
+        simulateMat.SetTexture("_CurrPositions", currPos);
       }
     }
 
-    displayMat.mainTexture = pos0;
-    displayMat.SetTexture("_Velocity", vel0);
+    quadMat.mainTexture = currPos;
+    displayMat.mainTexture = currPos;
   }
 
   public void SetSize(float per) {
@@ -129,30 +151,40 @@ public class BasicPointParticles : MonoBehaviour {
     GUILayout.Label(":::::::::::::::::::::::::::::::::::::   " + Mathf.RoundToInt(1.0f / Time.smoothDeltaTime));
   }
 
-  bool hasDoneIt = false;
-  void OnRenderImage(Texture src, RenderTexture dst) {
-    if (!hasDoneIt) {
-      CommandBuffer buffer = new CommandBuffer();
-      dothisNow(buffer, src.width, src.height);
-      GetComponent<Camera>().AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
-      hasDoneIt = true;
+  //bool hasDoneIt = false;
+  //void OnRenderImage(Texture src, RenderTexture dst) {
+  //  if (!hasDoneIt) {
+  //    CommandBuffer buffer = new CommandBuffer();
+  //    dothisNow(buffer, src.width, src.height);
+  //    GetComponent<Camera>().AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
+  //    hasDoneIt = true;
+  //  }
+
+  //  Graphics.Blit(src, dst);
+  //}
+
+  //void dothisNow(CommandBuffer buffer, int width, int height) {
+  //  RenderTargetIdentifier id = new RenderTargetIdentifier(123);
+
+  //  buffer.GetTemporaryRT(123, width / 1, height / 1, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 8);
+
+  //  buffer.SetRenderTarget(id);
+  //  buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
+
+  //  buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, prevPos.width * prevPos.height);
+
+  //  buffer.Blit(id, BuiltinRenderTextureType.CameraTarget, gammaBlit);
+
+  //  buffer.ReleaseTemporaryRT(123);
+  //}
+
+  private void drawStars(Camera camera) {
+    if (useQuads) {
+      quadMat.SetPass(0);
+    } else {
+      displayMat.SetPass(0);
     }
 
-    Graphics.Blit(src, dst);
-  }
-
-  void dothisNow(CommandBuffer buffer, int width, int height) {
-    RenderTargetIdentifier id = new RenderTargetIdentifier(123);
-
-    buffer.GetTemporaryRT(123, width / 1, height / 1, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
-
-    buffer.SetRenderTarget(id);
-    buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
-
-    buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, pos0.width * pos0.height);
-
-    buffer.Blit(id, BuiltinRenderTextureType.CameraTarget, gammaBlit);
-
-    buffer.ReleaseTemporaryRT(123);
+    Graphics.DrawProcedural(MeshTopology.Points, prevPos.width * prevPos.height);
   }
 }

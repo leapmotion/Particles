@@ -38,6 +38,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string KEYWORD_BY_SPECIES = "COLOR_SPECIES";
   public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
   public const string KEYWORD_BY_VELOCITY = "COLOR_VELOCITY";
+  public const string KEYWORD_BY_INVERSE_VELOCITY = "COLOR_INVERSE";
 
   public const string KEYWORD_ENABLE_INTERPOLATION = "ENABLE_INTERPOLATION";
 
@@ -699,6 +700,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.DisableKeyword(KEYWORD_BY_SPECIES);
     _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
     _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
+    _particleMat.DisableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
 
     switch (_manager.colorMode) {
       case ColorMode.BySpecies:
@@ -709,6 +711,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ColorMode.ByVelocity:
         _particleMat.EnableKeyword(KEYWORD_BY_VELOCITY);
+        break;
+      case ColorMode.ByInverseVelocity:
+        _particleMat.EnableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
         break;
     }
 
@@ -835,12 +840,13 @@ public class TextureSimulator : MonoBehaviour {
     Texture2D ramp = new Texture2D(TAIL_RAMP_RESOLUTION, 1, TextureFormat.Alpha8, mipmap: false, linear: true);
     for (int i = 0; i < TAIL_RAMP_RESOLUTION; i++) {
       float speed = i / (float)TAIL_RAMP_RESOLUTION;
-      float length = _manager.speedToTrailLength.Evaluate(speed);
+      float length = _manager.speedToTrailLength.Evaluate(speed) * _manager.trailSize;
+      length = Mathf.Clamp(length / 200, 0, 1);
       ramp.SetPixel(i, 0, new Color(length, length, length, length));
     }
     ramp.Apply(updateMipmaps: false, makeNoLongerReadable: true);
 
-    _particleMat.SetTexture("_TailRamp", ramp);
+    _displayBlock.SetTexture("_TailRamp", ramp);
   }
 
   #endregion
@@ -1533,7 +1539,7 @@ public class TextureSimulator : MonoBehaviour {
       if (prev == null) {
         prev = new Hand().CopyFrom(source);
       }
-      if (!actor.active || !_disableCollisionWhenGrasping) {
+      if (!actor.fullyActive || !_disableCollisionWhenGrasping) {
         for (int i = 0; i < 5; i++) {
           Finger finger = source.Fingers[i];
           Finger prevFinger = prev.Fingers[i];
@@ -1577,6 +1583,11 @@ public class TextureSimulator : MonoBehaviour {
     public Vector3 position, prevPosition;
     public Quaternion rotation, prevRotation;
     public bool active;
+    public bool fullyActive {
+      get {
+        return _radiusMultiplier >= 0.9f;
+      }
+    }
 
     private SmoothedFloat _smoothedGrab = new SmoothedFloat();
     private TextureSimulator _sim;

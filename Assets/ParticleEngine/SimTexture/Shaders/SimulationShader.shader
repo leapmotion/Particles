@@ -141,6 +141,8 @@
     half4 vel = tex2Dlod0(_ParticleVelocities, i.uv.xy);
     pos.xyz += vel.xyz * 0.01;
 
+    pos.w = pos.w + (length(vel.xyz) - pos.w) * 0.5;
+
     //Dont hit the head pls
     half3 fromHead = pos.xyz - _HeadPos;
     half distToHead = length(fromHead);
@@ -189,7 +191,7 @@
         sphereForce.w = 1;
 
         velocity.xyz = sphereForce.xyz * sphereForce.w * 100;
-        velocity.w *= lerp(1, 0.5, sphereForce.w);
+        velocity.w *= lerp(1, 0, sphereForce.w);
 #else
         velocity.xyz += sphereForce.xyz * sphereForce.w * 100;
 #endif
@@ -239,7 +241,7 @@
     //Step offset for social forces
     i.uv.y = i.uv.y / MAX_FORCE_STEPS + i.uv.z / MAX_FORCE_STEPS;
     half4 socialForce = tex2Dlod0(_ParticleSocialForces, i.uv.xy);
-    velocity.xyz += socialForce.xyz * 0.1;
+    velocity.xyz += socialForce.xyz * 0.1 * lerp(0, 1, velocity.w);
 
     //Damping
     //velocity.xyz *= lerp(1, i.uv.w, velocity.w);

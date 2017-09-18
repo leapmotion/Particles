@@ -132,13 +132,15 @@ namespace Leap.Unity.Recording {
 
       //Try to generate a leap recording if we have leap data
       RecordingTrack recordingTrack = null;
-      LeapRecording leapRecording = ScriptableObject.CreateInstance(_leapRecordingType)
-                                      as LeapRecording;
-      if (leapRecording != null) {
-        leapRecording.LoadFrames(leapData);
-      } else {
-        Debug.LogError("Unable to create Leap recording: Invalid type specification for "
-                     + "LeapRecording implementation.", this);
+      LeapRecording leapRecording = null;
+      if (leapData.Count > 0) {
+        leapRecording = ScriptableObject.CreateInstance(_leapRecordingType) as LeapRecording;
+        if (leapRecording != null) {
+          leapRecording.LoadFrames(leapData);
+        } else {
+          Debug.LogError("Unable to create Leap recording: Invalid type specification for "
+                       + "LeapRecording implementation.", this);
+        }
       }
 
       string assetPath = Path.Combine(assetFolder.Path, recordingName + ".asset");
@@ -176,12 +178,14 @@ namespace Leap.Unity.Recording {
 
       //Destroy existing provider
       var provider = gameObject.GetComponentInChildren<LeapProvider>();
-      GameObject providerObj = provider.gameObject;
-      DestroyImmediate(provider);
-      //If a leap recording track exists, spawn a playable provider and link it to the track
-      if (recordingTrack != null) {
-        var playableProvider = providerObj.AddComponent<LeapPlayableProvider>();
-        director.SetGenericBinding(recordingTrack.outputs.Query().First().sourceObject, playableProvider);
+      if (provider != null) {
+        GameObject providerObj = provider.gameObject;
+        DestroyImmediate(provider);
+        //If a leap recording track exists, spawn a playable provider and link it to the track
+        if (recordingTrack != null) {
+          var playableProvider = providerObj.AddComponent<LeapPlayableProvider>();
+          director.SetGenericBinding(recordingTrack.outputs.Query().First().sourceObject, playableProvider);
+        }
       }
 
       buildAudioTracks(progress, director, timeline);

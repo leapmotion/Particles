@@ -26,12 +26,6 @@ namespace Leap.Unity.Interaction {
                        InteractionBehaviour interactionObj, bool justGrasped) {
       interactionObj.rigidbody.MovePosition(solvedPosition);
       interactionObj.rigidbody.MoveRotation(solvedRotation);
-      //interactionObj.rigidbody.transform.position = solvedPosition;
-      //interactionObj.rigidbody.transform.rotation = solvedRotation;
-      //interactionObj.rigidbody.position = solvedPosition;
-      //interactionObj.rigidbody.rotation = solvedRotation;
     }
-
   }
-
 }

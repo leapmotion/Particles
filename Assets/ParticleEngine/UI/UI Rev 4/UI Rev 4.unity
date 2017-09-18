@@ -538,6 +538,15 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114850329675928932, guid: 2139a592e0be62a42821e86349c037c7,
+        type: 2}
+      propertyPath: animTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1870173422019186, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
   m_IsPrefabParent: 0
@@ -590,6 +599,7 @@ MonoBehaviour:
   followingController: {fileID: 1635495933}
   toolbeltAnchor: {fileID: 172295474}
   openCloseButton: {fileID: 1673283789}
+  _appearVanishController: {fileID: 1904236830}
   _state: 0
   openCloseTime: 0.33
   localClosedPosition: {x: 0, y: -0.6, z: 0.07}
@@ -1674,6 +1684,15 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114850329675928932, guid: 2139a592e0be62a42821e86349c037c7,
+        type: 2}
+      propertyPath: animTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1870173422019186, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
   m_IsPrefabParent: 0
@@ -2330,6 +2349,15 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
       propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114850329675928932, guid: 2139a592e0be62a42821e86349c037c7,
+        type: 2}
+      propertyPath: animTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1870173422019186, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -4043,6 +4071,27 @@ Prefab:
       propertyPath: m_Name
       value: Bubble Anchor (0)
       objectReference: {fileID: 0}
+    - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4316486024729964, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114850329675928932, guid: 2139a592e0be62a42821e86349c037c7,
+        type: 2}
+      propertyPath: animTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1870173422019186, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
   m_IsPrefabParent: 0
@@ -5175,6 +5224,15 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114850329675928932, guid: 2139a592e0be62a42821e86349c037c7,
+        type: 2}
+      propertyPath: animTime
+      value: 0.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 1870173422019186, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2139a592e0be62a42821e86349c037c7, type: 2}
   m_IsPrefabParent: 0
@@ -5650,6 +5708,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1904236828}
   - component: {fileID: 1904236829}
+  - component: {fileID: 1904236830}
   m_Layer: 0
   m_Name: Bubble Anchors Control
   m_TagString: Untagged
@@ -5696,6 +5755,20 @@ MonoBehaviour:
   autoFillWithChildren: 1
   alignment: 0
   spacing: 0.18
+--- !u!114 &1904236830
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1904236827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98e5c240cb610754ea7a864266647129, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animTime: 0.33
+  _startAppeared: 1
+  sequenceProvider: {fileID: 1904236829}
 --- !u!21 &1913769305
 Material:
   serializedVersion: 6

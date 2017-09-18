@@ -9,6 +9,8 @@ namespace Leap.Unity.Interaction.UI {
 
   public class ScaleAppearVanishController : TweenAppearVanishController, IAppearVanishController {
 
+    public const float NEAR_ZERO = 0.0001f;
+
     #region Inspector
 
     [Header("Scale Control")]
@@ -22,6 +24,16 @@ namespace Leap.Unity.Interaction.UI {
     /// </summary>
     [Disable, SerializeField]
     private Vector3 _baseLocalScale = Vector3.one;
+
+    /// <summary>
+    /// Enforces a minimum value of 0.0001f for each localScale axis.
+    /// </summary>
+    public bool enforceNonzeroScale = true;
+
+    /// <summary>
+    /// Deactivates this object when its target localScale is zero or very near zero.
+    /// </summary>
+    public bool deactivateSelfWhenZero = true;
 
     [Header("Animation Curves")]
     [UnitCurve]
@@ -59,7 +71,15 @@ namespace Leap.Unity.Interaction.UI {
     protected override void updateAppearVanish(float time, bool immediately = false) {
       Vector3 targetScale = getTargetScale(time);
 
+      if (enforceNonzeroScale) {
+        targetScale = Vector3.Max(targetScale, Vector3.one * NEAR_ZERO);
+      }
+
       this.transform.localScale = targetScale;
+
+      if (deactivateSelfWhenZero) {
+        gameObject.SetActive(!(this.transform.localScale.CompMin() <= NEAR_ZERO));
+      }
     }
 
     private Vector3 getTargetScale(float time) {

@@ -55,7 +55,7 @@ namespace Leap.Unity.Animation {
       }
     }
 
-    private void refreshTween() {
+    protected void refreshTween() {
       if (!_backingAppearVanishTween.isValid) {
         _backingAppearVanishTween = Tween.Persistent().Value(0f, 1f, onTweenValue);
       }

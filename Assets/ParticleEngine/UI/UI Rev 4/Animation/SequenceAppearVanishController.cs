@@ -12,10 +12,6 @@ namespace Leap.Unity.Animation {
     [ImplementsInterface(typeof(IGameObjectSequenceProvider))]
     public MonoBehaviour sequenceProvider;
 
-    [Header("Sequence Animation")]
-    [Tooltip("Time offset between appearing / vanishing elements in seconds.")]
-    public float temporalSpacing = 0.01f;
-
     private IGameObjectSequenceProvider _objSequenceProvider {
       get { return sequenceProvider as IGameObjectSequenceProvider; }
     }

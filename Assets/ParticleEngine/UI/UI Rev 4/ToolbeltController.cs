@@ -1,5 +1,6 @@
 ﻿using Leap.Unity;
 using Leap.Unity.Animation;
+using Leap.Unity.Attributes;
 using Leap.Unity.Interaction;
 using System;
 using System.Collections;
@@ -17,6 +18,15 @@ public class ToolbeltController : MonoBehaviour {
   
   public InteractionButton openCloseButton;
 
+  [Header("Open / Close <> Appear / Vanish")]
+
+  [ImplementsInterface(typeof(IAppearVanishController))]
+  [SerializeField]
+  public MonoBehaviour _appearVanishController;
+  public IAppearVanishController appearVanishController {
+    get { return _appearVanishController as IAppearVanishController; }
+  }
+
   [Header("Open/Close Animation")]
   public State _state = State.Closed;
   public enum State { Closed, Opened }
@@ -26,6 +36,7 @@ public class ToolbeltController : MonoBehaviour {
 
   //public Pose localClosedPose = Pose.zero;
 
+  [Space]
   public Vector3 localClosedPosition = Vector3.zero;
   public Vector3 localClosedEuler    = Vector3.zero;
 
@@ -49,6 +60,10 @@ public class ToolbeltController : MonoBehaviour {
     createOpenCloseTween();
 
     _baseLocalTargetPose = toolbeltAnchor.ToLocalPose();
+
+    if (appearVanishController != null) {
+      appearVanishController.VanishNow();
+    }
   }
 
   private void createOpenCloseTween() {
@@ -80,6 +95,10 @@ public class ToolbeltController : MonoBehaviour {
 
     _state = State.Opened;
 
+    if (appearVanishController != null) {
+      appearVanishController.Appear();
+    }
+
     OnOpenBegin();
   }
 
@@ -87,6 +106,10 @@ public class ToolbeltController : MonoBehaviour {
     _openCloseTween.Play(Direction.Backward);
 
     _state = State.Closed;
+
+    if (appearVanishController != null) {
+      appearVanishController.Vanish();
+    }
 
     OnCloseBegin();
   }

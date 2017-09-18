@@ -9,10 +9,18 @@ public class BasicPointParticles : MonoBehaviour {
 
   public bool render = true;
   public bool simulate = true;
+  public bool loop = true;
+  public int loopTime = 10;
+  public int frameSkip = 1;
 
   [Header("Settings")]
   public bool quads = true;
   public float size = 0.05f;
+
+  [Header("Galazy")]
+  public float minDiscRadius = 0.01f;
+  public float maxDiscRadius = 1;
+  public float maxDiscHeight = 1;
 
   [Header("References")]
   public RenderTexture pos0, pos1;
@@ -22,10 +30,10 @@ public class BasicPointParticles : MonoBehaviour {
   public Material simulateMat;
   public Material gammaBlit;
 
-  public Transform[] targets;
-  private Vector4[] targetPositions;
+  public Transform[] planets;
 
-  private List<Mesh> _meshes = new List<Mesh>();
+  private Vector4[] planetPositions;
+  private Matrix4x4[] planetRotations;
 
   private void Start() {
     simulateMat.SetTexture("_Positions", pos0);
@@ -36,94 +44,73 @@ public class BasicPointParticles : MonoBehaviour {
     pos0.DiscardContents();
     vel0.DiscardContents();
 
-    simulateMat.SetFloat("_Seed", Random.value);
-    Graphics.Blit(null, pos0, simulateMat, 2);
-    simulateMat.SetFloat("_Seed", Random.value);
-    Graphics.Blit(null, vel0, simulateMat, 2);
-
-    targetPositions = new Vector4[targets.Length];
+    planetPositions = new Vector4[planets.Length];
+    planetRotations = new Matrix4x4[planets.Length];
 
     if (!displayMat.shader.isSupported) {
       FindObjectOfType<Renderer>().material.color = Color.red;
     }
 
-    generateMeshes();
+    initGalaxies();
   }
 
-  private void generateMeshes() {
-    Mesh currMesh = null;
-    List<Vector3> verts = new List<Vector3>();
-    List<Vector2> uvs = new List<Vector2>();
-    List<int> tris = new List<int>();
+  private void updateShaderConstants() {
+    simulateMat.SetFloat("_MinDiscRadius", minDiscRadius);
+    simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
+    simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
 
-    for (int i = 0; i < pos0.width; i++) {
-      for (int j = 0; j < pos0.height; j++) {
-        if (verts.Count + 4 >= 60000) {
-          currMesh.SetVertices(verts);
-          currMesh.SetUVs(0, uvs);
-          currMesh.SetTriangles(tris, 0);
-          currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-          currMesh.UploadMeshData(markNoLogerReadable: true);
-          currMesh = null;
-        }
+    planets.Query().Select(t => (Vector4)t.position).FillArray(planetPositions);
+    simulateMat.SetVectorArray("_Planets", planetPositions);
 
-        if (currMesh == null) {
-          currMesh = new Mesh();
-          _meshes.Add(currMesh);
-          verts.Clear();
-          uvs.Clear();
-          tris.Clear();
-        }
+    planets.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(planetRotations);
+    simulateMat.SetMatrixArray("_PlanetRotations", planetRotations);
 
+    simulateMat.SetInt("_PlanetCount", planets.Length);
+  }
 
-        Vector2 uv;
-        uv.x = i / (float)pos0.width;
-        uv.y = j / (float)pos0.height;
+  private void initGalaxies() {
+    updateShaderConstants();
 
-        if (quads) {
-          tris.Add(verts.Count + 0);
-          tris.Add(verts.Count + 2);
-          tris.Add(verts.Count + 1);
+    GL.LoadPixelMatrix(0, 1, 0, 1);
 
-          tris.Add(verts.Count + 0);
-          tris.Add(verts.Count + 3);
-          tris.Add(verts.Count + 2);
+    RenderBuffer[] buffer = new RenderBuffer[2];
+    buffer[0] = pos0.colorBuffer;
+    buffer[1] = vel0.colorBuffer;
+    Graphics.SetRenderTarget(buffer, pos0.depthBuffer);
 
-          uvs.Add(uv);
-          uvs.Add(uv);
-          uvs.Add(uv);
-          uvs.Add(uv);
+    simulateMat.SetPass(2);
 
-          verts.Add(new Vector3(size, size, 0));
-          verts.Add(new Vector3(-size, size, 0));
-          verts.Add(new Vector3(-size, -size, 0));
-          verts.Add(new Vector3(size, -size, 0));
-        }
-      }
-    }
-
-    currMesh.SetVertices(verts);
-    currMesh.SetUVs(0, uvs);
-    currMesh.SetTriangles(tris, 0);
-    currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000);
-    currMesh.UploadMeshData(markNoLogerReadable: true);
-    currMesh = null;
+    GL.Begin(GL.QUADS);
+    GL.TexCoord2(0, 0);
+    GL.Vertex3(0, 0, 0);
+    GL.TexCoord2(1, 0);
+    GL.Vertex3(1, 0, 0);
+    GL.TexCoord2(1, 1);
+    GL.Vertex3(1, 1, 0);
+    GL.TexCoord2(0, 1);
+    GL.Vertex3(0, 1, 0);
+    GL.End();
   }
 
   private void Update() {
+    if (loop && Time.frameCount % loopTime == 0) {
+      initGalaxies();
+    }
+
     if (simulate) {
-      targets.Query().Select(t => (Vector4)t.position).FillArray(targetPositions);
-      simulateMat.SetVectorArray("_Targets", targetPositions);
+      for (int i = 0; i < frameSkip; i++) {
+        updateShaderConstants();
 
-      vel1.DiscardContents();
-      Graphics.Blit(vel0, vel1, simulateMat, 0);
-      simulateMat.SetTexture("_Velocities", vel1);
-      Utils.Swap(ref vel0, ref vel1);
+        vel1.DiscardContents();
+        Graphics.Blit(vel0, vel1, simulateMat, 0);
+        simulateMat.SetTexture("_Velocities", vel1);
+        Utils.Swap(ref vel0, ref vel1);
 
-      pos1.DiscardContents();
-      Graphics.Blit(pos0, pos1, simulateMat, 1);
-      simulateMat.SetTexture("_Positions", pos1);
-      Utils.Swap(ref pos0, ref pos1);
+        pos1.DiscardContents();
+        Graphics.Blit(pos0, pos1, simulateMat, 1);
+        simulateMat.SetTexture("_Positions", pos1);
+        Utils.Swap(ref pos0, ref pos1);
+      }
     }
 
     displayMat.mainTexture = pos0;
@@ -138,39 +125,13 @@ public class BasicPointParticles : MonoBehaviour {
     displayMat.SetFloat("_Bright", per.Map(0, 1, 0, 0.01f));
   }
 
-  //private void Update() {
-  //  if (render) {
-  //    displayMat.mainTexture = pos0;
-  //    foreach (var mesh in _meshes) {
-  //      Graphics.DrawMesh(mesh, Matrix4x4.identity, displayMat, 0);
-  //    }
-  //  }
-  //}
-
-  //void OnPostRender() {
-  //  var origin = RenderTexture.active;
-
-  //  var lowRes = RenderTexture.GetTemporary(Screen.width / 2, Screen.height / 2, 0, RenderTextureFormat.ARGBHalf, RenderTextureReadWrite.Linear, 1);
-  //  RenderTexture.active = lowRes;
-  //  GL.Clear(clearDepth: true, clearColor: true, backgroundColor: Color.black);
-
-  //  displayMat.mainTexture = pos0;
-  //  displayMat.SetPass(0);
-  //  Graphics.DrawProcedural(MeshTopology.Points, pos0.width * pos0.height);
-
-  //  RenderTexture.active = origin;
-  //  Graphics.Blit(lowRes, (RenderTexture)null);
-
-  //  RenderTexture.ReleaseTemporary(lowRes);
-  //}
-
   void OnGUI() {
     GUILayout.Label(":::::::::::::::::::::::::::::::::::::   " + Mathf.RoundToInt(1.0f / Time.smoothDeltaTime));
   }
 
   bool hasDoneIt = false;
   void OnRenderImage(Texture src, RenderTexture dst) {
-    if(!hasDoneIt) {
+    if (!hasDoneIt) {
       CommandBuffer buffer = new CommandBuffer();
       dothisNow(buffer, src.width, src.height);
       GetComponent<Camera>().AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
@@ -183,13 +144,13 @@ public class BasicPointParticles : MonoBehaviour {
   void dothisNow(CommandBuffer buffer, int width, int height) {
     RenderTargetIdentifier id = new RenderTargetIdentifier(123);
 
-    buffer.GetTemporaryRT(123, width / 4, height / 4, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
+    buffer.GetTemporaryRT(123, width / 1, height / 1, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 1);
 
     buffer.SetRenderTarget(id);
     buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
 
     buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, pos0.width * pos0.height);
-    
+
     buffer.Blit(id, BuiltinRenderTextureType.CameraTarget, gammaBlit);
 
     buffer.ReleaseTemporaryRT(123);

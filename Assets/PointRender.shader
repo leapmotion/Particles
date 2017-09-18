@@ -52,7 +52,7 @@
         v2f o;
         o.pos = UnityObjectToClipPos(position);
         o.size = _Size;
-        o.color = abs(velocity.rgb) * _Bright;
+        o.color = _Bright;
         return o;
       }
 			

@@ -31,6 +31,8 @@ public class BasicPointParticles : MonoBehaviour {
     simulateMat.SetTexture("_Positions", pos0);
     simulateMat.SetTexture("_Velocities", vel0);
 
+    pos0.Create();
+    vel0.Create();
     pos0.DiscardContents();
     vel0.DiscardContents();
 
@@ -46,8 +48,6 @@ public class BasicPointParticles : MonoBehaviour {
     }
 
     generateMeshes();
-
-
   }
 
   private void generateMeshes() {

@@ -59,29 +59,29 @@
 #else
     particle = tex2Dlod(_ParticlePositions, texcoord);
 #endif
-
+    
+    particle.w *= 0.01;
     velocity = tex2Dlod(_ParticleVelocities, texcoord);
     velocity.xyz *= 0.01;
   }
 
-  void calculateParticleColor(inout half4 rawColor, half4 velocity) {
+  void calculateParticleColor(inout half4 rawColor, float speed, half4 velocity) {
 #ifdef COLOR_VELOCITY
     rawColor.rgb = abs(velocity.xyz) * _Brightness;
     rawColor.a = 1;
 #endif
 
 #ifdef COLOR_SPECIES_MAGNITUDE
-    rawColor *= length(velocity.xyz) * _Brightness;
+    rawColor *= speed * _Brightness;
 #endif
 
 #ifdef COLOR_INVERSE
-    rawColor *= 0.01 * _Brightness / (length(velocity.xyz) * 500 + 1.0);
+    rawColor *= 0.01 * _Brightness / (speed * 500 + 1.0);
 #endif
   }
 
-  void calculateParticleShape(inout float4 vertex, float4 velocity) {
+  void calculateParticleShape(inout float4 vertex, float speed, float4 velocity) {
 #ifdef FISH_TAIL
-    float speed = length(velocity.xyz);
     float3 velDir = speed < 0.00001 ? float3(0, 0, 0) : velocity.xyz / speed;
     float trailLength = 10 * tex2Dlod(_TailRamp, float4(speed * 100, 0, 0, 0)).a * velocity.w;
     float vertFactor = saturate(-dot(velDir, normalize(vertex.xyz)) - 0.2);
@@ -119,14 +119,14 @@
     float4 particle, velocity;
     sampleParticle(texcoord, particle, velocity);
 
-    calculateParticleShape(v.vertex, velocity);
+    calculateParticleShape(v.vertex, particle.w, velocity);
       
     //This line makes the particles grow/shrink when transitions happen
     v.vertex.xyz *= color.a;
 
     v.vertex.xyz += particle.xyz;
 
-    calculateParticleColor(color, velocity);
+    calculateParticleColor(color, particle.w, velocity);
 
     v2f o;
     o.position = UnityObjectToClipPos(v.vertex);

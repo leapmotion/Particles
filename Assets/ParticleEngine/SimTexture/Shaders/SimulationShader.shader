@@ -141,6 +141,8 @@
     half4 vel = tex2Dlod0(_ParticleVelocities, i.uv.xy);
     pos.xyz += vel.xyz * 0.01;
 
+    pos.w = pos.w + (length(vel.xyz) - pos.w) * 0.5;
+
     //Dont hit the head pls
     half3 fromHead = pos.xyz - _HeadPos;
     half distToHead = length(fromHead);

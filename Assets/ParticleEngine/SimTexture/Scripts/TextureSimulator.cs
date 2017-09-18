@@ -1539,7 +1539,7 @@ public class TextureSimulator : MonoBehaviour {
       if (prev == null) {
         prev = new Hand().CopyFrom(source);
       }
-      if (!actor.active || !_disableCollisionWhenGrasping) {
+      if (!actor.fullyActive || !_disableCollisionWhenGrasping) {
         for (int i = 0; i < 5; i++) {
           Finger finger = source.Fingers[i];
           Finger prevFinger = prev.Fingers[i];
@@ -1583,6 +1583,11 @@ public class TextureSimulator : MonoBehaviour {
     public Vector3 position, prevPosition;
     public Quaternion rotation, prevRotation;
     public bool active;
+    public bool fullyActive {
+      get {
+        return _radiusMultiplier >= 0.9f;
+      }
+    }
 
     private SmoothedFloat _smoothedGrab = new SmoothedFloat();
     private TextureSimulator _sim;

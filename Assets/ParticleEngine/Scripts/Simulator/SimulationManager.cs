@@ -618,6 +618,7 @@ public class SimulationManager : MonoBehaviour {
     string toLoad = allPaths[currIndex];
     var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(toLoad));
     RestartSimulation(description, ResetBehavior.ResetPositions);
+    _currLoadedEcosystemName = toLoad;
   }
 
   private bool buttonOrKey(string name, KeyCode key) {

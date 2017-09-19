@@ -610,13 +610,14 @@ public class SimulationManager : MonoBehaviour {
       allPaths.Add(_currLoadedEcosystemName);
     }
 
-    allPaths.Sort();
+    allPaths.Sort((a, b) => Path.GetFileNameWithoutExtension(a).ToLower().Replace(" ", "").CompareTo(Path.GetFileNameWithoutExtension(b).ToLower().Replace(" ", "")));
 
     int currIndex = allPaths.IndexOf(_currLoadedEcosystemName);
     currIndex = (currIndex + allPaths.Count + offset) % allPaths.Count;
 
     string toLoad = allPaths[currIndex];
     var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(toLoad));
+    description.name = Path.GetFileNameWithoutExtension(toLoad);
     RestartSimulation(description, ResetBehavior.ResetPositions);
     _currLoadedEcosystemName = toLoad;
   }

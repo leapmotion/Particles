@@ -18,12 +18,11 @@ namespace Leap.Unity.Animation {
     #endregion
 
     #region Unity Events
-
-    [HideInInspector, SerializeField]
-    private bool _startAppeared = false;
+    
+    public bool startAppeared;
 
     protected virtual void Start() {
-      if (_startAppeared) {
+      if (startAppeared) {
         AppearNow();
       }
       else {
@@ -107,21 +106,13 @@ namespace Leap.Unity.Animation {
     public void AppearNow() {
       var tween = _appearVanishTween;
       tween.progress = 1f;
-
-      if (!Application.isPlaying) {
-        updateAppearVanish(1f, immediately: true);
-        _startAppeared = true;
-      }
+      updateAppearVanish(1f, immediately: true);
     }
 
     public void VanishNow() {
       var tween = _appearVanishTween;
       tween.progress = 0f;
-
-      if (!Application.isPlaying) {
-        updateAppearVanish(0f, immediately: true);
-        _startAppeared = false;
-      }
+      updateAppearVanish(0f, immediately: true);
     }
 
     #endregion

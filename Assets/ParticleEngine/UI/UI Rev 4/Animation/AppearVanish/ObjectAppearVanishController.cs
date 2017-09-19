@@ -26,6 +26,8 @@ namespace Leap.Unity.Animation {
       get { return _appearVanishControllers; }
     }
 
+    private bool _refreshed = false;
+
     protected virtual void Start() {
       refreshAppearVanishControllers();
     }
@@ -39,9 +41,13 @@ namespace Leap.Unity.Animation {
                                 .Where(c => c is IAppearVanishController && !(c == this))
                                 .Select(c => c as IAppearVanishController)
                                 .FillList(_appearVanishControllers);
+
+      _refreshed = true;
     }
 
     public void Appear() {
+      if (!_refreshed) refreshAppearVanishControllers();
+
       foreach (var appearVanishController in _appearVanishControllers) {
         appearVanishController.Appear();
       }

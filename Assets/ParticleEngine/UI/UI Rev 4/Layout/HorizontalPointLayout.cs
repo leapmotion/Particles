@@ -25,8 +25,12 @@ namespace Leap.Unity.Layout {
     public bool autoFillWithChildren = false;
 
     [Header("Layout Settings")]
-    public Alignment alignment = Alignment.Center;
+    [Tooltip("If this flag is disabled, this Layout will not actually move its "
+           + "layout transforms, useful if you have other scripts handling the layout "
+           + "transforms' positions.")]
+    public bool performLayoutOnUpdate = true;
     public enum Alignment { Center }
+    public Alignment alignment = Alignment.Center;
     public float spacing = 0.10f;
 
     #region Layout Points Enumerator
@@ -81,7 +85,9 @@ namespace Leap.Unity.Layout {
         }
       }
 
-      updateLayout();
+      if (performLayoutOnUpdate) {
+        updateLayout();
+      }
     }
 
     private void updateLayout() {

@@ -71,10 +71,10 @@ namespace Leap.Unity.Interaction.UI {
         targetScale = Vector3.Max(targetScale, Vector3.one * NEAR_ZERO);
       }
 
-      this.transform.localScale = targetScale;
+      localScaleTarget.localScale = targetScale;
 
       if (deactivateSelfWhenZero) {
-        gameObject.SetActive(!(this.transform.localScale.CompMin() <= NEAR_ZERO));
+        this.gameObject.SetActive(!(localScaleTarget.localScale.CompMin() <= NEAR_ZERO));
       }
     }
 

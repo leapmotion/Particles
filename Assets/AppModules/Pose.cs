@@ -94,6 +94,15 @@ namespace Leap.Unity {
       t.localRotation = localPose.rotation;
     }
 
+    /// <summary>
+    /// Sets the position and rotation of this transform to the argument pose's
+    /// position and rotation.
+    /// </summary>
+    public static void SetWorldPose(this Transform t, Pose localPose) {
+      t.position = localPose.position;
+      t.rotation = localPose.rotation;
+    }
+
   }
 
 }

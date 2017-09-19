@@ -24,7 +24,11 @@ namespace Leap.Unity.Layout {
     [ImplementsInterface(typeof(ILocalPositionProvider))]
     public MonoBehaviour localPositionProvider = null;
 
-    private void LateUpdate() {
+    private void Update() {
+      refreshPosition();
+    }
+
+    private void refreshPosition() {
       if (leapSpace != null) {
         if (leapSpace.transformer != null) {
           this.transform.position =

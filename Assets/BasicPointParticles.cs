@@ -11,6 +11,8 @@ public class BasicPointParticles : MonoBehaviour {
   [Header("Display")]
   public bool render = true;
   public bool useQuads = true;
+  public bool loop = true;
+  public int loopTime = 10;
 
   [Header("Settings")]
   public bool quads = true;
@@ -18,10 +20,7 @@ public class BasicPointParticles : MonoBehaviour {
 
   [Header("Stars")]
   public bool simulateStars = true;
-  public bool loop = true;
-  public int loopTime = 10;
   public int frameSkip = 1;
-
   public float minDiscRadius = 0.01f;
   public float maxDiscRadius = 1;
   public float maxDiscHeight = 1;
@@ -29,10 +28,13 @@ public class BasicPointParticles : MonoBehaviour {
 
   [Header("Planets")]
   public bool simulatePlanets = true;
+  public int planetSubframes = 10;
   [MinValue(0)]
   public float gravConstant = 0.0001f;
   [MinValue(0)]
-  public float randomVelocity = 0.1f;
+  public float planetVelocity = 0.1f;
+  [Range(0, 180)]
+  public float maxAngleAwayFromCenter = 90;
   public float planetSpawnRadius = 0.5f;
 
   [Header("References")]
@@ -62,6 +64,7 @@ public class BasicPointParticles : MonoBehaviour {
 
     planetPositions = new Vector4[planets.Length];
     planetRotations = new Matrix4x4[planets.Length];
+    planetVelocities = new Vector3[planets.Length];
 
     if (!displayMat.shader.isSupported) {
       FindObjectOfType<Renderer>().material.color = Color.red;
@@ -104,6 +107,8 @@ public class BasicPointParticles : MonoBehaviour {
 
     updateShaderConstants();
 
+    simulateMat.SetVectorArray("_PlanetVelocities", planetVelocities.Query().Select(t => (Vector4)t).ToArray());
+
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
     RenderBuffer[] buffer = new RenderBuffer[2];
@@ -125,10 +130,21 @@ public class BasicPointParticles : MonoBehaviour {
     GL.End();
 
     Random.InitState(seed);
-    foreach (var planet in planets) {
-      planet.position = Random.insideUnitSphere * planetSpawnRadius;
-      planet.velocity = Random.insideUnitSphere * randomVelocity;
-      planet.rotation = Random.rotationUniform;
+    for (int i = 0; i < planets.Length; i++) {
+      planets[i].position = Random.onUnitSphere * planetSpawnRadius;
+      planets[i].rotation = Random.rotationUniform;
+
+      Vector3 vel;
+      int tries = 0;
+      do {
+        vel = Random.onUnitSphere * planetVelocity;
+        tries++;
+        if (tries > 1000) {
+          Debug.LogWarning("Tried too much");
+          break;
+        }
+      } while (Vector3.Angle(vel, Vector3.zero - planets[i].position) > maxAngleAwayFromCenter);
+      planetVelocities[i] = vel;
     }
   }
 
@@ -145,10 +161,30 @@ public class BasicPointParticles : MonoBehaviour {
     Random.InitState(Time.frameCount);
     seed = Random.Range(int.MinValue, int.MaxValue);
 
-    if (simulateStars) {
-      for (int i = 0; i < frameSkip; i++) {
-        updateShaderConstants();
+    if (simulatePlanets) {
+      float planetDT = 1.0f / planetSubframes;
+      for (int i = 0; i < planetSubframes; i++) {
+        for (int j = 0; j < planets.Length; j++) {
+          for (int k = 0; k < planets.Length; k++) {
+            if (j == k) continue;
 
+            Vector3 toOther = planets[k].position - planets[j].position;
+            float dist = toOther.magnitude;
+            Vector3 force = gravConstant * (toOther / dist) / (dist * dist);
+            planetVelocities[j] += force * planetDT;
+          }
+        }
+
+        for (int j = 0; j < planets.Length; j++) {
+          planets[j].position += planetVelocities[j] * planetDT;
+        }
+      }
+    }
+
+    if (simulateStars) {
+      updateShaderConstants();
+
+      for (int i = 0; i < frameSkip; i++) {
         nextPos.DiscardContents();
         Graphics.Blit(null, nextPos, simulateMat, 0);
 
@@ -162,22 +198,10 @@ public class BasicPointParticles : MonoBehaviour {
       }
     }
 
+
+
     quadMat.mainTexture = currPos;
     displayMat.mainTexture = currPos;
-  }
-
-  private void FixedUpdate() {
-    foreach (var planet1 in planets) {
-      foreach (var planet2 in planets) {
-        if (planet1 == planet2) continue;
-
-        Vector3 toPlanet2 = planet2.position - planet1.position;
-        float distance = toPlanet2.magnitude;
-        Vector3 force = gravConstant * (toPlanet2 / distance) / (0.001f + distance * distance);
-
-        planet1.AddForce(force, ForceMode.Acceleration);
-      }
-    }
   }
 
   public void SetSize(float per) {

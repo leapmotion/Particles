@@ -20,6 +20,7 @@
 
   float4x4 _PlanetRotations[10];
   float4 _Planets[10];
+  float4 _PlanetVelocities[10];
   uint _PlanetCount;
 
   float _MinDiscRadius;
@@ -96,6 +97,7 @@
 
     discPos = mul(planetRot, float4(discPos, 1));
     discVel = mul(planetRot, float4(discVel, 1));
+    discVel += _PlanetVelocities[index];
 
     discPos += planetPos;
 

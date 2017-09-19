@@ -533,6 +533,75 @@ Transform:
   m_Father: {fileID: 179775622}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1288433348
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1288433351}
+  - component: {fileID: 1288433350}
+  - component: {fileID: 1288433349}
+  m_Layer: 0
+  m_Name: Planet (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &1288433349
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1288433348}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+--- !u!33 &1288433350
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1288433348}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &1288433351
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1288433348}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.4, y: 0.1, z: 0}
+  m_LocalScale: {x: 0.05, y: 0.05, z: 0.05}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1628092939
 GameObject:
   m_ObjectHideFlags: 0
@@ -760,12 +829,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   render: 1
-  useQuads: 0
+  useQuads: 1
+  loop: 1
+  loopTime: 1
   quads: 1
   size: 0.005
   simulateStars: 1
-  loop: 0
-  loopTime: 1
   frameSkip: 1
   minDiscRadius: 0.05
   maxDiscRadius: 1
@@ -795,8 +864,10 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 0
   simulatePlanets: 1
-  gravConstant: 0.01
-  randomVelocity: 0.1
+  planetSubframes: 10
+  gravConstant: 0.00001
+  planetVelocity: 0.01
+  maxAngleAwayFromCenter: 30
   planetSpawnRadius: 0.5
   prevPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
   currPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
@@ -806,8 +877,9 @@ MonoBehaviour:
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
   gammaBlit: {fileID: 2100000, guid: d685a257c7ff2d947856690bf1c4db79, type: 2}
   planets:
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 117918841}
+  - {fileID: 1727814373}
+  - {fileID: 1288433351}
 --- !u!81 &1697903794
 AudioListener:
   m_ObjectHideFlags: 0

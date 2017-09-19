@@ -45,9 +45,10 @@ public class BasicPointParticles : MonoBehaviour {
   public Material simulateMat;
   public Material gammaBlit;
 
-  public Rigidbody[] planets;
+  public Transform[] planets;
 
   private Vector4[] planetPositions;
+  private Vector3[] planetVelocities;
   private Matrix4x4[] planetRotations;
 
   private void Start() {

@@ -117,9 +117,7 @@ GameObject:
   m_Component:
   - component: {fileID: 117918841}
   - component: {fileID: 117918840}
-  - component: {fileID: 117918839}
   - component: {fileID: 117918838}
-  - component: {fileID: 117918842}
   m_Layer: 0
   m_Name: Planet
   m_TagString: Untagged
@@ -159,18 +157,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!135 &117918839
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 117918837}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &117918840
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -191,21 +177,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!54 &117918842
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 117918837}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &179775621
 GameObject:
   m_ObjectHideFlags: 0
@@ -826,6 +797,7 @@ MonoBehaviour:
   simulatePlanets: 1
   gravConstant: 0.01
   randomVelocity: 0.1
+  planetSpawnRadius: 0.5
   prevPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
   currPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
   nextPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
@@ -834,8 +806,8 @@ MonoBehaviour:
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
   gammaBlit: {fileID: 2100000, guid: d685a257c7ff2d947856690bf1c4db79, type: 2}
   planets:
-  - {fileID: 117918842}
-  - {fileID: 1727814369}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!81 &1697903794
 AudioListener:
   m_ObjectHideFlags: 0
@@ -915,9 +887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1727814373}
   - component: {fileID: 1727814372}
-  - component: {fileID: 1727814371}
   - component: {fileID: 1727814370}
-  - component: {fileID: 1727814369}
   m_Layer: 0
   m_Name: Planet (1)
   m_TagString: Untagged
@@ -925,21 +895,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!54 &1727814369
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1727814368}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 0
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!23 &1727814370
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -972,18 +927,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!135 &1727814371
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1727814368}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 0
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &1727814372
 MeshFilter:
   m_ObjectHideFlags: 0

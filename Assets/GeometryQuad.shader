@@ -1,7 +1,9 @@
 ﻿Shader "Unlit/QuadDisplayShader"{
 	Properties { 
     _MainTex ("Positions", 2D) = "" {}
+    _Particle("Particle", 2D) = "white" {}
     _Size    ("Size", Range(0, 0.1)) = 0.05
+    _Bright  ("Brightness", Float) = 0.1
   }
 
 
@@ -10,7 +12,7 @@
 		LOD 100
 
     Cull Off
-    Blend One One
+    Blend SrcAlpha OneMinusSrcAlpha
     ZWrite Off
 
 		Pass {
@@ -29,15 +31,18 @@
 
       struct v2g {
         float4 pos : POSITION;
-        float4 toCam : TEXCOORD1;
+        float3 toCam : TEXCOORD1;
       };
 
 			struct g2f {
         float4 pos : SV_POSITION;
+        float4 uv : TEXCOORD0;
 			};
 
       sampler2D _MainTex;
+      sampler2D _Particle;
       half _Size;
+      half _Bright;
 
       v2g vert(uint id : SV_VertexID) {
         float4 uv;
@@ -50,8 +55,7 @@
         float3 worldPos = mul(unity_ObjectToWorld, position);
 
         v2g o;
-        o.toCam.xyz = normalize(_WorldSpaceCameraPos - worldPos);
-        o.toCam.w = length(_WorldSpaceCameraPos - worldPos);
+        o.toCam = normalize(_WorldSpaceCameraPos - worldPos);
         o.pos = float4(worldPos, 1);
         return o;
       }
@@ -61,27 +65,32 @@
         g2f o;
 
         float3 toCam = input[0].toCam.xyz;
-        float3 distToCam = input[0].toCam.w;
         float3 up = float3(0, 1, 0);
 
         float4 quadRight = float4(normalize(cross(toCam, up)) * _Size, 0);
         float4 quadUp = float4(normalize(cross(toCam, quadRight)) * _Size, 0);
 
         o.pos = mul(UNITY_MATRIX_VP, input[0].pos + quadRight - quadUp);
+        o.uv = float4(1, 0, 0, 0);
         triStream.Append(o);
 
         o.pos = mul(UNITY_MATRIX_VP, input[0].pos - quadRight - quadUp);
+        o.uv = float4(0, 0, 0, 0);
         triStream.Append(o);
 
         o.pos = mul(UNITY_MATRIX_VP, input[0].pos + quadRight + quadUp);
+        o.uv = float4(1, 1, 0, 0);
         triStream.Append(o);
 
         o.pos = mul(UNITY_MATRIX_VP, input[0].pos - quadRight + quadUp);
+        o.uv = float4(0, 1, 0, 0);
         triStream.Append(o);
       }
 			
 			fixed4 frag (g2f i) : SV_Target {
-        return fixed4(0.01, 0.01, 0.01, 1);
+        float4 color = tex2D(_Particle, i.uv);
+        color.w *= _Bright;
+        return float4(1, 1, 1, color.w);
 			}
 			ENDCG
 		}

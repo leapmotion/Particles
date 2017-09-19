@@ -3,26 +3,37 @@ using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Query;
+using Leap.Unity.Attributes;
 using UnityEngine.Rendering;
 
 public class BasicPointParticles : MonoBehaviour {
 
+  [Header("Display")]
   public bool render = true;
   public bool useQuads = true;
-  public bool simulate = true;
-  public bool loop = true;
-  public int loopTime = 10;
-  public int frameSkip = 1;
 
   [Header("Settings")]
   public bool quads = true;
   public float size = 0.05f;
 
-  [Header("Galazy")]
+  [Header("Stars")]
+  public bool simulateStars = true;
+  public bool loop = true;
+  public int loopTime = 10;
+  public int frameSkip = 1;
+
   public float minDiscRadius = 0.01f;
   public float maxDiscRadius = 1;
   public float maxDiscHeight = 1;
   public AnimationCurve radiusDistribution;
+
+  [Header("Planets")]
+  public bool simulatePlanets = true;
+  [MinValue(0)]
+  public float gravConstant = 0.0001f;
+  [MinValue(0)]
+  public float randomVelocity = 0.1f;
+  public float planetSpawnRadius = 0.5f;
 
   [Header("References")]
   public RenderTexture prevPos;
@@ -34,7 +45,7 @@ public class BasicPointParticles : MonoBehaviour {
   public Material simulateMat;
   public Material gammaBlit;
 
-  public Transform[] planets;
+  public Rigidbody[] planets;
 
   private Vector4[] planetPositions;
   private Matrix4x4[] planetRotations;
@@ -111,14 +122,29 @@ public class BasicPointParticles : MonoBehaviour {
     GL.TexCoord2(0, 1);
     GL.Vertex3(0, 1, 0);
     GL.End();
+
+    Random.InitState(seed);
+    foreach (var planet in planets) {
+      planet.position = Random.insideUnitSphere * planetSpawnRadius;
+      planet.velocity = Random.insideUnitSphere * randomVelocity;
+      planet.rotation = Random.rotationUniform;
+    }
   }
+
+  int seed = 0;
 
   private void Update() {
     if (loop && Time.frameCount % loopTime == 0) {
       initGalaxies();
+      quadMat.mainTexture = currPos;
+      displayMat.mainTexture = currPos;
+      return;
     }
 
-    if (simulate) {
+    Random.InitState(Time.frameCount);
+    seed = Random.Range(int.MinValue, int.MaxValue);
+
+    if (simulateStars) {
       for (int i = 0; i < frameSkip; i++) {
         updateShaderConstants();
 
@@ -137,6 +163,20 @@ public class BasicPointParticles : MonoBehaviour {
 
     quadMat.mainTexture = currPos;
     displayMat.mainTexture = currPos;
+  }
+
+  private void FixedUpdate() {
+    foreach (var planet1 in planets) {
+      foreach (var planet2 in planets) {
+        if (planet1 == planet2) continue;
+
+        Vector3 toPlanet2 = planet2.position - planet1.position;
+        float distance = toPlanet2.magnitude;
+        Vector3 force = gravConstant * (toPlanet2 / distance) / (0.001f + distance * distance);
+
+        planet1.AddForce(force, ForceMode.Acceleration);
+      }
+    }
   }
 
   public void SetSize(float per) {

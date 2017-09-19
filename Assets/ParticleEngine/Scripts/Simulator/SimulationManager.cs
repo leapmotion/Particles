@@ -300,7 +300,10 @@ public class SimulationManager : MonoBehaviour {
   private KeyCode _saveEcosystemKey = KeyCode.F5;
 
   [SerializeField]
-  private KeyCode _loadEcosystemKey = KeyCode.F6;
+  private KeyCode _loadPrevEcosystem = KeyCode.LeftArrow;
+
+  [SerializeField]
+  private KeyCode _loadNextEcosystem = KeyCode.RightArrow;
 
   [SerializeField]
   private KeyCode _randomizeEcosystemKey = KeyCode.Space;
@@ -316,6 +319,7 @@ public class SimulationManager : MonoBehaviour {
   private EcosystemDescription _currentDescription;
   private SimulationMethod _currentSimulationMethod = SimulationMethod.Texture;
   private bool _inGui = false;
+  private string _currLoadedEcosystemName = "";
 
   #region PUBLIC API
   public event System.Action OnPresetLoaded;
@@ -514,6 +518,10 @@ public class SimulationManager : MonoBehaviour {
       _inGui = true;
       handleUserInput();
       _inGui = false;
+
+      if (_currentDescription != null) {
+        GUILayout.Label(_currentDescription.name);
+      }
     }
   }
   #endregion
@@ -581,13 +589,35 @@ public class SimulationManager : MonoBehaviour {
       SaveEcosystem();
     }
 
-    if (buttonOrKey("Load Ecosystem", _loadEcosystemKey)) {
-      var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
-      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(file));
-      RestartSimulation(description, ResetBehavior.ResetPositions);
+    if (buttonOrKey("Load Prev", _loadPrevEcosystem)) {
+      loadAtOffset(-1);
+    }
+
+    if (buttonOrKey("Load Next", _loadNextEcosystem)) {
+      loadAtOffset(1);
     }
 
     endHorizontal();
+  }
+
+  private void loadAtOffset(int offset) {
+    List<string> allPaths = Directory.GetFiles(_loadingFolder.Path).Query().Where(t => t.EndsWith(".json")).ToList();
+    if (allPaths.Count == 0) {
+      return;
+    }
+
+    if (!allPaths.Contains(_currLoadedEcosystemName)) {
+      allPaths.Add(_currLoadedEcosystemName);
+    }
+
+    allPaths.Sort();
+
+    int currIndex = allPaths.IndexOf(_currLoadedEcosystemName);
+    currIndex = (currIndex + allPaths.Count + offset) % allPaths.Count;
+
+    string toLoad = allPaths[currIndex];
+    var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(toLoad));
+    RestartSimulation(description, ResetBehavior.ResetPositions);
   }
 
   private bool buttonOrKey(string name, KeyCode key) {

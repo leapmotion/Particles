@@ -4,37 +4,68 @@ using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Query;
 using Leap.Unity.Attributes;
-using UnityEngine.Rendering;
+using Leap.Unity.DevGui;
 
-public class BasicPointParticles : MonoBehaviour {
+public class BasicPointParticles : DevBehaviour {
 
   [Header("Display")]
   public bool render = true;
+
+  [DevValue]
   public bool useQuads = true;
+
   public bool loop = true;
+
+  [DevValue]
+  [Range(1, 1000)]
   public int loopTime = 10;
 
   [Header("Settings")]
-  public bool quads = true;
+
+  [DevValue("Particle Size")]
+  [Range(0, 0.05f)]
   public float size = 0.05f;
+
+  [DevValue]
+  [Range(0, 1)]
+  public float brightness = 0.1f;
 
   [Header("Stars")]
   public bool simulateStars = true;
   public int frameSkip = 1;
+
+  [DevValue]
+  [Range(0, 2)]
   public float minDiscRadius = 0.01f;
+
+  [DevValue]
+  [Range(0, 2)]
   public float maxDiscRadius = 1;
+
+  [DevValue]
+  [Range(0, 0.5f)]
   public float maxDiscHeight = 1;
+
   public AnimationCurve radiusDistribution;
 
   [Header("Planets")]
   public bool simulatePlanets = true;
   public int planetSubframes = 10;
+
   [MinValue(0)]
+  [DevValue]
   public float gravConstant = 0.0001f;
+
   [MinValue(0)]
+  [DevValue("Black Hole Velocity")]
   public float planetVelocity = 0.1f;
+
   [Range(0, 180)]
+  [DevValue("Black Hole Velocity Tolerance")]
   public float maxAngleAwayFromCenter = 90;
+
+  [Range(0, 4)]
+  [DevValue]
   public float planetSpawnRadius = 0.5f;
 
   [Header("References")]
@@ -93,6 +124,11 @@ public class BasicPointParticles : MonoBehaviour {
     simulateMat.SetMatrixArray("_PlanetRotations", planetRotations);
 
     simulateMat.SetInt("_PlanetCount", planets.Length);
+
+    displayMat.SetFloat("_Size", size);
+    displayMat.SetFloat("_Bright", brightness);
+    quadMat.SetFloat("_Size", size);
+    quadMat.SetFloat("_Bright", brightness);
   }
 
   private void initGalaxies() {
@@ -210,10 +246,6 @@ public class BasicPointParticles : MonoBehaviour {
 
   public void SetBright(float per) {
     displayMat.SetFloat("_Bright", per.Map(0, 1, 0, 0.01f));
-  }
-
-  void OnGUI() {
-    GUILayout.Label(":::::::::::::::::::::::::::::::::::::   " + Mathf.RoundToInt(1.0f / Time.smoothDeltaTime));
   }
 
   //bool hasDoneIt = false;

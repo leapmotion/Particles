@@ -34,7 +34,6 @@ public class BasicPointParticles : DevBehaviour {
   //#####################
   [Header("Star Settings")]
 
-  [Header("Stars")]
   public bool simulateStars = true;
 
   [Range(0, 0.05f)]
@@ -129,7 +128,7 @@ public class BasicPointParticles : DevBehaviour {
   private Vector4[] blackHoleVelocities = new Vector4[32];
   private Matrix4x4[] blackHoleRotations = new Matrix4x4[32];
 
-  private void Start() {
+  private IEnumerator Start() {
     prevPos.Create();
     currPos.Create();
     nextPos.Create();
@@ -142,6 +141,9 @@ public class BasicPointParticles : DevBehaviour {
       FindObjectOfType<Renderer>().material.color = Color.red;
     }
 
+    initGalaxies();
+    yield return null;
+    yield return null;
     initGalaxies();
   }
 

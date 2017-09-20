@@ -832,8 +832,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   render: 1
   useQuads: 1
-  loop: 1
-  loopTime: 73
+  loop: 0
+  loopTime: 400
   timestep: 1
   simulateStars: 1
   starSize: 0.009

@@ -181,7 +181,7 @@ public class BasicPointParticles : DevBehaviour {
     blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
     simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
 
-    simulateMat.SetInt("_PlanetCount", blackHoleCount);
+    simulateMat.SetInt("_PlanetCount", blackHoles.Count);
 
     displayMat.SetFloat("_Size", starSize);
     displayMat.SetFloat("_Bright", starBrightness);
@@ -198,6 +198,8 @@ public class BasicPointParticles : DevBehaviour {
   [DevButton("Reset Sim")]
   private void initGalaxies() {
     _prevTimestep = timestep;
+
+    blackHoles.Clear();
 
     Random.InitState(seed);
     for (int i = 0; i < blackHoleCount; i++) {
@@ -266,7 +268,7 @@ public class BasicPointParticles : DevBehaviour {
     if (timestep > 0.05f) {
       if (simulateBlackHoles) {
         float planetDT = 1.0f / blackHoleSubFrames;
-        for (int i = 0; i < blackHoleSubFrames; i++) {
+        for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
 
           for (int j = 0; j < blackHoles.Count; j++) {
             BlackHole blackHole = blackHoles[j];
@@ -285,12 +287,33 @@ public class BasicPointParticles : DevBehaviour {
             blackHoles[j] = blackHole;
           }
 
-          for (int j = 0; j < blackHoleCount; j++) {
+          for (int j = 0; j < blackHoles.Count; j++) {
             BlackHole blackHole = blackHoles[j];
             blackHole.position += blackHole.velocity * planetDT * timestep;
 
             if (renderBlackHoles) {
               Graphics.DrawMesh(blackHoleMesh, Matrix4x4.TRS(blackHole.position, Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
+            }
+
+            blackHoles[j] = blackHole;
+          }
+
+          for (int j = 0; j < blackHoles.Count; j++) {
+            BlackHole blackHole = blackHoles[j];
+
+            for (int k = j + 1; k < blackHoles.Count; k++) {
+              BlackHole other = blackHoles[k];
+
+              float distToOther = Vector3.Distance(other.position, blackHole.position);
+              if (distToOther < blackHoleCombineDistance) {
+                blackHoles.RemoveAtUnordered(k);
+
+                blackHole.position = (blackHole.position * blackHole.mass + other.position * other.mass) / (blackHole.mass + other.mass);
+                blackHole.velocity = (blackHole.velocity * blackHole.mass + other.velocity * other.mass) / (blackHole.mass + other.mass);
+                blackHole.mass += other.mass;
+
+                k--;
+              }
             }
 
             blackHoles[j] = blackHole;

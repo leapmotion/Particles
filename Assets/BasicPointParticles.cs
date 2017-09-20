@@ -61,6 +61,13 @@ public class BasicPointParticles : DevBehaviour {
   public bool simulatePlanets = true;
   public int planetSubframes = 10;
 
+  public GameObject blackHolePrefab;
+
+  [DevCategory("Black Holes")]
+  [DevValue("Count")]
+  [Range(1, 10)]
+  public int blackHoleCount = 3;
+
   [DevCategory("Black Holes")]
   [MinValue(0)]
   [DevValue]
@@ -91,8 +98,7 @@ public class BasicPointParticles : DevBehaviour {
   public Material simulateMat;
   public Material gammaBlit;
 
-  public Transform[] planets;
-
+  private Transform[] planets;
   private Vector4[] planetPositions;
   private Vector3[] planetVelocities;
   private Matrix4x4[] planetRotations;
@@ -106,9 +112,7 @@ public class BasicPointParticles : DevBehaviour {
     currPos.DiscardContents();
     nextPos.DiscardContents();
 
-    planetPositions = new Vector4[planets.Length];
-    planetRotations = new Matrix4x4[planets.Length];
-    planetVelocities = new Vector3[planets.Length];
+
 
     if (!displayMat.shader.isSupported) {
       FindObjectOfType<Renderer>().material.color = Color.red;
@@ -147,6 +151,22 @@ public class BasicPointParticles : DevBehaviour {
   }
 
   private void initGalaxies() {
+    if (planets != null) {
+      foreach (var planet in planets) {
+        DestroyImmediate(planet.gameObject);
+      }
+    }
+
+    planets = new Transform[blackHoleCount];
+    planetPositions = new Vector4[blackHoleCount];
+    planetRotations = new Matrix4x4[blackHoleCount];
+    planetVelocities = new Vector3[blackHoleCount];
+    planets.Fill(() => {
+      var obj = Instantiate(blackHolePrefab);
+      obj.SetActive(true);
+      return obj.transform;
+    });
+
     Random.InitState(seed);
     for (int i = 0; i < planets.Length; i++) {
       planets[i].position = Random.onUnitSphere * planetSpawnRadius;

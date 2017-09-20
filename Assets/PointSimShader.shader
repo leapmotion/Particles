@@ -3,7 +3,6 @@
 		_MainTex ("Texture", 2D) = "white" {}
     _Noise   ("Noise", 2D) = "white" {}
     _Force   ("Force", Float) = 0.01
-    _Timestep("Timestep", Float) = 1
 	}
 
   CGINCLUDE
@@ -16,6 +15,8 @@
   sampler2D_float _RadiusDistribution;
 
   float _Force;
+
+  float _PrevTimestep;
   float _Timestep;
 
   float4x4 _PlanetRotations[10];
@@ -61,7 +62,7 @@
       accel += normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
     }
 
-    return float4(currPos.xyz * 2 - prevPos.xyz + accel * _Timestep * _Timestep * _Force, 1);
+    return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, 1);
   }
 
   fragOut initDisc(v2f i) {

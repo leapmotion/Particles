@@ -833,15 +833,15 @@ MonoBehaviour:
   render: 1
   useQuads: 1
   loop: 1
-  loopTime: 500
-  size: 0.005
-  brightness: 0.1
-  starGravConstant: 0.00001
+  loopTime: 73
+  timestep: 1
   simulateStars: 1
-  frameSkip: 1
-  minDiscRadius: 0.1
-  maxDiscRadius: 1
-  maxDiscHeight: 0.01
+  starSize: 0.009
+  starBrightness: 0.048
+  starGravConstant: 0.00001
+  minDiscRadius: 0.0096
+  maxDiscRadius: 0.618
+  maxDiscHeight: 0.053
   radiusDistribution:
     serializedVersion: 2
     m_Curve:
@@ -866,14 +866,16 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  simulatePlanets: 1
-  planetSubframes: 50
-  blackHolePrefab: {fileID: 117918837}
+  simulateBlackHoles: 1
+  blackHoleSubFrames: 10
+  blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  blackHoleMaterial: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  renderBlackHoles: 1
   blackHoleCount: 10
   gravConstant: 0.00005
-  planetVelocity: 0.01
-  initialDirVariance: 0
-  planetSpawnRadius: 2
+  blackHoleVelocity: 0.004
+  initialDirVariance: 0.4154
+  blackHoleSpawnRadius: 3.806
   prevPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
   currPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
   nextPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}

@@ -82,6 +82,11 @@ public class BasicPointParticles : DevBehaviour {
 
   public Material blackHoleMaterial;
 
+  [Range(0, 1)]
+  [DevCategory("Black Holes")]
+  [DevValue]
+  public float blackHoleMassVariance = 0;
+
   [DevCategory("Black Holes")]
   [DevValue("Draw")]
   public bool renderBlackHoles = true;
@@ -209,7 +214,7 @@ public class BasicPointParticles : DevBehaviour {
         position = position,
         rotation = Random.rotationUniform,
         velocity = Vector3.Slerp(Vector3.zero - position, Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity,
-        mass = 1
+        mass = Random.Range(1 - blackHoleMassVariance, 1 + blackHoleMassVariance)
       });
     }
 

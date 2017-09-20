@@ -22,26 +22,35 @@ public class BasicPointParticles : DevBehaviour {
 
   [Header("Settings")]
 
+  [DevCategory("Stars")]
   [DevValue("Particle Size")]
   [Range(0, 0.05f)]
   public float size = 0.05f;
 
+  [DevCategory("Stars")]
   [DevValue]
   [Range(0, 1)]
   public float brightness = 0.1f;
+
+  [DevCategory("Stars")]
+  [DevValue("Grav Constant")]
+  public float starGravConstant = 5e-05f;
 
   [Header("Stars")]
   public bool simulateStars = true;
   public int frameSkip = 1;
 
+  [DevCategory("Stars")]
   [DevValue]
   [Range(0, 2)]
   public float minDiscRadius = 0.01f;
 
+  [DevCategory("Stars")]
   [DevValue]
   [Range(0, 2)]
   public float maxDiscRadius = 1;
 
+  [DevCategory("Stars")]
   [DevValue]
   [Range(0, 0.5f)]
   public float maxDiscHeight = 1;
@@ -52,19 +61,23 @@ public class BasicPointParticles : DevBehaviour {
   public bool simulatePlanets = true;
   public int planetSubframes = 10;
 
+  [DevCategory("Black Holes")]
   [MinValue(0)]
   [DevValue]
   public float gravConstant = 0.0001f;
 
   [MinValue(0)]
-  [DevValue("Black Hole Velocity")]
+  [DevCategory("Black Holes")]
+  [DevValue("Start Velocity")]
   public float planetVelocity = 0.1f;
 
-  [Range(0, 180)]
-  [DevValue("Black Hole Velocity Tolerance")]
-  public float maxAngleAwayFromCenter = 90;
+  [Range(0, 1)]
+  [DevCategory("Black Holes")]
+  [DevValue("Initial Direction Variance")]
+  public float initialDirVariance = 0;
 
   [Range(0, 4)]
+  [DevCategory("Black Holes")]
   [DevValue]
   public float planetSpawnRadius = 0.5f;
 
@@ -129,6 +142,8 @@ public class BasicPointParticles : DevBehaviour {
     displayMat.SetFloat("_Bright", brightness);
     quadMat.SetFloat("_Size", size);
     quadMat.SetFloat("_Bright", brightness);
+
+    simulateMat.SetFloat("_Force", starGravConstant);
   }
 
   private void initGalaxies() {
@@ -136,18 +151,7 @@ public class BasicPointParticles : DevBehaviour {
     for (int i = 0; i < planets.Length; i++) {
       planets[i].position = Random.onUnitSphere * planetSpawnRadius;
       planets[i].rotation = Random.rotationUniform;
-
-      Vector3 vel;
-      int tries = 0;
-      do {
-        vel = Random.onUnitSphere * planetVelocity;
-        tries++;
-        if (tries > 1000) {
-          Debug.LogWarning("Tried too much");
-          break;
-        }
-      } while (Vector3.Angle(vel, Vector3.zero - planets[i].position) > maxAngleAwayFromCenter);
-      planetVelocities[i] = vel;
+      planetVelocities[i] = Vector3.Slerp(Vector3.zero - planets[i].position, Random.onUnitSphere, initialDirVariance).normalized * planetVelocity;
     }
 
     Texture2D tex = new Texture2D(512, 1, TextureFormat.RFloat, mipmap: false, linear: true);

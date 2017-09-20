@@ -18,6 +18,8 @@ public class BasicPointParticles : DevBehaviour {
   [DevValue]
   public bool useQuads = true;
 
+  public KeyCode resetKeycode = KeyCode.Space;
+
   [DevValue]
   public bool loop = false;
 
@@ -176,6 +178,7 @@ public class BasicPointParticles : DevBehaviour {
     _prevTimestep = timestep;
   }
 
+  [DevButton("Reset Sim")]
   private void initGalaxies() {
     _prevTimestep = timestep;
 
@@ -223,6 +226,10 @@ public class BasicPointParticles : DevBehaviour {
   int seed = 0;
 
   private void Update() {
+    if (Input.GetKeyDown(resetKeycode)) {
+      initGalaxies();
+    }
+
     if (loop && Time.frameCount % loopTime == 0) {
       initGalaxies();
       quadMat.mainTexture = currPos;

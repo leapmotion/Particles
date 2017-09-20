@@ -84,8 +84,18 @@ public class BasicPointParticles : DevBehaviour {
 
   [Range(0, 1)]
   [DevCategory("Black Holes")]
-  [DevValue]
+  [DevValue("Mass Variance")]
   public float blackHoleMassVariance = 0;
+
+  [Range(0, 1)]
+  [DevCategory("Black Holes")]
+  [DevValue("Mass Affects Radius")]
+  public float blackHoleMassAffectsRadius = 1;
+
+  [Range(0, 1)]
+  [DevCategory("Black Holes")]
+  [DevValue("Mass Affects Density")]
+  public float blackHoleMassAffectsDensity = 1;
 
   [DevCategory("Black Holes")]
   [DevValue("Draw")]

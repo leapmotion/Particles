@@ -111,6 +111,11 @@ public class BasicPointParticles : DevBehaviour {
   [DevValue]
   public float blackHoleSpawnRadius = 0.5f;
 
+  [Range(0, 0.1f)]
+  [DevCategory("Black Holes")]
+  [DevValue]
+  public float blackHoleCombineDistance = 0.05f;
+
   //##################
   //### References ###
   //##################
@@ -126,9 +131,17 @@ public class BasicPointParticles : DevBehaviour {
 
   private float _prevTimestep = -1000;
 
-  private Vector4[] blackHolePositions = new Vector4[32];
-  private Vector4[] blackHoleVelocities = new Vector4[32];
-  private Matrix4x4[] blackHoleRotations = new Matrix4x4[32];
+  private struct BlackHole {
+    public Vector3 position;
+    public Vector3 velocity;
+    public Quaternion rotation;
+    public float mass;
+  }
+
+  private List<BlackHole> blackHoles = new List<BlackHole>();
+
+  private Vector4[] _vectorArray = new Vector4[32];
+  private Matrix4x4[] _matrixArray = new Matrix4x4[32];
 
   private IEnumerator Start() {
     prevPos.Create();
@@ -162,8 +175,12 @@ public class BasicPointParticles : DevBehaviour {
     simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
     simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
 
-    simulateMat.SetVectorArray("_Planets", blackHolePositions);
-    simulateMat.SetMatrixArray("_PlanetRotations", blackHoleRotations);
+    blackHoles.Query().Select(t => (Vector4)t.position).FillArray(_vectorArray);
+    simulateMat.SetVectorArray("_Planets", _vectorArray);
+
+    blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
+    simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
+
     simulateMat.SetInt("_PlanetCount", blackHoleCount);
 
     displayMat.SetFloat("_Size", starSize);
@@ -184,9 +201,14 @@ public class BasicPointParticles : DevBehaviour {
 
     Random.InitState(seed);
     for (int i = 0; i < blackHoleCount; i++) {
-      blackHolePositions[i] = Random.onUnitSphere * blackHoleSpawnRadius;
-      blackHoleRotations[i] = Matrix4x4.Rotate(Random.rotationUniform);
-      blackHoleVelocities[i] = Vector3.Slerp(Vector3.zero - (Vector3)blackHolePositions[i], Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity;
+      Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
+
+      blackHoles.Add(new BlackHole() {
+        position = position,
+        rotation = Random.rotationUniform,
+        velocity = Vector3.Slerp(Vector3.zero - position, Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity,
+        mass = 1
+      });
     }
 
     Texture2D tex = new Texture2D(512, 1, TextureFormat.RFloat, mipmap: false, linear: true);
@@ -200,7 +222,8 @@ public class BasicPointParticles : DevBehaviour {
 
     updateShaderConstants();
 
-    simulateMat.SetVectorArray("_PlanetVelocities", blackHoleVelocities.Query().Select(t => (Vector4)t).ToArray());
+    blackHoles.Query().Select(t => (Vector4)t.velocity).FillArray(_vectorArray);
+    simulateMat.SetVectorArray("_PlanetVelocities", _vectorArray);
 
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
@@ -244,23 +267,33 @@ public class BasicPointParticles : DevBehaviour {
       if (simulateBlackHoles) {
         float planetDT = 1.0f / blackHoleSubFrames;
         for (int i = 0; i < blackHoleSubFrames; i++) {
-          for (int j = 0; j < blackHoleCount; j++) {
-            for (int k = 0; k < blackHoleCount; k++) {
+
+          for (int j = 0; j < blackHoles.Count; j++) {
+            BlackHole blackHole = blackHoles[j];
+
+            for (int k = 0; k < blackHoles.Count; k++) {
               if (j == k) continue;
 
-              Vector3 toOther = blackHolePositions[k] - blackHolePositions[j];
+              BlackHole other = blackHoles[k];
+
+              Vector3 toOther = other.position - blackHole.position;
               float dist = toOther.magnitude;
               Vector3 force = gravConstant * (toOther / dist) / (dist * dist);
-              blackHoleVelocities[j] += (Vector4)force * planetDT * timestep;
+              blackHole.velocity += force * planetDT * timestep;
             }
+
+            blackHoles[j] = blackHole;
           }
 
           for (int j = 0; j < blackHoleCount; j++) {
-            blackHolePositions[j] += blackHoleVelocities[j] * planetDT * timestep;
+            BlackHole blackHole = blackHoles[j];
+            blackHole.position += blackHole.velocity * planetDT * timestep;
 
             if (renderBlackHoles) {
-              Graphics.DrawMesh(blackHoleMesh, Matrix4x4.TRS(blackHolePositions[j], Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
+              Graphics.DrawMesh(blackHoleMesh, Matrix4x4.TRS(blackHole.position, Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
             }
+
+            blackHoles[j] = blackHole;
           }
         }
       }

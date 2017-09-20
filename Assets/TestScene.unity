@@ -831,12 +831,12 @@ MonoBehaviour:
   render: 1
   useQuads: 1
   loop: 1
-  loopTime: 1
+  loopTime: 500
   quads: 1
   size: 0.005
   simulateStars: 1
   frameSkip: 1
-  minDiscRadius: 0.05
+  minDiscRadius: 0.1
   maxDiscRadius: 1
   maxDiscHeight: 0.01
   radiusDistribution:
@@ -864,14 +864,14 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 0
   simulatePlanets: 1
-  planetSubframes: 10
-  gravConstant: 0.00001
+  planetSubframes: 50
+  gravConstant: 0.00005
   planetVelocity: 0.01
-  maxAngleAwayFromCenter: 30
-  planetSpawnRadius: 0.5
-  prevPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
-  currPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
-  nextPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
+  maxAngleAwayFromCenter: 12
+  planetSpawnRadius: 2
+  prevPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
+  currPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
+  nextPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
   displayMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
   quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
@@ -910,7 +910,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.18382353, g: 0.18382353, b: 0.18382353, a: 0}
   m_NormalizedViewPortRect:
     serializedVersion: 2
     x: 0
@@ -929,7 +929,7 @@ Camera:
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
-  m_TargetEye: 0
+  m_TargetEye: 3
   m_HDR: 1
   m_AllowMSAA: 0
   m_ForceIntoRT: 0
@@ -1055,7 +1055,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1883624478}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb8f8839ee256bb458e1657c1ee40572, type: 3}
   m_Name: 

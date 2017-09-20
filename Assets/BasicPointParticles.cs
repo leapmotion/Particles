@@ -96,6 +96,24 @@ public class BasicPointParticles : MonoBehaviour {
   }
 
   private void initGalaxies() {
+    Random.InitState(seed);
+    for (int i = 0; i < planets.Length; i++) {
+      planets[i].position = Random.onUnitSphere * planetSpawnRadius;
+      planets[i].rotation = Random.rotationUniform;
+
+      Vector3 vel;
+      int tries = 0;
+      do {
+        vel = Random.onUnitSphere * planetVelocity;
+        tries++;
+        if (tries > 1000) {
+          Debug.LogWarning("Tried too much");
+          break;
+        }
+      } while (Vector3.Angle(vel, Vector3.zero - planets[i].position) > maxAngleAwayFromCenter);
+      planetVelocities[i] = vel;
+    }
+
     Texture2D tex = new Texture2D(512, 1, TextureFormat.RFloat, mipmap: false, linear: true);
     for (int i = 0; i < tex.width; i++) {
       tex.SetPixel(i, 0, new Color(radiusDistribution.Evaluate(i / 512.0f), 0, 0, 0));
@@ -128,24 +146,6 @@ public class BasicPointParticles : MonoBehaviour {
     GL.TexCoord2(0, 1);
     GL.Vertex3(0, 1, 0);
     GL.End();
-
-    Random.InitState(seed);
-    for (int i = 0; i < planets.Length; i++) {
-      planets[i].position = Random.onUnitSphere * planetSpawnRadius;
-      planets[i].rotation = Random.rotationUniform;
-
-      Vector3 vel;
-      int tries = 0;
-      do {
-        vel = Random.onUnitSphere * planetVelocity;
-        tries++;
-        if (tries > 1000) {
-          Debug.LogWarning("Tried too much");
-          break;
-        }
-      } while (Vector3.Angle(vel, Vector3.zero - planets[i].position) > maxAngleAwayFromCenter);
-      planetVelocities[i] = vel;
-    }
   }
 
   int seed = 0;

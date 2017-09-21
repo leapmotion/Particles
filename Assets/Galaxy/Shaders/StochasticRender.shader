@@ -24,6 +24,7 @@
         float4 color : COLOR;
 			};
 			
+      sampler2D _Noise;
       sampler2D _MainTex;
 
       float _Scale;
@@ -39,18 +40,19 @@
         uv.w = 0;
 
         float4 position = tex2Dlod(_MainTex, uv);
-        float4 worldPosition = mul(unity_ObjectToWorld, position) * _Scale;
+        float4 worldPosition = mul(unity_ObjectToWorld, position);
+        worldPosition.xyz *= _Scale;
 
         uint id2 = (id + _NoiseOffset) % (32 * 32);
         uv.x = (id2 / 32) / 32.0;
         uv.y = (id2 % 32) / 32.0;
         uv.z = 0;
         uv.w = 0;
-        worldPosition += tex2Dlod(_MainTex, uv) * _Size;
+        worldPosition.xyz += tex2Dlod(_Noise, uv) * _Size;
 
         float distToCamera = length(_WorldSpaceCameraPos - worldPosition);
 
-        float screenSpaceWidth = 2000 * _Bright * _Size / distToCamera;
+        float screenSpaceWidth = 20 * _Bright / distToCamera;
         float brightness = screenSpaceWidth * screenSpaceWidth;
 
 				v2f o;

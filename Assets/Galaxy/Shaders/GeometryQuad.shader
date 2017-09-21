@@ -47,8 +47,8 @@
 
       v2g vert(uint id : SV_VertexID) {
         float4 uv;
-        uv.x = (id / 1024) / 1024.0;
-        uv.y = (id % 1024) / 1024.0;
+        uv.x = (id / 512) / 512.0;
+        uv.y = (id % 512) / 512.0;
         uv.z = 0;
         uv.w = 0;
 

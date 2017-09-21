@@ -380,9 +380,6 @@ public class BasicPointParticles : DevBehaviour {
         simulateMat.SetTexture("_CurrPositions", currPos);
       }
     }
-
-    quadMat.mainTexture = currPos;
-    displayMat.mainTexture = currPos;
   }
 
   public void SetSize(float per) {
@@ -432,14 +429,15 @@ public class BasicPointParticles : DevBehaviour {
         break;
       case RenderType.Stochastic:
         mat = stochasticMat;
-        stochasticMat.SetInt("_NoiseOffset", Time.frameCount);
+        stochasticMat.SetInt("_NoiseOffset", (Time.frameCount % (32 * 32)));
         break;
     }
 
-    displayMat.SetFloat("_Scale", scale);
-    displayMat.SetFloat("_Size", starSize);
-    displayMat.SetFloat("_Bright", starBrightness);
-    displayMat.SetPass(0);
+    mat.mainTexture = currPos;
+    mat.SetFloat("_Scale", scale);
+    mat.SetFloat("_Size", starSize);
+    mat.SetFloat("_Bright", starBrightness);
+    mat.SetPass(0);
 
     Graphics.DrawProcedural(MeshTopology.Points, prevPos.width * prevPos.height);
   }

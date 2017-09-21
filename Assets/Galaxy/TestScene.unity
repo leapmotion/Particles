@@ -831,7 +831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   render: 1
-  useQuads: 1
+  renderType: 1
   resetKeycode: 32
   loop: 0
   loopTime: 10
@@ -889,6 +889,7 @@ MonoBehaviour:
   quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
   gammaBlit: {fileID: 2100000, guid: d685a257c7ff2d947856690bf1c4db79, type: 2}
+  stochasticMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
 --- !u!81 &1697903794
 AudioListener:
   m_ObjectHideFlags: 0

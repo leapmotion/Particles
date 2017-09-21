@@ -122,17 +122,17 @@ public class BasicPointParticles : DevBehaviour {
 
   [Range(0, 1)]
   [DevCategory("Black Holes")]
-  [DevValue("Initial Direction Variance")]
+  [DevValue("Direction Variance")]
   public float initialDirVariance = 0;
 
   [Range(0, 4)]
   [DevCategory("Black Holes")]
-  [DevValue]
+  [DevValue("Spawn Radius")]
   public float blackHoleSpawnRadius = 0.5f;
 
   [Range(0, 0.1f)]
   [DevCategory("Black Holes")]
-  [DevValue]
+  [DevValue("Combine Dist")]
   public float blackHoleCombineDistance = 0.05f;
 
   //##################

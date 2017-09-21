@@ -838,7 +838,7 @@ MonoBehaviour:
   timestep: 1
   scale: 1
   simulateStars: 1
-  starSize: 0.009
+  starSize: 0.0099
   starBrightness: 0.048
   starGravConstant: 0.00001
   minDiscRadius: 0.0096

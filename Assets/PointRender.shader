@@ -38,6 +38,7 @@ Shader "Unlit/PointDisplayShader"{
       sampler2D _Velocity;
       half _Size;
       half _Bright;
+      float _Scale;
 
       v2f vert(uint id : SV_VertexID) {
         float4 uv;
@@ -51,7 +52,7 @@ Shader "Unlit/PointDisplayShader"{
         float4 position = tex2Dlod(_MainTex, uv);
         float4 velocity = tex2Dlod(_Velocity, uv);
 
-        float4 worldPos = mul(unity_ObjectToWorld, position);
+        float4 worldPos = mul(unity_ObjectToWorld, position) * _Scale;
         float distToCamera = length(_WorldSpaceCameraPos - worldPos);
 
         v2f o;

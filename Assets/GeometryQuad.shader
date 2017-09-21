@@ -43,6 +43,7 @@
       sampler2D _Particle;
       half _Size;
       half _Bright;
+      float _Scale;
 
       v2g vert(uint id : SV_VertexID) {
         float4 uv;
@@ -52,7 +53,7 @@
         uv.w = 0;
 
         float4 position = tex2Dlod(_MainTex, uv);
-        float3 worldPos = mul(unity_ObjectToWorld, position);
+        float3 worldPos = mul(unity_ObjectToWorld, position) * _Scale;
 
         v2g o;
         o.toCam = normalize(_WorldSpaceCameraPos - worldPos);
@@ -67,8 +68,8 @@
         float3 toCam = input[0].toCam.xyz;
         float3 up = float3(0, 1, 0);
 
-        float4 quadRight = float4(normalize(cross(toCam, up)) * _Size, 0);
-        float4 quadUp = float4(normalize(cross(toCam, quadRight)) * _Size, 0);
+        float4 quadRight = float4(normalize(cross(toCam, up)) * _Size * _Scale, 0);
+        float4 quadUp = float4(normalize(cross(toCam, quadRight)) * _Size * _Scale, 0);
 
         o.pos = mul(UNITY_MATRIX_VP, input[0].pos + quadRight - quadUp);
         o.uv = float4(1, 0, 0, 0);

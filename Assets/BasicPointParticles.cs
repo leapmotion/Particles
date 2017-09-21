@@ -31,6 +31,10 @@ public class BasicPointParticles : DevBehaviour {
   [DevValue]
   public float timestep = 1;
 
+  [Range(0.05f, 2f)]
+  [DevValue]
+  public float scale = 1;
+
   //#####################
   //### Star Settings ###
   //#####################
@@ -212,6 +216,7 @@ public class BasicPointParticles : DevBehaviour {
 
     simulateMat.SetFloat("_Timestep", timestep);
     simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
+
     _prevTimestep = timestep;
   }
 
@@ -320,7 +325,7 @@ public class BasicPointParticles : DevBehaviour {
             blackHole.position += blackHole.velocity * planetDT * timestep;
 
             if (renderBlackHoles) {
-              Graphics.DrawMesh(blackHoleMesh, Matrix4x4.TRS(blackHole.position, Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
+              Graphics.DrawMesh(blackHoleMesh, Matrix4x4.Scale(Vector3.one * scale) * Matrix4x4.TRS(blackHole.position, Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
             }
 
             blackHoles[j] = blackHole;
@@ -406,8 +411,10 @@ public class BasicPointParticles : DevBehaviour {
 
   private void drawStars(Camera camera) {
     if (useQuads) {
+      quadMat.SetFloat("_Scale", scale);
       quadMat.SetPass(0);
     } else {
+      displayMat.SetFloat("_Scale", scale);
       displayMat.SetPass(0);
     }
 

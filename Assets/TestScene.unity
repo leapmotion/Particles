@@ -832,9 +832,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   render: 1
   useQuads: 1
+  resetKeycode: 32
   loop: 0
   loopTime: 400
-  timestep: 1
+  timestep: 0
   simulateStars: 1
   starSize: 0.009
   starBrightness: 0.048
@@ -870,12 +871,16 @@ MonoBehaviour:
   blackHoleSubFrames: 10
   blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   blackHoleMaterial: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  blackHoleMassVariance: 0.75
+  blackHoleMassAffectsSize: 1
+  blackHoleMassAffectsDensity: 1
   renderBlackHoles: 1
   blackHoleCount: 10
   gravConstant: 0.00005
   blackHoleVelocity: 0.004
   initialDirVariance: 0.4154
   blackHoleSpawnRadius: 3.806
+  blackHoleCombineDistance: 0.05
   prevPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
   currPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
   nextPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}

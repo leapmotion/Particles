@@ -22,7 +22,12 @@
   float4x4 _PlanetRotations[10];
   float4 _Planets[10];
   float4 _PlanetVelocities[10];
+
+  float _PlanetSizes[10];
+  float _PlanetDensities[10];
+
   uint _PlanetCount;
+  float _TotalDensity;
 
   float _MinDiscRadius;
   float _MaxDiscRadius;
@@ -59,7 +64,7 @@
     for (uint j = 0; j < _PlanetCount; j++) {
       float4 target = _Planets[j];
       float3 toTarget = target.xyz - currPos.xyz;
-      accel += normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
+      accel += target.w * normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
     }
 
     return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, 1);
@@ -69,10 +74,17 @@
     float4 rand = tex2D(_Noise, i.uv);
     float4 rand2 = tex2D(_Noise, i.uv + float2(0.5, 0.5)) * 2 - 1;
 
-    uint index = (uint)(rand.x * _PlanetCount);
-    if (index == _PlanetCount) {
-      index = 0;
+    float randomDensity = rand.x * _TotalDensity;
+    uint index = 0;
+    for (uint i = 0; i < _PlanetCount; i++) {
+      randomDensity -= _PlanetDensities[i];
+      if (randomDensity <= 0) {
+        index = i;
+        break;
+      }
     }
+
+    float planetSize = _PlanetSizes[index];
 
     float4 planetPos = _Planets[index];
     float4x4 planetRot = _PlanetRotations[index];
@@ -90,10 +102,10 @@
     float vy = -dy * 0.5;
     float vz = -cos(discAngle);
 
-    float3 discPos = float3(dx, dy, dz);
-    float3 discVel = float3(vx, vy, vz); //TODO: correct constant
+    float3 discPos = float3(dx, dy, dz) * planetSize;
+    float3 discVel = float3(vx, vy, vz);
 
-    float velocityMul = sqrt(_Force / length(discPos));
+    float velocityMul = sqrt(planetPos.w * _Force / length(discPos));
     discVel = normalize(discVel) * velocityMul;
 
     discPos = mul(planetRot, float4(discPos, 1));

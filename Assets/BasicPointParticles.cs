@@ -90,7 +90,7 @@ public class BasicPointParticles : DevBehaviour {
   [Range(0, 1)]
   [DevCategory("Black Holes")]
   [DevValue("Mass Affects Radius")]
-  public float blackHoleMassAffectsRadius = 1;
+  public float blackHoleMassAffectsSize = 1;
 
   [Range(0, 1)]
   [DevCategory("Black Holes")]
@@ -155,6 +155,7 @@ public class BasicPointParticles : DevBehaviour {
 
   private List<BlackHole> blackHoles = new List<BlackHole>();
 
+  private float[] _floatArray = new float[32];
   private Vector4[] _vectorArray = new Vector4[32];
   private Matrix4x4[] _matrixArray = new Matrix4x4[32];
 
@@ -190,7 +191,11 @@ public class BasicPointParticles : DevBehaviour {
     simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
     simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
 
-    blackHoles.Query().Select(t => (Vector4)t.position).FillArray(_vectorArray);
+    blackHoles.Query().Select(t => {
+      Vector4 planet = t.position;
+      planet.w = t.mass;
+      return planet;
+    }).FillArray(_vectorArray);
     simulateMat.SetVectorArray("_Planets", _vectorArray);
 
     blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
@@ -241,6 +246,14 @@ public class BasicPointParticles : DevBehaviour {
 
     blackHoles.Query().Select(t => (Vector4)t.velocity).FillArray(_vectorArray);
     simulateMat.SetVectorArray("_PlanetVelocities", _vectorArray);
+
+    _floatArray.Fill(0);
+    blackHoles.Query().Select(t => Mathf.Lerp(1, t.mass, blackHoleMassAffectsDensity)).FillArray(_floatArray);
+    simulateMat.SetFloatArray("_PlanetDensities", _floatArray);
+    simulateMat.SetFloat("_TotalDensity", _floatArray.Query().Fold((a, b) => a + b));
+
+    blackHoles.Query().Select(t => Mathf.Lerp(1, t.mass, blackHoleMassAffectsSize)).FillArray(_floatArray);
+    simulateMat.SetFloatArray("_PlanetSizes", _floatArray);
 
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
@@ -296,7 +309,7 @@ public class BasicPointParticles : DevBehaviour {
               Vector3 toOther = other.position - blackHole.position;
               float dist = toOther.magnitude;
               Vector3 force = gravConstant * (toOther / dist) / (dist * dist);
-              blackHole.velocity += force * planetDT * timestep;
+              blackHole.velocity += blackHole.mass * other.mass * force * planetDT * timestep;
             }
 
             blackHoles[j] = blackHole;

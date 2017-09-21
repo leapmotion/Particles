@@ -834,8 +834,9 @@ MonoBehaviour:
   useQuads: 1
   resetKeycode: 32
   loop: 0
-  loopTime: 400
-  timestep: 0
+  loopTime: 10
+  timestep: 1
+  scale: 1
   simulateStars: 1
   starSize: 0.009
   starBrightness: 0.048

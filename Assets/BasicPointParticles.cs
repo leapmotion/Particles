@@ -24,9 +24,9 @@ public class BasicPointParticles : DevBehaviour {
   [DevValue]
   public bool loop = false;
 
-  [Range(1, 1000)]
+  [Range(0, 10)]
   [DevValue]
-  public int loopTime = 10;
+  public float loopTime = 10;
 
   [Range(0, 2)]
   [DevValue]
@@ -150,6 +150,7 @@ public class BasicPointParticles : DevBehaviour {
   public Material gammaBlit;
 
   private float _prevTimestep = -1000;
+  private float _simulationTime = 0;
 
   private struct BlackHole {
     public Vector3 position;
@@ -226,6 +227,7 @@ public class BasicPointParticles : DevBehaviour {
   [DevButton("Reset Sim")]
   private void initGalaxies() {
     _prevTimestep = timestep;
+    _simulationTime = 0;
 
     blackHoles.Clear();
 
@@ -291,7 +293,7 @@ public class BasicPointParticles : DevBehaviour {
       initGalaxies();
     }
 
-    if (loop && Time.frameCount % loopTime == 0) {
+    if (loop && _simulationTime > loopTime) {
       initGalaxies();
       quadMat.mainTexture = currPos;
       displayMat.mainTexture = currPos;
@@ -302,6 +304,8 @@ public class BasicPointParticles : DevBehaviour {
     seed = Random.Range(int.MinValue, int.MaxValue);
 
     if (timestep > TIME_FREEZE_THRESHOLD) {
+      _simulationTime += timestep * Time.deltaTime;
+
       if (simulateBlackHoles) {
         float planetDT = 1.0f / blackHoleSubFrames;
         for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {

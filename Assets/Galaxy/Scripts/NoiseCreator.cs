@@ -12,7 +12,8 @@ public class NoiseCreator : MonoBehaviour {
     Texture2D tex = new Texture2D(resolution, resolution, format, mipmap: false, linear: true);
     for (int i = 0; i < resolution; i++) {
       for (int j = 0; j < resolution; j++) {
-        tex.SetPixel(i, j, new Color(Random.value, Random.value, Random.value, Random.value));
+        Vector3 v = Random.onUnitSphere;
+        tex.SetPixel(i, j, new Color(v.x, v.y, v.z, 1));
       }
     }
     tex.Apply();

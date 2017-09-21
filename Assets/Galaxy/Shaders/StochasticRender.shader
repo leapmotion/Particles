@@ -40,9 +40,9 @@
         float4 position = tex2Dlod(_MainTex, uv);
         float4 worldPosition = mul(unity_ObjectToWorld, position) * _Scale;
 
-        id += _NoiseOffset;
-        uv.x = (id / 512) / 512.0;
-        uv.y = (id % 512) / 512.0;
+        uint id2 = (id + _NoiseOffset) % (32 * 32);
+        uv.x = (id / 32) / 32.0;
+        uv.y = (id % 32) / 32.0;
         uv.z = 0;
         uv.w = 0;
         worldPosition += tex2Dlod(_MainTex, uv) * _Size;

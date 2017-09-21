@@ -17,7 +17,7 @@ public class BasicPointParticles : DevBehaviour {
   public bool render = true;
 
   [DevValue]
-  public bool useQuads = true;
+  public RenderType renderType = RenderType.Quad;
 
   public KeyCode resetKeycode = KeyCode.Space;
 
@@ -148,9 +148,16 @@ public class BasicPointParticles : DevBehaviour {
   public Material quadMat;
   public Material simulateMat;
   public Material gammaBlit;
+  public Material stochasticMat;
 
   private float _prevTimestep = -1000;
   private float _simulationTime = 0;
+
+  public enum RenderType {
+    Point,
+    Quad,
+    Stochastic
+  }
 
   private struct BlackHole {
     public Vector3 position;
@@ -173,6 +180,8 @@ public class BasicPointParticles : DevBehaviour {
     prevPos.DiscardContents();
     currPos.DiscardContents();
     nextPos.DiscardContents();
+
+    stochasticMat.SetTexture("_Noise", UnitNoise.Create(32, TextureFormat.RGBAHalf));
 
     if (!displayMat.shader.isSupported) {
       FindObjectOfType<Renderer>().material.color = Color.red;
@@ -208,11 +217,6 @@ public class BasicPointParticles : DevBehaviour {
     simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
 
     simulateMat.SetInt("_PlanetCount", blackHoles.Count);
-
-    displayMat.SetFloat("_Size", starSize);
-    displayMat.SetFloat("_Bright", starBrightness);
-    quadMat.SetFloat("_Size", starSize);
-    quadMat.SetFloat("_Bright", starBrightness);
 
     simulateMat.SetFloat("_Force", starGravConstant);
 
@@ -417,13 +421,25 @@ public class BasicPointParticles : DevBehaviour {
   //}
 
   private void drawStars(Camera camera) {
-    if (useQuads) {
-      quadMat.SetFloat("_Scale", scale);
-      quadMat.SetPass(0);
-    } else {
-      displayMat.SetFloat("_Scale", scale);
-      displayMat.SetPass(0);
+    Material mat = null;
+
+    switch (renderType) {
+      case RenderType.Point:
+        mat = displayMat;
+        break;
+      case RenderType.Quad:
+        mat = quadMat;
+        break;
+      case RenderType.Stochastic:
+        mat = stochasticMat;
+        stochasticMat.SetInt("_NoiseOffset", Time.frameCount);
+        break;
     }
+
+    displayMat.SetFloat("_Scale", scale);
+    displayMat.SetFloat("_Size", starSize);
+    displayMat.SetFloat("_Bright", starBrightness);
+    displayMat.SetPass(0);
 
     Graphics.DrawProcedural(MeshTopology.Points, prevPos.width * prevPos.height);
   }

@@ -101,11 +101,13 @@ namespace Leap.Unity.DevGui {
           if (int.TryParse(_currString, out parsedResult)) {
             curr = parsedResult;
 
-            curr = min.Match(min => Mathf.Min(min, curr),
-                             () => curr);
+            if (!min.hasValue || !max.hasValue) {
+              curr = min.Match(min => Mathf.Min(min, curr),
+                               () => curr);
 
-            curr = max.Match(max => Mathf.Max(max, curr),
-                             () => curr);
+              curr = max.Match(max => Mathf.Max(max, curr),
+                               () => curr);
+            }
           }
         } else {
           _currString = curr.ToString();
@@ -166,11 +168,13 @@ namespace Leap.Unity.DevGui {
           if (float.TryParse(_currString, out parsedResult)) {
             curr = parsedResult;
 
-            curr = min.Match(min => Mathf.Max(min, curr),
+            if (!min.hasValue || !max.hasValue) {
+              curr = min.Match(min => Mathf.Max(min, curr),
                  () => curr);
 
-            curr = max.Match(max => Mathf.Min(max, curr),
-                             () => curr);
+              curr = max.Match(max => Mathf.Min(max, curr),
+                               () => curr);
+            }
           }
         } else {
           _currString = curr.ToString();

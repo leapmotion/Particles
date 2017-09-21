@@ -177,7 +177,7 @@ namespace Leap.Unity.DevGui {
             }
           }
         } else {
-          _currString = curr.ToString();
+          _currString = curr.ToString("0.#########");
         }
       }
 

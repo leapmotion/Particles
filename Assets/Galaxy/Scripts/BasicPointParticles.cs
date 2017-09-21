@@ -156,7 +156,7 @@ public class BasicPointParticles : DevBehaviour {
   public enum RenderType {
     Point,
     Quad,
-    Stochastic
+    PointBright
   }
 
   private struct BlackHole {
@@ -194,11 +194,11 @@ public class BasicPointParticles : DevBehaviour {
   }
 
   private void OnEnable() {
-    Camera.onPostRender += drawStars;
+    Camera.onPostRender += DrawStars;
   }
 
   private void OnDisable() {
-    Camera.onPostRender -= drawStars;
+    Camera.onPostRender -= DrawStars;
   }
 
   private void updateShaderConstants() {
@@ -417,7 +417,9 @@ public class BasicPointParticles : DevBehaviour {
   //  buffer.ReleaseTemporaryRT(123);
   //}
 
-  private void drawStars(Camera camera) {
+  public void DrawStars(Camera camera) {
+    if (camera == Camera.main) return;
+
     Material mat = null;
 
     switch (renderType) {
@@ -427,7 +429,7 @@ public class BasicPointParticles : DevBehaviour {
       case RenderType.Quad:
         mat = quadMat;
         break;
-      case RenderType.Stochastic:
+      case RenderType.PointBright:
         mat = stochasticMat;
         stochasticMat.SetInt("_NoiseOffset", (Time.frameCount % (32 * 32)));
         break;

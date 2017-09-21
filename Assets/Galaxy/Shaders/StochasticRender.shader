@@ -43,17 +43,17 @@
         float4 worldPosition = mul(unity_ObjectToWorld, position);
         worldPosition.xyz *= _Scale;
 
-        uint id2 = (id + _NoiseOffset) % (32 * 32);
-        uv.x = (id2 / 32) / 32.0;
-        uv.y = (id2 % 32) / 32.0;
-        uv.z = 0;
-        uv.w = 0;
-        worldPosition.xyz += tex2Dlod(_Noise, uv) * _Size;
+        //uint id2 = (id + _NoiseOffset) % (32 * 32);
+        //uv.x = (id2 / 32) / 32.0;
+        //uv.y = (id2 % 32) / 32.0;
+        //uv.z = 0;
+        //uv.w = 0;
+        //worldPosition.xyz += tex2Dlod(_Noise, uv) * _Size;
 
         float distToCamera = length(_WorldSpaceCameraPos - worldPosition);
 
-        float screenSpaceWidth = 20 * _Bright / distToCamera;
-        float brightness = screenSpaceWidth * screenSpaceWidth;
+        float screenSpaceWidth = _Scale * _Size * 400 / distToCamera;
+        float brightness = _Bright * screenSpaceWidth * screenSpaceWidth;
 
 				v2f o;
         o.vertex = mul(UNITY_MATRIX_VP, worldPosition); 

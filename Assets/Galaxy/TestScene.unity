@@ -831,9 +831,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   render: 1
-  renderType: 1
+  renderType: 2
   resetKeycode: 32
-  loop: 0
+  loop: 1
   loopTime: 10
   timestep: 1
   scale: 1

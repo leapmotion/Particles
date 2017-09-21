@@ -7,6 +7,7 @@ using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 
 public class BasicPointParticles : DevBehaviour {
+  public const float TIME_FREEZE_THRESHOLD = 0.05f;
 
   //#######################
   //## General Settings ###
@@ -214,10 +215,12 @@ public class BasicPointParticles : DevBehaviour {
 
     simulateMat.SetFloat("_Force", starGravConstant);
 
-    simulateMat.SetFloat("_Timestep", timestep);
-    simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
+    if (timestep > TIME_FREEZE_THRESHOLD) {
+      simulateMat.SetFloat("_Timestep", timestep);
+      simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
 
-    _prevTimestep = timestep;
+      _prevTimestep = timestep;
+    }
   }
 
   [DevButton("Reset Sim")]
@@ -298,7 +301,7 @@ public class BasicPointParticles : DevBehaviour {
     Random.InitState(Time.frameCount);
     seed = Random.Range(int.MinValue, int.MaxValue);
 
-    if (timestep > 0.05f) {
+    if (timestep > TIME_FREEZE_THRESHOLD) {
       if (simulateBlackHoles) {
         float planetDT = 1.0f / blackHoleSubFrames;
         for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {

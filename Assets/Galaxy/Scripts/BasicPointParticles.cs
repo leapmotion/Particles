@@ -152,6 +152,7 @@ public class BasicPointParticles : MonoBehaviour {
 
   private float _prevTimestep = -1000;
   private float _simulationTime = 0;
+  private int _seed = 0;
 
   public enum RenderType {
     Point,
@@ -172,70 +173,14 @@ public class BasicPointParticles : MonoBehaviour {
   private Vector4[] _vectorArray = new Vector4[32];
   private Matrix4x4[] _matrixArray = new Matrix4x4[32];
 
-  private IEnumerator Start() {
-    prevPos.Create();
-    currPos.Create();
-    nextPos.Create();
-
-    prevPos.DiscardContents();
-    currPos.DiscardContents();
-    nextPos.DiscardContents();
-
-    stochasticMat.SetTexture("_Noise", UnitNoise.Create(32, TextureFormat.RGBAHalf));
-
-    if (!displayMat.shader.isSupported) {
-      FindObjectOfType<Renderer>().material.color = Color.red;
-    }
-
-    initGalaxies();
-    yield return null;
-    yield return null;
-    initGalaxies();
-  }
-
-  private void OnEnable() {
-    Camera.onPostRender += DrawStars;
-  }
-
-  private void OnDisable() {
-    Camera.onPostRender -= DrawStars;
-  }
-
-  private void updateShaderConstants() {
-    simulateMat.SetFloat("_MinDiscRadius", minDiscRadius);
-    simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
-    simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
-
-    blackHoles.Query().Select(t => {
-      Vector4 planet = t.position;
-      planet.w = t.mass;
-      return planet;
-    }).FillArray(_vectorArray);
-    simulateMat.SetVectorArray("_Planets", _vectorArray);
-
-    blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
-    simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
-
-    simulateMat.SetInt("_PlanetCount", blackHoles.Count);
-
-    simulateMat.SetFloat("_Force", starGravConstant);
-
-    if (timestep > TIME_FREEZE_THRESHOLD) {
-      simulateMat.SetFloat("_Timestep", timestep);
-      simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
-
-      _prevTimestep = timestep;
-    }
-  }
-
   [DevButton("Reset Sim")]
-  private void initGalaxies() {
+  public void ResetSimulation() {
     _prevTimestep = timestep;
     _simulationTime = 0;
 
     blackHoles.Clear();
 
-    Random.InitState(seed);
+    Random.InitState(_seed);
     for (int i = 0; i < blackHoleCount; i++) {
       Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
 
@@ -290,22 +235,76 @@ public class BasicPointParticles : MonoBehaviour {
     GL.End();
   }
 
-  int seed = 0;
+  private IEnumerator Start() {
+    prevPos.Create();
+    currPos.Create();
+    nextPos.Create();
+
+    prevPos.DiscardContents();
+    currPos.DiscardContents();
+    nextPos.DiscardContents();
+
+    stochasticMat.SetTexture("_Noise", UnitNoise.Create(32, TextureFormat.RGBAHalf));
+
+    if (!displayMat.shader.isSupported) {
+      FindObjectOfType<Renderer>().material.color = Color.red;
+    }
+
+    ResetSimulation();
+    yield return null;
+    yield return null;
+    ResetSimulation();
+  }
+
+  private void OnEnable() {
+    Camera.onPostRender += DrawStars;
+  }
+
+  private void OnDisable() {
+    Camera.onPostRender -= DrawStars;
+  }
+
+  private void updateShaderConstants() {
+    simulateMat.SetFloat("_MinDiscRadius", minDiscRadius);
+    simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
+    simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
+
+    blackHoles.Query().Select(t => {
+      Vector4 planet = t.position;
+      planet.w = t.mass;
+      return planet;
+    }).FillArray(_vectorArray);
+    simulateMat.SetVectorArray("_Planets", _vectorArray);
+
+    blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
+    simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
+
+    simulateMat.SetInt("_PlanetCount", blackHoles.Count);
+
+    simulateMat.SetFloat("_Force", starGravConstant);
+
+    if (timestep > TIME_FREEZE_THRESHOLD) {
+      simulateMat.SetFloat("_Timestep", timestep);
+      simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
+
+      _prevTimestep = timestep;
+    }
+  }
 
   private void Update() {
     if (Input.GetKeyDown(resetKeycode)) {
-      initGalaxies();
+      ResetSimulation();
     }
 
     if (loop && _simulationTime > loopTime) {
-      initGalaxies();
+      ResetSimulation();
       quadMat.mainTexture = currPos;
       displayMat.mainTexture = currPos;
       return;
     }
 
     Random.InitState(Time.frameCount);
-    seed = Random.Range(int.MinValue, int.MaxValue);
+    _seed = Random.Range(int.MinValue, int.MaxValue);
 
     if (timestep > TIME_FREEZE_THRESHOLD) {
       _simulationTime += timestep * Time.deltaTime;

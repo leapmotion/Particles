@@ -8,7 +8,7 @@ public class ExpandEffect : MonoBehaviour {
   public bool doit;
 
   private void OnRenderImage(RenderTexture source, RenderTexture destination) {
-    FindObjectOfType<BasicPointParticles>().DrawStars(null);
+    FindObjectOfType<GalaxySimulation>().DrawStars(null);
 
     if (doit) {
       Graphics.Blit(source, destination, expandMat);

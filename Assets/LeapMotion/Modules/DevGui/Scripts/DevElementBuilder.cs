@@ -23,9 +23,10 @@ namespace Leap.Unity.DevGui {
                              () => type.Name);
 
         elements = new List<DevElement>();
-        buildElementsFromMembers(category, type.GetMethods(), elements);
-        buildElementsFromMembers(category, type.GetFields(), elements);
-        buildElementsFromMembers(category, type.GetProperties(), elements);
+        var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        buildElementsFromMembers(category, type.GetMethods(flags), elements);
+        buildElementsFromMembers(category, type.GetFields(flags), elements);
+        buildElementsFromMembers(category, type.GetProperties(flags), elements);
 
         _typeToElements[type] = elements;
       }

@@ -510,47 +510,47 @@ public class TextureSimulator : MonoBehaviour {
   //##################//
   [Header("Debug")]
   [SerializeField]
-  private Renderer _positionDebug;
+  protected Renderer _positionDebug;
 
   [SerializeField]
-  private Renderer _velocityDebug;
+  protected Renderer _velocityDebug;
 
   [SerializeField]
-  private Renderer _socialDebug;
+  protected Renderer _socialDebug;
 
   [SerializeField]
-  private Renderer _layoutDebug;
+  protected Renderer _layoutDebug;
 
   [SerializeField]
-  private Renderer _shaderDataDebug;
+  protected Renderer _shaderDataDebug;
 
   [SerializeField]
-  private bool _drawHandColliders = true;
+  protected bool _drawHandColliders = true;
   public void SetDrawHandColliders(bool shouldDraw) {
     _drawHandColliders = shouldDraw;
   }
 
   [SerializeField]
-  private Color _handColliderColor = Color.black;
+  protected Color _handColliderColor = Color.black;
 
   [SerializeField]
-  private bool _showIsPointing = false;
+  protected bool _showIsPointing = false;
 
   [SerializeField]
-  private bool _enableSpeciesDebugColors = false;
+  protected bool _enableSpeciesDebugColors = false;
 
   [Range(0, MAX_SPECIES - 1)]
   [SerializeField]
-  private int _debugSpeciesNumber = 0;
+  protected int _debugSpeciesNumber = 0;
 
   [SerializeField]
-  private ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;
+  protected ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;
 
   [SerializeField]
-  private int _shaderDebugData0;
+  protected int _shaderDebugData0;
 
   [SerializeField]
-  private int _shaderDebugData1;
+  protected int _shaderDebugData1;
   #endregion
 
   //General

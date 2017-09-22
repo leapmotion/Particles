@@ -12,6 +12,7 @@ public class UserTestController : MonoBehaviour {
 
   public SimulationManager simManager;
   public TextureSimulator texSimulator;
+  public GameObject buttonAnchor;
 
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
@@ -43,6 +44,7 @@ public class UserTestController : MonoBehaviour {
                                 ToList();
 
     simManager.OnEcosystemMidTransition += onSimulationTransitionMid;
+    simManager.OnEcosystemEndedTransition += onSimulationTransitionEnded;
   }
 
   void Update() {
@@ -134,6 +136,8 @@ public class UserTestController : MonoBehaviour {
     texSimulator.handInfluenceEnabled = _currLoadData.graspingEnabled;
 
     StartCoroutine(loadAudioCoroutine());
+
+    buttonAnchor.SetActive(_currLoadData.transitionBehavior < 0);
   }
 
   private IEnumerator loadAudioCoroutine() {
@@ -195,6 +199,12 @@ public class UserTestController : MonoBehaviour {
     }
   }
 
+  private void onSimulationTransitionEnded() {
+    if (_currLoadData.autoTransitionTime > 0) {
+      Tween.AfterDelay(_currLoadData.autoTransitionTime, OnNext);
+    }
+  }
+
   public class LoadData {
     public ResetBehavior transitionBehavior = ResetBehavior.FadeInOut;
     public ColorMode colorMode = ColorMode.BySpecies;
@@ -205,6 +215,7 @@ public class UserTestController : MonoBehaviour {
     public bool graspingEnabled = true;
     public bool collisionEnabled = true;
     public int meshDetail = 1;
+    public float autoTransitionTime = -1;
   }
 
 }

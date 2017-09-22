@@ -20,7 +20,7 @@ namespace Leap.Unity.DevGui {
                        Cast<DevCategoryAttribute>().
                        FirstOrNone().
                        Match(a => a.category,
-                             () => "");
+                             () => type.Name);
 
         elements = new List<DevElement>();
         buildElementsFromMembers(category, type.GetMethods(), elements);

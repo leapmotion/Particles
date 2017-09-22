@@ -113,9 +113,9 @@ public class UserTestController : MonoBehaviour {
     string currEcosystemPath = _ecosystemPaths[_currEcosystem];
     string ecosystemName = Path.GetFileNameWithoutExtension(currEcosystemPath);
     _scriptPaths = Directory.GetFiles(textFolder.Path).
-                             Where(p => p.Contains(ecosystemName)).
+                             Where(p => Path.GetFileNameWithoutExtension(p).Contains(ecosystemName)).
                              Where(p => p.EndsWith(".txt")).
-                             OrderBy(p => p.Replace(ecosystemName, "")).
+                             OrderBy(p => Path.GetFileNameWithoutExtension(p).Replace(ecosystemName, "")).
                              ToList();
   }
 
@@ -137,7 +137,7 @@ public class UserTestController : MonoBehaviour {
 
     StartCoroutine(loadAudioCoroutine());
 
-    buttonAnchor.SetActive(_currLoadData.transitionBehavior < 0);
+    buttonAnchor.SetActive(_currLoadData.autoTransitionTime < 0);
   }
 
   private IEnumerator loadAudioCoroutine() {

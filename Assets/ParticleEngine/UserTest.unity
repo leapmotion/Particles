@@ -3304,6 +3304,26 @@ Prefab:
       propertyPath: _resetParticlePositionsKey
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 114966711495576560, guid: 81683c81ff946cc47bac1de596cb0bbd,
+        type: 2}
+      propertyPath: _loadNextEcosystem
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114966711495576560, guid: 81683c81ff946cc47bac1de596cb0bbd,
+        type: 2}
+      propertyPath: _loadPrevEcosystem
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114966711495576560, guid: 81683c81ff946cc47bac1de596cb0bbd,
+        type: 2}
+      propertyPath: _zoomOutKey
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114966711495576560, guid: 81683c81ff946cc47bac1de596cb0bbd,
+        type: 2}
+      propertyPath: _zoomInKey
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 81683c81ff946cc47bac1de596cb0bbd, type: 2}
   m_IsPrefabParent: 0

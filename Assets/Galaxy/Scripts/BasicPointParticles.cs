@@ -6,7 +6,7 @@ using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 
-public class BasicPointParticles : DevBehaviour {
+public class BasicPointParticles : MonoBehaviour {
   public const float TIME_FREEZE_THRESHOLD = 0.05f;
 
   //#######################

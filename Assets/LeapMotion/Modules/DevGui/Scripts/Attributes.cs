@@ -6,15 +6,17 @@ namespace Leap.Unity.DevGui {
   using Attributes;
   using Query;
 
-  public interface IFieldDev {
+  public interface IDevAttribute { }
+
+  public interface IFieldDev : IDevAttribute {
     DevElement TryBuildDevElement(FieldInfo info);
   }
 
-  public interface IPropertyDev {
+  public interface IPropertyDev : IDevAttribute {
     DevElement TryBuildDevElement(PropertyInfo info);
   }
 
-  public interface IMethodDev {
+  public interface IMethodDev : IDevAttribute {
     DevElement TryBuildDevElement(MethodInfo info);
   }
 

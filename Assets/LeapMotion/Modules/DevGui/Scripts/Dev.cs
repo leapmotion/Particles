@@ -36,54 +36,42 @@ namespace Leap.Unity.DevGui {
     }
 
     private static Dev _devInstance;
+
+    [RuntimeInitializeOnLoadMethod]
     private static void ensureInstanceExists() {
       if (_devInstance == null) {
-        _devInstance = new GameObject("__Dev").AddComponent<Dev>();
-        DontDestroyOnLoad(_devInstance.gameObject);
+        _devInstance = FindObjectOfType<Dev>();
+        if (_devInstance == null) {
+          _devInstance = new GameObject("__Dev").AddComponent<Dev>();
+          DontDestroyOnLoad(_devInstance.gameObject);
+        }
       }
     }
 
-    /// <summary>
-    /// Register an object with the Dev.  Its dev elements are automatically
-    /// created based on attributes added to its class.
-    /// </summary>
-    public static void Register(object obj) {
-      ensureInstanceExists();
+    private static void onOpenGui() {
+      var isTypeSpecial = new Dictionary<Type, bool>();
+      _registered.Clear();
 
-      if (_registered.ContainsKey(obj)) {
-        throw new InvalidOperationException("Cannot register " + obj + " because it is already registered!");
+      var objs = FindObjectsOfType<MonoBehaviour>();
+      foreach (var obj in objs) {
+        var type = obj.GetType();
+
+        bool isSpecial;
+        if (!isTypeSpecial.TryGetValue(type, out isSpecial)) {
+          isSpecial = type.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0 ||
+                      type.GetFields().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0) ||
+                      type.GetProperties().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0) ||
+                      type.GetMethods().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0);
+
+          isTypeSpecial[type] = isSpecial;
+        }
+
+        if (!isSpecial) {
+          continue;
+        }
+
+        _registered.Add(obj, getElementsForObj(obj));
       }
-
-      Register(obj, getElementsForObj(obj));
-    }
-
-    /// <summary>
-    /// Register an object with the Dev.  Its dev elements are specified
-    /// manually by the caller.
-    /// </summary>
-    public static void Register(object obj, List<DevElement> elements) {
-      ensureInstanceExists();
-
-      if (_registered.ContainsKey(obj)) {
-        throw new InvalidOperationException("Cannot register " + obj + " because it is already registered!");
-      }
-
-      _registered.Add(obj, elements.Query().Select(t => t.Clone()).ToList());
-
-      rebuildCategoryMap();
-    }
-
-    /// <summary>
-    /// Unregisters an object from the Dev.
-    /// </summary>
-    public static void Unregister(object obj) {
-      ensureInstanceExists();
-
-      if (!_registered.ContainsKey(obj)) {
-        throw new InvalidOperationException("Cannot unregister " + obj + " because it is not registered!");
-      }
-
-      _registered.Remove(obj);
 
       rebuildCategoryMap();
     }
@@ -229,6 +217,9 @@ namespace Leap.Unity.DevGui {
     private void Update() {
       if (Input.GetKeyDown(KeyCode.F12)) {
         _enabled = !_enabled;
+        if (_enabled) {
+          onOpenGui();
+        }
       }
     }
 

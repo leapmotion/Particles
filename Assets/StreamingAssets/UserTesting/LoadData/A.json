@@ -1,10 +1,10 @@
 {
     "transitionBehavior": 3,
     "colorMode": 0,
-    "simulationScale": 5.0,
+    "simulationScale": 1.0,
     "timeScale": 1.0,
-    "backgroundMusic": "",
+    "backgroundMusic": "MusicA.ogg",
 	"graspingEnabled": true,
     "collisionEnabled": true,
-	"simMethod": 1
+	"autoTransitionTime": 5
 }

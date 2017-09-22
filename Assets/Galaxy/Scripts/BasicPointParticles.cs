@@ -418,8 +418,6 @@ public class BasicPointParticles : MonoBehaviour {
   //}
 
   public void DrawStars(Camera camera) {
-    if (camera == Camera.main) return;
-
     Material mat = null;
 
     switch (renderType) {

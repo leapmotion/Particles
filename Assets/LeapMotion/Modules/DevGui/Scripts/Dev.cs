@@ -49,28 +49,14 @@ namespace Leap.Unity.DevGui {
     }
 
     private static void onOpenGui() {
-      var isTypeSpecial = new Dictionary<Type, bool>();
       _registered.Clear();
 
       var objs = FindObjectsOfType<MonoBehaviour>();
       foreach (var obj in objs) {
-        var type = obj.GetType();
-
-        bool isSpecial;
-        if (!isTypeSpecial.TryGetValue(type, out isSpecial)) {
-          isSpecial = type.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0 ||
-                      type.GetFields().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0) ||
-                      type.GetProperties().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0) ||
-                      type.GetMethods().Query().Any(t => t.GetCustomAttributes(typeof(IDevAttribute), inherit: true).Length > 0);
-
-          isTypeSpecial[type] = isSpecial;
+        List<DevElement> elements;
+        if (DevElementBuilder.TryBuildElements(obj, out elements)) {
+          _registered.Add(obj, elements);
         }
-
-        if (!isSpecial) {
-          continue;
-        }
-
-        _registered.Add(obj, getElementsForObj(obj));
       }
 
       rebuildCategoryMap();
@@ -96,8 +82,7 @@ namespace Leap.Unity.DevGui {
         var objs = pair.Value.Key;
         var elements = pair.Value.Value;
 
-        //First add all of the elements that can be grouped
-        foreach (var element in elements.Query().Where(e => e.shouldBeGrouped)) {
+        foreach (var element in elements) {
           CategoryInfo categoryInfo = _categories.Query().FirstOrDefault(t => t.name == element.category);
           if (categoryInfo == null) {
             categoryInfo = new CategoryInfo(element.category);
@@ -109,109 +94,9 @@ namespace Leap.Unity.DevGui {
             element = element.Clone()
           });
         }
-
-        //Then add all of the elements that should not be grouped
-        foreach (var obj in objs) {
-          foreach (var element in elements.Query().Where(e => !e.shouldBeGrouped)) {
-            CategoryInfo categoryInfo = _categories.Query().FirstOrDefault(t => t.name == element.category);
-            if (categoryInfo == null) {
-              categoryInfo = new CategoryInfo(element.category);
-              _categories.Add(categoryInfo);
-            }
-
-            categoryInfo.elementInfo.Add(new DevElementInfo() {
-              targets = new List<object>() {
-                obj
-              },
-              element = element.Clone()
-            });
-          }
-        }
       }
 
       _categories.Sort((a, b) => a.name.CompareTo(b.name));
-    }
-
-    private static List<DevElement> getElementsForObj(object obj) {
-      var elements = new List<DevElement>();
-
-      var classAttributes = obj.GetType().GetCustomAttributes(inherit: true);
-      string masterCategory = classAttributes.Query().
-                                              OfType<DevCategoryAttribute>().
-                                              FirstOrNone().
-                                              Match(cat => cat.category,
-                                                    () => obj.GetType().Name);
-
-      bool masterGroupSetting = classAttributes.Query().
-                                                OfType<DevGroupedAttribute>().
-                                                FirstOrNone().
-                                                Match(s => true,
-                                                      () => false);
-
-      foreach (var method in obj.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
-        string category = getCategoryForMember(masterCategory, method);
-        bool shouldBeGrouped = getShouldBeGrouped(masterGroupSetting, method);
-        foreach (var attribute in method.GetCustomAttributes(inherit: true)) {
-          if (attribute is IMethodDev) {
-            var element = (attribute as IMethodDev).TryBuildDevElement(method);
-            if (element != null) {
-              element.category = category;
-              element.shouldBeGrouped = shouldBeGrouped;
-              elements.Add(element);
-            }
-          }
-        }
-      }
-
-      foreach (var field in obj.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
-        string category = getCategoryForMember(masterCategory, field);
-        bool shouldBeGrouped = getShouldBeGrouped(masterGroupSetting, field);
-        foreach (var attribute in field.GetCustomAttributes(inherit: true)) {
-          if (attribute is IFieldDev) {
-            var element = (attribute as IFieldDev).TryBuildDevElement(field);
-            if (element != null) {
-              element.category = category;
-              element.shouldBeGrouped = shouldBeGrouped;
-              elements.Add(element);
-            }
-          }
-        }
-      }
-
-      foreach (var property in obj.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
-        string category = getCategoryForMember(masterCategory, property);
-        bool shouldBeGrouped = getShouldBeGrouped(masterGroupSetting, property);
-        foreach (var attribute in property.GetCustomAttributes(inherit: true)) {
-          if (attribute is IPropertyDev) {
-            var element = (attribute as IPropertyDev).TryBuildDevElement(property);
-            if (element != null) {
-              element.category = category;
-              element.shouldBeGrouped = shouldBeGrouped;
-              elements.Add(element);
-            }
-          }
-        }
-      }
-
-      return elements;
-    }
-
-    private static string getCategoryForMember(string masterCategory, MemberInfo info) {
-      return info.GetCustomAttributes(inherit: true).
-                  Query().
-                  OfType<DevCategoryAttribute>().
-                  FirstOrNone().
-                  Match(cat => cat.category,
-                        () => masterCategory);
-    }
-
-    private static bool getShouldBeGrouped(bool masterSetting, MemberInfo info) {
-      return info.GetCustomAttributes(inherit: true).
-                  Query().
-                  OfType<DevGroupedAttribute>().
-                  FirstOrNone().
-                  Match(g => true,
-                        () => false);
     }
 
     private void Update() {

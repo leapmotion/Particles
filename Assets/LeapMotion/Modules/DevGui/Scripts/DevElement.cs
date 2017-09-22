@@ -8,7 +8,6 @@ namespace Leap.Unity.DevGui {
     public string name;
     public string tooltip;
     public string category;
-    public bool shouldBeGrouped = false;
 
     public GUIContent guiContent {
       get {
@@ -24,7 +23,6 @@ namespace Leap.Unity.DevGui {
       clone.name = name;
       clone.tooltip = tooltip;
       clone.category = category;
-      clone.shouldBeGrouped = shouldBeGrouped;
       return clone;
     }
   }

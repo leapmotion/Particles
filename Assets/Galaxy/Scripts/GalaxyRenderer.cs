@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using Leap.Unity.DevGui;
+using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Camera))]
 public class GalaxyRenderer : MonoBehaviour {
@@ -20,45 +21,56 @@ public class GalaxyRenderer : MonoBehaviour {
 
   [Header("Star Rendering"), DevCategory]
   [Range(0.05f, 2f)]
+  [FormerlySerializedAs("scale")]
   [SerializeField, DevValue]
-  private float scale;
+  private float _scale;
 
   [Range(0, 0.05f)]
+  [FormerlySerializedAs("starSize")]
   [SerializeField, DevValue]
-  private float starSize;
+  private float _starSize;
 
   [Range(0, 1)]
+  [FormerlySerializedAs("starBrightness")]
   [SerializeField, DevValue]
-  private float starBrightness;
+  private float _starBrightness;
 
   [SerializeField, DevValue]
-  private RenderType renderType;
+  private RenderType _renderType;
 
   [SerializeField]
-  private Material pointMat;
+  private Material _pointMat;
 
   [SerializeField]
-  private Material quadMat;
+  private Material _quadMat;
 
   [SerializeField]
-  private Material lightMat;
+  private Material _lightMat;
+
+  [Header("Star Coloring"), DevCategory]
+  [SerializeField, DevValue]
+  private ColorMode _colorMode = ColorMode.Solid;
+
+  [SerializeField]
+  private Color _solidColor = Color.white;
 
   [Header("Post Processing"), DevCategory]
-  private Material postProcessMat;
+  [SerializeField, DevValue]
+  private PostProcessMode _postProcessMode;
+
+  [SerializeField]
+  private Material _postProcessMat;
 
   [SerializeField, DevValue]
-  private ColorMode colorMode = ColorMode.None;
-
-  [SerializeField, DevValue]
-  private bool enableBoxFilter = true;
-
-  [Range(0, 1)]
-  [SerializeField, DevValue]
-  private float adjacentFilter = 0.75f;
+  private bool _enableBoxFilter = true;
 
   [Range(0, 1)]
   [SerializeField, DevValue]
-  private float diagonalFilter = 0.5f;
+  private float _adjacentFilter = 0.75f;
+
+  [Range(0, 1)]
+  [SerializeField, DevValue]
+  private float _diagonalFilter = 0.5f;
 
   private Camera _myCamera;
   private Texture _position;
@@ -70,6 +82,10 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   public enum ColorMode {
+    Solid
+  }
+
+  public enum PostProcessMode {
     None
   }
 
@@ -88,7 +104,7 @@ public class GalaxyRenderer : MonoBehaviour {
 
   public void DrawBlackHole(Vector3 position) {
     if (_renderBlackHoles) {
-      Graphics.DrawMesh(_blackHoleMesh, Matrix4x4.Scale(Vector3.one * scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f), _blackHoleMat, 0);
+      Graphics.DrawMesh(_blackHoleMesh, Matrix4x4.Scale(Vector3.one * _scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f), _blackHoleMat, 0);
     }
   }
 
@@ -99,8 +115,8 @@ public class GalaxyRenderer : MonoBehaviour {
 
     drawStars();
 
-    postProcessMat.SetTexture("_Stars", tex);
-    Graphics.Blit(source, destination, postProcessMat);
+    _postProcessMat.SetTexture("_Stars", tex);
+    Graphics.Blit(source, destination, _postProcessMat);
 
     RenderTexture.ReleaseTemporary(tex);
   }
@@ -116,22 +132,22 @@ public class GalaxyRenderer : MonoBehaviour {
   private void drawStars() {
     Material mat = null;
 
-    switch (renderType) {
+    switch (_renderType) {
       case RenderType.Point:
-        mat = pointMat;
+        mat = _pointMat;
         break;
       case RenderType.Quad:
-        mat = quadMat;
+        mat = _quadMat;
         break;
       case RenderType.PointBright:
-        mat = lightMat;
+        mat = _lightMat;
         break;
     }
 
     mat.mainTexture = _position;
-    mat.SetFloat("_Scale", scale);
-    mat.SetFloat("_Size", starSize);
-    mat.SetFloat("_Bright", starBrightness);
+    mat.SetFloat("_Scale", _scale);
+    mat.SetFloat("_Size", _starSize);
+    mat.SetFloat("_Bright", _starBrightness);
     mat.SetPass(0);
 
     Graphics.DrawProcedural(MeshTopology.Points, _position.width * _position.height);

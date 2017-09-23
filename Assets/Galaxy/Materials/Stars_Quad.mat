@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: QuadDisplay
+  m_Name: Stars_Quad
   m_Shader: {fileID: 4800000, guid: f526870dd03955341b2ead0e2e411288, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4

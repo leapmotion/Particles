@@ -283,8 +283,6 @@ MonoBehaviour:
   timestep: 1
   galaxyRenderer: {fileID: 1697903793}
   simulateStars: 1
-  starSize: 0.0099
-  starBrightness: 0.048
   starGravConstant: 0.00001
   minDiscRadius: 0.0096
   maxDiscRadius: 0.618
@@ -374,17 +372,20 @@ MonoBehaviour:
   _renderBlackHoles: 1
   _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   _blackHoleMat: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
-  scale: 1
-  starSize: 0.0099
-  starBrightness: 0.048
-  renderType: 2
-  pointMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
-  quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
-  lightMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
-  colorMode: 0
-  enableBoxFilter: 1
-  adjacentFilter: 0.75
-  diagonalFilter: 0.5
+  _scale: 1
+  _starSize: 0.0099
+  _starBrightness: 0.048
+  _renderType: 2
+  _pointMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
+  _quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
+  _lightMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
+  _colorMode: 0
+  _solidColor: {r: 1, g: 1, b: 1, a: 1}
+  _postProcessMode: 0
+  _postProcessMat: {fileID: 2100000, guid: 2e0337d99c2de644195a8d4d2d6968ec, type: 2}
+  _enableBoxFilter: 1
+  _adjacentFilter: 0.75
+  _diagonalFilter: 0.5
 --- !u!81 &1697903794
 AudioListener:
   m_ObjectHideFlags: 0

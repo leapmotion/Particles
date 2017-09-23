@@ -277,13 +277,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 757e654341826684f9c3da5fde5f662a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  render: 1
-  renderType: 2
   resetKeycode: 32
   loop: 1
   loopTime: 10
   timestep: 1
-  scale: 1
+  galaxyRenderer: {fileID: 1697903793}
   simulateStars: 1
   starSize: 0.0099
   starBrightness: 0.048
@@ -317,12 +315,9 @@ MonoBehaviour:
     m_RotationOrder: 0
   simulateBlackHoles: 1
   blackHoleSubFrames: 10
-  blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  blackHoleMaterial: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   blackHoleMassVariance: 0.75
   blackHoleMassAffectsSize: 1
   blackHoleMassAffectsDensity: 1
-  renderBlackHoles: 1
   blackHoleCount: 10
   gravConstant: 0.00005
   blackHoleVelocity: 0.004
@@ -332,11 +327,7 @@ MonoBehaviour:
   prevPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
   currPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
   nextPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
-  displayMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
-  quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
   simulateMat: {fileID: 2100000, guid: 48377e56b3c8be043af18aef4ce8c687, type: 2}
-  gammaBlit: {fileID: 2100000, guid: d685a257c7ff2d947856690bf1c4db79, type: 2}
-  stochasticMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
 --- !u!4 &1245413932
 Transform:
   m_ObjectHideFlags: 0
@@ -361,6 +352,7 @@ GameObject:
   - component: {fileID: 1697903798}
   - component: {fileID: 1697903797}
   - component: {fileID: 1697903794}
+  - component: {fileID: 1697903793}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -368,6 +360,31 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1697903793
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1697903792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a64c23d3b646e454e94cbd3b3edb264a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _renderBlackHoles: 1
+  _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  _blackHoleMat: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  scale: 1
+  starSize: 0.0099
+  starBrightness: 0.048
+  renderType: 2
+  pointMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
+  quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
+  lightMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
+  colorMode: 0
+  enableBoxFilter: 1
+  adjacentFilter: 0.75
+  diagonalFilter: 0.5
 --- !u!81 &1697903794
 AudioListener:
   m_ObjectHideFlags: 0

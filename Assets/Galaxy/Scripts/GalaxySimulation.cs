@@ -13,12 +13,6 @@ public class GalaxySimulation : MonoBehaviour {
   //## General Settings ###
   //#######################
   [Header("General Settings")]
-
-  public bool render = true;
-
-  [DevValue]
-  public RenderType renderType = RenderType.Quad;
-
   public KeyCode resetKeycode = KeyCode.Space;
 
   [DevValue]
@@ -32,43 +26,26 @@ public class GalaxySimulation : MonoBehaviour {
   [DevValue]
   public float timestep = 1;
 
-  [Range(0.05f, 2f)]
-  [DevValue]
-  public float scale = 1;
+  public GalaxyRenderer galaxyRenderer;
 
   //#####################
   //### Star Settings ###
   //#####################
-  [Header("Star Settings")]
-
+  [Header("Stars"), DevCategory]
   public bool simulateStars = true;
 
-  [Range(0, 0.05f)]
-  [DevCategory("Stars")]
-  [DevValue("Particle Size")]
-  public float starSize = 0.05f;
-
-  [Range(0, 1)]
-  [DevCategory("Stars")]
-  [DevValue]
-  public float starBrightness = 0.1f;
-
-  [DevCategory("Stars")]
   [DevValue("Grav Constant")]
   public float starGravConstant = 5e-05f;
 
-  [DevCategory("Stars")]
   [DevValue]
   [Range(0, 2)]
   public float minDiscRadius = 0.01f;
 
   [Range(0, 2)]
-  [DevCategory("Stars")]
   [DevValue]
   public float maxDiscRadius = 1;
 
   [Range(0, 0.5f)]
-  [DevCategory("Stars")]
   [DevValue]
   public float maxDiscHeight = 1;
 
@@ -77,62 +54,44 @@ public class GalaxySimulation : MonoBehaviour {
   //###########################
   //### Black Hole Settings ###
   //###########################
-  [Header("Black Hole Settings")]
-
+  [Header("Black Holes"), DevCategory]
   public bool simulateBlackHoles = true;
 
   public int blackHoleSubFrames = 10;
 
-  public Mesh blackHoleMesh;
-
-  public Material blackHoleMaterial;
-
   [Range(0, 1)]
-  [DevCategory("Black Holes")]
   [DevValue("Mass Variance")]
   public float blackHoleMassVariance = 0;
 
   [Range(0, 1)]
-  [DevCategory("Black Holes")]
   [DevValue("Mass Affects Radius")]
   public float blackHoleMassAffectsSize = 1;
 
   [Range(0, 1)]
-  [DevCategory("Black Holes")]
   [DevValue("Mass Affects Density")]
   public float blackHoleMassAffectsDensity = 1;
 
-  [DevCategory("Black Holes")]
-  [DevValue("Draw")]
-  public bool renderBlackHoles = true;
-
   [Range(1, 10)]
-  [DevCategory("Black Holes")]
   [DevValue("Count")]
   public int blackHoleCount = 3;
 
   [MinValue(0)]
-  [DevCategory("Black Holes")]
   [DevValue]
   public float gravConstant = 0.0001f;
 
   [MinValue(0)]
-  [DevCategory("Black Holes")]
   [DevValue("Start Velocity")]
   public float blackHoleVelocity = 0.1f;
 
   [Range(0, 1)]
-  [DevCategory("Black Holes")]
   [DevValue("Direction Variance")]
   public float initialDirVariance = 0;
 
   [Range(0, 4)]
-  [DevCategory("Black Holes")]
   [DevValue("Spawn Radius")]
   public float blackHoleSpawnRadius = 0.5f;
 
   [Range(0, 0.1f)]
-  [DevCategory("Black Holes")]
   [DevValue("Combine Dist")]
   public float blackHoleCombineDistance = 0.05f;
 
@@ -144,21 +103,11 @@ public class GalaxySimulation : MonoBehaviour {
   public RenderTexture currPos;
   public RenderTexture nextPos;
 
-  public Material displayMat;
-  public Material quadMat;
   public Material simulateMat;
-  public Material gammaBlit;
-  public Material stochasticMat;
 
   private float _prevTimestep = -1000;
   private float _simulationTime = 0;
   private int _seed = 0;
-
-  public enum RenderType {
-    Point,
-    Quad,
-    PointBright
-  }
 
   private struct BlackHole {
     public Vector3 position;
@@ -244,24 +193,10 @@ public class GalaxySimulation : MonoBehaviour {
     currPos.DiscardContents();
     nextPos.DiscardContents();
 
-    stochasticMat.SetTexture("_Noise", UnitNoise.Create(32, TextureFormat.RGBAHalf));
-
-    if (!displayMat.shader.isSupported) {
-      FindObjectOfType<Renderer>().material.color = Color.red;
-    }
-
     ResetSimulation();
     yield return null;
     yield return null;
     ResetSimulation();
-  }
-
-  private void OnEnable() {
-    Camera.onPostRender += DrawStars;
-  }
-
-  private void OnDisable() {
-    Camera.onPostRender -= DrawStars;
   }
 
   private void updateShaderConstants() {
@@ -298,8 +233,6 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (loop && _simulationTime > loopTime) {
       ResetSimulation();
-      quadMat.mainTexture = currPos;
-      displayMat.mainTexture = currPos;
       return;
     }
 
@@ -334,9 +267,7 @@ public class GalaxySimulation : MonoBehaviour {
             BlackHole blackHole = blackHoles[j];
             blackHole.position += blackHole.velocity * planetDT * timestep;
 
-            if (renderBlackHoles) {
-              Graphics.DrawMesh(blackHoleMesh, Matrix4x4.Scale(Vector3.one * scale) * Matrix4x4.TRS(blackHole.position, Quaternion.identity, Vector3.one * 0.01f), blackHoleMaterial, 0);
-            }
+            galaxyRenderer.DrawBlackHole(blackHole.position);
 
             blackHoles[j] = blackHole;
           }
@@ -381,63 +312,7 @@ public class GalaxySimulation : MonoBehaviour {
     }
   }
 
-  public void SetSize(float per) {
-    displayMat.SetFloat("_Size", per.Map(0, 1, 0, 20));
-  }
-
-  public void SetBright(float per) {
-    displayMat.SetFloat("_Bright", per.Map(0, 1, 0, 0.01f));
-  }
-
-  //bool hasDoneIt = false;
-  //void OnRenderImage(Texture src, RenderTexture dst) {
-  //  if (!hasDoneIt) {
-  //    CommandBuffer buffer = new CommandBuffer();
-  //    dothisNow(buffer, src.width, src.height);
-  //    GetComponent<Camera>().AddCommandBuffer(CameraEvent.AfterForwardOpaque, buffer);
-  //    hasDoneIt = true;
-  //  }
-
-  //  Graphics.Blit(src, dst);
-  //}
-
-  //void dothisNow(CommandBuffer buffer, int width, int height) {
-  //  RenderTargetIdentifier id = new RenderTargetIdentifier(123);
-
-  //  buffer.GetTemporaryRT(123, width / 1, height / 1, 0, FilterMode.Bilinear, RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear, 8);
-
-  //  buffer.SetRenderTarget(id);
-  //  buffer.ClearRenderTarget(clearDepth: true, clearColor: true, backgroundColor: Color.black);
-
-  //  buffer.DrawProcedural(Matrix4x4.identity, displayMat, 0, MeshTopology.Points, prevPos.width * prevPos.height);
-
-  //  buffer.Blit(id, BuiltinRenderTextureType.CameraTarget, gammaBlit);
-
-  //  buffer.ReleaseTemporaryRT(123);
-  //}
-
-  public void DrawStars(Camera camera) {
-    Material mat = null;
-
-    switch (renderType) {
-      case RenderType.Point:
-        mat = displayMat;
-        break;
-      case RenderType.Quad:
-        mat = quadMat;
-        break;
-      case RenderType.PointBright:
-        mat = stochasticMat;
-        stochasticMat.SetInt("_NoiseOffset", (Time.frameCount % (32 * 32)));
-        break;
-    }
-
-    mat.mainTexture = currPos;
-    mat.SetFloat("_Scale", scale);
-    mat.SetFloat("_Size", starSize);
-    mat.SetFloat("_Bright", starBrightness);
-    mat.SetPass(0);
-
-    Graphics.DrawProcedural(MeshTopology.Points, prevPos.width * prevPos.height);
+  private void LateUpdate() {
+    galaxyRenderer.UpdatePositions(currPos);
   }
 }

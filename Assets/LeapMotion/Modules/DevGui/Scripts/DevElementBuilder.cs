@@ -19,7 +19,8 @@ namespace Leap.Unity.DevGui {
                        Query().
                        Cast<DevCategoryAttribute>().
                        FirstOrNone().
-                       Match(a => a.category,
+                       Match(a => a.category.Match(c => c,
+                                                   () => type.Name),
                              () => type.Name);
 
         elements = new List<DevElement>();
@@ -47,7 +48,13 @@ namespace Leap.Unity.DevGui {
                              Query().
                              Cast<DevCategoryAttribute>().
                              FirstOrNone().
-                             Match(a => a.category,
+                             Match(a => a.category.Match(c => c,
+                                                         () => info.GetCustomAttributes(typeof(HeaderAttribute), inherit: true).
+                                                                    Query().
+                                                                    Cast<HeaderAttribute>().
+                                                                    FirstOrNone().
+                                                                    Match(h => h.header,
+                                                                          () => overridingCategory)),
                                    () => overridingCategory);
 
         var attributes = info.GetCustomAttributes(typeof(DevAttributeBase), inherit: true);

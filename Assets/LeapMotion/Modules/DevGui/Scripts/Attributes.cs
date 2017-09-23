@@ -4,7 +4,11 @@ namespace Leap.Unity.DevGui {
 
   [AttributeUsage(AttributeTargets.Class | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
   public class DevCategoryAttribute : Attribute {
-    public string category;
+    public Maybe<string> category;
+
+    public DevCategoryAttribute() {
+      category = Maybe.None;
+    }
 
     public DevCategoryAttribute(string category) {
       this.category = category;

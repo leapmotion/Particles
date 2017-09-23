@@ -10,6 +10,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string BOX_FILTER_KEYWORD = "BOX_FILTER";
 
   private const string START_TEX_PROPERTY = "_Stars";
+  private const string GRADIENT_PROPERTY = "_Gradient";
+
+  private const string GAMMA_PROPERTY = "_Gamma";
   private const string ADJACENT_PROPERTY = "_AdjacentFilter";
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
@@ -56,7 +59,7 @@ public class GalaxyRenderer : MonoBehaviour {
   private ColorMode _colorMode = ColorMode.Solid;
 
   [SerializeField]
-  private Color _solidColor = Color.white;
+  private Color _starColor = Color.white;
 
   [Header("Post Processing"), DevCategory]
   [SerializeField, DevValue]
@@ -64,6 +67,13 @@ public class GalaxyRenderer : MonoBehaviour {
 
   [SerializeField]
   private Material _postProcessMat;
+
+  [SerializeField]
+  private Gradient _heatGradient;
+
+  [Range(0, 2)]
+  [SerializeField, DevValue]
+  private float _gammaValue = 0.3f;
 
   [SerializeField, DevValue]
   private bool _enableBoxFilter = true;
@@ -86,16 +96,24 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   public enum ColorMode {
-    Solid
+    Solid,
+    BySpeed
   }
 
   public enum PostProcessMode {
-    None = 0
+    None = 0,
+    HeatMap = 1
+  }
+
+  private void OnValidate() {
+    uploadGradientTexture();
   }
 
   private void OnEnable() {
     _myCamera = GetComponent<Camera>();
     Camera.onPostRender += drawCamera;
+
+    uploadGradientTexture();
   }
 
   private void OnDisable() {
@@ -108,16 +126,32 @@ public class GalaxyRenderer : MonoBehaviour {
 
   public void DrawBlackHole(Vector3 position) {
     if (_renderBlackHoles) {
-      Graphics.DrawMesh(_blackHoleMesh, Matrix4x4.Scale(Vector3.one * _scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f), _blackHoleMat, 0);
+      _blackHoleMat.SetColor("_Color", _starColor);
+
+      Graphics.DrawMesh(_blackHoleMesh,
+                        Matrix4x4.Scale(Vector3.one * _scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
+                        _blackHoleMat,
+                        (int)_colorMode);
     }
   }
 
   private void OnRenderImage(RenderTexture source, RenderTexture destination) {
-    RenderTexture tex = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear, 1, RenderTextureMemoryless.Color);
+    RenderTexture tex = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear, 1);
 
     Graphics.SetRenderTarget(tex.colorBuffer, source.depthBuffer);
+    GL.Clear(clearDepth: false, clearColor: true, backgroundColor: Color.black);
 
     drawStars();
+
+    if (_enableBoxFilter) {
+      _postProcessMat.EnableKeyword(BOX_FILTER_KEYWORD);
+      _postProcessMat.SetFloat(ADJACENT_PROPERTY, _adjacentFilter);
+      _postProcessMat.SetFloat(DIAGONAL_PROPERTY, _diagonalFilter);
+    } else {
+      _postProcessMat.DisableKeyword(BOX_FILTER_KEYWORD);
+    }
+
+    _postProcessMat.SetFloat(GAMMA_PROPERTY, _gammaValue);
 
     _postProcessMat.SetTexture(START_TEX_PROPERTY, tex);
     Graphics.Blit(source, destination, _postProcessMat, (int)_postProcessMode);
@@ -155,5 +189,19 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.SetPass(0);
 
     Graphics.DrawProcedural(MeshTopology.Points, _position.width * _position.height);
+  }
+
+  private void uploadGradientTexture() {
+    Texture2D tex = new Texture2D(256, 1, TextureFormat.ARGB32, mipmap: false, linear: true);
+    tex.filterMode = FilterMode.Bilinear;
+    tex.wrapMode = TextureWrapMode.Clamp;
+
+    for (int i = 0; i < tex.width; i++) {
+      float t = i / (tex.width - 1.0f);
+      tex.SetPixel(i, 0, _heatGradient.Evaluate(t));
+    }
+    tex.Apply();
+
+    _postProcessMat.SetTexture(GRADIENT_PROPERTY, tex);
   }
 }

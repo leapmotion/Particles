@@ -2,6 +2,7 @@
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
     _Stars   ("Stars",   2D) = "white" {}
+    _Gradient("Gradient", 2D) = "white" {}
 	}
 
   CGINCLUDE
@@ -21,11 +22,14 @@
     float2 uv[1] : TEXCOORD0;
 #endif
   };
-
+  
   sampler2D _Stars;
   sampler2D _MainTex;
   float4 _MainTex_TexelSize;
 
+  sampler2D _Gradient;
+
+  float _Gamma;
   float _AdjacentFilter;
   float _DiagonalFilter;
 
@@ -56,22 +60,27 @@
     fixed4 col = tex2D(_Stars, i.uv[0]);
 
 #if BOX_FILTER
-    col = max(col, saturate(tex2D(_MainTex, i.uv[1])) * _AdjacentFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[2])) * _AdjacentFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[3])) * _AdjacentFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[4])) * _AdjacentFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[1])) * _AdjacentFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[2])) * _AdjacentFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[3])) * _AdjacentFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[4])) * _AdjacentFilter);
 
-    col = max(col, saturate(tex2D(_MainTex, i.uv[5])) * _DiagonalFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[6])) * _DiagonalFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[7])) * _DiagonalFilter);
-    col = max(col, saturate(tex2D(_MainTex, i.uv[8])) * _DiagonalFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[5])) * _DiagonalFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[6])) * _DiagonalFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[7])) * _DiagonalFilter);
+    col = max(col, saturate(tex2D(_Stars, i.uv[8])) * _DiagonalFilter);
 #endif
 
-    return col;
+    return pow(col, _Gamma);
   }
 
   fixed4 frag_none(v2f i) : SV_Target{
     return getStars(i) + tex2D(_MainTex, i.uv[0]);
+  }
+
+  fixed4 frag_gradient(v2f i) : SV_Target {
+    fixed4 starColor = tex2D(_Gradient, getStars(i).r);
+    return starColor + tex2D(_MainTex, i.uv[0]);
   }
   ENDCG
 
@@ -87,5 +96,12 @@
 			#pragma fragment frag_none
 			ENDCG
 		}
+
+    Pass {
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment frag_gradient
+      ENDCG
+    }
 	}
 }

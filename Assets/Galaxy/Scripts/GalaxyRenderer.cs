@@ -7,7 +7,11 @@ using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Camera))]
 public class GalaxyRenderer : MonoBehaviour {
-  private const int PASS_NONE = 0;
+  private const string BOX_FILTER_KEYWORD = "BOX_FILTER";
+
+  private const string START_TEX_PROPERTY = "_Stars";
+  private const string ADJACENT_PROPERTY = "_AdjacentFilter";
+  private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
   [Header("Black Hole Rendering"), DevCategory]
   [SerializeField, DevValue]
@@ -86,7 +90,7 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   public enum PostProcessMode {
-    None
+    None = 0
   }
 
   private void OnEnable() {
@@ -115,8 +119,8 @@ public class GalaxyRenderer : MonoBehaviour {
 
     drawStars();
 
-    _postProcessMat.SetTexture("_Stars", tex);
-    Graphics.Blit(source, destination, _postProcessMat);
+    _postProcessMat.SetTexture(START_TEX_PROPERTY, tex);
+    Graphics.Blit(source, destination, _postProcessMat, (int)_postProcessMode);
 
     RenderTexture.ReleaseTemporary(tex);
   }

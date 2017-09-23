@@ -9,6 +9,9 @@ using UnityEngine.Serialization;
 public class GalaxyRenderer : MonoBehaviour {
   private const string BOX_FILTER_KEYWORD = "BOX_FILTER";
 
+  private const string BY_SPEED_KEYWORD = "BY_SPEED";
+  private const string BY_DIRECTION_KEYWORD = "BY_DIRECTION";
+
   private const string START_TEX_PROPERTY = "_Stars";
   private const string GRADIENT_PROPERTY = "_Gradient";
 
@@ -61,6 +64,9 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField]
   private Color _starColor = Color.white;
 
+  [SerializeField]
+  private float _speedScalar = 1;
+
   [Header("Post Processing"), DevCategory]
   [SerializeField, DevValue]
   private PostProcessMode _postProcessMode;
@@ -87,7 +93,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private float _diagonalFilter = 0.5f;
 
   private Camera _myCamera;
-  private Texture _position;
+  private Texture _currPosition;
+  private Texture _prevPosition;
+  private Texture _lastPosition;
 
   public enum RenderType {
     Point,
@@ -97,7 +105,8 @@ public class GalaxyRenderer : MonoBehaviour {
 
   public enum ColorMode {
     Solid,
-    BySpeed
+    BySpeed,
+    ByDirection
   }
 
   public enum PostProcessMode {
@@ -120,8 +129,10 @@ public class GalaxyRenderer : MonoBehaviour {
     Camera.onPostRender -= drawCamera;
   }
 
-  public void UpdatePositions(Texture position) {
-    _position = position;
+  public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {
+    _currPosition = currPosition;
+    _prevPosition = prevPosition;
+    _lastPosition = lastPosition;
   }
 
   public void DrawBlackHole(Vector3 position) {
@@ -131,7 +142,7 @@ public class GalaxyRenderer : MonoBehaviour {
       Graphics.DrawMesh(_blackHoleMesh,
                         Matrix4x4.Scale(Vector3.one * _scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
                         _blackHoleMat,
-                        (int)_colorMode);
+                        0);
     }
   }
 
@@ -182,13 +193,26 @@ public class GalaxyRenderer : MonoBehaviour {
         break;
     }
 
-    mat.mainTexture = _position;
+    mat.DisableKeyword(BY_SPEED_KEYWORD);
+    switch (_colorMode) {
+      case ColorMode.BySpeed:
+        mat.EnableKeyword(BY_SPEED_KEYWORD);
+        break;
+      case ColorMode.ByDirection:
+        mat.EnableKeyword(BY_DIRECTION_KEYWORD);
+        break;
+    }
+
+    mat.mainTexture = _currPosition;
+    mat.SetTexture("_PrevPosition", _prevPosition);
+
+    mat.SetFloat("_SpeedScalar", _speedScalar);
     mat.SetFloat("_Scale", _scale);
     mat.SetFloat("_Size", _starSize);
     mat.SetFloat("_Bright", _starBrightness);
     mat.SetPass(0);
 
-    Graphics.DrawProcedural(MeshTopology.Points, _position.width * _position.height);
+    Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
   }
 
   private void uploadGradientTexture() {

@@ -313,6 +313,6 @@ public class GalaxySimulation : MonoBehaviour {
   }
 
   private void LateUpdate() {
-    galaxyRenderer.UpdatePositions(currPos);
+    galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
   }
 }

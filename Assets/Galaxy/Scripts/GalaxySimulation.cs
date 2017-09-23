@@ -165,6 +165,9 @@ public class GalaxySimulation : MonoBehaviour {
 
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
+    prevPos.DiscardContents();
+    currPos.DiscardContents();
+
     RenderBuffer[] buffer = new RenderBuffer[2];
     buffer[0] = prevPos.colorBuffer;
     buffer[1] = currPos.colorBuffer;

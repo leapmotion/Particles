@@ -19,7 +19,7 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string ADJACENT_PROPERTY = "_AdjacentFilter";
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
-  [Header("Black Hole Rendering"), DevCategory]
+  [Header("Black Holes"), DevCategory]
   [SerializeField, DevValue]
   private bool _renderBlackHoles = true;
 
@@ -194,6 +194,7 @@ public class GalaxyRenderer : MonoBehaviour {
     }
 
     mat.DisableKeyword(BY_SPEED_KEYWORD);
+    mat.DisableKeyword(BY_DIRECTION_KEYWORD);
     switch (_colorMode) {
       case ColorMode.BySpeed:
         mat.EnableKeyword(BY_SPEED_KEYWORD);

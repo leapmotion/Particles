@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Rendering;
+﻿using UnityEngine;
 using Leap.Unity.DevGui;
+using Leap.Unity.Attributes;
 using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Camera))]
@@ -43,7 +41,8 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField, DevValue]
   private float _starBrightness;
 
-  [SerializeField, DevValue]
+  [Disable]
+  [SerializeField]
   private RenderType _renderType;
 
   [SerializeField]

@@ -6,6 +6,7 @@ using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 
+[DevCategory("General Settings")]
 public class GalaxySimulation : MonoBehaviour {
   public const float TIME_FREEZE_THRESHOLD = 0.05f;
 

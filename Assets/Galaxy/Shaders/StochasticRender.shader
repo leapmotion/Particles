@@ -18,6 +18,7 @@
   sampler2D _MainTex;
   sampler2D _PrevPosition;
 
+  float4x4 _ToWorldMat;
   float _Scale;
   float _Bright;
   float _Size;
@@ -35,8 +36,7 @@
     float4 position = tex2Dlod(_MainTex, uv);
     float4 prevPosition = tex2Dlod(_PrevPosition, uv);
 
-    float4 worldPosition = mul(unity_ObjectToWorld, position);
-    worldPosition.xyz *= _Scale;
+    float4 worldPosition = mul(_ToWorldMat, position);
 
     //uint id2 = (id + _NoiseOffset) % (32 * 32);
     //uv.x = (id2 / 32) / 32.0;

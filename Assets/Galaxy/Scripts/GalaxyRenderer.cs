@@ -19,6 +19,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string ADJACENT_PROPERTY = "_AdjacentFilter";
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
+  [SerializeField]
+  private Transform _displayAnchor;
+
   [Header("Black Holes"), DevCategory]
   [SerializeField, DevValue]
   private bool _renderBlackHoles = true;
@@ -30,11 +33,6 @@ public class GalaxyRenderer : MonoBehaviour {
   private Material _blackHoleMat;
 
   [Header("Star Rendering"), DevCategory]
-  [Range(0.05f, 2f)]
-  [FormerlySerializedAs("scale")]
-  [SerializeField, DevValue]
-  private float _scale;
-
   [Range(0, 0.05f)]
   [FormerlySerializedAs("starSize")]
   [SerializeField, DevValue]
@@ -97,6 +95,17 @@ public class GalaxyRenderer : MonoBehaviour {
   private Texture _prevPosition;
   private Texture _lastPosition;
 
+  [DevCategory("General Settings")]
+  [DevValue("Scale")]
+  public float scale {
+    get {
+      return _displayAnchor.lossyScale.x;
+    }
+    set {
+      _displayAnchor.localScale = Vector3.one * value;
+    }
+  }
+
   public enum RenderType {
     Point,
     Quad,
@@ -140,7 +149,7 @@ public class GalaxyRenderer : MonoBehaviour {
       _blackHoleMat.SetColor("_Color", _starColor);
 
       Graphics.DrawMesh(_blackHoleMesh,
-                        Matrix4x4.Scale(Vector3.one * _scale) * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
+                        _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
                         _blackHoleMat,
                         0);
     }
@@ -206,9 +215,11 @@ public class GalaxyRenderer : MonoBehaviour {
 
     mat.mainTexture = _currPosition;
     mat.SetTexture("_PrevPosition", _prevPosition);
+    mat.SetTexture("_LastPosition", _lastPosition);
 
     mat.SetFloat("_SpeedScalar", _speedScalar);
-    mat.SetFloat("_Scale", _scale);
+    mat.SetMatrix("_ToWorldMat", _displayAnchor.localToWorldMatrix);
+    mat.SetFloat("_Scale", scale);
     mat.SetFloat("_Size", _starSize);
     mat.SetFloat("_Bright", _starBrightness);
     mat.SetPass(0);

@@ -269,9 +269,6 @@ public class GalaxySimulation : MonoBehaviour {
           for (int j = 0; j < blackHoles.Count; j++) {
             BlackHole blackHole = blackHoles[j];
             blackHole.position += blackHole.velocity * planetDT * timestep;
-
-            galaxyRenderer.DrawBlackHole(blackHole.position);
-
             blackHoles[j] = blackHole;
           }
 
@@ -295,6 +292,11 @@ public class GalaxySimulation : MonoBehaviour {
 
             blackHoles[j] = blackHole;
           }
+        }
+
+        for (int j = 0; j < blackHoles.Count; j++) {
+          BlackHole blackHole = blackHoles[j];
+          galaxyRenderer.DrawBlackHole(blackHole.position);
         }
       }
 

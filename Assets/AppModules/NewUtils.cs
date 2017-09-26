@@ -78,4 +78,12 @@ public static class NewUtils {
 
   #endregion
 
+
+  public static void SplitHorizontallyWithLeft(this Rect rect, out Rect left, out Rect right, float leftWidth) {
+    left = rect;
+    left.width = leftWidth;
+    right = rect;
+    right.x += left.width;
+    right.width = rect.width - leftWidth;
+  }
 }

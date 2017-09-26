@@ -1,0 +1,4 @@
+sceneSetups:
+- path: Assets/Magic_Clay.unity
+  isLoaded: 1
+  isActive: 1

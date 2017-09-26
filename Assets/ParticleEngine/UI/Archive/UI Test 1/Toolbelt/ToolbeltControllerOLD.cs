@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ToolbeltController : MonoBehaviour {
+public class ToolbeltControllerOLD : MonoBehaviour {
 
   public enum AnimState {
     Idle,
@@ -13,7 +13,7 @@ public class ToolbeltController : MonoBehaviour {
   }
 
   public Camera mainCamera;
-  public ToolbeltFollower follower;
+  public FollowingController follower;
   public Animator animator;
 
   [Disable]
@@ -27,7 +27,7 @@ public class ToolbeltController : MonoBehaviour {
 
   void Reset() {
     mainCamera = Camera.main;
-    follower = GetComponent<ToolbeltFollower>();
+    follower = GetComponent<FollowingController>();
     animator = GetComponent<Animator>();
   }
 

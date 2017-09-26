@@ -39,6 +39,19 @@ namespace Leap.Unity.GraphicalRenderer {
       private set { _size = new Vector2(value.x, value.y); _thickness = value.z; }
     }
 
+    public Vector3 center {
+      get {
+        var rectTransform = GetComponent<RectTransform>();
+        if (rectTransform != null) {
+          return new Vector2(_size.x * rectTransform.pivot.x,
+                             _size.y * rectTransform.pivot.y);
+        }
+        else {
+          return Vector3.zero;
+        }
+      }
+    }
+
     public override void RefreshSlicedMeshData(Vector2i    resolution,
                                                RectMargins meshMargins,
                                                RectMargins uvMargins) {

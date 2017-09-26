@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WidgetController : MonoBehaviour {
+public class WidgetControllerRev3 : MonoBehaviour {
 
   private struct Pose {
     public Vector3 pos;

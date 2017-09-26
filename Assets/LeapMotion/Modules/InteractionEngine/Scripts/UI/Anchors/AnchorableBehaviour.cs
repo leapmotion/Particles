@@ -263,8 +263,8 @@ namespace Leap.Unity.Interaction {
     /// this anchor. This callback will never fire if tryAttachAnchorOnGraspEnd is not enabled.
     ///
     /// If tryAttachAnchorOnGraspEnd is enabled, the anchor will be attached to
-    /// an anchor only if its preferredAnchor property is false; otherwise, the attempt to
-    /// anchor failed.
+    /// an anchor only if its preferredAnchor property is non-null; otherwise, the
+    /// attempt to anchor failed.
     /// </summary>
     public Action<AnchorableBehaviour> OnPostTryAnchorOnGraspEnd = (anchObj) => { };
 
@@ -325,7 +325,9 @@ namespace Leap.Unity.Interaction {
         }
 
         updateAnchorAttachment();
-        updateAnchorAttachmentRotation();
+        if (anchorRotation) {
+          updateAnchorAttachmentRotation();
+        }
 
         WhileAttachedToAnchor.Invoke(this, anchor);
 

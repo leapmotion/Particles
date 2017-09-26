@@ -30,7 +30,7 @@ public class PresetLoader : MonoBehaviour {
   [SerializeField]
   public RenderPreset _heatMap;
 
-  [DevCategory("Rasdliujkasdkjh")]
+  [DevCategory("Star Rendering")]
   [DevValue]
   public PresetSelection renderMode {
     get {

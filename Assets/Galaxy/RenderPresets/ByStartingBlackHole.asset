@@ -44,7 +44,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 7
     m_NumAlphaKeys: 2
-  postScalar: 1
+  postScalar: 2.72
   postProcessMode: 0
   heatGradient:
     serializedVersion: 2

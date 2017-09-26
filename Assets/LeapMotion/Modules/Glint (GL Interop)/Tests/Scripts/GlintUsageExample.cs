@@ -1,26 +1,24 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
 namespace Leap.Unity.Glint.Tests {
 
+  [AddComponentMenu("")]
   public class GlintUsageExample : MonoBehaviour {
 
-    [Header("Takes a RenderTexture from")]
+    [Header("Takes a RenderTexture from this script.")]
     public BlittingScript blittingScript;
 
-    [Header("On success, puts data in _MainTex for")]
+    [Header("On success, puts data in _MainTex for this material.")]
     public Material resultMaterial;
 
-    [Header("Report profiling data to")]
-    public TextMesh textMesh;
 
-    private float[] _data;
+    private byte[] _data;
     private Texture2D _previewTexture = null;
 
     private bool _firstUpdate = true;
-    private StringBuilder _sb = new StringBuilder();
+    private bool _readyForAnotherRequest = true;
 
     void Update() {
       if (_firstUpdate) {
@@ -29,57 +27,79 @@ namespace Leap.Unity.Glint.Tests {
         _previewTexture.filterMode = FilterMode.Point;
         resultMaterial.SetTexture("_MainTex", _previewTexture);
 
-        Glint.requestWaitTimeInFrames = 1;
-        Glint.RequestAsync(blittingScript.renderTex, _data, onDataRetrieved);
-
         _firstUpdate = false;
+      }
+
+      if (_readyForAnotherRequest) {
+        Glint.RequestTextureDownload(blittingScript.renderTex, _data, onDataRetrieved);
+
+        _readyForAnotherRequest = false;
       }
     }
 
-    // Callback that calls itself, for continuous (sequential, non-optimal) download.
+    // Callback that calls RequestAsync again, for "continuous" (sequential, non-optimal)
+    // download.
     private void onDataRetrieved() {
       // Upon getting the callback, we look at the data and fill it into a texture
       // to display on the "CPU" side of the scene.
       fillTextureWithData(_data,
-                          blittingScript.renderTex.width,
-                          blittingScript.renderTex.height,
                           _previewTexture);
 
-      _sb.Remove(0, _sb.Length);
-      _sb.Append("Render thread map (ms):\t");
-      _sb.Append(Glint.Profiling.lastRenderMapMs.ToString("F3"));
-      _sb.Append("\n");
-      _sb.Append("Render thread memcpy (ms):\t");
-      _sb.Append(Glint.Profiling.lastRenderCopyMs.ToString("F3"));
-      _sb.Append("\n");
-      _sb.Append("Main thread memcpy (ms):\t");
-      _sb.Append(Glint.Profiling.lastMainCopyMs.ToString("F3"));
-      textMesh.text = _sb.ToString();
+      // TODO: Much faster if this is made to work
+      // _previewTexture.LoadRawTextureData(_data);
 
-      Glint.RequestAsync(blittingScript.renderTex, _data, onDataRetrieved);
+      //_sb.Remove(0, _sb.Length);
+      //_sb.Append("Render thread map (ms):\t");
+      //_sb.Append(ZZOLD_Glint.Profiling.lastRenderMapMs.ToString("F3"));
+      //_sb.Append("\n");
+      //_sb.Append("Render thread memcpy (ms):\t");
+      //_sb.Append(ZZOLD_Glint.Profiling.lastRenderCopyMs.ToString("F3"));
+      //_sb.Append("\n");
+      //_sb.Append("Main thread memcpy (ms):\t");
+      //_sb.Append(ZZOLD_Glint.Profiling.lastMainCopyMs.ToString("F3"));
+      //textMesh.text = _sb.ToString();
+
+      _readyForAnotherRequest = true;
     }
 
-    private static void initDataForTex(ref float[] data, RenderTexture tex) {
-      data = new float[tex.width * tex.height * 4 /* four channels per pixel */];
+    #region Support
+
+    private static void initDataForTex(ref byte[] data, RenderTexture tex) {
+      data = new byte[tex.width * tex.height * Glint.GetBytesPerPixel(tex)];
     }
 
+    private static float[] _floats = null;
     private static Color[] _pixels = null;
-    private static void fillTextureWithData(float[] data, int width, int height, Texture2D tex) {
+    private static void fillTextureWithData(byte[] data,
+                                            Texture2D tex) {
+
       if (_pixels == null) {
-        _pixels = new Color[width * height];
+        _pixels = new Color[tex.width * tex.height];
       }
 
-      fillPixelsFromFloats(ref _pixels, data);
+      if (_floats == null) {
+        _floats = new float[tex.width * tex.height * 4];
+      }
+
+      fillFloatsFromBytes(data, _floats);
+
+      fillPixelsFromFloats(_floats, _pixels);
 
       tex.SetPixels(_pixels);
       tex.Apply();
     }
 
-    private static void fillPixelsFromFloats(ref Color[] pixels, float[] data) {
-      for (int i = 0; i + 3 < data.Length; i += 4) {
-        pixels[i / 4] = new Color(data[i], data[i + 1], data[i + 2], data[i + 3]);
+    private static void fillFloatsFromBytes(byte[] bytes, float[] floats) {
+      System.Buffer.BlockCopy(bytes, 0, floats, 0, bytes.Length);
+    }
+
+    private static void fillPixelsFromFloats(float[] floats, Color[] pixels) {
+      for (int i = 0; i + 3 < floats.Length; i += 4) {
+        pixels[i / 4] = new Color(floats[i], floats[i + 1], floats[i + 2], floats[i + 3]);
       }
     }
+
+    #endregion
 
   }
 

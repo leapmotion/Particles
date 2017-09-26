@@ -28,28 +28,20 @@
 				o.uv = v.uv;
 				return o;
 			}
-
-      uint _Frame;
 			
 			fixed4 frag (v2f i) : SV_Target {
 				// start with white
-
-        uint frames = (uint)(i.uv.y * 10);
-        uint xFrame = (uint)(i.uv.x * 20 + _Frame);
-
-        fixed4 col = (xFrame % frames == 0) ? 0 : 1;
-
-        //fixed4 col = sin(i.uv.x * 20 + _Time.y * 50);
+        fixed4 col = 1;
 
         // add some sine-on-time bullshit
-        //float tC = 0.2;
-        //col.r *= (0.8 * sin((_Time.x * 100 * tC + i.uv.x * 10) * 4) + 0.7);
-        //col.g *= (0.6 * sin((_Time.x * 98  * tC + i.uv.x * 8 ) * 2) + 0.7);
-        //col.b *= (0.8 * sin((_Time.x * 77  * tC + i.uv.x * 5 ) * 2) + 0.7);
+        float tC = 0.2;
+        col.r *= (0.8 * sin((_Time.x * 100 * tC + i.uv.x * 10) * 4) + 0.7);
+        col.g *= (0.6 * sin((_Time.x * 98  * tC + i.uv.x * 8 ) * 2) + 0.7);
+        col.b *= (0.8 * sin((_Time.x * 77  * tC + i.uv.x * 5 ) * 2) + 0.7);
 
-        //col.r *= (0.8 * sin((_Time.x * 89  * tC + i.uv.y * 10) * 4) + 0.7);
-        //col.g *= (0.6 * sin((_Time.x * 99  * tC + i.uv.y * 8 ) * 2) + 0.7);
-        //col.b *= (0.8 * sin((_Time.x * 64  * tC + i.uv.y * 5 ) * 2) + 0.7);
+        col.r *= (0.8 * sin((_Time.x * 89  * tC + i.uv.y * 10) * 4) + 0.7);
+        col.g *= (0.6 * sin((_Time.x * 99  * tC + i.uv.y * 8 ) * 2) + 0.7);
+        col.b *= (0.8 * sin((_Time.x * 64  * tC + i.uv.y * 5 ) * 2) + 0.7);
 
 				return col;
 			}

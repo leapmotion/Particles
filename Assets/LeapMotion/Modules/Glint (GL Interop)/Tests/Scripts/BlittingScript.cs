@@ -25,7 +25,7 @@ namespace Leap.Unity.Glint.Tests {
       _renderTex = new RenderTexture(initTexSize, initTexSize, 0,
                                      RenderTextureFormat.ARGBFloat,
                                      RenderTextureReadWrite.Default);
-      _renderTex.filterMode = FilterMode.Bilinear;
+      _renderTex.filterMode = FilterMode.Point;
       _renderTex.Create();
 
       _whiteTex = new Texture2D(initTexSize, initTexSize, TextureFormat.RGBAFloat, false);
@@ -42,7 +42,6 @@ namespace Leap.Unity.Glint.Tests {
     }
 
     private void DoBlit(RenderTexture renderTex) {
-      blitMaterial.SetInt("_Frame", Time.frameCount);
       Graphics.Blit(_whiteTex, _renderTex, blitMaterial);
     }
 

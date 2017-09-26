@@ -286,7 +286,7 @@ GameObject:
   - component: {fileID: 346888889}
   - component: {fileID: 346888890}
   m_Layer: 0
-  m_Name: Readback Quad + TinyRex Usage
+  m_Name: Readback Quad + Glint Usage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -332,12 +332,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 346888888}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d68943b149de4c14790de2463e224722, type: 3}
+  m_Script: {fileID: 11500000, guid: cb581e108f3408743b650433b8abd523, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   blittingScript: {fileID: 521410173}
   resultMaterial: {fileID: 2100000, guid: 77d5dace773f706459a76565883f382d, type: 2}
-  textMesh: {fileID: 870463267}
 --- !u!33 &346888891
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -420,7 +419,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e6192ffaa1763914083372bb827ea916, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  initTexSize: 64
+  initTexSize: 512
   blitMaterial: {fileID: 2100000, guid: ea70d30273dfe00478eecddf97ded2b9, type: 2}
   previewMaterial: {fileID: 2100000, guid: 95ef31a7e48ace54f97bf3edc6090f20, type: 2}
 --- !u!33 &521410174

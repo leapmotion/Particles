@@ -265,7 +265,7 @@ MonoBehaviour:
   _pointMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
   _quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
   _lightMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
-  preset: {fileID: 11400000, guid: 00734a0de0b21854bb1a8d4df224bde9, type: 2}
+  preset: {fileID: 11400000, guid: 903fb7abdb1cf22408ab96aa199b290a, type: 2}
   _postProcessMat: {fileID: 2100000, guid: 2e0337d99c2de644195a8d4d2d6968ec, type: 2}
   _gammaValue: 1
   _enableBoxFilter: 1

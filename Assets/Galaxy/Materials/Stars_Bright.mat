@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: Stars_Bright
   m_Shader: {fileID: 4800000, guid: 8d406ec0c0a175c4ebf51a6ef0191887, type: 3}
-  m_ShaderKeywords: BY_ACCEL USE_RAMP
+  m_ShaderKeywords: BY_BLACK_HOLE USE_RAMP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -39,7 +39,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}
+        m_Texture: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:

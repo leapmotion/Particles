@@ -67,7 +67,7 @@
       accel += target.w * normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
     }
 
-    return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, 1);
+    return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, currPos.w);
   }
 
   fragOut initDisc(v2f i) {
@@ -114,9 +114,11 @@
 
     discPos += planetPos;
 
+    float planetIndex = index / (float)_PlanetCount;
+
     fragOut o;
-    o.dest0 = float4(discPos - discVel * _Timestep, 1);
-    o.dest1 = float4(discPos, 1);
+    o.dest0 = float4(discPos - discVel * _Timestep, planetIndex);
+    o.dest1 = float4(discPos, planetIndex);
     return o;
   }
 

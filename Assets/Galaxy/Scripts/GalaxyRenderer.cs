@@ -11,6 +11,7 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string BY_SPEED_KEYWORD = "BY_SPEED";
   private const string BY_DIRECTION_KEYWORD = "BY_DIRECTION";
   private const string BY_ACCEL_KEYWORD = "BY_ACCEL";
+  private const string BY_BLACK_HOLE_KEYWORD = "BY_BLACK_HOLE";
 
   private const string START_TEX_PROPERTY = "_Stars";
   private const string GRADIENT_PROPERTY = "_Gradient";
@@ -123,7 +124,8 @@ public class GalaxyRenderer : MonoBehaviour {
     Solid,
     BySpeed,
     ByDirection,
-    ByAccel
+    ByAccel,
+    ByStartingBlackHole
   }
 
   public enum PostProcessMode {
@@ -213,6 +215,7 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.DisableKeyword(BY_SPEED_KEYWORD);
     mat.DisableKeyword(BY_DIRECTION_KEYWORD);
     mat.DisableKeyword(BY_ACCEL_KEYWORD);
+    mat.DisableKeyword(BY_BLACK_HOLE_KEYWORD);
     switch (_colorMode) {
       case ColorMode.BySpeed:
         mat.EnableKeyword(BY_SPEED_KEYWORD);
@@ -222,6 +225,9 @@ public class GalaxyRenderer : MonoBehaviour {
         break;
       case ColorMode.ByAccel:
         mat.EnableKeyword(BY_ACCEL_KEYWORD);
+        break;
+      case ColorMode.ByStartingBlackHole:
+        mat.EnableKeyword(BY_BLACK_HOLE_KEYWORD);
         break;
     }
 

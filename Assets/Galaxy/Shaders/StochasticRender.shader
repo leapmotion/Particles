@@ -7,7 +7,7 @@
 
   CGINCLUDE
   #pragma multi_compile _ USE_RAMP
-  #pragma multi_compile _ BY_SPEED BY_DIRECTION BY_ACCEL
+  #pragma multi_compile _ BY_SPEED BY_DIRECTION BY_ACCEL BY_BLACK_HOLE
   #include "UnityCG.cginc"
 
   struct v2f {
@@ -70,6 +70,10 @@
     float4 vel0 = position - prevPosition;
     float4 vel1 = prevPosition - lastPosition;
     o.color = _SpeedScalar * length(vel0 - vel1);
+#endif
+
+#if BY_BLACK_HOLE
+    o.color = position.w;
 #endif
 
 #if USE_RAMP

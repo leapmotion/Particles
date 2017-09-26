@@ -103,6 +103,11 @@ public class GalaxyRenderer : MonoBehaviour {
     PointBright
   }
 
+  public void SetPreset(RenderPreset preset) {
+    this.preset = preset;
+    uploadGradientTextures();
+  }
+
   private void OnValidate() {
     uploadGradientTextures();
   }

@@ -237,6 +237,7 @@ GameObject:
   - component: {fileID: 1697903797}
   - component: {fileID: 1697903794}
   - component: {fileID: 1697903793}
+  - component: {fileID: 1697903795}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -278,6 +279,25 @@ AudioListener:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1697903792}
   m_Enabled: 1
+--- !u!114 &1697903795
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1697903792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 249d5f66f74c5864a8625b4f15a3f2f3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _presetSelection: 0
+  _basic: {fileID: 11400000, guid: 99a6f97a817b49e49b0e03026c3a6fef, type: 2}
+  _speedRamp: {fileID: 11400000, guid: 903fb7abdb1cf22408ab96aa199b290a, type: 2}
+  _accelRamp: {fileID: 11400000, guid: 3ea5228263c4f6b4293e571e695bb4b7, type: 2}
+  _byDirection: {fileID: 11400000, guid: 00734a0de0b21854bb1a8d4df224bde9, type: 2}
+  _byStartingBlackHole: {fileID: 11400000, guid: df867983269c8474db9ef205ff0b26bf,
+    type: 2}
+  _heatMap: {fileID: 11400000, guid: 113066a5cc1bd1d43865369d6f482423, type: 2}
 --- !u!20 &1697903797
 Camera:
   m_ObjectHideFlags: 0

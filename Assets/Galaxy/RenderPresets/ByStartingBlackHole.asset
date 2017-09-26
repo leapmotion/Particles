@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f83ef941d2c6e64c9315732bc9fb76c, type: 3}
+  m_Name: ByStartingBlackHole
+  m_EditorClassIdentifier: 
+  blitMode: 4
+  baseColor: {r: 1, g: 1, b: 1, a: 1}
+  enableStarGradient: 1
+  preScalar: 1
+  starRamp:
+    serializedVersion: 2
+    key0: {r: 1, g: 0, b: 0, a: 1}
+    key1: {r: 1, g: 0.6827586, b: 0, a: 1}
+    key2: {r: 1, g: 0.9724138, b: 0, a: 0}
+    key3: {r: 0, g: 1, b: 0.21379304, a: 0}
+    key4: {r: 0, g: 1, b: 1, a: 0}
+    key5: {r: 0.3439658, g: 0.17995745, b: 1, a: 0}
+    key6: {r: 1, g: 0, b: 0.8068962, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 9252
+    ctime2: 20046
+    ctime3: 33153
+    ctime4: 42598
+    ctime5: 53777
+    ctime6: 65535
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 7
+    m_NumAlphaKeys: 2
+  postScalar: 1
+  postProcessMode: 0
+  heatGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0.060582444, g: 0.007820265, b: 0.73226154, a: 0}
+    key3: {r: 1, g: 0.17995745, b: 0.17995745, a: 0}
+    key4: {r: 1, g: 1, b: 1, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 22745
+    ctime3: 44718
+    ctime4: 65535
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2

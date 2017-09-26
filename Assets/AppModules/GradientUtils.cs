@@ -6,6 +6,7 @@ public static class GradientUtils {
     Texture2D tex = new Texture2D(resolution, 1, format, mipmap: false, linear: true);
     tex.filterMode = FilterMode.Bilinear;
     tex.wrapMode = TextureWrapMode.Clamp;
+    tex.hideFlags = HideFlags.HideAndDontSave;
 
     for (int i = 0; i < resolution; i++) {
       float t = i / (resolution - 1.0f);

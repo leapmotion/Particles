@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using Leap.Unity;
 using Leap.Unity.DevGui;
 using Leap.Unity.Attributes;
 using UnityEngine.Serialization;
@@ -57,31 +58,13 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField]
   private Material _lightMat;
 
-  [Header("Star Coloring"), DevCategory]
-  [SerializeField, DevValue]
-  private ColorMode _colorMode = ColorMode.Solid;
 
+  [Header("Render Presets")]
   [SerializeField]
-  private Color _starColor = Color.white;
-
-  [SerializeField]
-  private bool _enableStarGradient = false;
-
-  [SerializeField]
-  private Gradient _starRamp;
-
-  [SerializeField]
-  private float _speedScalar = 1;
-
-  [Header("Post Processing"), DevCategory]
-  [SerializeField, DevValue]
-  private PostProcessMode _postProcessMode;
+  private RenderPreset preset;
 
   [SerializeField]
   private Material _postProcessMat;
-
-  [SerializeField]
-  private Gradient _heatGradient;
 
   [Range(0, 2)]
   [SerializeField, DevValue]
@@ -120,19 +103,6 @@ public class GalaxyRenderer : MonoBehaviour {
     PointBright
   }
 
-  public enum ColorMode {
-    Solid,
-    BySpeed,
-    ByDirection,
-    ByAccel,
-    ByStartingBlackHole
-  }
-
-  public enum PostProcessMode {
-    None = 0,
-    HeatMap = 1
-  }
-
   private void OnValidate() {
     uploadGradientTextures();
   }
@@ -156,7 +126,7 @@ public class GalaxyRenderer : MonoBehaviour {
 
   public void DrawBlackHole(Vector3 position) {
     if (_renderBlackHoles) {
-      _blackHoleMat.SetColor("_Color", _starColor);
+      _blackHoleMat.SetColor("_Color", preset.baseColor);
 
       Graphics.DrawMesh(_blackHoleMesh,
                         _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
@@ -184,7 +154,7 @@ public class GalaxyRenderer : MonoBehaviour {
     _postProcessMat.SetFloat(GAMMA_PROPERTY, _gammaValue);
 
     _postProcessMat.SetTexture(START_TEX_PROPERTY, tex);
-    Graphics.Blit(source, destination, _postProcessMat, (int)_postProcessMode);
+    Graphics.Blit(source, destination, _postProcessMat, (int)preset.postProcessMode);
 
     RenderTexture.ReleaseTemporary(tex);
   }
@@ -216,22 +186,22 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.DisableKeyword(BY_DIRECTION_KEYWORD);
     mat.DisableKeyword(BY_ACCEL_KEYWORD);
     mat.DisableKeyword(BY_BLACK_HOLE_KEYWORD);
-    switch (_colorMode) {
-      case ColorMode.BySpeed:
+    switch (preset.blitMode) {
+      case RenderPreset.BlitMode.BySpeed:
         mat.EnableKeyword(BY_SPEED_KEYWORD);
         break;
-      case ColorMode.ByDirection:
+      case RenderPreset.BlitMode.ByDirection:
         mat.EnableKeyword(BY_DIRECTION_KEYWORD);
         break;
-      case ColorMode.ByAccel:
+      case RenderPreset.BlitMode.ByAccel:
         mat.EnableKeyword(BY_ACCEL_KEYWORD);
         break;
-      case ColorMode.ByStartingBlackHole:
+      case RenderPreset.BlitMode.ByStartingBlackHole:
         mat.EnableKeyword(BY_BLACK_HOLE_KEYWORD);
         break;
     }
 
-    if (_enableStarGradient) {
+    if (preset.enableStarGradient) {
       mat.EnableKeyword(STAR_RAMP_KEYWORD);
     } else {
       mat.DisableKeyword(STAR_RAMP_KEYWORD);
@@ -241,20 +211,27 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.SetTexture("_PrevPosition", _prevPosition);
     mat.SetTexture("_LastPosition", _lastPosition);
 
-    mat.SetFloat("_SpeedScalar", _speedScalar);
+    mat.SetFloat("_PreScalar", preset.preScalar);
+    mat.SetFloat("_PostScalar", preset.postScalar);
+
     mat.SetMatrix("_ToWorldMat", _displayAnchor.localToWorldMatrix);
     mat.SetFloat("_Scale", scale);
     mat.SetFloat("_Size", _starSize);
     mat.SetFloat("_Bright", _starBrightness);
+
+#if UNITY_EDITOR
+    uploadGradientTextures();
+#endif
+
     mat.SetPass(0);
 
     Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
   }
 
   private void uploadGradientTextures() {
-    _postProcessMat.SetTexture(GRADIENT_PROPERTY, _heatGradient.ToTexture());
+    _postProcessMat.SetTexture(GRADIENT_PROPERTY, preset.heatTex);
 
-    var starTex = _starRamp.ToTexture();
+    var starTex = preset.starTex;
     _pointMat.SetTexture("_Ramp", starTex);
     _quadMat.SetTexture("_Ramp", starTex);
     _lightMat.SetTexture("_Ramp", starTex);

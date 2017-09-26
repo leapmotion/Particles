@@ -27,7 +27,8 @@
   float _Size;
   uint _NoiseOffset;
 
-  float _SpeedScalar;
+  float _PreScalar;
+  float _PostScalar;
 
   v2f vert(uint id : SV_VertexID) {
     float4 uv;
@@ -56,20 +57,20 @@
 
     v2f o;
     o.vertex = mul(UNITY_MATRIX_VP, worldPosition);
-    o.color = 1;
+    o.color = _PreScalar;
 
 #if BY_SPEED
-    o.color = _SpeedScalar * length(prevPosition - position);
+    o.color = _PreScalar * length(prevPosition - position);
 #endif
 
 #if BY_DIRECTION
-    o.color = abs(prevPosition - position) * _SpeedScalar;
+    o.color = abs(prevPosition - position) * _PreScalar;
 #endif
 
 #if BY_ACCEL
     float4 vel0 = position - prevPosition;
     float4 vel1 = prevPosition - lastPosition;
-    o.color = _SpeedScalar * length(vel0 - vel1);
+    o.color = _PreScalar * length(vel0 - vel1);
 #endif
 
 #if BY_BLACK_HOLE
@@ -81,7 +82,7 @@
     o.color = tex2Dlod(_Ramp, float4(uv2, 0, 0));
 #endif
 
-    o.color *= brightness;
+    o.color *= brightness * _PostScalar;
 
     return o;
   }

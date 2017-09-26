@@ -6,7 +6,8 @@
 	}
 
   CGINCLUDE
-  #pragma multi_compile _ BY_SPEED BY_DIRECTION
+  #pragma multi_compile _ USE_RAMP
+  #pragma multi_compile _ BY_SPEED BY_DIRECTION BY_ACCEL
   #include "UnityCG.cginc"
 
   struct v2f {
@@ -14,9 +15,11 @@
     float4 color : COLOR;
   };
 
+  sampler2D _Ramp;
   sampler2D _Noise;
   sampler2D _MainTex;
   sampler2D _PrevPosition;
+  sampler2D _LastPosition;
 
   float4x4 _ToWorldMat;
   float _Scale;
@@ -35,6 +38,7 @@
 
     float4 position = tex2Dlod(_MainTex, uv);
     float4 prevPosition = tex2Dlod(_PrevPosition, uv);
+    float4 lastPosition = tex2Dlod(_LastPosition, uv);
 
     float4 worldPosition = mul(_ToWorldMat, position);
 
@@ -52,15 +56,28 @@
 
     v2f o;
     o.vertex = mul(UNITY_MATRIX_VP, worldPosition);
-    o.color = brightness;
+    o.color = 1;
 
 #if BY_SPEED
-    o.color *= _SpeedScalar * length(prevPosition - position);
+    o.color = _SpeedScalar * length(prevPosition - position);
 #endif
 
 #if BY_DIRECTION
-    o.color = brightness * abs(prevPosition - position) * _SpeedScalar;
+    o.color = abs(prevPosition - position) * _SpeedScalar;
 #endif
+
+#if BY_ACCEL
+    float4 vel0 = position - prevPosition;
+    float4 vel1 = prevPosition - lastPosition;
+    o.color = _SpeedScalar * length(vel0 - vel1);
+#endif
+
+#if USE_RAMP
+    float2 uv2 = o.color.rg;
+    o.color = tex2Dlod(_Ramp, float4(uv2, 0, 0));
+#endif
+
+    o.color *= brightness;
 
     return o;
   }

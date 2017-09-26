@@ -6,9 +6,11 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Camera))]
 public class GalaxyRenderer : MonoBehaviour {
   private const string BOX_FILTER_KEYWORD = "BOX_FILTER";
+  private const string STAR_RAMP_KEYWORD = "USE_RAMP";
 
   private const string BY_SPEED_KEYWORD = "BY_SPEED";
   private const string BY_DIRECTION_KEYWORD = "BY_DIRECTION";
+  private const string BY_ACCEL_KEYWORD = "BY_ACCEL";
 
   private const string START_TEX_PROPERTY = "_Stars";
   private const string GRADIENT_PROPERTY = "_Gradient";
@@ -60,6 +62,12 @@ public class GalaxyRenderer : MonoBehaviour {
 
   [SerializeField]
   private Color _starColor = Color.white;
+
+  [SerializeField]
+  private bool _enableStarGradient = false;
+
+  [SerializeField]
+  private Gradient _starRamp;
 
   [SerializeField]
   private float _speedScalar = 1;
@@ -114,7 +122,8 @@ public class GalaxyRenderer : MonoBehaviour {
   public enum ColorMode {
     Solid,
     BySpeed,
-    ByDirection
+    ByDirection,
+    ByAccel
   }
 
   public enum PostProcessMode {
@@ -123,14 +132,14 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void OnValidate() {
-    uploadGradientTexture();
+    uploadGradientTextures();
   }
 
   private void OnEnable() {
     _myCamera = GetComponent<Camera>();
     Camera.onPostRender += drawCamera;
 
-    uploadGradientTexture();
+    uploadGradientTextures();
   }
 
   private void OnDisable() {
@@ -203,6 +212,7 @@ public class GalaxyRenderer : MonoBehaviour {
 
     mat.DisableKeyword(BY_SPEED_KEYWORD);
     mat.DisableKeyword(BY_DIRECTION_KEYWORD);
+    mat.DisableKeyword(BY_ACCEL_KEYWORD);
     switch (_colorMode) {
       case ColorMode.BySpeed:
         mat.EnableKeyword(BY_SPEED_KEYWORD);
@@ -210,6 +220,15 @@ public class GalaxyRenderer : MonoBehaviour {
       case ColorMode.ByDirection:
         mat.EnableKeyword(BY_DIRECTION_KEYWORD);
         break;
+      case ColorMode.ByAccel:
+        mat.EnableKeyword(BY_ACCEL_KEYWORD);
+        break;
+    }
+
+    if (_enableStarGradient) {
+      mat.EnableKeyword(STAR_RAMP_KEYWORD);
+    } else {
+      mat.DisableKeyword(STAR_RAMP_KEYWORD);
     }
 
     mat.mainTexture = _currPosition;
@@ -226,17 +245,12 @@ public class GalaxyRenderer : MonoBehaviour {
     Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
   }
 
-  private void uploadGradientTexture() {
-    Texture2D tex = new Texture2D(256, 1, TextureFormat.ARGB32, mipmap: false, linear: true);
-    tex.filterMode = FilterMode.Bilinear;
-    tex.wrapMode = TextureWrapMode.Clamp;
+  private void uploadGradientTextures() {
+    _postProcessMat.SetTexture(GRADIENT_PROPERTY, _heatGradient.ToTexture());
 
-    for (int i = 0; i < tex.width; i++) {
-      float t = i / (tex.width - 1.0f);
-      tex.SetPixel(i, 0, _heatGradient.Evaluate(t));
-    }
-    tex.Apply();
-
-    _postProcessMat.SetTexture(GRADIENT_PROPERTY, tex);
+    var starTex = _starRamp.ToTexture();
+    _pointMat.SetTexture("_Ramp", starTex);
+    _quadMat.SetTexture("_Ramp", starTex);
+    _lightMat.SetTexture("_Ramp", starTex);
   }
 }

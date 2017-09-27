@@ -4,6 +4,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Leap.Unity.Animation {
 
   public abstract class TweenAppearVanishController : MonoBehaviour, IAppearVanishController {
@@ -19,10 +23,16 @@ namespace Leap.Unity.Animation {
 
     #region Unity Events
     
-    public bool startAppeared;
+    [SerializeField]
+    private bool _startAppeared;
 
     protected virtual void Start() {
-      if (startAppeared) {
+      if (_backingAppearVanishTween.isValid) {
+        // Something other call initialized the tween, don't initialize here.
+        return;
+      }
+
+      if (_startAppeared) {
         AppearNow();
       }
       else {
@@ -104,14 +114,38 @@ namespace Leap.Unity.Animation {
     }
 
     public void AppearNow() {
-      var tween = _appearVanishTween;
-      tween.progress = 1f;
+      if (Application.isPlaying) {
+        if (!gameObject.activeSelf) {
+          gameObject.SetActive(true);
+        }
+
+        var tween = _appearVanishTween;
+        tween.progress = 1f;
+      }
+
+#if UNITY_EDITOR
+      if (!Application.isPlaying) {
+        Undo.RegisterFullObjectHierarchyUndo(gameObject, "Appear Object(s) Now");
+        _startAppeared = true;
+      }
+#endif
+
       updateAppearVanish(1f, immediately: true);
     }
 
     public void VanishNow() {
-      var tween = _appearVanishTween;
-      tween.progress = 0f;
+      if (Application.isPlaying) {
+        var tween = _appearVanishTween;
+        tween.progress = 0f;
+      }
+
+#if UNITY_EDITOR
+      if (!Application.isPlaying) {
+        Undo.RegisterFullObjectHierarchyUndo(gameObject, "Vanish Object(s) Now");
+        _startAppeared = false;
+      }
+#endif
+
       updateAppearVanish(0f, immediately: true);
     }
 

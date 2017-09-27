@@ -1,11 +1,10 @@
-﻿using Leap.Unity.Animation;
-using Leap.Unity.Attributes;
+﻿using Leap.Unity.Attributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Leap.Unity.Interaction.UI {
+namespace Leap.Unity.Animation {
 
   public class ScaleAppearVanishController : TweenAppearVanishController, IAppearVanishController {
 
@@ -74,7 +73,7 @@ namespace Leap.Unity.Interaction.UI {
       localScaleTarget.localScale = targetScale;
 
       if (deactivateSelfWhenZero) {
-        this.gameObject.SetActive(!(localScaleTarget.localScale.CompMin() <= NEAR_ZERO));
+        this.gameObject.SetActive(!(targetScale.CompMin() <= NEAR_ZERO));
       }
     }
 

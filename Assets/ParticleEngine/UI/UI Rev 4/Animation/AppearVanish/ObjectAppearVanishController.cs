@@ -28,17 +28,23 @@ namespace Leap.Unity.Animation {
 
     private bool _refreshed = false;
 
-    protected virtual void Start() {
-      refreshAppearVanishControllers();
+    protected virtual void Reset() {
+      RefreshAppearVanishControllers();
     }
 
     protected virtual void OnValidate() {
-      refreshAppearVanishControllers();
+      RefreshAppearVanishControllers();
     }
 
-    private void refreshAppearVanishControllers() {
-      GetComponents<Component>().Query()
-                                .Where(c => c is IAppearVanishController && !(c == this))
+    protected virtual void Start() {
+      RefreshAppearVanishControllers();
+    }
+
+    public void RefreshAppearVanishControllers() {
+      GetComponents<MonoBehaviour>().Query()
+                                .Where(c => c is IAppearVanishController
+                                            && !(c == this)
+                                            && c.enabled)
                                 .Select(c => c as IAppearVanishController)
                                 .FillList(_appearVanishControllers);
 
@@ -46,7 +52,7 @@ namespace Leap.Unity.Animation {
     }
 
     public void Appear() {
-      if (!_refreshed) refreshAppearVanishControllers();
+      if (!_refreshed) RefreshAppearVanishControllers();
 
       foreach (var appearVanishController in _appearVanishControllers) {
         appearVanishController.Appear();
@@ -64,15 +70,11 @@ namespace Leap.Unity.Animation {
     }
 
     public bool GetAppearingOrAppeared() {
-      throw new NotImplementedException(
-        "GetAppearingOrAppeared not implemented for ObjectAppearVanishController."
-      );
+      return _appearVanishControllers.Query().Any(c => c.GetAppearingOrAppeared());
     }
 
     public bool GetVanishingOrVanished() {
-      throw new NotImplementedException(
-        "GetVanishingOrVanished not implemented for ObjectAppearVanishController."
-      );
+      return _appearVanishControllers.Query().Any(c => c.GetVanishingOrVanished());
     }
 
     public bool GetVisible() {

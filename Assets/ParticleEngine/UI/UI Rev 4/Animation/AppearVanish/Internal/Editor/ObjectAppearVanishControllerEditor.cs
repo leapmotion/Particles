@@ -15,7 +15,15 @@ namespace Leap.Unity.Animation {
     public override void OnInspectorGUI() {
       base.OnInspectorGUI();
 
+      refreshAppearVanishControllers();
+
       drawAttachedAppearVanishControllers();
+    }
+
+    private void refreshAppearVanishControllers() {
+      foreach (var target in targets) {
+        target.RefreshAppearVanishControllers();
+      }
     }
 
     private void drawAttachedAppearVanishControllers() {

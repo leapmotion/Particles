@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 114213223039247614}
   - component: {fileID: 114125500328867750}
   - component: {fileID: 114201312227546328}
+  - component: {fileID: 114653066773673342}
   m_Layer: 0
   m_Name: Panel Pivot
   m_TagString: Untagged
@@ -274,7 +275,9 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4448231898725588}
+  - component: {fileID: 114241787018393888}
   - component: {fileID: 114007232055186976}
+  - component: {fileID: 114877514016167184}
   - component: {fileID: 54822530072908070}
   - component: {fileID: 114978851440977624}
   - component: {fileID: 114054689936194556}
@@ -285,7 +288,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1985013939487496
 GameObject:
   m_ObjectHideFlags: 1
@@ -369,8 +372,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1964204889738366}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.07}
+  m_LocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
   m_Children:
   - {fileID: 4831512912612670}
   m_Father: {fileID: 4635659174773152}
@@ -602,8 +605,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 1
-  startAppeared: 1
+  animTime: 0.33
+  _startAppeared: 0
   localScaleTarget: {fileID: 4448231898725588}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
@@ -781,7 +784,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _panelAppearVanish: {fileID: 114213223039247614}
-  _ballAppearVanish: {fileID: 114007232055186976}
+  ballVanishWhenPanelAppears: 1
+  _ballAppearVanish: {fileID: 114241787018393888}
   ballTransform: {fileID: 4448231898725588}
 --- !u!114 &114123466307569574
 MonoBehaviour:
@@ -808,8 +812,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.66
-  startAppeared: 0
+  animTime: 0.33
+  _startAppeared: 0
   localScaleTarget: {fileID: 4719667381718988}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
@@ -819,21 +823,9 @@ MonoBehaviour:
     m_Curve:
     - serializedVersion: 2
       time: 0
-      value: 0.010040283
-      inSlope: 4.2916274
-      outSlope: 4.2916274
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 0.21211568
-      value: 0.6539097
-      inSlope: 2.3024547
-      outSlope: 2.3024547
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 0.66612643
-      value: 0.9965122
-      inSlope: -0.012488773
-      outSlope: -0.012488773
+      value: 0
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
       time: 1
@@ -844,7 +836,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
-  nonUniformScale: 0
+  nonUniformScale: 1
   xScaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -855,6 +847,18 @@ MonoBehaviour:
       outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
+      time: 0.32573932
+      value: 0.5019319
+      inSlope: 2.2104108
+      outSlope: 2.2104108
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.68692535
+      value: 0.99642944
+      inSlope: 0.0000011568367
+      outSlope: 0.0000011568367
+      tangentMode: 0
+    - serializedVersion: 2
       time: 1
       value: 1
       inSlope: 0
@@ -862,7 +866,7 @@ MonoBehaviour:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   yScaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -873,6 +877,18 @@ MonoBehaviour:
       outSlope: 0
       tangentMode: 0
     - serializedVersion: 2
+      time: 0.2913785
+      value: 0
+      inSlope: 0.026088309
+      outSlope: 0.026088309
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.6127719
+      value: 0.495889
+      inSlope: 2.2726448
+      outSlope: 2.2726448
+      tangentMode: 0
+    - serializedVersion: 2
       time: 1
       value: 1
       inSlope: 0
@@ -880,7 +896,7 @@ MonoBehaviour:
       tangentMode: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
-    m_RotationOrder: 4
+    m_RotationOrder: 0
   zScaleCurve:
     serializedVersion: 2
     m_Curve:
@@ -937,7 +953,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animTime: 0.66
-  startAppeared: 0
+  _startAppeared: 0
   leapRadialSpace: {fileID: 114123466307569574}
   apparentRadius: 1
   vanishedRadius: 0.07
@@ -1237,6 +1253,17 @@ MonoBehaviour:
     - {fileID: 114908333210174922}
     _supportInfo: []
     _addRemoveSupported: 1
+--- !u!114 &114241787018393888
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1964204889738366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114421660106371870
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1386,6 +1413,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   additionalDepth: 0.025
   additionalNegativeDepth: 0.015
+--- !u!114 &114653066773673342
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1009360001300858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animTime: 0.5
+  _startAppeared: 0
+  apparentLocalPosition: {x: 0, y: 0, z: 0}
+  vanishedLocalPosition: {x: 0, y: 0, z: 0}
+  movementCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.49959064
+      value: 0.49938595
+      inSlope: 3.3133194
+      outSlope: 3.3133194
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &114698008528811954
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1460,6 +1526,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   widgetModeController: {fileID: 114112614033485654}
   anchObj: {fileID: 114054689936194556}
+--- !u!114 &114877514016167184
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1964204889738366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  animTime: 0.5
+  _startAppeared: 0
+  apparentLocalPosition: {x: 0, y: 0, z: 0}
+  vanishedLocalPosition: {x: 0, y: 0, z: 0.07}
+  movementCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.49823806
+      value: 0.4973571
+      inSlope: 2.0703394
+      outSlope: 2.0703394
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &114889294472524628
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1869,7 +1974,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1009360001300858}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224564470234054886}

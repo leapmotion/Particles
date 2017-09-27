@@ -16,6 +16,7 @@ public class WidgetModeController : MonoBehaviour {
   }
 
   [Header("Ball")]
+
   [SerializeField, ImplementsInterface(typeof(IAppearVanishController))]
   public MonoBehaviour _ballAppearVanish;
   public IAppearVanishController ballAppearVanish {

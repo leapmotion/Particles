@@ -24,4 +24,12 @@ public class SandboxTransitionController : MonoBehaviour {
   public void OnFinalTransition() {
     SceneManager.LoadSceneAsync(1);
   }
+
+  private void Update() {
+    if (sandboxAnchor.activeInHierarchy) {
+      if (Input.GetKeyDown(KeyCode.UpArrow)) {
+        OnFinalTransition();
+      }
+    }
+  }
 }

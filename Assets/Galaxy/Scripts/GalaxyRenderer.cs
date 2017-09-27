@@ -24,6 +24,11 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField]
   private Transform _displayAnchor;
 
+  [DevCategory("General Settings")]
+  [Range(0.01f, 2f)]
+  [SerializeField, DevValue]
+  private float _scale = 1;
+
   [Header("Black Holes"), DevCategory]
   [SerializeField, DevValue]
   private bool _renderBlackHoles = true;
@@ -86,10 +91,14 @@ public class GalaxyRenderer : MonoBehaviour {
   private Texture _prevPosition;
   private Texture _lastPosition;
 
-  [DevCategory("General Settings")]
-  [Range(0.01f, 2f)]
-  [DevValue("Scale")]
-  private float _devScale;
+  public float scale {
+    get {
+      return _scale;
+    }
+    set {
+      _scale = value;
+    }
+  }
 
   public enum RenderType {
     Point,
@@ -107,8 +116,6 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void OnEnable() {
-    _devScale = _displayAnchor.localScale.x;
-
     _myCamera = GetComponent<Camera>();
     Camera.onPostRender += drawCamera;
 
@@ -120,7 +127,7 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void LateUpdate() {
-    _displayAnchor.localScale = _devScale * Vector3.one;
+    _displayAnchor.localScale = _scale * Vector3.one;
   }
 
   public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {

@@ -87,15 +87,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private Texture _lastPosition;
 
   [DevCategory("General Settings")]
+  [Range(0.01f, 2f)]
   [DevValue("Scale")]
-  public float scale {
-    get {
-      return _displayAnchor.lossyScale.x;
-    }
-    set {
-      _displayAnchor.localScale = Vector3.one * value;
-    }
-  }
+  private float _devScale;
 
   public enum RenderType {
     Point,
@@ -113,6 +107,8 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void OnEnable() {
+    _devScale = _displayAnchor.localScale.x;
+
     _myCamera = GetComponent<Camera>();
     Camera.onPostRender += drawCamera;
 
@@ -121,6 +117,10 @@ public class GalaxyRenderer : MonoBehaviour {
 
   private void OnDisable() {
     Camera.onPostRender -= drawCamera;
+  }
+
+  private void LateUpdate() {
+    _displayAnchor.localScale = _devScale * Vector3.one;
   }
 
   public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {
@@ -220,7 +220,7 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.SetFloat("_PostScalar", preset.postScalar);
 
     mat.SetMatrix("_ToWorldMat", _displayAnchor.localToWorldMatrix);
-    mat.SetFloat("_Scale", scale);
+    mat.SetFloat("_Scale", _displayAnchor.lossyScale.x);
     mat.SetFloat("_Size", _starSize);
     mat.SetFloat("_Bright", _starBrightness);
 

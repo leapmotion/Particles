@@ -217,7 +217,7 @@ public class IESimulator : MonoBehaviour {
           color *= 0.01f * _manager.particleBrightness / (simVelocity.magnitude * 500 + 1);
           break;
         case ColorMode.SmartVelocity:
-          color = currentDescription.speciesData[particle.species].color * 0.35f;
+          color = currentDescription.speciesData[particle.species].color * 0.6f;
           color += Color.white * _manager.particleBrightness * simVelocity.magnitude * 0.8f;
           break;
         default:

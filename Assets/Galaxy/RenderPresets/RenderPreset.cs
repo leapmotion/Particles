@@ -29,14 +29,30 @@ public class RenderPreset : ScriptableObject {
     HeatMap = 1
   }
 
-  [NonSerialized]
-  public Texture2D starTex;
-  [NonSerialized]
-  public Texture2D heatTex;
+  private Texture2D _starTex;
+  private Texture2D _heatTex;
+
+  public Texture2D starTex {
+    get {
+      if (_starTex == null) {
+        _starTex = starRamp.ToTexture();
+      }
+      return _starTex;
+    }
+  }
+
+  public Texture2D heatTex {
+    get {
+      if (_heatTex == null) {
+        _heatTex = heatGradient.ToTexture();
+      }
+      return _heatTex;
+    }
+  }
 
   void OnValidate() {
-    starTex = starRamp.ToTexture();
-    heatTex = heatGradient.ToTexture();
+    _starTex = starRamp.ToTexture();
+    _heatTex = heatGradient.ToTexture();
   }
 }
 

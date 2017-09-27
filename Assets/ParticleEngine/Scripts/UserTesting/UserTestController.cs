@@ -13,6 +13,7 @@ public class UserTestController : MonoBehaviour {
   public SimulationManager simManager;
   public TextureSimulator texSimulator;
   public GameObject buttonAnchor;
+  public SandboxTransitionController transitionController;
 
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
@@ -68,6 +69,14 @@ public class UserTestController : MonoBehaviour {
 
   public void OnNext() {
     if (_currScript == _scriptPaths.Count - 1 && _currEcosystem == _ecosystemPaths.Count - 1) {
+      enabled = false;
+      transitionController.BeginSandboxTransition();
+      buttonAnchor.SetActive(false);
+      Tween.Single().Target(simManager.displayAnchor).
+                     ToLocalScale(0).
+                     OverTime(1).
+                     Smooth().
+                     Play();
       return;
     }
 

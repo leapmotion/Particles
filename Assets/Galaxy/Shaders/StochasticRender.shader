@@ -41,7 +41,7 @@
     float4 prevPosition = tex2Dlod(_PrevPosition, uv);
     float4 lastPosition = tex2Dlod(_LastPosition, uv);
 
-    float4 worldPosition = mul(_ToWorldMat, position);
+    float4 worldPosition = mul(_ToWorldMat, float4(position.xyz, 1));
 
     //uint id2 = (id + _NoiseOffset) % (32 * 32);
     //uv.x = (id2 / 32) / 32.0;

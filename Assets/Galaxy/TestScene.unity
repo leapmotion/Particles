@@ -257,9 +257,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _displayAnchor: {fileID: 753507340}
-  _renderBlackHoles: 1
+  _renderBlackHoles: 0
   _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  _blackHoleMat: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  _blackHoleMat: {fileID: 2100000, guid: 9d30d8bee9d12a742a4235d76c16b104, type: 2}
   _starSize: 0.0099
   _starBrightness: 0.192
   _renderType: 2
@@ -370,7 +370,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1883624478}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -4.7}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1697903798}

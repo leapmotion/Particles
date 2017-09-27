@@ -134,7 +134,7 @@ public class GalaxyRenderer : MonoBehaviour {
       _blackHoleMat.SetColor("_Color", preset.baseColor);
 
       Graphics.DrawMesh(_blackHoleMesh,
-                        _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.01f),
+                        _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.03f),
                         _blackHoleMat,
                         0);
     }

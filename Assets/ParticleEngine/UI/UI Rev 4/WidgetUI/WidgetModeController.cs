@@ -9,26 +9,26 @@ using UnityEngine;
 public class WidgetModeController : MonoBehaviour {
 
   [Header("Panel")]
-  [SerializeField, ImplementsInterface(typeof(IAppearVanishController))]
+  [SerializeField, ImplementsInterface(typeof(IPropertySwitch))]
   private MonoBehaviour _panelAppearVanish;
-  public IAppearVanishController panelAppearVanish {
-    get { return _panelAppearVanish as IAppearVanishController; }
+  public IPropertySwitch panelAppearVanish {
+    get { return _panelAppearVanish as IPropertySwitch; }
   }
 
   [Header("Ball")]
 
-  [SerializeField, ImplementsInterface(typeof(IAppearVanishController))]
+  [SerializeField, ImplementsInterface(typeof(IPropertySwitch))]
   public MonoBehaviour _ballAppearVanish;
-  public IAppearVanishController ballAppearVanish {
-    get { return _ballAppearVanish as IAppearVanishController; }
+  public IPropertySwitch ballAppearVanish {
+    get { return _ballAppearVanish as IPropertySwitch; }
   }
 
   public Transform ballTransform;
 
   public void TransitionToBall() {
-    panelAppearVanish.Vanish();
+    panelAppearVanish.Off();
 
-    ballAppearVanish.Appear();
+    ballAppearVanish.On();
   }
 
   public void TransitionToPanel() {
@@ -36,21 +36,21 @@ public class WidgetModeController : MonoBehaviour {
 
     FaceCamera();
 
-    panelAppearVanish.Appear();
+    panelAppearVanish.On();
 
-    ballAppearVanish.Vanish();
+    ballAppearVanish.Off();
   }
 
   public void TransitionToBallNow() {
-    panelAppearVanish.VanishNow();
+    panelAppearVanish.OffNow();
 
-    ballAppearVanish.AppearNow();
+    ballAppearVanish.OnNow();
   }
 
   public void TransitionToPanelNow() {
-    panelAppearVanish.AppearNow();
+    panelAppearVanish.OnNow();
 
-    ballAppearVanish.VanishNow();
+    ballAppearVanish.OffNow();
   }
 
   public void MoveSelfToBall() {

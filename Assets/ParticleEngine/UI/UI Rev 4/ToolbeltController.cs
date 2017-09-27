@@ -20,11 +20,11 @@ public class ToolbeltController : MonoBehaviour {
 
   [Header("Open / Close <> Appear / Vanish")]
 
-  [ImplementsInterface(typeof(IAppearVanishController))]
+  [ImplementsInterface(typeof(IPropertySwitch))]
   [SerializeField]
   public MonoBehaviour _appearVanishController;
-  public IAppearVanishController appearVanishController {
-    get { return _appearVanishController as IAppearVanishController; }
+  public IPropertySwitch appearVanishController {
+    get { return _appearVanishController as IPropertySwitch; }
   }
 
   [Header("Open/Close Animation")]
@@ -62,7 +62,7 @@ public class ToolbeltController : MonoBehaviour {
     _baseLocalTargetPose = toolbeltAnchor.ToLocalPose();
 
     if (appearVanishController != null) {
-      appearVanishController.VanishNow();
+      appearVanishController.OffNow();
     }
   }
 
@@ -96,7 +96,7 @@ public class ToolbeltController : MonoBehaviour {
     _state = State.Opened;
 
     if (appearVanishController != null) {
-      appearVanishController.Appear();
+      appearVanishController.On();
     }
 
     OnOpenBegin();
@@ -108,7 +108,7 @@ public class ToolbeltController : MonoBehaviour {
     _state = State.Closed;
 
     if (appearVanishController != null) {
-      appearVanishController.Vanish();
+      appearVanishController.Off();
     }
 
     OnCloseBegin();

@@ -91,10 +91,12 @@ namespace Leap.Unity.Layout {
     }
 
     private void updateLayout() {
-      for (int i = 0; i < layoutTransforms.Length; i++) {
-        var point = layoutTransforms[i];
+      if (layoutTransforms != null) {
+        for (int i = 0; i < layoutTransforms.Length; i++) {
+          var point = layoutTransforms[i];
 
-        point.localPosition = localPosForIndex(i);
+          point.localPosition = localPosForIndex(i);
+        }
       }
     }
 

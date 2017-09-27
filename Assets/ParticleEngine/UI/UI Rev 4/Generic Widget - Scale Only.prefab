@@ -432,7 +432,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1084357072699700}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.25788143, y: -0.53880715, z: 0.03539437}
+  m_LocalPosition: {x: -0.3376845, y: -0.53986174, z: -0.040103406}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4856806331067478}
@@ -739,12 +739,12 @@ MonoBehaviour:
   _isAttached: 1
   _anchor: {fileID: 0}
   _anchorGroup: {fileID: 0}
-  maxAnchorRange: 0.4
+  maxAnchorRange: 0.34
   useTrajectory: 1
-  _motionlessRangeFraction: 0.65
-  _maxMotionlessRange: 0.26
+  _motionlessRangeFraction: 0.6
+  _maxMotionlessRange: 0.20400001
   _maxAttachmentAngle: 60
-  _alwaysAttachDistance: 0.22
+  _alwaysAttachDistance: 0.16
   lockToAnchor: 0
   lockWhenAttached: 1
   matchAnchorMotionWhileAttaching: 1

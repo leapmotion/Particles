@@ -29,7 +29,7 @@ public class PanelTitlebarController : MonoBehaviour {
   void Update() {
     if (_graspingController != null) {
       var intHand = _graspingController.intHand;
-      if (intHand != null) {
+      if (intHand != null && intHand.isTracked) {
         updateGraspedPose(intHand.isRight ? Hands.Right.PalmPosition.ToVector3()
                                           : Hands.Left.PalmPosition.ToVector3());
       }
@@ -77,7 +77,7 @@ public class PanelTitlebarController : MonoBehaviour {
 
       // Rotate about the panelCenterTransform to face the camera.
       Vector3 pCToCam = -1f * (Camera.main.transform.position - panelCenterTransform.position);
-      Vector3 horizonRight = Vector3.Cross(Vector3.up, Camera.main.transform.forward);
+      Vector3 horizonRight = Vector3.Cross(Vector3.up, pCToCam);
       Vector3 pCUp = Vector3.Cross(pCToCam.normalized, horizonRight.normalized);
       panelCenterTransform.rotation = Quaternion.LookRotation(pCToCam, pCUp);
 

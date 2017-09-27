@@ -99,6 +99,8 @@ public class ToolbeltController : MonoBehaviour {
       appearVanishController.On();
     }
 
+    followingController.locked = true;
+
     OnOpenBegin();
   }
 
@@ -110,6 +112,8 @@ public class ToolbeltController : MonoBehaviour {
     if (appearVanishController != null) {
       appearVanishController.Off();
     }
+
+    followingController.locked = false;
 
     OnCloseBegin();
   }

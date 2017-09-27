@@ -19,6 +19,12 @@ namespace Leap.Unity.Animation {
       get { return sequenceProvider as IGameObjectSequenceProvider; }
     }
 
+    [Header("Sequence Control")]
+
+    [Tooltip("If this is checked, elements in the sequence will activate starting "
+           + "from the last index rather than the first index.")]
+    public bool reverseOrder = false;
+
     #endregion
 
     #region Switch Implementation
@@ -27,15 +33,16 @@ namespace Leap.Unity.Animation {
       int totalNumObjects = _objSequenceProvider.Count;
       int numOnObjects = (int)(time * totalNumObjects);
 
+      int objIdx = reverseOrder ? totalNumObjects - 1 : 0;
       for (int i = 0; i < totalNumObjects; i++) {
-        var propertySwitch = _objSequenceProvider[i].GetComponent<IPropertySwitch>();
+        var propertySwitch = _objSequenceProvider[objIdx].GetComponent<IPropertySwitch>();
 
         // Each element needs a component that implements IPropertySwitch for the
         // sequence switch to function properly.
         if (propertySwitch == null) {
-          Debug.LogError("Unable to switch " + _objSequenceProvider[i].name + ";"
+          Debug.LogError("Unable to switch " + _objSequenceProvider[objIdx].name + ";"
                        + "it must have a component that implements IPropertySwitch.",
-                       _objSequenceProvider[i]);
+                       _objSequenceProvider[objIdx]);
           continue;
         }
 
@@ -55,6 +62,8 @@ namespace Leap.Unity.Animation {
             propertySwitch.Off();
           }
         }
+
+        objIdx += reverseOrder ? -1 : 1;
       }
     }
 

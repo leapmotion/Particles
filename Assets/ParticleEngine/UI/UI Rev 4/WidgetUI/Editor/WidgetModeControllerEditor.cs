@@ -14,7 +14,6 @@ public class WidgetModeControllerEditor : CustomEditorBase<WidgetModeController>
 
   public override void OnInspectorGUI() {
     drawTransitionButtons();
-    drawMatchBallPoseButton();
 
     base.OnInspectorGUI();
   }
@@ -55,19 +54,6 @@ public class WidgetModeControllerEditor : CustomEditorBase<WidgetModeController>
       Undo.CollapseUndoOperations(curGroupIdx);
       Undo.SetCurrentGroupName("Ball Mode");
 
-    }
-
-    EditorGUILayout.EndHorizontal();
-  }
-
-  protected void drawMatchBallPoseButton() {
-    EditorGUILayout.BeginHorizontal();
-
-    if (GUILayout.Button(new GUIContent("Match Ball Pose",
-      "Calls MoveSelfToBall() on the selected widget controller(s)."))) {
-      foreach (var target in targets) {
-        target.MoveSelfToBall();
-      }
     }
 
     EditorGUILayout.EndHorizontal();

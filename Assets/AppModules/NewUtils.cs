@@ -183,4 +183,17 @@ public static class NewUtils {
 
   #endregion
 
+  #region Value Mapping Utils
+
+  /// <summary>
+  /// Returns a vector between resultMin and resultMax based on the input value's position
+  /// between valueMin and valueMax.
+  /// The input value is clamped between valueMin and valueMax.
+  /// </summary>
+  public static Vector3 Map(float input, float valueMin, float valueMax, Vector3 resultMin, Vector3 resultMax) {
+    return Vector3.Lerp(resultMin, resultMax, Mathf.InverseLerp(valueMin, valueMax, input));
+  }
+
+  #endregion
+
 }

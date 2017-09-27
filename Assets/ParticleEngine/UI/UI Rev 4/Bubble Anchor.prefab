@@ -151,8 +151,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.2
-  _startAppeared: 1
+  tweenTime: 0.33
+  _startOn: 0
   localScaleTarget: {fileID: 4316486024729964}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1

@@ -1,10 +1,24 @@
-﻿using Leap.Unity.Query;
+﻿using Leap.Unity.Attributes;
+using Leap.Unity.Query;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace Leap.Unity.Animation {
 
   public class ObjectSwitch : MonoBehaviour, IPropertySwitch {
+
+    #region Inspector
+
+    [Header("Attached Tween Overrides")]
+
+    [Tooltip("If checked, you can specify the tween times for all tween-based "
+           + "switches attached to this object switch.")]
+    public bool overrideTweenTime = false;
+
+    [DisableIf("overrideTweenTime", isEqualTo: false)]
+    public float tweenTime = 1f;
+
+    #endregion
 
     #region Attached Switches
 
@@ -40,6 +54,14 @@ namespace Leap.Unity.Animation {
                                     .FillList(_switches);
 
       _refreshed = true;
+
+      if (Application.isPlaying && overrideTweenTime) {
+        foreach (var tweenSwitch in _switches.Query()
+                                             .Where(s => s is TweenSwitch)
+                                             .Cast<TweenSwitch>()) {
+          tweenSwitch.tweenTime = tweenTime;
+        }
+      }
     }
 
     #endregion

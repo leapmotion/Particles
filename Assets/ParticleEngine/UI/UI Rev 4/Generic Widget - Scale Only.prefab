@@ -108,8 +108,13 @@ GameObject:
   - component: {fileID: 224762227081997102}
   - component: {fileID: 114760707246475942}
   - component: {fileID: 114958676558708536}
+  - component: {fileID: 54997547413114602}
+  - component: {fileID: 114313042489935484}
+  - component: {fileID: 114761051737946664}
+  - component: {fileID: 65633166693025140}
+  - component: {fileID: 114880995806723584}
   m_Layer: 0
-  m_Name: Label Control
+  m_Name: Titlebar Control
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -427,7 +432,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1084357072699700}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.25788143, y: -0.53880715, z: 0.03539434}
+  m_LocalPosition: {x: -0.25788143, y: -0.53880715, z: 0.03539437}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4856806331067478}
@@ -582,6 +587,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!54 &54997547413114602
+Rigidbody:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1397012824702858}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 2
 --- !u!65 &65369678364208786
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -594,6 +614,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.05, y: 0.05, z: 0.035}
   m_Center: {x: -0.025, y: 0, z: 4.656613e-10}
+--- !u!65 &65633166693025140
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1397012824702858}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.35, y: 0.05, z: 0.035}
+  m_Center: {x: 0.175, y: 0, z: 4.656613e-10}
 --- !u!114 &114003203630368808
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -605,10 +637,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.5
-  _startAppeared: 1
-  apparentLocalPosition: {x: 0, y: 0, z: 0}
-  vanishedLocalPosition: {x: 0, y: 0, z: 0.07}
+  tweenTime: 0.4
+  _startOn: 1
+  onLocalPosition: {x: 0, y: 0, z: 0}
+  offLocalPosition: {x: 0, y: 0, z: 0.115}
   movementCurve:
     serializedVersion: 2
     m_Curve:
@@ -621,8 +653,8 @@ MonoBehaviour:
     - serializedVersion: 2
       time: 0.49823806
       value: 0.4973571
-      inSlope: 2.0703394
-      outSlope: 2.0703394
+      inSlope: 5.5868583
+      outSlope: 5.5868583
       tangentMode: 0
     - serializedVersion: 2
       time: 1
@@ -644,6 +676,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  overrideTweenTime: 1
+  tweenTime: 0.33
 --- !u!114 &114064814286373070
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -655,6 +689,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  overrideTweenTime: 1
+  tweenTime: 0.33
 --- !u!114 &114097150436237578
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -703,11 +739,12 @@ MonoBehaviour:
   _isAttached: 1
   _anchor: {fileID: 0}
   _anchorGroup: {fileID: 0}
-  maxAnchorRange: 0.3
+  maxAnchorRange: 0.4
   useTrajectory: 1
-  _motionlessRangeFraction: 0.4
-  _maxMotionlessRange: 0.120000005
+  _motionlessRangeFraction: 0.65
+  _maxMotionlessRange: 0.26
   _maxAttachmentAngle: 60
+  _alwaysAttachDistance: 0.22
   lockToAnchor: 0
   lockWhenAttached: 1
   matchAnchorMotionWhileAttaching: 1
@@ -818,8 +855,39 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _panelAppearVanish: {fileID: 114064814286373070}
+  panelTransform: {fileID: 4856806331067478}
   _ballAppearVanish: {fileID: 114045828273944314}
   ballTransform: {fileID: 4263645406100726}
+--- !u!114 &114313042489935484
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1397012824702858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f10fa40360571247a7ca806d6859557, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _manager: {fileID: 0}
+  _ignoreHoverMode: 0
+  _isIgnoringAllHoverState: 0
+  _ignorePrimaryHover: 0
+  _ignoreContact: 1
+  _ignoreGrasping: 0
+  _contactForceMode: 0
+  _allowMultiGrasp: 0
+  _moveObjectWhenGrasped: 1
+  graspedMovementType: 0
+  graspHoldWarpingEnabled__curIgnored: 1
+  _overrideInteractionLayer: 0
+  _interactionLayer:
+    layerIndex: 0
+  _overrideNoContactLayer: 0
+  _noContactLayer:
+    layerIndex: 0
+  _eventTable:
+    _entries: []
 --- !u!114 &114328666758107968
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -831,11 +899,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8735cad1e35cdbf4e8289b2b91a7b5c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.66
-  _startAppeared: 0
+  tweenTime: 1
+  _startOn: 0
   leapRadialSpace: {fileID: 114750237781704370}
-  apparentRadius: 1
-  vanishedRadius: 0.07
+  onRadius: 1
+  offRadius: 0.1
   radiusUnitCurve:
     serializedVersion: 2
     m_Curve:
@@ -901,10 +969,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.5
-  _startAppeared: 0
-  apparentLocalPosition: {x: 0, y: 0, z: 0}
-  vanishedLocalPosition: {x: 0, y: 0, z: 0}
+  tweenTime: 0.33
+  _startOn: 0
+  onLocalPosition: {x: 0, y: 0, z: 0}
+  offLocalPosition: {x: 0, y: 0, z: 0.114}
   movementCurve:
     serializedVersion: 2
     m_Curve:
@@ -917,8 +985,8 @@ MonoBehaviour:
     - serializedVersion: 2
       time: 0.49959064
       value: 0.49938595
-      inSlope: 3.3133194
-      outSlope: 3.3133194
+      inSlope: 3.2327535
+      outSlope: 3.2327535
       tangentMode: 0
     - serializedVersion: 2
       time: 1
@@ -940,8 +1008,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.33
-  _startAppeared: 1
+  tweenTime: 1
+  _startOn: 0
   localScaleTarget: {fileID: 4263645406100726}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
@@ -1132,8 +1200,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animTime: 0.33
-  _startAppeared: 0
+  tweenTime: 0.33
+  _startOn: 0
   localScaleTarget: {fileID: 4856806331067478}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
@@ -1523,7 +1591,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parent: {fileID: 114750237781704370}
   space: {fileID: 114750237781704370}
-  _radius: 1
+  _radius: 1000
 --- !u!114 &114760707246475942
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1571,6 +1639,19 @@ MonoBehaviour:
   _size: {x: 0.35, y: 0.05}
   _nineSliced: 0
   _thickness: 0.01
+--- !u!114 &114761051737946664
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1397012824702858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96279462391502542bdf3ba40e3cd00f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  additionalDepth: 0.025
+  additionalNegativeDepth: 0.015
 --- !u!114 &114855920101779262
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1592,6 +1673,20 @@ MonoBehaviour:
   button: {fileID: 114966330385347100}
   primaryHoverColorIdx: 5
   pressedColorIdx: 3
+--- !u!114 &114880995806723584
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1397012824702858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 720e72cd458f5c044bf851f13db24dcb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  panelCenterTransform: {fileID: 4856806331067478}
+  intObj: {fileID: 114313042489935484}
+  widgetModeController: {fileID: 114300413083397490}
 --- !u!114 &114889202798580130
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1803,7 +1898,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1507733605802318}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.114}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224101423744150776}

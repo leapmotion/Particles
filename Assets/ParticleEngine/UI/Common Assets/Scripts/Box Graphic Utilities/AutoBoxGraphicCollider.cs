@@ -7,11 +7,14 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class AutoBoxGraphicCollider : MonoBehaviour {
 
-  [MinValue(0F)]
-  public float additionalDepth = 0.005F;
+  [MinValue(0f)]
+  public float additionalDepth = 0.005f;
 
-  [MinValue(0F)]
-  public float additionalNegativeDepth = 0.0F;
+  [MinValue(0f)]
+  public float additionalNegativeDepth = 0f;
+
+  [MinValue(0f)]
+  public float additionalXYPadding = 0f;
 
 #if UNITY_EDITOR
   void Update() {
@@ -31,8 +34,15 @@ public class AutoBoxGraphicCollider : MonoBehaviour {
       }
 
       if (boxCollider != null) {
-        boxCollider.size = new Vector3(boxGraphic.size.x, boxGraphic.size.y, boxGraphic.size.z + additionalDepth);
-        boxCollider.center = -boxGraphic.center + new Vector3(boxGraphic.size.x / 2F, boxGraphic.size.y / 2F, -boxGraphic.size.z / 2F + additionalDepth / 2F - additionalNegativeDepth / 2F);
+        boxCollider.size = new Vector3(boxGraphic.size.x + additionalXYPadding * 2f,
+                                       boxGraphic.size.y + additionalXYPadding * 2f,
+                                       boxGraphic.size.z + additionalDepth);
+        boxCollider.center = -boxGraphic.center
+                               + new Vector3(boxGraphic.size.x / 2F,
+                                             boxGraphic.size.y / 2F,
+                                             -boxGraphic.size.z / 2F
+                                               + additionalDepth / 2F
+                                               - additionalNegativeDepth / 2F);
       }
     }
   }

@@ -19,8 +19,10 @@ namespace Leap.Unity.Layout {
 
     [Header("Manual Specification")]
     public Vector3 localRectangularPosition = Vector3.zero;
+    public bool matchRotation = true;
+    public Vector3 localRectangularRotation = Vector3.zero;
 
-    [Header("Or, ILocalPositionProvider (overrides manual spec)")]
+    [Header("ILocalPositionProvider (overrides manual local position)")]
     [ImplementsInterface(typeof(ILocalPositionProvider))]
     public MonoBehaviour localPositionProvider = null;
 
@@ -31,14 +33,25 @@ namespace Leap.Unity.Layout {
     private void refreshPosition() {
       if (leapSpace != null) {
         if (leapSpace.transformer != null) {
+          var localRectPos = leapSpace.transform.InverseTransformPoint(
+                               this.transform.parent.TransformPoint(
+                                 localPositionProvider == null ? localRectangularPosition
+                                                               : (localPositionProvider as ILocalPositionProvider)
+                                                                 .GetLocalPosition(this.transform)));
           this.transform.position =
             leapSpace.transform.TransformPoint(
               leapSpace.transformer.TransformPoint(
-                leapSpace.transform.InverseTransformPoint(
-                  this.transform.parent.TransformPoint(
-                    localPositionProvider == null ? localRectangularPosition
-                                                  : (localPositionProvider as ILocalPositionProvider)
-                                                    .GetLocalPosition(this.transform)))));
+                localRectPos));
+
+          if (matchRotation) {
+            this.transform.rotation =
+              leapSpace.transform.TransformRotation(
+                leapSpace.transformer.TransformRotation(
+                  localRectPos,
+                  leapSpace.transform.InverseTransformRotation(
+                    this.transform.parent.TransformRotation(
+                      Quaternion.Euler(localRectangularRotation)))));
+          }
         }
       }
     }

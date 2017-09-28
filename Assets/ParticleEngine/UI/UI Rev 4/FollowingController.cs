@@ -36,17 +36,17 @@ public class FollowingController : MonoBehaviour {
   }
 
   void Update() {
-    if (locked) {
-      _effLerpCoeffPerSec = 0f;
-      _effSlerpCoeffPerSec = 0f;
-    }
+    //if (locked) {
+    //  _effLerpCoeffPerSec = 0f;
+    //  _effSlerpCoeffPerSec = 0f;
+    //}
 
-    if (followTarget != null && !locked) {
-      float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F);
-      _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec, targetLerpCoeffPerSec, 20F * Time.deltaTime);
+    if (followTarget != null) {
+      float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F) * (locked ? 0f : 1f);
+      _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec, targetLerpCoeffPerSec, 5F * Time.deltaTime);
 
-      float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F);
-      _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec, targetSlerpCoeffPerSec, 20F * Time.deltaTime);
+      float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F) * (locked ? 0f : 1f);
+      _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec, targetSlerpCoeffPerSec, 5F * Time.deltaTime);
 
 
       // Update position and rotation gradually towards the targets.

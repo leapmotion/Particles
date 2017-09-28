@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Leap.Unity.Layout {
 
+  [CanEditMultipleObjects]
   [CustomEditor(typeof(HorizontalPointLayout))]
   public class HorizontalPointLayoutEditor : CustomEditorBase<HorizontalPointLayout> {
 

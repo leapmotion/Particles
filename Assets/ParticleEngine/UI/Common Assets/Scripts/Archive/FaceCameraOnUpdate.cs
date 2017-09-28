@@ -18,7 +18,8 @@ public class FaceCameraOnUpdate : MonoBehaviour {
     }
     this.transform.rotation = Quaternion.LookRotation((_mainCamera.transform.position
                                                          - this.transform.position)
-                                                       * (faceAway ? -1f : 1f));
+                                                       * (faceAway ? -1f : 1f),
+                                                      Vector3.up);
   }
 
 }

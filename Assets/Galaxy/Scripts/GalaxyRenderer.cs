@@ -35,9 +35,13 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField, DevValue]
   private float _forwardOffset = 0;
 
-  [Header("Black Holes"), DevCategory]
-  [SerializeField, DevValue]
+  [Header("Black Hole Rendering"), DevCategory]
+  [SerializeField, DevValue("Render")]
   private bool _renderBlackHoles = true;
+
+  [Range(0, 1)]
+  [SerializeField, DevValue("Size")]
+  private float _blackHoleSize = 0.05f;
 
   [SerializeField]
   private Mesh _blackHoleMesh;
@@ -151,7 +155,7 @@ public class GalaxyRenderer : MonoBehaviour {
       _blackHoleMat.SetColor("_Color", preset.baseColor);
 
       Graphics.DrawMesh(_blackHoleMesh,
-                        _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * 0.03f),
+                        _displayAnchor.localToWorldMatrix * Matrix4x4.TRS(position, Quaternion.identity, Vector3.one * _blackHoleSize),
                         _blackHoleMat,
                         0);
     }

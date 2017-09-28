@@ -40,6 +40,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private Material _blackHoleMat;
 
   [Header("Star Rendering"), DevCategory]
+  [SerializeField, DevValue]
+  private bool _renderStars = true;
+
   [Range(0, 0.05f)]
   [FormerlySerializedAs("starSize")]
   [SerializeField, DevValue]
@@ -148,6 +151,11 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void OnRenderImage(RenderTexture source, RenderTexture destination) {
+    if (!_renderStars) {
+      Graphics.Blit(source, destination);
+      return;
+    }
+
     RenderTexture tex = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear, 1);
 
     Graphics.SetRenderTarget(tex.colorBuffer, source.depthBuffer);
@@ -180,6 +188,8 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void drawStars() {
+
+
     Material mat = null;
 
     switch (_renderType) {
@@ -235,9 +245,10 @@ public class GalaxyRenderer : MonoBehaviour {
     uploadGradientTextures();
 #endif
 
-    mat.SetPass(0);
-
-    Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
+    if (_renderStars) {
+      mat.SetPass(0);
+      Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
+    }
   }
 
   private void uploadGradientTextures() {

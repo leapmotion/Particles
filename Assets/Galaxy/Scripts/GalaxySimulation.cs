@@ -17,6 +17,9 @@ public class GalaxySimulation : MonoBehaviour {
   public KeyCode resetKeycode = KeyCode.Space;
 
   [DevValue]
+  public bool respawnMode = false;
+
+  [DevValue]
   public bool loop = false;
 
   [Range(0, 10)]
@@ -235,7 +238,7 @@ public class GalaxySimulation : MonoBehaviour {
       ResetSimulation();
     }
 
-    if (loop && _simulationTime > loopTime) {
+    if ((loop && _simulationTime > loopTime) || respawnMode) {
       ResetSimulation();
       return;
     }

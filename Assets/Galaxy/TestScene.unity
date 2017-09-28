@@ -165,7 +165,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resetKeycode: 32
   respawnMode: 0
-  loop: 1
+  loop: 0
   loopTime: 10
   timestep: 1
   galaxyRenderer: {fileID: 1697903793}
@@ -204,7 +204,7 @@ MonoBehaviour:
   blackHoleMassAffectsSize: 1
   blackHoleMassAffectsDensity: 1
   blackHoleCount: 10
-  gravConstant: 0.00005
+  gravConstant: 0.00001
   blackHoleVelocity: 0.004
   initialDirVariance: 0.4154
   blackHoleSpawnRadius: 3.806

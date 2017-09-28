@@ -75,7 +75,7 @@ public class GalaxySimulation : MonoBehaviour {
   [DevValue("Mass Affects Density")]
   public float blackHoleMassAffectsDensity = 1;
 
-  [Range(1, 10)]
+  [Range(1, 100)]
   [DevValue("Count")]
   public int blackHoleCount = 3;
 
@@ -122,9 +122,9 @@ public class GalaxySimulation : MonoBehaviour {
 
   private List<BlackHole> blackHoles = new List<BlackHole>();
 
-  private float[] _floatArray = new float[32];
-  private Vector4[] _vectorArray = new Vector4[32];
-  private Matrix4x4[] _matrixArray = new Matrix4x4[32];
+  private float[] _floatArray = new float[100];
+  private Vector4[] _vectorArray = new Vector4[100];
+  private Matrix4x4[] _matrixArray = new Matrix4x4[100];
 
   [DevButton("Reset Sim")]
   public void ResetSimulation() {

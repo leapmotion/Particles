@@ -19,12 +19,12 @@
   float _PrevTimestep;
   float _Timestep;
 
-  float4x4 _PlanetRotations[10];
-  float4 _Planets[10];
-  float4 _PlanetVelocities[10];
+  float4x4 _PlanetRotations[100];
+  float4 _Planets[100];
+  float4 _PlanetVelocities[100];
 
-  float _PlanetSizes[10];
-  float _PlanetDensities[10];
+  float _PlanetSizes[100];
+  float _PlanetDensities[100];
 
   uint _PlanetCount;
   float _TotalDensity;

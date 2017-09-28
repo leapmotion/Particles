@@ -258,6 +258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a64c23d3b646e454e94cbd3b3edb264a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _sim: {fileID: 1245413931}
   _displayAnchor: {fileID: 753507340}
   _scale: 1
   _forwardOffset: 4

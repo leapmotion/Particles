@@ -22,6 +22,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
   [SerializeField]
+  private GalaxySimulation _sim;
+
+  [SerializeField]
   private Transform _displayAnchor;
 
   [DevCategory("General Settings")]
@@ -237,7 +240,18 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.SetTexture("_PrevPosition", _prevPosition);
     mat.SetTexture("_LastPosition", _lastPosition);
 
-    mat.SetFloat("_PreScalar", preset.preScalar);
+    switch (preset.blitMode) {
+      case RenderPreset.BlitMode.BySpeed:
+        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timestep);
+        break;
+      case RenderPreset.BlitMode.ByAccel:
+        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timestep / _sim.timestep);
+        break;
+      default:
+        mat.SetFloat("_PreScalar", preset.preScalar);
+        break;
+    }
+
     mat.SetFloat("_PostScalar", preset.postScalar);
 
     mat.SetMatrix("_ToWorldMat", _displayAnchor.localToWorldMatrix);

@@ -17,6 +17,9 @@ public class GalaxySimulation : MonoBehaviour {
   public KeyCode resetKeycode = KeyCode.Space;
 
   [DevValue]
+  public bool simulate = true;
+
+  [DevValue]
   public bool respawnMode = false;
 
   [DevValue]
@@ -246,7 +249,7 @@ public class GalaxySimulation : MonoBehaviour {
     Random.InitState(Time.frameCount);
     _seed = Random.Range(int.MinValue, int.MaxValue);
 
-    if (timestep > TIME_FREEZE_THRESHOLD) {
+    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
       _simulationTime += timestep * Time.deltaTime;
 
       if (simulateBlackHoles) {

@@ -29,6 +29,9 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField, DevValue]
   private float _scale = 1;
 
+  [SerializeField, DevValue]
+  private float _forwardOffset = 0;
+
   [Header("Black Holes"), DevCategory]
   [SerializeField, DevValue]
   private bool _renderBlackHoles = true;
@@ -131,6 +134,7 @@ public class GalaxyRenderer : MonoBehaviour {
 
   private void LateUpdate() {
     _displayAnchor.localScale = _scale * Vector3.one;
+    _displayAnchor.localPosition = Vector3.forward * _forwardOffset * _scale;
   }
 
   public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {

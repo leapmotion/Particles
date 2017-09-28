@@ -86,6 +86,10 @@ public class GalaxySimulation : MonoBehaviour {
   [DevValue]
   public float gravConstant = 0.0001f;
 
+  [Range(0, 0.001f)]
+  [DevValue]
+  public float fuzzValue = 0.0005f;
+
   [MinValue(0)]
   [DevValue("Start Velocity")]
   public float blackHoleVelocity = 0.1f;
@@ -227,6 +231,7 @@ public class GalaxySimulation : MonoBehaviour {
     simulateMat.SetInt("_PlanetCount", blackHoles.Count);
 
     simulateMat.SetFloat("_Force", starGravConstant);
+    simulateMat.SetFloat("_FuzzValue", fuzzValue);
 
     if (timestep > TIME_FREEZE_THRESHOLD) {
       simulateMat.SetFloat("_Timestep", timestep);

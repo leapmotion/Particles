@@ -18,6 +18,7 @@
 
   float _PrevTimestep;
   float _Timestep;
+  float _FuzzValue;
 
   float4x4 _PlanetRotations[100];
   float4 _Planets[100];
@@ -64,7 +65,7 @@
     for (uint j = 0; j < _PlanetCount; j++) {
       float4 target = _Planets[j];
       float3 toTarget = target.xyz - currPos.xyz;
-      accel += target.w * normalize(toTarget) / (0.0001 + dot(toTarget, toTarget));
+      accel += target.w * normalize(toTarget) / (_FuzzValue + dot(toTarget, toTarget));
     }
 
     return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, currPos.w);

@@ -164,6 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resetKeycode: 32
+  simulate: 1
   respawnMode: 0
   loop: 0
   loopTime: 10
@@ -171,7 +172,7 @@ MonoBehaviour:
   galaxyRenderer: {fileID: 1697903793}
   simulateStars: 1
   starGravConstant: 0.00001
-  minDiscRadius: 0.0096
+  minDiscRadius: 0.03
   maxDiscRadius: 0.618
   maxDiscHeight: 0.053
   radiusDistribution:
@@ -205,6 +206,7 @@ MonoBehaviour:
   blackHoleMassAffectsDensity: 1
   blackHoleCount: 10
   gravConstant: 0.00001
+  fuzzValue: 0.0005
   blackHoleVelocity: 0.004
   initialDirVariance: 0.4154
   blackHoleSpawnRadius: 3.806

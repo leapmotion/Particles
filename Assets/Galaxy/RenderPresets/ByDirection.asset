@@ -14,7 +14,7 @@ MonoBehaviour:
   blitMode: 2
   baseColor: {r: 1, g: 1, b: 1, a: 1}
   enableStarGradient: 0
-  preScalar: 140
+  preScalar: 5.06
   starRamp:
     serializedVersion: 2
     key0: {r: 0, g: 0, b: 0, a: 1}
@@ -44,7 +44,7 @@ MonoBehaviour:
     m_Mode: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  postScalar: 1
+  postScalar: 39.53
   postProcessMode: 0
   heatGradient:
     serializedVersion: 2

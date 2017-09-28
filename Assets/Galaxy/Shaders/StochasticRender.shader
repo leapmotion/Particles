@@ -64,7 +64,14 @@
 #endif
 
 #if BY_DIRECTION
-    o.color = abs(prevPosition - position) * _PreScalar;
+    float3 delta = abs(prevPosition - position);
+    float maxC = max(max(delta.x, delta.y), delta.z);
+
+    delta /= maxC;
+    delta = pow(delta, 2);
+    delta *= min(1, maxC);
+
+    o.color = float4(delta * _PreScalar, 1);
 #endif
 
 #if BY_ACCEL

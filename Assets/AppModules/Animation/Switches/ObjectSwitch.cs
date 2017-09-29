@@ -16,6 +16,7 @@ namespace Leap.Unity.Animation {
     public bool overrideTweenTime = false;
 
     [DisableIf("overrideTweenTime", isEqualTo: false)]
+    [OnEditorChange("RefreshSwitches")]
     public float tweenTime = 1f;
 
     #endregion

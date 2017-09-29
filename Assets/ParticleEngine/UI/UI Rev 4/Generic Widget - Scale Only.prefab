@@ -54,7 +54,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4999452351138824}
-  - component: {fileID: 114300413083397490}
+  - component: {fileID: 114538829356365462}
   - component: {fileID: 114908250718703774}
   m_Layer: 0
   m_Name: Generic Widget - Scale Only
@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1542378270268712
 GameObject:
   m_ObjectHideFlags: 1
@@ -419,7 +419,7 @@ Transform:
   m_GameObject: {fileID: 1888862336856450}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
   m_Children:
   - {fileID: 224076238673338764}
   m_Father: {fileID: 4999452351138824}
@@ -637,7 +637,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweenTime: 0.4
+  _tweenTime: 0.4
   _startOn: 1
   onLocalPosition: {x: 0, y: 0, z: 0}
   offLocalPosition: {x: 0, y: 0, z: 0.115}
@@ -843,21 +843,6 @@ MonoBehaviour:
   parentBox: {fileID: 114760707246475942}
   extraDepth: 0.0001
   _parentBoxDepth: 0.01
---- !u!114 &114300413083397490
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1084357072699700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a4deb50f4c43fa4f8b74213c8202a23, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _panelAppearVanish: {fileID: 114064814286373070}
-  panelTransform: {fileID: 4856806331067478}
-  _ballAppearVanish: {fileID: 114045828273944314}
-  ballTransform: {fileID: 4263645406100726}
 --- !u!114 &114313042489935484
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -899,7 +884,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8735cad1e35cdbf4e8289b2b91a7b5c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweenTime: 1
+  _tweenTime: 1
   _startOn: 0
   leapRadialSpace: {fileID: 114750237781704370}
   onRadius: 1
@@ -969,8 +954,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweenTime: 0.33
-  _startOn: 1
+  _tweenTime: 0.33
+  _startOn: 0
   onLocalPosition: {x: 0, y: 0, z: 0}
   offLocalPosition: {x: 0, y: 0, z: 0.114}
   movementCurve:
@@ -1008,7 +993,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweenTime: 1
+  _tweenTime: 1
   _startOn: 0
   localScaleTarget: {fileID: 4263645406100726}
   baseLocalScale: {x: 1, y: 1, z: 1}
@@ -1124,6 +1109,25 @@ MonoBehaviour:
   additionalDepth: 0.025
   additionalNegativeDepth: 0.015
   additionalXYPadding: 0
+--- !u!114 &114538829356365462
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a50561188605c947b58cdefd6a66563, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  states:
+    _keys:
+    - Ball
+    - Panel
+    _values:
+    - _switch: {fileID: 114045828273944314}
+    - _switch: {fileID: 114064814286373070}
+  _curState: Ball
 --- !u!114 &114564157389895140
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1188,7 +1192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3610d85d9a2878e4e84f87aad26ddb02, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  widgetModeController: {fileID: 114300413083397490}
+  widgetModeController: {fileID: 0}
   anchObj: {fileID: 114265855366839592}
 --- !u!114 &114693086155942622
 MonoBehaviour:
@@ -1201,8 +1205,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweenTime: 0.33
-  _startOn: 1
+  _tweenTime: 0.33
+  _startOn: 0
   localScaleTarget: {fileID: 4856806331067478}
   baseLocalScale: {x: 1, y: 1, z: 1}
   enforceNonzeroScale: 1
@@ -1688,7 +1692,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   panelCenterTransform: {fileID: 4856806331067478}
   intObj: {fileID: 114313042489935484}
-  widgetModeController: {fileID: 114300413083397490}
+  widgetModeController: {fileID: 0}
 --- !u!114 &114889202798580130
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1863,7 +1867,7 @@ MonoBehaviour:
   _OnPress:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 114300413083397490}
+      - m_Target: {fileID: 0}
         m_MethodName: TransitionToBall
         m_Mode: 1
         m_Arguments:
@@ -1900,7 +1904,7 @@ RectTransform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1507733605802318}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0.114}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224101423744150776}

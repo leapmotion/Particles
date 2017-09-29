@@ -19,8 +19,18 @@ namespace Leap.Unity.Animation {
 
     [Header("Tween Control")]
 
-    [MinValue(0f), OnEditorChange("refreshTween")]
-    public float tweenTime = 1f;
+    [SerializeField, MinValue(0f), OnEditorChange("tweenTime")]
+    [UnityEngine.Serialization.FormerlySerializedAs("tweenTime")]
+    private float _tweenTime = 1f;
+    public float tweenTime {
+      get {
+        return _tweenTime;
+      }
+      set {
+        _tweenTime = value;
+        refreshTween();
+      }
+    }
 
     #endregion
 
@@ -130,6 +140,10 @@ namespace Leap.Unity.Animation {
 
         var tween = _switchTween;
         tween.progress = 1f;
+
+        if (tween.isRunning) {
+          tween.Stop();
+        }
       }
 
       updateSwitch(1f, immediately: true);
@@ -146,6 +160,10 @@ namespace Leap.Unity.Animation {
       if (Application.isPlaying) {
         var tween = _switchTween;
         tween.progress = 0f;
+
+        if (tween.isRunning) {
+          tween.Stop();
+        }
       }
 
       updateSwitch(0f, immediately: true);

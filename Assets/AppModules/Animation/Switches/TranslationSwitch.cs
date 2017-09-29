@@ -41,9 +41,9 @@ namespace Leap.Unity.Animation {
     #region Switch Implementation
 
     protected override void updateSwitch(float time, bool immediately = false) {
-      this.transform.localPosition = Vector3.Lerp(offLocalPosition,
-                                                  onLocalPosition,
-                                                  movementCurve.Evaluate(time));
+      this.transform.localPosition = Vector3.LerpUnclamped(offLocalPosition,
+                                                           onLocalPosition,
+                                                           movementCurve.Evaluate(time));
     }
 
     #endregion

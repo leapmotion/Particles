@@ -541,7 +541,9 @@ public class TextureSimulator : MonoBehaviour {
 
   [Range(0, MAX_SPECIES - 1)]
   [SerializeField]
+#pragma warning disable 0414
   private int _debugSpeciesNumber = 0;
+#pragma warning restore 0414
 
   [SerializeField]
   private ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;

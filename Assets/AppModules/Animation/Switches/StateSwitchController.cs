@@ -75,7 +75,7 @@ namespace Leap.Unity.Animation {
 
     #region Public API
 
-    public void TransitionTo(string state) {
+    public void SetState(string state) {
       curState = state;
     }
 

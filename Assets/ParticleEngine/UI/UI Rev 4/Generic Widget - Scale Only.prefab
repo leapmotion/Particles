@@ -190,7 +190,6 @@ GameObject:
   - component: {fileID: 54449937142777618}
   - component: {fileID: 114360760894527698}
   - component: {fileID: 114265855366839592}
-  - component: {fileID: 114668847252448944}
   m_Layer: 0
   m_Name: Widget Sphere
   m_TagString: Untagged
@@ -1181,19 +1180,6 @@ MonoBehaviour:
   colorChangeSpeed: 20
   filter: {fileID: 0}
   restingColorIdx: 6
---- !u!114 &114668847252448944
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1595381598985844}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3610d85d9a2878e4e84f87aad26ddb02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  widgetModeController: {fileID: 0}
-  anchObj: {fileID: 114265855366839592}
 --- !u!114 &114693086155942622
 MonoBehaviour:
   m_ObjectHideFlags: 1

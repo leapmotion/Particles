@@ -79,10 +79,17 @@ namespace Leap.Unity {
   public static class PoseExtensions {
 
     /// <summary>
-    /// Creates a Pose object using the transform's localPosition and localRotation.
+    /// Creates a Pose using the transform's localPosition and localRotation.
     /// </summary>
     public static Pose ToLocalPose(this Transform t) {
       return new Pose(t.localPosition, t.localRotation);
+    }
+
+    /// <summary>
+    /// Creates a Pose using the transform's position and rotation.
+    /// </summary>
+    public static Pose ToWorldPose(this Transform t) {
+      return new Pose(t.position, t.rotation);
     }
 
     /// <summary>

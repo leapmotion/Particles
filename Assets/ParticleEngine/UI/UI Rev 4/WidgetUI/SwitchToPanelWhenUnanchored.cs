@@ -40,7 +40,7 @@ public class SwitchToPanelWhenUnanchored : MonoBehaviour {
 
   private bool _eligibleForPanel = false;
 
-  private void onPostTryAnchorOnGraspEnd(AnchorableBehaviour anchObj) {
+  private void onPostTryAnchorOnGraspEnd() {
     if (anchObj.preferredAnchor == null) {
       _eligibleForPanel = true;
     }

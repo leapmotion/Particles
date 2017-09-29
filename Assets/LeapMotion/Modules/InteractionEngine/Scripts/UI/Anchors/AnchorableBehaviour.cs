@@ -272,7 +272,7 @@ namespace Leap.Unity.Interaction {
     /// an anchor only if its preferredAnchor property is non-null; otherwise, the
     /// attempt to anchor failed.
     /// </summary>
-    public Action<AnchorableBehaviour> OnPostTryAnchorOnGraspEnd = (anchObj) => { };
+    public Action OnPostTryAnchorOnGraspEnd = () => { };
 
     #endregion
 
@@ -803,7 +803,7 @@ namespace Leap.Unity.Interaction {
     private void tryToAnchorOnGraspEnd() {
       TryAttachToNearestAnchor();
 
-      OnPostTryAnchorOnGraspEnd(this);
+      OnPostTryAnchorOnGraspEnd();
     }
 
     #region Unity Events (Internal)
@@ -838,6 +838,10 @@ namespace Leap.Unity.Interaction {
     private void setupCallback<T>(ref Action<T> action, EventType type)
                                   where T : AnchorableBehaviour         {
       action += (anchObj) => _eventTable.Invoke((int)type);
+    }
+
+    private void setupCallback(ref Action action, EventType type) {
+      action += () => _eventTable.Invoke((int)type);
     }
 
     #endregion

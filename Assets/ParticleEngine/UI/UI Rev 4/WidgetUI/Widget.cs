@@ -30,6 +30,11 @@ public class Widget : MonoBehaviour {
   [Tooltip("Switch to this state when the widget panel should be open.")]
   public string panelOpenState   = "Panel";
 
+  // TODO: Arrgh this is not general...
+  public Transform currentlyFollowing = null;
+  public Transform ballTransform;
+  public Transform panelTransform;
+
   [Header("Widget Placement")]
 
   [SerializeField]
@@ -72,12 +77,14 @@ public class Widget : MonoBehaviour {
   private void onHandlePlaced() {
     stateController.SetState(panelOpenState);
 
-    placementMoveToTarget.MoveToTarget(duration: 1f);
+    placementMoveToTarget.MoveToTarget(handle.pose.position,
+                                       duration: 0.0f);
   }
 
   private void onHandleThrown(Vector3 velocity) {
     placementMoveToTarget.MoveToTarget(handle.pose.position,
-                            duration: velocity.magnitude.Map(0f, 1f, 1f, 3f));
+                                       duration: velocity.magnitude.Map(0f, 3f,
+                                                                        0f, 1f));
   }
 
   private void onHandlePlacedInContainer() {
@@ -93,5 +100,21 @@ public class Widget : MonoBehaviour {
   }
 
   #endregion
+
+  public void MoveToBall() {
+    MoveTo(ballTransform);
+  }
+
+  public void MoveToPanel() {
+    MoveTo(panelTransform);
+  }
+
+  public void MoveTo(Transform t) {
+    Pose followingPose = t.ToWorldPose();
+
+    this.transform.SetWorldPose(followingPose);
+
+    t.SetWorldPose(followingPose);
+  }
 
 }

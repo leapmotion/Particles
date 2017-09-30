@@ -137,8 +137,8 @@ namespace Leap.Unity.Animation {
 
     public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
       if (_isSimulating && _drawRuntimeGizmos) {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireCube(_position, Vector3.one * 0.05f);
+        drawer.color = Color.red;
+        drawer.DrawWireCube(_position, Vector3.one * 0.05f);
       }
     }
 

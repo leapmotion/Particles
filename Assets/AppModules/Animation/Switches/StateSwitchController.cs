@@ -1,6 +1,7 @@
 ﻿using Leap.Unity.Attributes;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.Serialization;
 
 namespace Leap.Unity.Animation {
@@ -19,6 +20,8 @@ namespace Leap.Unity.Animation {
       public IPropertySwitch propertySwitch {
         get { return _switch as IPropertySwitch; }
       }
+
+      public UnityEvent onSwitchedOn;
     }
 
     [SDictionary]
@@ -53,6 +56,9 @@ namespace Leap.Unity.Animation {
                 newStateSwitch.propertySwitch.OnNow();
               }
             }
+            if (newStateSwitch.onSwitchedOn != null) {
+              newStateSwitch.onSwitchedOn.Invoke();
+            }
           }
         }
       }
@@ -60,7 +66,7 @@ namespace Leap.Unity.Animation {
 
     #endregion
 
-    #region UnityEvents
+    #region Unity Events
 
     void Start() {
       StateSwitch curStateSwitch;

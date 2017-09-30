@@ -15,6 +15,11 @@ namespace Leap.Unity.PhysicalInterfaces {
 
     #region Unity Events
 
+    void Reset() {
+      if (intObj == null) intObj = GetComponent<InteractionBehaviour>();
+      if (anchObj == null) anchObj = GetComponent<AnchorableBehaviour>();
+    }
+
     void OnValidate() {
       if (intObj == null) intObj = GetComponent<InteractionBehaviour>();
       if (anchObj == null) anchObj = GetComponent<AnchorableBehaviour>();
@@ -33,12 +38,12 @@ namespace Leap.Unity.PhysicalInterfaces {
     }
 
     private void onGraspEnd() {
-      float throwThreshold = 0.1f;
-      if (intObj.rigidbody.velocity.sqrMagnitude > throwThreshold * throwThreshold) {
-        OnThrown(intObj.rigidbody.velocity);
-      }
-      else if (anchObj != null && anchObj.preferredAnchor != null) {
+      float throwThreshold = 0.02f;
+      if (anchObj != null && anchObj.preferredAnchor != null) {
         OnPlacedInContainer();
+      }
+      else if (intObj.rigidbody.velocity.sqrMagnitude > throwThreshold * throwThreshold) {
+        OnThrown(intObj.rigidbody.velocity);
       }
       else {
         OnPlaced();

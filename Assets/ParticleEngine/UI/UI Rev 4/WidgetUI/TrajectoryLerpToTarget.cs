@@ -11,16 +11,18 @@ namespace Leap.Unity.Animation {
 
     #region Inspector
 
+    [Header("Target")]
+
+    public Vector3 targetPosition;
+
     [Header("Trajectory")]
 
     public TrajectorySimulator simulator;
 
     [Header("Animation")]
 
-    public Vector3 targetPosition;
-
     [MinValue(0.001f)]
-    public float   lerpDuration = 1f;
+    public float lerpDuration = 1f;
 
     [UnitCurve]
     public AnimationCurve lerpToPositionCurve = DefaultCurve.SigmoidUp;
@@ -48,7 +50,10 @@ namespace Leap.Unity.Animation {
       this.transform.position = Vector3.Lerp(simulator.GetSimulatedPosition(),
                                              targetPosition,
                                              t);
+
       if (finished) {
+        simulator.StopSimulating();
+
         OnReachTarget();
       }
     }
@@ -65,6 +70,7 @@ namespace Leap.Unity.Animation {
     public void Cancel() {
       if (_tween.isValid && _tween.isRunning) {
         _tween.Stop();
+        simulator.StopSimulating();
       }
     }
 
@@ -76,6 +82,8 @@ namespace Leap.Unity.Animation {
       if (movementDuration.HasValue) {
         lerpDuration = movementDuration.Value;
       }
+
+      simulator.StartSimulating();
 
       CreateAnimationTween(lerpDuration).Play();
     }

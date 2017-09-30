@@ -56,6 +56,7 @@ GameObject:
   - component: {fileID: 4999452351138824}
   - component: {fileID: 114538829356365462}
   - component: {fileID: 114908250718703774}
+  - component: {fileID: 114850469632216446}
   m_Layer: 0
   m_Name: Generic Widget - Scale Only
   m_TagString: Untagged
@@ -112,7 +113,6 @@ GameObject:
   - component: {fileID: 114313042489935484}
   - component: {fileID: 114761051737946664}
   - component: {fileID: 65633166693025140}
-  - component: {fileID: 114880995806723584}
   m_Layer: 0
   m_Name: Titlebar Control
   m_TagString: Untagged
@@ -190,6 +190,9 @@ GameObject:
   - component: {fileID: 54449937142777618}
   - component: {fileID: 114360760894527698}
   - component: {fileID: 114265855366839592}
+  - component: {fileID: 114173908366360780}
+  - component: {fileID: 114380844974183922}
+  - component: {fileID: 114966221319103294}
   m_Layer: 0
   m_Name: Widget Sphere
   m_TagString: Untagged
@@ -724,6 +727,44 @@ MonoBehaviour:
   _horizontalAlignment: 0
   _verticalAlignment: 1
   _color: {r: 0.81022924, g: 0.8320086, b: 0.86764705, a: 1}
+--- !u!114 &114173908366360780
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1595381598985844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32e30de1764c4ca478ffd378f763d9f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetPosition: {x: 0, y: 0, z: 0}
+  simulator: {fileID: 114380844974183922}
+  lerpDuration: 0.001
+  lerpToPositionCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.5004093
+      value: 0.500614
+      inSlope: 2.6102388
+      outSlope: 2.6102388
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &114265855366839592
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -942,6 +983,22 @@ MonoBehaviour:
     layerIndex: 9
   _eventTable:
     _entries: []
+--- !u!114 &114380844974183922
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1595381598985844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bcb0f05ec098304e88fd58b462309a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _isSimulating: 0
+  overrideGravity: 1
+  customGravity: {x: 0, y: -2.4525, z: 0}
+  drag: 2
+  _drawRuntimeGizmos: 0
 --- !u!114 &114433479338321194
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1125,7 +1182,39 @@ MonoBehaviour:
     - Panel
     _values:
     - _switch: {fileID: 114045828273944314}
+      onSwitchedOn:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 114850469632216446}
+            m_MethodName: MoveToPanel
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
     - _switch: {fileID: 114064814286373070}
+      onSwitchedOn:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 114850469632216446}
+            m_MethodName: MoveToBall
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
+          PublicKeyToken=null
   _curState: Ball
 --- !u!114 &114564157389895140
 MonoBehaviour:
@@ -1644,6 +1733,25 @@ MonoBehaviour:
   additionalDepth: 0.025
   additionalNegativeDepth: 0.015
   additionalXYPadding: 0.01
+--- !u!114 &114850469632216446
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0c2aad226c34294188c440cd49301df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _handle: {fileID: 114966221319103294}
+  stateController: {fileID: 114538829356365462}
+  panelClosedState: Ball
+  panelOpenState: Panel
+  currentlyFollowing: {fileID: 4263645406100726}
+  ballTransform: {fileID: 4263645406100726}
+  panelTransform: {fileID: 4856806331067478}
+  _placementMoveToTarget: {fileID: 114173908366360780}
 --- !u!114 &114855920101779262
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1665,20 +1773,6 @@ MonoBehaviour:
   button: {fileID: 114966330385347100}
   primaryHoverColorIdx: 5
   pressedColorIdx: 3
---- !u!114 &114880995806723584
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1397012824702858}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 720e72cd458f5c044bf851f13db24dcb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  panelCenterTransform: {fileID: 4856806331067478}
-  intObj: {fileID: 114313042489935484}
-  widgetModeController: {fileID: 0}
 --- !u!114 &114889202798580130
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1815,6 +1909,19 @@ MonoBehaviour:
   colorChangeSpeed: 20
   filter: {fileID: 0}
   restingColorIdx: 0
+--- !u!114 &114966221319103294
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1595381598985844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76b563231d52b5b4e995e0c5d9258847, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  intObj: {fileID: 114360760894527698}
+  anchObj: {fileID: 114265855366839592}
 --- !u!114 &114966330385347100
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1853,15 +1960,15 @@ MonoBehaviour:
   _OnPress:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_MethodName: TransitionToBall
-        m_Mode: 1
+      - m_Target: {fileID: 114538829356365462}
+        m_MethodName: SetState
+        m_Mode: 5
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
-          m_StringArgument: 
+          m_StringArgument: Ball
           m_BoolArgument: 0
         m_CallState: 2
     m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,

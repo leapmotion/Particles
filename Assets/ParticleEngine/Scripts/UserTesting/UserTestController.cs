@@ -87,6 +87,10 @@ public class UserTestController : MonoBehaviour {
 
       loadScripts();
       transition(forceReset: false);
+    } else {
+      if (_currLoadData.autoTransitionTime > 0) {
+        Tween.AfterDelay(_currLoadData.autoTransitionTime, OnNext);
+      }
     }
 
     updateText();
@@ -201,6 +205,7 @@ public class UserTestController : MonoBehaviour {
     }
 
     simManager.displayAnchor.localScale = Vector3.one * _currLoadData.simulationScale;
+    simManager.displayAnchor.localPosition = Vector3.forward * _currLoadData.forwardOffset;
     simManager.colorMode = _currLoadData.colorMode;
 
     if (simManager.particleMesh != meshes[_currLoadData.meshDetail]) {
@@ -225,6 +230,7 @@ public class UserTestController : MonoBehaviour {
     public bool collisionEnabled = true;
     public int meshDetail = 1;
     public float autoTransitionTime = -1;
+    public float forwardOffset = 0;
   }
 
 }

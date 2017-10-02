@@ -87,6 +87,10 @@ public class UserTestController : MonoBehaviour {
 
       loadScripts();
       transition(forceReset: false);
+    } else {
+      if (_currLoadData.autoTransitionTime > 0) {
+        Tween.AfterDelay(_currLoadData.autoTransitionTime, OnNext);
+      }
     }
 
     updateText();

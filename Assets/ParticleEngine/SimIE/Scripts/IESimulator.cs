@@ -61,6 +61,8 @@ public class IESimulator : MonoBehaviour {
         }
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
         break;
+      case ResetBehavior.FadeInOut:
+      case ResetBehavior.SmoothTransition:
       case ResetBehavior.ResetPositions:
         foreach (var obj in _particles) {
           DestroyImmediate(obj.gameObject);
@@ -94,9 +96,6 @@ public class IESimulator : MonoBehaviour {
         _prevParticleSize = _manager.particleRadius;
 
         _manager.NotifyMidTransition(SimulationMethod.InteractionEngine);
-        break;
-      case ResetBehavior.FadeInOut:
-      case ResetBehavior.SmoothTransition:
         break;
       default:
         throw new System.NotImplementedException();
@@ -216,6 +215,10 @@ public class IESimulator : MonoBehaviour {
         case ColorMode.ByInverseVelocity:
           color = currentDescription.speciesData[particle.species].color;
           color *= 0.01f * _manager.particleBrightness / (simVelocity.magnitude * 500 + 1);
+          break;
+        case ColorMode.SmartVelocity:
+          color = currentDescription.speciesData[particle.species].color * 0.6f;
+          color += Color.white * _manager.particleBrightness * simVelocity.magnitude * 0.8f;
           break;
         default:
           throw new System.Exception("Unsupported color mode");

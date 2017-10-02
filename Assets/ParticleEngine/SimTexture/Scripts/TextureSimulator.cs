@@ -39,6 +39,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
   public const string KEYWORD_BY_VELOCITY = "COLOR_VELOCITY";
   public const string KEYWORD_BY_INVERSE_VELOCITY = "COLOR_INVERSE";
+  public const string KEYWORD_SMART_VELOCITY = "SMART_VELOCITY";
 
   public const string KEYWORD_ENABLE_INTERPOLATION = "ENABLE_INTERPOLATION";
 
@@ -510,49 +511,47 @@ public class TextureSimulator : MonoBehaviour {
   //##################//
   [Header("Debug")]
   [SerializeField]
-  private Renderer _positionDebug;
+  protected Renderer _positionDebug;
 
   [SerializeField]
-  private Renderer _velocityDebug;
+  protected Renderer _velocityDebug;
 
   [SerializeField]
-  private Renderer _socialDebug;
+  protected Renderer _socialDebug;
 
   [SerializeField]
-  private Renderer _layoutDebug;
+  protected Renderer _layoutDebug;
 
   [SerializeField]
-  private Renderer _shaderDataDebug;
+  protected Renderer _shaderDataDebug;
 
   [SerializeField]
-  private bool _drawHandColliders = true;
+  protected bool _drawHandColliders = true;
   public void SetDrawHandColliders(bool shouldDraw) {
     _drawHandColliders = shouldDraw;
   }
 
   [SerializeField]
-  private Color _handColliderColor = Color.black;
+  protected Color _handColliderColor = Color.black;
 
   [SerializeField]
-  private bool _showIsPointing = false;
+  protected bool _showIsPointing = false;
 
   [SerializeField]
-  private bool _enableSpeciesDebugColors = false;
+  protected bool _enableSpeciesDebugColors = false;
 
   [Range(0, MAX_SPECIES - 1)]
   [SerializeField]
-#pragma warning disable 0414
-  private int _debugSpeciesNumber = 0;
-#pragma warning restore 0414
+  protected int _debugSpeciesNumber = 0;
 
   [SerializeField]
-  private ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;
+  protected ShaderDebugMode _shaderDebugMode = ShaderDebugMode.None;
 
   [SerializeField]
-  private int _shaderDebugData0;
+  protected int _shaderDebugData0;
 
   [SerializeField]
-  private int _shaderDebugData1;
+  protected int _shaderDebugData1;
   #endregion
 
   //General
@@ -703,6 +702,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
     _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
     _particleMat.DisableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
+    _particleMat.DisableKeyword(KEYWORD_SMART_VELOCITY);
 
     switch (_manager.colorMode) {
       case ColorMode.BySpecies:
@@ -716,6 +716,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ColorMode.ByInverseVelocity:
         _particleMat.EnableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
+        break;
+      case ColorMode.SmartVelocity:
+        _particleMat.EnableKeyword(KEYWORD_SMART_VELOCITY);
         break;
     }
 

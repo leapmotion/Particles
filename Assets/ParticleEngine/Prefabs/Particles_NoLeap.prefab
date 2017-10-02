@@ -1204,15 +1204,16 @@ MonoBehaviour:
   _zoomOutKey: 274
   _zoomFactor: 0.1
   _loadEcosystemOnStart: 1
-  _presetToLoad: 18
+  _presetToLoad: 0
   _simulationMethod: 0
   _saveEcosystemKey: 286
-  _loadEcosystemKey: 287
+  _loadPrevEcosystem: 276
+  _loadNextEcosystem: 275
   _randomizeEcosystemKey: 32
   _loadPresetEcosystemKey: 114
   _loadingFolder:
-    _assetFolder: {fileID: 0}
-    _relativePath: 
+    _assetFolder: {fileID: 102900000, guid: a091356c55bc94d4fb821df4f52be76f, type: 3}
+    _relativePath: LoadingFolder
 --- !u!114 &114826706302985056
 MonoBehaviour:
   m_ObjectHideFlags: 1

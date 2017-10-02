@@ -12,6 +12,8 @@ public class UserTestController : MonoBehaviour {
 
   public SimulationManager simManager;
   public TextureSimulator texSimulator;
+  public GameObject buttonAnchor;
+  public SandboxTransitionController transitionController;
 
   public LeapTextGraphic textLabel;
   public StreamingFolder textFolder;
@@ -43,6 +45,7 @@ public class UserTestController : MonoBehaviour {
                                 ToList();
 
     simManager.OnEcosystemMidTransition += onSimulationTransitionMid;
+    simManager.OnEcosystemEndedTransition += onSimulationTransitionEnded;
   }
 
   void Update() {
@@ -66,6 +69,14 @@ public class UserTestController : MonoBehaviour {
 
   public void OnNext() {
     if (_currScript == _scriptPaths.Count - 1 && _currEcosystem == _ecosystemPaths.Count - 1) {
+      enabled = false;
+      transitionController.BeginSandboxTransition();
+      buttonAnchor.SetActive(false);
+      Tween.Single().Target(simManager.displayAnchor).
+                     ToLocalScale(0).
+                     OverTime(1).
+                     Smooth().
+                     Play();
       return;
     }
 
@@ -111,9 +122,9 @@ public class UserTestController : MonoBehaviour {
     string currEcosystemPath = _ecosystemPaths[_currEcosystem];
     string ecosystemName = Path.GetFileNameWithoutExtension(currEcosystemPath);
     _scriptPaths = Directory.GetFiles(textFolder.Path).
-                             Where(p => p.Contains(ecosystemName)).
+                             Where(p => Path.GetFileNameWithoutExtension(p).Contains(ecosystemName)).
                              Where(p => p.EndsWith(".txt")).
-                             OrderBy(p => p.Replace(ecosystemName, "")).
+                             OrderBy(p => Path.GetFileNameWithoutExtension(p).Replace(ecosystemName, "")).
                              ToList();
   }
 
@@ -134,6 +145,8 @@ public class UserTestController : MonoBehaviour {
     texSimulator.handInfluenceEnabled = _currLoadData.graspingEnabled;
 
     StartCoroutine(loadAudioCoroutine());
+
+    buttonAnchor.SetActive(_currLoadData.autoTransitionTime < 0);
   }
 
   private IEnumerator loadAudioCoroutine() {
@@ -195,6 +208,12 @@ public class UserTestController : MonoBehaviour {
     }
   }
 
+  private void onSimulationTransitionEnded() {
+    if (_currLoadData.autoTransitionTime > 0) {
+      Tween.AfterDelay(_currLoadData.autoTransitionTime, OnNext);
+    }
+  }
+
   public class LoadData {
     public ResetBehavior transitionBehavior = ResetBehavior.FadeInOut;
     public ColorMode colorMode = ColorMode.BySpecies;
@@ -205,6 +224,7 @@ public class UserTestController : MonoBehaviour {
     public bool graspingEnabled = true;
     public bool collisionEnabled = true;
     public int meshDetail = 1;
+    public float autoTransitionTime = -1;
   }
 
 }

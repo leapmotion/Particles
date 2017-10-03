@@ -9,7 +9,7 @@
 
   CGINCLUDE
   #include "UnityCG.cginc"
-  #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY COLOR_INVERSE
+  #pragma multi_compile COLOR_SPECIES COLOR_SPECIES_MAGNITUDE COLOR_VELOCITY COLOR_INVERSE SMART_VELOCITY
   #pragma multi_compile _ ENABLE_INTERPOLATION
   #pragma multi_compile FISH_TAIL SQUASH_TAIL
   #pragma multi_compile _ COLOR_LERP
@@ -77,6 +77,11 @@
 
 #ifdef COLOR_INVERSE
     rawColor *= 0.01 * _Brightness / (speed * 500 + 1.0);
+#endif
+
+#ifdef SMART_VELOCITY
+    rawColor *= 0.6;
+    rawColor += _Brightness * speed * 0.8;
 #endif
   }
 

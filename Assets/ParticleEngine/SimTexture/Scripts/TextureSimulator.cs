@@ -39,6 +39,7 @@ public class TextureSimulator : MonoBehaviour {
   public const string KEYWORD_BY_SPEED = "COLOR_SPECIES_MAGNITUDE";
   public const string KEYWORD_BY_VELOCITY = "COLOR_VELOCITY";
   public const string KEYWORD_BY_INVERSE_VELOCITY = "COLOR_INVERSE";
+  public const string KEYWORD_SMART_VELOCITY = "SMART_VELOCITY";
 
   public const string KEYWORD_ENABLE_INTERPOLATION = "ENABLE_INTERPOLATION";
 
@@ -701,6 +702,7 @@ public class TextureSimulator : MonoBehaviour {
     _particleMat.DisableKeyword(KEYWORD_BY_SPEED);
     _particleMat.DisableKeyword(KEYWORD_BY_VELOCITY);
     _particleMat.DisableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
+    _particleMat.DisableKeyword(KEYWORD_SMART_VELOCITY);
 
     switch (_manager.colorMode) {
       case ColorMode.BySpecies:
@@ -714,6 +716,9 @@ public class TextureSimulator : MonoBehaviour {
         break;
       case ColorMode.ByInverseVelocity:
         _particleMat.EnableKeyword(KEYWORD_BY_INVERSE_VELOCITY);
+        break;
+      case ColorMode.SmartVelocity:
+        _particleMat.EnableKeyword(KEYWORD_SMART_VELOCITY);
         break;
     }
 

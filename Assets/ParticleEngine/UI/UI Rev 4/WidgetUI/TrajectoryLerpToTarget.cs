@@ -6,14 +6,16 @@ using UnityEngine;
 
 namespace Leap.Unity.Animation {
 
-  public class TrajectoryLerpToTarget : TweenBehaviour,
-                                        IMoveToTarget {
+  public class TrajectoryLerpToTarget : MonoBehaviour, IMoveToTarget {
 
     #region Inspector
 
     [Header("Target")]
 
     public Vector3 targetPosition;
+    public bool useTargetRotation;
+    [DisableIf("useTargetRotation", isEqualTo: false)]
+    public Quaternion targetRotation;
 
     [Header("Trajectory")]
 
@@ -46,12 +48,18 @@ namespace Leap.Unity.Animation {
     #endregion
 
     private void updateLerp(float t) {
-      bool finished = t == 1f;
       this.transform.position = Vector3.Lerp(simulator.GetSimulatedPosition(),
                                              targetPosition,
                                              t);
+      
+      if (useTargetRotation) {
+        this.transform.rotation = Quaternion.Slerp(simulator.GetSimulatedRotation(),
+                                                   targetRotation,
+                                                   t);
+      }
 
-      if (finished) {
+      bool isFinished = t == 1f;
+      if (isFinished) {
         simulator.StopSimulating();
 
         OnReachTarget();

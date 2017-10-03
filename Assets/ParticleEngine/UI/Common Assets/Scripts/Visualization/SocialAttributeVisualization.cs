@@ -207,10 +207,10 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void refreshRowColSpeciesGraphics() {
-    NewUtils.EnsureListExists(ref rowSpeciesGraphics);
+    Utils.EnsureListExists(ref rowSpeciesGraphics);
     rowSpeciesGraphics.EnsureListCount(_numSpecies, createMeshGraphic, deleteMeshGraphic);
 
-    NewUtils.EnsureListExists(ref colSpeciesGraphics);
+    Utils.EnsureListExists(ref colSpeciesGraphics);
     colSpeciesGraphics.EnsureListCount(_numSpecies, createMeshGraphic, deleteMeshGraphic);
 
     for (int i = 0; i < _numSpecies; i++) {
@@ -229,7 +229,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void refreshAttributeGraphics() {
-    NewUtils.EnsureListExists(ref attributeGraphics);
+    Utils.EnsureListExists(ref attributeGraphics);
     attributeGraphics.EnsureListCount(_numSocialAttributes, createMeshGraphic,
                                                             deleteMeshGraphic);
 

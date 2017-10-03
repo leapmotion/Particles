@@ -41,6 +41,9 @@ namespace Leap.Unity.Animation {
     [MinValue(0f)]
     public float drag = 0f;
 
+    [MinValue(0f)]
+    public float angularDrag = 0.01f;
+
     [Header("Debug")]
 
     [SerializeField]
@@ -85,16 +88,24 @@ namespace Leap.Unity.Animation {
       return _position;
     }
 
+    public Quaternion GetSimulatedRotation() {
+      return _rotation;
+    }
+
     #endregion
 
     #region Simulation
 
     private Rigidbody _rigidbody;
     private Vector3 _positionLastUpdate;
+    private Quaternion _rotationLastUpdate;
     private bool _hasPositionLastUpdate = false;
 
     private Vector3 _position = Vector3.zero;
     private Vector3 _velocity = Vector3.zero;
+    private Quaternion _rotation = Quaternion.identity;
+    private Vector3 _angularVelocity = Vector3.zero;
+
 
     private void initSimulation() {
       _rigidbody = GetComponent<Rigidbody>();
@@ -111,6 +122,13 @@ namespace Leap.Unity.Animation {
       _velocity += (dragAccel + gravAccel) * Time.deltaTime;
 
       _position += _velocity * Time.deltaTime;
+
+      // Rotation
+      Vector3 angDragAccel = -_angularVelocity.normalized * _angularVelocity.sqrMagnitude * angularDrag;
+
+      _angularVelocity += angDragAccel * Time.deltaTime;
+      
+      _rotation = Quaternion.AngleAxis(_angularVelocity.magnitude * Time.deltaTime, _angularVelocity.normalized) * _rotation;
     }
 
     /// <summary>
@@ -119,15 +137,19 @@ namespace Leap.Unity.Animation {
     /// </summary>
     private void updateNonSimulation() {
       _position = this.transform.position;
+      _rotation = this.transform.rotation;
 
       if (_rigidbody != null) {
         _velocity = _rigidbody.velocity;
+        _angularVelocity = _rigidbody.angularVelocity;
       }
       else if (_hasPositionLastUpdate) {
         _velocity = (_position - _positionLastUpdate) / Time.deltaTime;
+        _angularVelocity = (Quaternion.Inverse(_rotationLastUpdate) * _rotation).ToAngleAxisVector() / Time.deltaTime;
       }
 
       _positionLastUpdate = _position;
+      _rotationLastUpdate = _rotation;
       _hasPositionLastUpdate = true;
     }
 
@@ -138,7 +160,13 @@ namespace Leap.Unity.Animation {
     public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
       if (_isSimulating && _drawRuntimeGizmos) {
         drawer.color = Color.red;
-        drawer.DrawWireCube(_position, Vector3.one * 0.05f);
+
+        drawer.PushMatrix();
+        drawer.matrix = Matrix4x4.TRS(_position, _rotation, Vector3.one);
+
+        drawer.DrawWireCube(Vector3.zero, Vector3.one * 0.05f);
+
+        drawer.PopMatrix();
       }
     }
 

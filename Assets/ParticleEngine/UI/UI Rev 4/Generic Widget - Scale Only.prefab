@@ -739,6 +739,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetPosition: {x: 0, y: 0, z: 0}
+  useTargetRotation: 1
+  targetRotation: {x: 0, y: 0, z: 0, w: 0}
   simulator: {fileID: 114380844974183922}
   lerpDuration: 0.001
   lerpToPositionCurve:
@@ -998,7 +1000,8 @@ MonoBehaviour:
   overrideGravity: 1
   customGravity: {x: 0, y: -2.4525, z: 0}
   drag: 2
-  _drawRuntimeGizmos: 0
+  angularDrag: 0.01
+  _drawRuntimeGizmos: 1
 --- !u!114 &114433479338321194
 MonoBehaviour:
   m_ObjectHideFlags: 1

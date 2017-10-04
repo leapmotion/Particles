@@ -24,26 +24,10 @@ namespace Leap.Unity {
     }
 
     [SerializeField]
-    private PinchDetector _pinchDetectorA;
-    public PinchDetector PinchDetectorA {
-      get {
-        return _pinchDetectorA;
-      }
-      set {
-        _pinchDetectorA = value;
-      }
-    }
+    private GrabSwitch _switchA;
 
     [SerializeField]
-    private PinchDetector _pinchDetectorB;
-    public PinchDetector PinchDetectorB {
-      get {
-        return _pinchDetectorB;
-      }
-      set {
-        _pinchDetectorB = value;
-      }
-    }
+    private GrabSwitch _switchB;
 
     [SerializeField]
     private RotationMethod _oneHandedRotationMethod;
@@ -62,14 +46,15 @@ namespace Leap.Unity {
     private bool _showGUI = true;
 
     private Transform _anchor;
+    private bool _wasAGrasped, _wasBGrasped;
 
     private float _defaultNearClip;
 
     void Start() {
-//      if (_pinchDetectorA == null || _pinchDetectorB == null) {
-//        Debug.LogWarning("Both Pinch Detectors of the LeapRTS component must be assigned. This component has been disabled.");
-//        enabled = false;
-//      }
+      //      if (_pinchDetectorA == null || _pinchDetectorB == null) {
+      //        Debug.LogWarning("Both Pinch Detectors of the LeapRTS component must be assigned. This component has been disabled.");
+      //        enabled = false;
+      //      }
 
       GameObject pinchControl = new GameObject("RTS Anchor");
       _anchor = pinchControl.transform;
@@ -83,22 +68,25 @@ namespace Leap.Unity {
       }
 
       bool didUpdate = false;
-      if(_pinchDetectorA != null)
-        didUpdate |= _pinchDetectorA.DidChangeFromLastFrame;
-      if(_pinchDetectorB != null)
-        didUpdate |= _pinchDetectorB.DidChangeFromLastFrame;
+      if (_switchA != null)
+        didUpdate |= _switchA.grasped != _wasAGrasped;
+      if (_switchB != null)
+        didUpdate |= _switchB.grasped != _wasBGrasped;
+
+      _wasAGrasped = _switchA.grasped;
+      _wasBGrasped = _switchB.grasped;
 
       if (didUpdate) {
         transform.SetParent(null, true);
       }
 
-      if (_pinchDetectorA != null && _pinchDetectorA.IsActive && 
-          _pinchDetectorB != null &&_pinchDetectorB.IsActive) {
+      if (_switchA != null && _switchA.grasped &&
+          _switchB != null && _switchB.grasped) {
         transformDoubleAnchor();
-      } else if (_pinchDetectorA != null && _pinchDetectorA.IsActive) {
-        transformSingleAnchor(_pinchDetectorA);
-      } else if (_pinchDetectorB != null && _pinchDetectorB.IsActive) {
-        transformSingleAnchor(_pinchDetectorB);
+      } else if (_switchA != null && _switchA.grasped) {
+        transformSingleAnchor(_switchA);
+      } else if (_switchB != null && _switchB.grasped) {
+        transformSingleAnchor(_switchB);
       }
 
       if (didUpdate) {
@@ -140,29 +128,29 @@ namespace Leap.Unity {
     }
 
     private void transformDoubleAnchor() {
-      _anchor.position = (_pinchDetectorA.Position + _pinchDetectorB.Position) / 2.0f;
+      _anchor.position = (_switchA.Position + _switchB.Position) / 2.0f;
 
       switch (_twoHandedRotationMethod) {
         case RotationMethod.None:
           break;
         case RotationMethod.Single:
-          Vector3 p = _pinchDetectorA.Position;
+          Vector3 p = _switchA.Position;
           p.y = _anchor.position.y;
           _anchor.LookAt(p);
           break;
         case RotationMethod.Full:
-          Quaternion pp = Quaternion.Lerp(_pinchDetectorA.Rotation, _pinchDetectorB.Rotation, 0.5f);
+          Quaternion pp = Quaternion.Lerp(_switchA.Rotation, _switchB.Rotation, 0.5f);
           Vector3 u = pp * Vector3.up;
-          _anchor.LookAt(_pinchDetectorA.Position, u);
+          _anchor.LookAt(_switchA.Position, u);
           break;
       }
 
       if (_allowScale) {
-        _anchor.localScale = Vector3.one * Vector3.Distance(_pinchDetectorA.Position, _pinchDetectorB.Position);
+        _anchor.localScale = Vector3.one * Vector3.Distance(_switchA.Position, _switchB.Position);
       }
     }
 
-    private void transformSingleAnchor(PinchDetector singlePinch) {
+    private void transformSingleAnchor(GrabSwitch singlePinch) {
       _anchor.position = singlePinch.Position;
 
       switch (_oneHandedRotationMethod) {

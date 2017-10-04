@@ -140,8 +140,8 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void LateUpdate() {
-    _displayAnchor.localScale = _scale * Vector3.one;
-    _displayAnchor.localPosition = Vector3.forward * _forwardOffset * _scale;
+    //_displayAnchor.localScale = _scale * Vector3.one;
+    //_displayAnchor.localPosition = Vector3.forward * _forwardOffset * _scale;
   }
 
   public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {

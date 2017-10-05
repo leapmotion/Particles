@@ -84,9 +84,6 @@ public class GrabManager : MonoBehaviour {
       Vector3 globalLeft = transform.TransformPoint(_localLeft);
       left.transform.position = globalLeft;
       left.transform.rotation = _rightToLeft * right.transform.rotation;
-    } else if (GetComponent<InteractionBehaviour>().isGrasped) {
-      //switchLeft.grasped = true;
-      //switchRight.grasped = true;
     } else {
       _localLeft = _localLeft.normalized * 0.1f / 0.07941258f;
       _localRight = _localRight.normalized * 0.1f / 0.07941258f;

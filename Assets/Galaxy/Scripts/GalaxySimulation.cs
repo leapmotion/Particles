@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Query;
 using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
+using Leap.Unity.RuntimeGizmos;
 
 [DevCategory("General Settings")]
 public class GalaxySimulation : MonoBehaviour {
@@ -106,6 +108,21 @@ public class GalaxySimulation : MonoBehaviour {
   [DevValue("Combine Dist")]
   public float blackHoleCombineDistance = 0.05f;
 
+  //####################
+  //### Orbit Trails ###
+  //####################
+  [Header("Orbit Trails"), DevCategory]
+  [SerializeField, DevValue]
+  private bool _enableTrails = false;
+
+  [Range(1, 1000)]
+  [SerializeField, DevValue]
+  private int _maxTrailLength = 100;
+
+  [Range(2, 10)]
+  [SerializeField, DevValue]
+  private int _trailUpdateRate = 2;
+
   //##################
   //### References ###
   //##################
@@ -117,39 +134,139 @@ public class GalaxySimulation : MonoBehaviour {
   public Material simulateMat;
 
   private float _prevTimestep = -1000;
-  private float _simulationTime = 0;
   private int _seed = 0;
+  private int _nextId = 0;
 
-  private struct BlackHole {
-    public Vector3 position;
-    public Vector3 velocity;
-    public Quaternion rotation;
+  [StructLayout(LayoutKind.Sequential)]
+  public struct BlackHoleMainState {
+    public static int SIZE;
+
+    static BlackHoleMainState() {
+      SIZE = Marshal.SizeOf(typeof(BlackHoleMainState));
+    }
+
+    public float x, y, z;
+    public float vx, vy, vz;
     public float mass;
+
+    public Vector3 position {
+      get {
+        return new Vector3(x, y, z);
+      }
+      set {
+        x = value.x;
+        y = value.y;
+        z = value.z;
+      }
+    }
+
+    public Vector3 velocity {
+      get {
+        return new Vector3(vx, vy, vz);
+      }
+      set {
+        vx = value.x;
+        vy = value.y;
+        vz = value.z;
+      }
+    }
   }
 
-  private List<BlackHole> blackHoles = new List<BlackHole>();
+  [StructLayout(LayoutKind.Sequential)]
+  public struct BlackHoleSecondaryState {
+    public static int SIZE;
+
+    static BlackHoleSecondaryState() {
+      SIZE = Marshal.SizeOf(typeof(BlackHoleSecondaryState));
+    }
+
+    public int id;
+    public Quaternion rotation;
+  }
+
+  private unsafe class UniverseState {
+    public float time;
+    public int count;
+
+    public byte* totalState;
+    public BlackHoleMainState* mainState;
+    public BlackHoleSecondaryState* secondaryState;
+
+    public UniverseState(int count) {
+      time = 0;
+      this.count = count;
+
+      int totalSize = (BlackHoleMainState.SIZE + BlackHoleSecondaryState.SIZE) * count;
+
+      totalState = (byte*)Marshal.AllocHGlobal(totalSize);
+      mainState = (BlackHoleMainState*)totalState;
+      secondaryState = (BlackHoleSecondaryState*)(totalState + BlackHoleMainState.SIZE * count);
+    }
+
+    public void Dispose() {
+      Marshal.FreeHGlobal((System.IntPtr)totalState);
+    }
+
+    public UniverseState Clone() {
+      UniverseState clone = new UniverseState(count);
+      clone.time = time;
+
+      int toCopy = clone.count;
+
+      BlackHoleMainState* srcMain = mainState;
+      BlackHoleMainState* dstMain = clone.mainState;
+
+      BlackHoleSecondaryState* srcSecond = secondaryState;
+      BlackHoleSecondaryState* dstSecond = clone.secondaryState;
+      do {
+        *dstMain = *srcMain;
+        *dstSecond = *srcSecond;
+        dstMain++;
+        srcMain++;
+        dstSecond++;
+        srcSecond++;
+      } while (--toCopy != 0);
+
+      return clone;
+    }
+  }
+
+  private UniverseState _mainState;
+  private UniverseState _trailState;
+  private Dictionary<int, List<Vector3>> _trails = new Dictionary<int, List<Vector3>>();
 
   private float[] _floatArray = new float[100];
   private Vector4[] _vectorArray = new Vector4[100];
   private Matrix4x4[] _matrixArray = new Matrix4x4[100];
 
   [DevButton("Reset Sim")]
-  public void ResetSimulation() {
+  public unsafe void ResetSimulation() {
     _prevTimestep = timestep;
-    _simulationTime = 0;
 
-    blackHoles.Clear();
+    _mainState = new UniverseState(blackHoleCount);
 
-    Random.InitState(_seed);
-    for (int i = 0; i < blackHoleCount; i++) {
-      Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
+    {
+      Random.InitState(_seed);
+      BlackHoleMainState* dstMain = _mainState.mainState;
+      BlackHoleSecondaryState* dstSecond = _mainState.secondaryState;
 
-      blackHoles.Add(new BlackHole() {
-        position = position,
-        rotation = Random.rotationUniform,
-        velocity = Vector3.Slerp(Vector3.zero - position, Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity,
-        mass = Random.Range(1 - blackHoleMassVariance, 1 + blackHoleMassVariance)
-      });
+      for (int i = 0; i < blackHoleCount; i++) {
+        Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
+
+        *dstMain = new BlackHoleMainState() {
+          position = position,
+          velocity = Vector3.Slerp(Vector3.zero - position, Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity,
+          mass = Random.Range(1 - blackHoleMassVariance, 1 + blackHoleMassVariance)
+        };
+
+        *dstSecond = new BlackHoleSecondaryState() {
+          id = _nextId++,
+          rotation = Random.rotationUniform
+        };
+
+        dstMain++;
+        dstSecond++;
+      }
     }
 
     Texture2D tex = new Texture2D(512, 1, TextureFormat.RFloat, mipmap: false, linear: true);
@@ -163,16 +280,31 @@ public class GalaxySimulation : MonoBehaviour {
 
     updateShaderConstants();
 
-    blackHoles.Query().Select(t => (Vector4)t.velocity).FillArray(_vectorArray);
-    simulateMat.SetVectorArray("_PlanetVelocities", _vectorArray);
+    {
+      BlackHoleMainState* src = _mainState.mainState;
+      for (int i = 0; i < _mainState.count; i++, src++) {
+        _vectorArray[i] = (*src).velocity;
+      }
+      simulateMat.SetVectorArray("_PlanetVelocities", _vectorArray);
+    }
 
-    _floatArray.Fill(0);
-    blackHoles.Query().Select(t => Mathf.Lerp(1, t.mass, blackHoleMassAffectsDensity)).FillArray(_floatArray);
-    simulateMat.SetFloatArray("_PlanetDensities", _floatArray);
-    simulateMat.SetFloat("_TotalDensity", _floatArray.Query().Fold((a, b) => a + b));
+    {
+      BlackHoleMainState* src = _mainState.mainState;
+      _floatArray.Fill(0);
+      for (int i = 0; i < _mainState.count; i++, src++) {
+        _floatArray[i] = Mathf.Lerp(1, (*src).mass, blackHoleMassAffectsDensity);
+      }
+      simulateMat.SetFloatArray("_PlanetDensities", _floatArray);
+      simulateMat.SetFloat("_TotalDensity", _floatArray.Query().Fold((a, b) => a + b));
+    }
 
-    blackHoles.Query().Select(t => Mathf.Lerp(1, t.mass, blackHoleMassAffectsSize)).FillArray(_floatArray);
-    simulateMat.SetFloatArray("_PlanetSizes", _floatArray);
+    {
+      BlackHoleMainState* src = _mainState.mainState;
+      for (int i = 0; i < _mainState.count; i++, src++) {
+        _floatArray[i] = Mathf.Lerp(1, (*src).mass, blackHoleMassAffectsSize);
+      }
+      simulateMat.SetFloatArray("_PlanetSizes", _floatArray);
+    }
 
     GL.LoadPixelMatrix(0, 1, 0, 1);
 
@@ -213,22 +345,30 @@ public class GalaxySimulation : MonoBehaviour {
     ResetSimulation();
   }
 
-  private void updateShaderConstants() {
+  private unsafe void updateShaderConstants() {
     simulateMat.SetFloat("_MinDiscRadius", minDiscRadius);
     simulateMat.SetFloat("_MaxDiscRadius", maxDiscRadius);
     simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
 
-    blackHoles.Query().Select(t => {
-      Vector4 planet = t.position;
-      planet.w = t.mass;
-      return planet;
-    }).FillArray(_vectorArray);
-    simulateMat.SetVectorArray("_Planets", _vectorArray);
+    {
+      BlackHoleMainState* src = _mainState.mainState;
+      for (int i = 0; i < _mainState.count; i++, src++) {
+        Vector4 planet = (*src).position;
+        planet.w = (*src).mass;
+        _vectorArray[i] = planet;
+      }
+      simulateMat.SetVectorArray("_Planets", _vectorArray);
+    }
 
-    blackHoles.Query().Select(t => Matrix4x4.Rotate(t.rotation)).FillArray(_matrixArray);
-    simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
+    {
+      BlackHoleSecondaryState* src = _mainState.secondaryState;
+      for (int i = 0; i < _mainState.count; i++, src++) {
+        _matrixArray[i] = Matrix4x4.Rotate((*src).rotation);
+      }
+      simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
+    }
 
-    simulateMat.SetInt("_PlanetCount", blackHoles.Count);
+    simulateMat.SetInt("_PlanetCount", _mainState.count);
 
     simulateMat.SetFloat("_Force", starGravConstant);
     simulateMat.SetFloat("_FuzzValue", fuzzValue);
@@ -246,7 +386,7 @@ public class GalaxySimulation : MonoBehaviour {
       ResetSimulation();
     }
 
-    if ((loop && _simulationTime > loopTime) || respawnMode) {
+    if ((loop && _mainState.time > loopTime) || respawnMode) {
       ResetSimulation();
       return;
     }
@@ -255,60 +395,44 @@ public class GalaxySimulation : MonoBehaviour {
     _seed = Random.Range(int.MinValue, int.MaxValue);
 
     if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
-      _simulationTime += timestep * Time.deltaTime;
+
+      //if (_enableTrails) {
+      //  for (int i = 0; i < _trailUpdateRate; i++) {
+      //    stepState(_trailState);
+      //    bool isAtMaxLength = false;
+
+      //    foreach (var blackHole in _trailState.blackHoles) {
+      //      _trails[blackHole.id].Add(blackHole.position);
+
+      //      if (_trails[blackHole.id].Count >= _maxTrailLength) {
+      //        isAtMaxLength = true;
+      //      }
+      //    }
+
+      //    if (isAtMaxLength) {
+      //      break;
+      //    }
+      //  }
+
+      //  RuntimeGizmoDrawer drawer;
+      //  if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+      //    drawer.color = Color.white;
+      //    foreach (var pair in _trails) {
+      //      foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
+      //        drawer.DrawLine(seg.prev, seg.value);
+      //      }
+      //    }
+      //  }
+      //}
 
       if (simulateBlackHoles) {
-        float planetDT = 1.0f / blackHoleSubFrames;
-        for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
+        stepState(_mainState);
+        renderState(_mainState);
 
-          for (int j = 0; j < blackHoles.Count; j++) {
-            BlackHole blackHole = blackHoles[j];
-
-            for (int k = 0; k < blackHoles.Count; k++) {
-              if (j == k) continue;
-
-              BlackHole other = blackHoles[k];
-
-              Vector3 toOther = other.position - blackHole.position;
-              float dist = toOther.magnitude;
-              Vector3 force = gravConstant * (toOther / dist) / (dist * dist);
-              blackHole.velocity += blackHole.mass * other.mass * force * planetDT * timestep;
-            }
-
-            blackHoles[j] = blackHole;
+        foreach (var pair in _trails) {
+          if (pair.Value.Count > 0) {
+            pair.Value.RemoveAt(0);
           }
-
-          for (int j = 0; j < blackHoles.Count; j++) {
-            BlackHole blackHole = blackHoles[j];
-            blackHole.position += blackHole.velocity * planetDT * timestep;
-            blackHoles[j] = blackHole;
-          }
-
-          for (int j = 0; j < blackHoles.Count; j++) {
-            BlackHole blackHole = blackHoles[j];
-
-            for (int k = j + 1; k < blackHoles.Count; k++) {
-              BlackHole other = blackHoles[k];
-
-              float distToOther = Vector3.Distance(other.position, blackHole.position);
-              if (distToOther < blackHoleCombineDistance) {
-                blackHoles.RemoveAtUnordered(k);
-
-                blackHole.position = (blackHole.position * blackHole.mass + other.position * other.mass) / (blackHole.mass + other.mass);
-                blackHole.velocity = (blackHole.velocity * blackHole.mass + other.velocity * other.mass) / (blackHole.mass + other.mass);
-                blackHole.mass += other.mass;
-
-                k--;
-              }
-            }
-
-            blackHoles[j] = blackHole;
-          }
-        }
-
-        for (int j = 0; j < blackHoles.Count; j++) {
-          BlackHole blackHole = blackHoles[j];
-          galaxyRenderer.DrawBlackHole(blackHole.position);
         }
       }
 
@@ -331,5 +455,102 @@ public class GalaxySimulation : MonoBehaviour {
 
   private void LateUpdate() {
     galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
+  }
+
+  private unsafe void stepState(UniverseState state) {
+    _mainState.time += timestep * Time.deltaTime;
+    float planetDT = 1.0f / blackHoleSubFrames;
+
+    float preStepConstant = gravConstant * planetDT * timestep;
+
+    for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
+
+      //Force accumulation
+      {
+        BlackHoleMainState* srcA = state.mainState;
+        for (int indexA = 0; indexA < state.count; indexA++, srcA++) {
+
+          BlackHoleMainState* srcB = state.mainState + indexA + 1;
+          for (int indexB = indexA + 1; indexB < state.count; indexB++, srcB++) {
+            float toBX = (*srcB).x - (*srcA).x;
+            float toBY = (*srcB).y - (*srcA).y;
+            float toBZ = (*srcB).z - (*srcA).z;
+
+            float dist = Mathf.Sqrt(toBX * toBX + toBY * toBY + toBZ * toBZ);
+            float forceConst = (*srcA).mass * (*srcB).mass * preStepConstant / (dist * dist * dist);
+
+            float forceX = toBX * forceConst;
+            float forceY = toBY * forceConst;
+            float forceZ = toBZ * forceConst;
+
+            (*srcA).vx += forceX;
+            (*srcA).vy += forceY;
+            (*srcA).vz += forceZ;
+
+            (*srcB).vx -= forceX;
+            (*srcB).vy -= forceY;
+            (*srcB).vz -= forceZ;
+          }
+        }
+      }
+
+      //Position intergration
+      {
+        BlackHoleMainState* src = state.mainState;
+        float combinedDT = planetDT * timestep;
+        for (int j = 0; j < state.count; j++, src++) {
+          (*src).x += (*src).vx * combinedDT;
+          (*src).y += (*src).vy * combinedDT;
+          (*src).z += (*src).vz * combinedDT;
+        }
+      }
+
+      //Black hole combination
+      {
+        float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
+
+        BlackHoleMainState* mainA = state.mainState;
+        BlackHoleSecondaryState* secondA = state.secondaryState;
+        for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {
+
+          BlackHoleMainState* mainB = state.mainState + indexA + 1;
+          BlackHoleSecondaryState* secondB = state.secondaryState + indexA + 1;
+          for (int indexB = indexA + 1; indexB < state.count; indexB++, mainB++, secondB++) {
+            float dx = (*mainA).x - (*mainB).x;
+            float dy = (*mainA).y - (*mainB).y;
+            float dz = (*mainA).z - (*mainB).z;
+
+            float distSqrd = dx * dx + dy * dy + dz * dz;
+            if (distSqrd >= combineDistSqrd) {
+              float totalMass = (*mainA).mass + (*mainB).mass;
+              (*mainA).x = ((*mainA).x * (*mainA).mass + (*mainB).x * (*mainB).mass) / totalMass;
+              (*mainA).y = ((*mainA).y * (*mainA).mass + (*mainB).y * (*mainB).mass) / totalMass;
+              (*mainA).z = ((*mainA).z * (*mainA).mass + (*mainB).z * (*mainB).mass) / totalMass;
+
+              (*mainA).vx = ((*mainA).vx * (*mainA).mass + (*mainB).vx * (*mainB).mass) / totalMass;
+              (*mainA).vy = ((*mainA).vy * (*mainA).mass + (*mainB).vy * (*mainB).mass) / totalMass;
+              (*mainA).vz = ((*mainA).vz * (*mainA).mass + (*mainB).vz * (*mainB).mass) / totalMass;
+
+              (*mainA).mass += (*mainB).mass;
+
+              state.count--;
+              *mainB = *(state.mainState + state.count);
+              *secondB = *(state.secondaryState + state.count);
+
+              indexB--;
+              mainB--;
+              secondB--;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private unsafe void renderState(UniverseState state) {
+    BlackHoleMainState* src = state.mainState;
+    for (int j = 0; j < state.count; j++, src++) {
+      galaxyRenderer.DrawBlackHole((*src).position);
+    }
   }
 }

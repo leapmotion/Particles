@@ -19,18 +19,12 @@ public class GrabManager : MonoBehaviour {
   private Quaternion _leftToRight;
   private Quaternion _rightToLeft;
 
-  private Tween _centerFade;
-
   private void Start() {
     _localLeft = transform.InverseTransformPoint(left.transform.position);
     _localRight = transform.InverseTransformPoint(right.transform.position);
 
     left.OnGraspEnd += crossFadeBoth;
     right.OnGraspEnd += crossFadeBoth;
-
-    _centerFade = Tween.Persistent().Target(GetComponentInChildren<Renderer>().transform).LocalScale(1, 0.5f).
-                                     OverTime(crossFadeTime).
-                                     Play();
   }
 
   private void crossFadeBoth() {
@@ -61,12 +55,6 @@ public class GrabManager : MonoBehaviour {
     switchLeft.grasped = false;
     switchRight.grasped = false;
     rts.vroomVroom = false;
-
-    if (left.isGrasped || right.isGrasped) {
-      _centerFade.Play(Direction.Forward);
-    } else {
-      _centerFade.Play(Direction.Backward);
-    }
 
     if (left.isGrasped && right.isGrasped) {
       rts.vroomVroom = true;
@@ -116,5 +104,7 @@ public class GrabManager : MonoBehaviour {
 
     switchRight.Position = right.transform.position;
     switchRight.Rotation = right.transform.rotation;
+
+    GetComponentInChildren<Renderer>().transform.localScale = Vector3.one * Vector3.Distance(left.transform.position, right.transform.position).Map(0, 0.079f * 2.1f, 0, 1f);
   }
 }

@@ -115,11 +115,11 @@ public class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private bool _enableTrails = false;
 
-  [Range(1, 1000)]
+  [Range(1, 10000)]
   [SerializeField, DevValue]
   private int _maxTrailLength = 100;
 
-  [Range(2, 10)]
+  [Range(2, 100)]
   [SerializeField, DevValue]
   private int _trailUpdateRate = 2;
 
@@ -241,8 +241,19 @@ public class GalaxySimulation : MonoBehaviour {
 
   [DevButton("Reset Sim")]
   public unsafe void ResetSimulation() {
-    _prevTimestep = timestep;
+    if (_mainState != null) {
+      _mainState.Dispose();
+      _mainState = null;
+    }
 
+    if (_trailState != null) {
+      _trailState.Dispose();
+      _trailState = null;
+    }
+
+    _trails.Clear();
+
+    _prevTimestep = timestep;
     _mainState = new UniverseState(blackHoleCount);
 
     {
@@ -260,12 +271,15 @@ public class GalaxySimulation : MonoBehaviour {
         };
 
         *dstSecond = new BlackHoleSecondaryState() {
-          id = _nextId++,
+          id = _nextId,
           rotation = Random.rotationUniform
         };
 
+        _trails[_nextId] = new List<Vector3>();
+
         dstMain++;
         dstSecond++;
+        _nextId++;
       }
     }
 
@@ -328,6 +342,8 @@ public class GalaxySimulation : MonoBehaviour {
     GL.TexCoord2(0, 1);
     GL.Vertex3(0, 1, 0);
     GL.End();
+
+    _trailState = _mainState.Clone();
   }
 
   private IEnumerator Start() {
@@ -343,6 +359,18 @@ public class GalaxySimulation : MonoBehaviour {
     yield return null;
     yield return null;
     ResetSimulation();
+  }
+
+  private void OnDisable() {
+    if (_mainState != null) {
+      _mainState.Dispose();
+      _mainState = null;
+    }
+
+    if (_trailState != null) {
+      _trailState.Dispose();
+      _trailState = null;
+    }
   }
 
   private unsafe void updateShaderConstants() {
@@ -396,34 +424,38 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
 
-      //if (_enableTrails) {
-      //  for (int i = 0; i < _trailUpdateRate; i++) {
-      //    stepState(_trailState);
-      //    bool isAtMaxLength = false;
+      if (_enableTrails) {
+        for (int i = 0; i < _trailUpdateRate; i++) {
+          stepState(_trailState);
+          bool isAtMaxLength = false;
 
-      //    foreach (var blackHole in _trailState.blackHoles) {
-      //      _trails[blackHole.id].Add(blackHole.position);
+          unsafe {
+            BlackHoleMainState* main = _trailState.mainState;
+            BlackHoleSecondaryState* secondary = _trailState.secondaryState;
+            for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
+              _trails[(*secondary).id].Add((*main).position);
 
-      //      if (_trails[blackHole.id].Count >= _maxTrailLength) {
-      //        isAtMaxLength = true;
-      //      }
-      //    }
+              if (_trails[(*secondary).id].Count >= _maxTrailLength) {
+                isAtMaxLength = true;
+              }
+            }
+          }
 
-      //    if (isAtMaxLength) {
-      //      break;
-      //    }
-      //  }
+          if (isAtMaxLength) {
+            break;
+          }
+        }
 
-      //  RuntimeGizmoDrawer drawer;
-      //  if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
-      //    drawer.color = Color.white;
-      //    foreach (var pair in _trails) {
-      //      foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
-      //        drawer.DrawLine(seg.prev, seg.value);
-      //      }
-      //    }
-      //  }
-      //}
+        RuntimeGizmoDrawer drawer;
+        if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+          drawer.color = Color.white;
+          foreach (var pair in _trails) {
+            foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
+              drawer.DrawLine(seg.prev, seg.value);
+            }
+          }
+        }
+      }
 
       if (simulateBlackHoles) {
         stepState(_mainState);

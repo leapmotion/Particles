@@ -89,7 +89,7 @@
     o.color = tex2Dlod(_Ramp, float4(uv2, 0, 0));
 #endif
 
-    o.color *= brightness * _PostScalar;
+    o.color *= saturate(brightness * _PostScalar);
 
     return o;
   }

@@ -193,6 +193,7 @@ GameObject:
   - component: {fileID: 114173908366360780}
   - component: {fileID: 114380844974183922}
   - component: {fileID: 114966221319103294}
+  - component: {fileID: 114077039407687046}
   m_Layer: 0
   m_Name: Widget Sphere
   m_TagString: Untagged
@@ -693,6 +694,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   overrideTweenTime: 1
   tweenTime: 0.33
+--- !u!114 &114077039407687046
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1595381598985844}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 576459bdc1f12fd4e8cbac23043ff63f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  flipPose: 0
 --- !u!114 &114097150436237578
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -738,35 +751,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32e30de1764c4ca478ffd378f763d9f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetPosition: {x: 0, y: 0, z: 0}
-  useTargetRotation: 1
-  targetRotation: {x: 0, y: 0, z: 0, w: 0}
+  targetPose:
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
   simulator: {fileID: 114380844974183922}
   lerpDuration: 0.001
-  lerpToPositionCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 2
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 0.5004093
-      value: 0.500614
-      inSlope: 2.6102388
-      outSlope: 2.6102388
-      tangentMode: 0
-    - serializedVersion: 2
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 0
 --- !u!114 &114265855366839592
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1001,7 +990,7 @@ MonoBehaviour:
   customGravity: {x: 0, y: -2.4525, z: 0}
   drag: 2
   angularDrag: 0.01
-  _drawRuntimeGizmos: 1
+  _drawRuntimeGizmos: 0
 --- !u!114 &114433479338321194
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1754,7 +1743,8 @@ MonoBehaviour:
   currentlyFollowing: {fileID: 4263645406100726}
   ballTransform: {fileID: 4263645406100726}
   panelTransform: {fileID: 4856806331067478}
-  _placementMoveToTarget: {fileID: 114173908366360780}
+  _targetPoseProvider: {fileID: 114077039407687046}
+  _movementToPose: {fileID: 114173908366360780}
 --- !u!114 &114855920101779262
 MonoBehaviour:
   m_ObjectHideFlags: 1

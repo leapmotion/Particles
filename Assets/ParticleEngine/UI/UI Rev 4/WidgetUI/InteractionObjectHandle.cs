@@ -58,6 +58,10 @@ namespace Leap.Unity.PhysicalInterfaces {
       get { return intObj.transform.ToWorldPose(); }
     }
 
+    public Movement movement {
+      get { return intObj.worldMovement; }
+    }
+
     public bool isHeld {
       get { return intObj.isGrasped; }
     }

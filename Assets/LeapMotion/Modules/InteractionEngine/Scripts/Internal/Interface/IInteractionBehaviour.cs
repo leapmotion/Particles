@@ -9,6 +9,7 @@
 
 using Leap;
 using Leap.Unity.Attributes;
+using Leap.Unity.PhysicalInterfaces;
 using Leap.Unity.Space;
 using System.Collections;
 using System.Collections.Generic;
@@ -26,6 +27,9 @@ namespace Leap.Unity.Interaction {
     string              name       { get; } // (subclass MonoBehaviour to satisfy)
     GameObject          gameObject { get; } // ^
     Transform           transform  { get; } // ^
+
+    // Properties for physical interfaces.
+    Pose                worldPose { get; }
 
     // Properties for interaction.
     InteractionManager  manager    { get; }

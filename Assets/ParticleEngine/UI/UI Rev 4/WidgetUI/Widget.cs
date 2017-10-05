@@ -1,6 +1,7 @@
 ﻿using Leap.Unity;
 using Leap.Unity.Animation;
 using Leap.Unity.Attributes;
+using Leap.Unity.Layout;
 using Leap.Unity.PhysicalInterfaces;
 using UnityEngine;
 
@@ -23,7 +24,7 @@ public class Widget : MonoBehaviour {
   [Header("State Changes")]
 
   [Tooltip("This controller opens and closes the panel.")]
-  public StateSwitchController stateController;
+  public ZZOLD_SwitchStateController stateController;
 
   [Tooltip("Switch to this state when the widget panel should be closed.")]
   public string panelClosedState = "Ball";
@@ -38,14 +39,21 @@ public class Widget : MonoBehaviour {
   [Header("Widget Placement")]
 
   [SerializeField]
-  [ImplementsInterface(typeof(IMoveToTarget))]
-  [Tooltip("This component handles how the widget moves to its target position "
-         + "when the user lets go of it.")]
-  private MonoBehaviour _placementMoveToTarget;
-  public IMoveToTarget placementMoveToTarget {
-    get {
-      return _placementMoveToTarget as IMoveToTarget;
-    }
+  [ImplementsInterface(typeof(IPoseProvider))]
+  [Tooltip("This component handles where the widget determines its target pose when "
+         + "placed or thrown by the user.")]
+  private MonoBehaviour _targetPoseProvider;
+  public IPoseProvider targetPoseProvider {
+    get { return _targetPoseProvider as IPoseProvider; }
+  }
+
+  [SerializeField]
+  [ImplementsInterface(typeof(IMoveToPose))]
+  [Tooltip("This component handles how the widget moves to its target pose when placed or "
+         + "thrown by the user.")]
+  private MonoBehaviour _movementToPose;
+  public IMoveToPose movementToPose {
+    get { return _movementToPose as IMoveToPose; }
   }
 
   #endregion
@@ -59,7 +67,8 @@ public class Widget : MonoBehaviour {
     handle.OnThrown            += onHandleThrown;
     handle.OnPlacedInContainer += onHandlePlacedInContainer;
 
-    placementMoveToTarget.OnReachTarget += onPlacementTargetReached;
+    movementToPose.OnMovementUpdate += onMovementUpdate;
+    movementToPose.OnReachTarget += onPlacementTargetReached;
   }
 
   #endregion
@@ -67,39 +76,45 @@ public class Widget : MonoBehaviour {
   #region Handle Events
 
   private void onHandlePickedUp() {
-    placementMoveToTarget.Cancel();
+    movementToPose.Cancel();
   }
 
   private void onHandleMoved() {
-
+    // (no logic)
   }
 
   private void onHandlePlaced() {
-    stateController.SetState(panelOpenState);
-
-    placementMoveToTarget.MoveToTarget(handle.pose.position,
-                                       duration: 0.0f);
+    initiateMovementToTarget(duration: 0.0f);
   }
 
   private void onHandleThrown(Vector3 velocity) {
-    placementMoveToTarget.MoveToTarget(handle.pose.position,
-                                       duration: velocity.magnitude.Map(0f, 3f,
-                                                                        0f, 1f));
+    initiateMovementToTarget(duration: velocity.magnitude.Map(0f, 3f, 0f, 1f));
   }
 
   private void onHandlePlacedInContainer() {
-
+    // (no logic)
   }
 
   #endregion
 
-  #region Placement Events
+  private void initiateMovementToTarget(float duration) {
+    var targetPose = targetPoseProvider.GetTargetPose();
+
+    movementToPose.MoveToTarget(targetPose, duration);
+  }
+
+  private void onMovementUpdate() {
+    movementToPose.targetPose = new Pose() {
+      position = movementToPose.targetPose.position,
+      rotation = targetPoseProvider.GetTargetPose().rotation
+    };
+  }
 
   private void onPlacementTargetReached() {
     stateController.SetState(panelOpenState);
   }
 
-  #endregion
+  #region Move To Child // TODO: Needs generalization
 
   public void MoveToBall() {
     MoveTo(ballTransform);
@@ -116,5 +131,7 @@ public class Widget : MonoBehaviour {
 
     t.SetWorldPose(followingPose);
   }
+
+  #endregion
 
 }

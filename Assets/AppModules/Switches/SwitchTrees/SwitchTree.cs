@@ -1,22 +1,33 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Leap.Unity.Animation {
 
+  [Serializable]
   public class SwitchTreeNodeRef {
-    SwitchTreeNode node;
+    public SwitchTreeNode node;
 
     public SwitchTreeNodeRef(SwitchTreeNode node) {
       this.node = node;
     }
+
+    public SwitchTreeNodeRef() { }
   }
 
-  public struct SwitchTreeNode {
-    Transform       transform;
-    IPropertySwitch objSwitch;
+  public static class SwitchTreeNodeRefExtensions {
+    public static SwitchTreeNodeRef Ref(this SwitchTreeNode node) {
+      return new SwitchTreeNodeRef(node);
+    }
+  }
 
-    SwitchTreeNodeRef     parent;
-    Stack<SwitchTreeNode> children;
+  [Serializable]
+  public struct SwitchTreeNode {
+    public Transform       transform;
+    public IPropertySwitch objSwitch;
+
+    public SwitchTreeNodeRef     parent;
+    public Stack<SwitchTreeNode> children;
 
     public int numChildren { get { return children.Count; } }
 
@@ -72,7 +83,7 @@ namespace Leap.Unity.Animation {
     }
   }
 
-  [System.Serializable]
+  [Serializable]
   public class SwitchTree {
 
     [SerializeField]
@@ -91,6 +102,73 @@ namespace Leap.Unity.Animation {
 
     public int NodeCount {
       get { return root.numChildren + 1; }
+    }
+
+    public void SwitchTo(string nodeName) {
+      // We have to traverse the whole tree because we don't know where the node matching
+      // nodeName resides. This is fine, because the contract of the tree is to maintain
+      // every node's state anyway, not just the ones that are currently activating or
+      // deactivating.
+
+      // TODO: DELETE THESE
+      var activeNodeChain = Pool<Stack<SwitchTreeNodeRef>>.Spawn();
+      var nonActiveNodes = Pool<List<SwitchTreeNodeRef>>.Spawn();
+
+      var visitedNodes = Pool<HashSet<SwitchTreeNode>>.Spawn();
+      var curNodeRef = Pool<SwitchTreeNodeRef>.Spawn();
+      curNodeRef.node = root;
+      SwitchTreeNode activeNode;
+      try {
+        while (curNodeRef != null) {
+
+          var node = curNodeRef.node;
+          if (!visitedNodes.Contains(node)) {
+            // Visiting a new node.
+            visitedNodes.Add(node);
+
+            // TODO: DELETE
+            // var nodeRef = Pool<SwitchTreeNodeRef>.Spawn();
+            // nodeRef.node = node;
+            // activeNodeChain.Push(nodeRef);
+
+            if (node.transform.name.Equals(nodeName)) {
+              // We've found the node we want active.
+              activeNode = node;
+            }
+          }
+
+          // Go deeper into children if there are any.
+          bool goingDown = false;
+          foreach (var child in node.children) {
+            if (!visitedNodes.Contains(child)) {
+              curNodeRef.node = child;
+              goingDown = true;
+              break;
+            }
+          }
+          if (goingDown) { continue; }
+          else {
+            // Head back up to the parent node.
+            curNodeRef = node.parent;
+          }
+        }
+      }
+      finally {
+        Pool<SwitchTreeNodeRef>.Recycle(curNodeRef);
+
+        visitedNodes.Clear();
+        Pool<HashSet<SwitchTreeNode>>.Recycle(visitedNodes);
+
+        foreach (var nodeRef in activeNodeChain) {
+          Pool<SwitchTreeNodeRef>.Recycle(nodeRef);
+        }
+
+        activeNodeChain.Clear();
+        Pool<Stack<SwitchTreeNodeRef>>.Recycle(activeNodeChain);
+
+        nonActiveNodes.Clear();
+        Pool<List<SwitchTreeNodeRef>>.Recycle(nonActiveNodes);
+      }
     }
   }
 

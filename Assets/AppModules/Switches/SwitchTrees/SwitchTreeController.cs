@@ -49,7 +49,7 @@ namespace Leap.Unity.Animation {
     /// are children of the named node are also deactivated.
     /// </summary>
     public void SwitchTo(string nodeName) {
-      throw new System.NotImplementedException();
+      tree.SwitchTo(nodeName);
     }
 
     #endregion

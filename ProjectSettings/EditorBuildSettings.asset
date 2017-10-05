@@ -4,10 +4,4 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes:
-  - enabled: 0
-    path: Assets/ParticleEngine/UserTest.unity
-    guid: be3447ddba92ad14da020ce8f64bbfc2
-  - enabled: 0
-    path: Assets/ParticleEngine/UI/UI Test 3/UITest3.unity
-    guid: a564dd1696447a94fb99526063211748
+  m_Scenes: []

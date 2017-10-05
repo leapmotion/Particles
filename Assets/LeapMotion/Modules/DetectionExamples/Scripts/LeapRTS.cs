@@ -38,6 +38,12 @@ namespace Leap.Unity {
     [SerializeField]
     private bool _allowScale = true;
 
+    [SerializeField]
+    public bool vroomVroom = true;
+
+    [SerializeField]
+    private bool _stateFull = true;
+
     [Header("GUI Options")]
     [SerializeField]
     private KeyCode _toggleGuiState = KeyCode.None;
@@ -77,6 +83,10 @@ namespace Leap.Unity {
       _wasBGrasped = _switchB.grasped;
 
       if (didUpdate) {
+        _prevA = _switchA.Position;
+        _prevB = _switchB.Position;
+        _prevRotA = _switchA.Rotation;
+        _prevRotB = _switchB.Rotation;
         transform.SetParent(null, true);
       }
 
@@ -127,6 +137,8 @@ namespace Leap.Unity {
       GUILayout.EndHorizontal();
     }
 
+    private Quaternion _prevRotA, _prevRotB;
+    private Vector3 _prevA, _prevB;
     private void transformDoubleAnchor() {
       _anchor.position = (_switchA.Position + _switchB.Position) / 2.0f;
 
@@ -139,11 +151,37 @@ namespace Leap.Unity {
           _anchor.LookAt(p);
           break;
         case RotationMethod.Full:
-          Quaternion pp = Quaternion.Lerp(_switchA.Rotation, _switchB.Rotation, 0.5f);
-          Vector3 u = pp * Vector3.up;
-          _anchor.LookAt(_switchA.Position, u);
+          if (_stateFull) {
+            if (vroomVroom) {
+              Vector3 axis = _switchA.Position - _switchB.Position;
+              Vector3 perp = Utils.Perpendicular(axis);
+
+              Vector3 deltaA = _switchA.Rotation * Quaternion.Inverse(_prevRotA) * perp;
+              float deltaAngleA = Vector3.SignedAngle(perp, deltaA, axis);
+
+              Vector3 deltaB = _switchB.Rotation * Quaternion.Inverse(_prevRotB) * perp;
+              float deltaAngleB = Vector3.SignedAngle(perp, deltaB, axis);
+
+              float totalDeltaAngle = (deltaAngleA + deltaAngleB) * 0.5f;
+
+              var delta = Quaternion.FromToRotation(_prevB - _prevA, _switchB.Position - _switchA.Position);
+              _anchor.rotation = Quaternion.AngleAxis(totalDeltaAngle, axis) * delta * _anchor.rotation;
+            } else {
+              var delta = Quaternion.FromToRotation(_prevB - _prevA, _switchB.Position - _switchA.Position);
+              _anchor.rotation = delta * _anchor.rotation;
+            }
+          } else {
+            //Quaternion pp = Quaternion.Lerp(_switchA.Rotation, _switchB.Rotation, 0.5f);
+            //Vector3 u = pp * Vector3.up;
+            //_anchor.LookAt(_switchA.Position, u);
+          }
           break;
       }
+
+      _prevA = _switchA.Position;
+      _prevB = _switchB.Position;
+      _prevRotA = _switchA.Rotation;
+      _prevRotB = _switchB.Rotation;
 
       if (_allowScale) {
         _anchor.localScale = Vector3.one * Vector3.Distance(_switchA.Position, _switchB.Position);

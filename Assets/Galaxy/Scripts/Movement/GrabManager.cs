@@ -2,11 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity.Interaction;
+using Leap.Unity;
+using Leap.Unity.Animation;
 
 public class GrabManager : MonoBehaviour {
 
+  public LeapRTS rts;
   public InteractionBehaviour left, right;
   public GrabSwitch switchLeft, switchRight;
+
+  public float crossFadeTime = 0.1f;
 
   private Vector3 _localLeft;
   private Vector3 _localRight;
@@ -14,16 +19,57 @@ public class GrabManager : MonoBehaviour {
   private Quaternion _leftToRight;
   private Quaternion _rightToLeft;
 
+  private Tween _centerFade;
+
   private void Start() {
     _localLeft = transform.InverseTransformPoint(left.transform.position);
     _localRight = transform.InverseTransformPoint(right.transform.position);
+
+    left.OnGraspEnd += crossFadeBoth;
+    right.OnGraspEnd += crossFadeBoth;
+
+    _centerFade = Tween.Persistent().Target(GetComponentInChildren<Renderer>().transform).LocalScale(1, 0.5f).
+                                     OverTime(crossFadeTime).
+                                     Play();
+  }
+
+  private void crossFadeBoth() {
+    crossFadeIE(left);
+    crossFadeIE(right);
+  }
+
+  private void crossFadeIE(InteractionBehaviour b) {
+    var rend = b.GetComponentInChildren<Renderer>();
+
+    var copyObj = Instantiate(rend.gameObject);
+    copyObj.transform.SetParent(null, worldPositionStays: true);
+    copyObj.transform.position = rend.transform.position;
+    copyObj.transform.rotation = rend.transform.rotation;
+    copyObj.transform.localScale = rend.transform.lossyScale;
+
+    Tween.Single().Target(copyObj.transform).ToLocalScale(0).
+                   OverTime(crossFadeTime).
+                   OnReachEnd(() => DestroyImmediate(copyObj)).
+                   Play();
+
+    Tween.Single().Target(rend.transform).LocalScale(0, 1).
+                   OverTime(crossFadeTime).
+                   Play();
   }
 
   private void Update() {
     switchLeft.grasped = false;
     switchRight.grasped = false;
+    rts.vroomVroom = false;
+
+    if (left.isGrasped || right.isGrasped) {
+      _centerFade.Play(Direction.Forward);
+    } else {
+      _centerFade.Play(Direction.Backward);
+    }
 
     if (left.isGrasped && right.isGrasped) {
+      rts.vroomVroom = true;
       switchLeft.grasped = true;
       switchRight.grasped = true;
       transform.position = (left.transform.position + right.transform.position) * 0.5f;

@@ -24,10 +24,10 @@ namespace Leap.Unity {
     }
 
     [SerializeField]
-    private GrabSwitch _switchA;
+    public GrabSwitch _switchA;
 
     [SerializeField]
-    private GrabSwitch _switchB;
+    public GrabSwitch _switchB;
 
     [SerializeField]
     private RotationMethod _oneHandedRotationMethod;

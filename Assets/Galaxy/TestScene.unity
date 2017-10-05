@@ -3921,7 +3921,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   resetKeycode: 32
   simulate: 1
-  respawnMode: 1
+  respawnMode: 0
   loop: 0
   loopTime: 10
   timestep: 1
@@ -3960,7 +3960,7 @@ MonoBehaviour:
   blackHoleMassVariance: 0.75
   blackHoleMassAffectsSize: 1
   blackHoleMassAffectsDensity: 1
-  blackHoleCount: 3
+  blackHoleCount: 10
   gravConstant: 0.00001
   fuzzValue: 0.0005
   blackHoleVelocity: 0.004

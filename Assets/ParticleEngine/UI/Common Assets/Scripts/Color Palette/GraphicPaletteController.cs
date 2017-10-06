@@ -8,6 +8,14 @@ public class GraphicPaletteController : MonoBehaviour {
 
   public LeapGraphic graphic;
 
+  [Header("Graphic Alternative (MeshRenderer) -- Play Mode Only")]
+
+  public new Renderer renderer;
+  public string shaderColorName = "_Color";
+  private int _shaderColorID;
+
+  [Header("Palette")]
+
   public ColorPalette palette;
   public float colorChangeSpeed = 20F;
 
@@ -27,6 +35,9 @@ public class GraphicPaletteController : MonoBehaviour {
 
   protected virtual void Reset() {
     graphic = GetComponent<LeapGraphic>();
+    if (graphic == null) {
+      renderer = GetComponent<Renderer>();
+    }
 
     if (palette == null && s_lastPalette != null) {
       palette = s_lastPalette;
@@ -42,6 +53,16 @@ public class GraphicPaletteController : MonoBehaviour {
       validateColorIdx(ref restingColorIdx);
       setColor(restingColor);
     }
+
+    refreshRendererShaderID();
+  }
+
+  protected virtual void Start() {
+    refreshRendererShaderID();
+  }
+
+  private void refreshRendererShaderID() {
+    _shaderColorID = Shader.PropertyToID(shaderColorName);
   }
 
   protected void validateColorIdx(ref int colorIdx) {
@@ -98,7 +119,19 @@ public class GraphicPaletteController : MonoBehaviour {
       text.color = color;
     }
     else {
-      graphic.SetRuntimeTint(color);
+      if (graphic != null) {
+        graphic.SetRuntimeTint(color);
+      }
+      else {
+        if (renderer != null) {
+          if (Application.isPlaying) {
+            renderer.material.SetColor(_shaderColorID, color);
+          }
+          else {
+            renderer.sharedMaterial.SetColor(_shaderColorID, color);
+          }
+        }
+      }
     }
   }
 

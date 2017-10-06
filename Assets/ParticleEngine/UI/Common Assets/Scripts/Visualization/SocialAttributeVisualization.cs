@@ -207,11 +207,11 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void refreshRowColSpeciesGraphics() {
-    ensureListExists(ref rowSpeciesGraphics);
-    ensureListCount(rowSpeciesGraphics, _numSpecies, createMeshGraphic, deleteMeshGraphic);
+    Utils.EnsureListExists(ref rowSpeciesGraphics);
+    rowSpeciesGraphics.EnsureListCount(_numSpecies, createMeshGraphic, deleteMeshGraphic);
 
-    ensureListExists(ref colSpeciesGraphics);
-    ensureListCount(colSpeciesGraphics, _numSpecies, createMeshGraphic, deleteMeshGraphic);
+    Utils.EnsureListExists(ref colSpeciesGraphics);
+    colSpeciesGraphics.EnsureListCount(_numSpecies, createMeshGraphic, deleteMeshGraphic);
 
     for (int i = 0; i < _numSpecies; i++) {
       Color speciesColor = _simDescription.speciesData[i].color;
@@ -229,9 +229,9 @@ public class SocialAttributeVisualization : MonoBehaviour {
   }
 
   private void refreshAttributeGraphics() {
-    ensureListExists(ref attributeGraphics);
-    ensureListCount(attributeGraphics, _numSocialAttributes, createMeshGraphic,
-                                                             deleteMeshGraphic);
+    Utils.EnsureListExists(ref attributeGraphics);
+    attributeGraphics.EnsureListCount(_numSocialAttributes, createMeshGraphic,
+                                                            deleteMeshGraphic);
 
     for (int k = 0; k < _numSocialAttributes; k++) {
       int row = k / _numSpecies;
@@ -374,24 +374,6 @@ public class SocialAttributeVisualization : MonoBehaviour {
   #endregion
 
   #region Utilities
-
-  private void ensureListExists<T>(ref List<T> list) {
-    if (list == null) {
-      list = new List<T>();
-    }
-  }
-
-  private void ensureListCount<T>(List<T> list, int count, Func<T> createT, Action<T> deleteT) {
-    while (list.Count < count) {
-      list.Add(createT());
-    }
-
-    while (list.Count > count) {
-      T tempT = list[list.Count - 1];
-      list.RemoveAt(list.Count - 1);
-      deleteT(tempT);
-    }
-  }
 
   private RectTransform initRectTransform(GameObject obj) {
     var rectTransform = obj.GetComponent<RectTransform>();

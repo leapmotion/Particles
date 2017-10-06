@@ -15,6 +15,7 @@ using Leap.Unity.Space;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.PhysicalInterfaces;
 
 namespace Leap.Unity.Interaction {
 
@@ -803,9 +804,43 @@ namespace Leap.Unity.Interaction {
     public void FixedUpdateObject() {
       if (!ignoreGrasping) fixedUpdateGrasping();
       fixedUpdateLayers();
+      fixedUpdatePose();
 
       if (_appliedForces) { FixedUpdateForces(); }
     }
+
+    #region Pose & Movement
+
+    private Pose _worldPose;
+    private Pose _worldPoseLastFrame = new Pose();
+    private bool _hasWorldPoseLastFrame = false;
+
+    public Pose worldPose {
+      get {
+        return _worldPose;
+      }
+    }
+
+    public Movement worldMovement {
+      get {
+        if (!rigidbody.isKinematic) {
+          return new Movement(rigidbody.velocity, rigidbody.angularVelocity);
+        }
+        else if (!_hasWorldPoseLastFrame) {
+          return new Movement();
+        }
+        else return new Movement(_worldPoseLastFrame, worldPose, Time.fixedDeltaTime);
+      }
+    }
+
+    private void fixedUpdatePose() {
+      _worldPoseLastFrame = _worldPose;
+      _hasWorldPoseLastFrame = true;
+
+      _worldPose = new Pose(rigidbody.position, rigidbody.rotation);
+    }
+
+    #endregion
 
     #region Hovering
 

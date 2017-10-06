@@ -18,11 +18,14 @@ namespace Leap.Unity.Animation {
     public Transform localScaleTarget;
 
     /// <summary>
-    /// Any animation curve values multiply this value to set the localScale of the
-    /// target transform.
+    /// The desired local scale of the scale target when the switch is on.
     /// </summary>
-    [SerializeField]
-    public Vector3 baseLocalScale = Vector3.one;
+    public Vector3 onLocalScale = Vector3.one;
+
+    /// <summary>
+    /// The desired local scale of the scale target when the switch is off.
+    /// </summary>
+    public Vector3 offLocalScale = Vector3.zero;
 
     /// <summary>
     /// Enforces a minimum value of 0.0001f for each localScale axis.
@@ -85,12 +88,12 @@ namespace Leap.Unity.Animation {
 
     private Vector3 getTargetScale(float time) {
       if (!nonUniformScale) {
-        return baseLocalScale * scaleCurve.Evaluate(time);
+        return Vector3.Lerp(offLocalScale, onLocalScale, scaleCurve.Evaluate(time));
       }
       else {
-        return new Vector3(baseLocalScale.x * xScaleCurve.Evaluate(time),
-                           baseLocalScale.y * yScaleCurve.Evaluate(time),
-                           baseLocalScale.z * zScaleCurve.Evaluate(time));
+        return new Vector3(Mathf.Lerp(offLocalScale.x, onLocalScale.x, xScaleCurve.Evaluate(time)),
+                           Mathf.Lerp(offLocalScale.y, onLocalScale.y, yScaleCurve.Evaluate(time)),
+                           Mathf.Lerp(offLocalScale.z, onLocalScale.z, zScaleCurve.Evaluate(time)));
       }
     }
 

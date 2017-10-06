@@ -57,6 +57,8 @@ GameObject:
   - component: {fileID: 114538829356365462}
   - component: {fileID: 114908250718703774}
   - component: {fileID: 114850469632216446}
+  - component: {fileID: 114653723184676572}
+  - component: {fileID: 114954474889142292}
   m_Layer: 0
   m_Name: Generic Widget - Scale Only
   m_TagString: Untagged
@@ -201,6 +203,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1610698744603220
+GameObject:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4583675577698036}
+  - component: {fileID: 114063086583750232}
+  - component: {fileID: 114571319868625292}
+  m_Layer: 0
+  m_Name: MiniSphere Switch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1614917170784038
 GameObject:
   m_ObjectHideFlags: 1
@@ -292,7 +311,7 @@ GameObject:
   - component: {fileID: 4391575588786490}
   - component: {fileID: 135811781899117048}
   m_Layer: 0
-  m_Name: Collider
+  m_Name: Sphere Collider & Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -383,6 +402,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4583675577698036}
   - {fileID: 4391575588786490}
   m_Father: {fileID: 4999452351138824}
   m_RootOrder: 1
@@ -399,7 +419,7 @@ Transform:
   m_Children:
   - {fileID: 4056087350601308}
   m_Father: {fileID: 4263645406100726}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4426107133599806
 Transform:
@@ -413,6 +433,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4056087350601308}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4583675577698036
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1610698744603220}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4263645406100726}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4856806331067478
 Transform:
@@ -681,6 +714,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   overrideTweenTime: 1
   tweenTime: 0.33
+--- !u!114 &114063086583750232
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1610698744603220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  overrideTweenTime: 0
+  tweenTime: 1
 --- !u!114 &114064814286373070
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1044,7 +1090,8 @@ MonoBehaviour:
   _tweenTime: 1
   _startOn: 0
   localScaleTarget: {fileID: 4263645406100726}
-  baseLocalScale: {x: 1, y: 1, z: 1}
+  onLocalScale: {x: 1, y: 1, z: 1}
+  offLocalScale: {x: 0, y: 0, z: 0}
   enforceNonzeroScale: 1
   deactivateSelfWhenZero: 1
   scaleCurve:
@@ -1222,6 +1269,97 @@ MonoBehaviour:
   parentBox: {fileID: 114889202798580130}
   extraDepth: 0.0002
   _parentBoxDepth: 0.01
+--- !u!114 &114571319868625292
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1610698744603220}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _tweenTime: 1
+  _startOn: 0
+  localScaleTarget: {fileID: 4391575588786490}
+  onLocalScale: {x: 0.05, y: 0.05, z: 0.05}
+  offLocalScale: {x: 0.09, y: 0.09, z: 0.09}
+  enforceNonzeroScale: 1
+  deactivateSelfWhenZero: 1
+  scaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  nonUniformScale: 0
+  xScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  yScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  zScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &114571523938389982
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1261,6 +1399,97 @@ MonoBehaviour:
   colorChangeSpeed: 20
   filter: {fileID: 0}
   restingColorIdx: 6
+--- !u!114 &114653723184676572
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e7e685ed21338449d229560959da62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _tweenTime: 1
+  _startOn: 1
+  localScaleTarget: {fileID: 4999452351138824}
+  onLocalScale: {x: 1, y: 1, z: 1}
+  offLocalScale: {x: 0, y: 0, z: 0}
+  enforceNonzeroScale: 1
+  deactivateSelfWhenZero: 1
+  scaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  nonUniformScale: 0
+  xScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  yScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  zScaleCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &114693086155942622
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1275,7 +1504,8 @@ MonoBehaviour:
   _tweenTime: 0.33
   _startOn: 0
   localScaleTarget: {fileID: 4856806331067478}
-  baseLocalScale: {x: 1, y: 1, z: 1}
+  onLocalScale: {x: 1, y: 1, z: 1}
+  offLocalScale: {x: 0, y: 0, z: 0}
   enforceNonzeroScale: 1
   deactivateSelfWhenZero: 1
   scaleCurve:
@@ -1884,6 +2114,21 @@ MonoBehaviour:
   colorChangeSpeed: 20
   filter: {fileID: 0}
   restingColorIdx: 0
+--- !u!114 &114954474889142292
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebb477410e1926a4eac655c999527e18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  overrideTweenTime: 0
+  tweenTime: 1
+  tree:
+    rootSwitchBehaviour: {fileID: 114653723184676572}
 --- !u!114 &114958676558708536
 MonoBehaviour:
   m_ObjectHideFlags: 1

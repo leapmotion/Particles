@@ -22,6 +22,8 @@ namespace Leap.Unity.Animation {
     }
     
     public struct Node {
+      
+      bool isValid;
 
       /// <summary>
       /// The serialized MonoBehaviour for this Node represents both its Transform
@@ -31,10 +33,16 @@ namespace Leap.Unity.Animation {
       MonoBehaviour switchBehaviour;
 
       public Transform transform {
-        get { return switchBehaviour.transform; }
+        get {
+          if (!isValid) return null;
+          return switchBehaviour.transform;
+        }
       }
       public IPropertySwitch objSwitch {
-        get { return switchBehaviour as IPropertySwitch; }
+        get {
+          if (!isValid) return null;
+          return switchBehaviour as IPropertySwitch;
+        }
       }
       
       public NodeRef     parent;
@@ -55,6 +63,26 @@ namespace Leap.Unity.Animation {
 
       public bool hasSibling { get { return hasParent && parent.node.numChildren > 1; } }
 
+      public bool isOn {
+        get {
+          if (objSwitch == null) return false;
+          return objSwitch.GetIsOnOrTurningOn();
+        }
+      }
+
+      public bool isParentOn {
+        get {
+          return hasParent && parent.node.isOn;
+        }
+      }
+
+      public bool isOff {
+        get {
+          if (objSwitch == null) return false;
+          return objSwitch.GetIsOffOrTurningOff();
+        }
+      }
+
       public bool hasNextSibling {
         get {
           return hasParent
@@ -62,10 +90,22 @@ namespace Leap.Unity.Animation {
         }
       }
 
+      public Node nextSibling {
+        get {
+          return parent.node.GetChild(parent.node.GetIndexOfChild(this) + 1);
+        }
+      }
+
       public bool hasPrevSibling {
         get {
           return hasParent
               && parent.node.GetIndexOfChild(this) != 0;
+        }
+      }
+
+      public Node prevSibling {
+        get {
+          return parent.node.GetChild(parent.node.GetIndexOfChild(this) - 1);
         }
       }
 
@@ -77,6 +117,8 @@ namespace Leap.Unity.Animation {
         this.parent = parent;
         this.treeDepth = treeDepth;
 
+        isValid = true;
+
         children = new List<Node>();
         numAllChildren = 0;
         constructChildren();
@@ -84,6 +126,10 @@ namespace Leap.Unity.Animation {
 
       public int GetIndexOfChild(Node child) {
         return children.IndexOf(child);
+      }
+
+      public Node GetChild(int childIdx) {
+        return children[childIdx];
       }
 
       private void constructChildren() {
@@ -130,16 +176,15 @@ namespace Leap.Unity.Animation {
 
     #endregion
 
-    private Node root;
-
-    private bool treeReady;
-
     /// <summary>
     /// This is the sole object Unity serializes to serialize the switch tree; the rest
     /// is generated in OnAfterDeserialize.
     /// </summary>
     [SerializeField]
     public MonoBehaviour rootSwitchBehaviour;
+
+    private Node root;
+    private bool treeReady;
 
     public SwitchTree(Transform transform) {
       var objSwitch = transform.GetComponent<IPropertySwitch>();

@@ -40,17 +40,12 @@ namespace Leap.Unity.Animation {
     [SerializeField]
     private bool _startOn = false;
 
-    protected virtual void Start() {
-      if (_backingSwitchTween.isValid) {
-        // Something other call initialized the tween, don't initialize here.
-        return;
-      }
+    private bool _tweenInitialized = false;
 
-      if (_startOn) {
-        OnNow();
-      }
-      else {
-        OffNow();
+    protected virtual void Start() {
+      if (!_tweenInitialized) {
+        // Some other call initialized the tween, don't initialize here.
+        refreshTween();
       }
     }
 
@@ -88,6 +83,20 @@ namespace Leap.Unity.Animation {
         _backingSwitchTween = Tween.Persistent().Value(0f, 1f, onTweenValue);
       }
 
+      // Sometimes we are initialized in Start(), other times another object
+      // forces an earlier initialization. Either way, the _first_ initialization
+      // of the tween consumes the _startOn state to set the tween state appropriately.
+      if (!_tweenInitialized && Application.isPlaying) {
+        if (_startOn) {
+          OnNow();
+        }
+        else {
+          OffNow();
+        }
+
+        _tweenInitialized = true;
+      }
+
       _backingSwitchTween.OverTime(tweenTime);
     }
 
@@ -119,6 +128,9 @@ namespace Leap.Unity.Animation {
         return _startOn;
       }
       else {
+        // Special case for when the tween was _just_ created.
+        if (_switchTween.progress == 0 && !_switchTween.isRunning) return false;
+
         return _switchTween.direction == Direction.Forward;
       }
     }
@@ -129,9 +141,12 @@ namespace Leap.Unity.Animation {
 
     public bool GetIsOffOrTurningOff() {
       if (!Application.isPlaying) {
-        return _startOn;
+        return !_startOn;
       }
       else {
+        // Special case for when the tween was _just_ created.
+        if (_switchTween.progress == 0 && !_switchTween.isRunning) return true;
+
         return _switchTween.direction == Direction.Backward;
       }
     }

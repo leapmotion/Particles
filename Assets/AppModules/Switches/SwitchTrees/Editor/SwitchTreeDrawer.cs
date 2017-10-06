@@ -26,11 +26,19 @@ namespace Leap.Unity.Animation {
 
     #region GUI Properties & Colors
 
-    private static float EXTRA_HEIGHT = 6f;
-    private static float EXTRA_HEIGHT_PER_NODE = 1f;
-    private static float INDENT_WIDTH = 17f;
-    private static float BUTTON_RECT_INNER_PAD = 3f;
-    private static float GLOW_WIDTH = 1f;
+    private const float EXTRA_HEIGHT = 6f;
+    private const float EXTRA_HEIGHT_PER_NODE = 1f;
+    private const float INDENT_WIDTH = 17f;
+
+    private const float BUTTON_RECT_INNER_PAD = 3f;
+
+    private const float LINE_SIDE_MARGIN_RATIO = 0.46f;
+    private const float LINE_ORIGIN_RATIO = 0.50f;
+
+    private const float GLOW_WIDTH = 1f;
+    private const float GLOW_LINE_SIDE_MARGIN_RATIO = 0.44f;
+    private const float GLOW_LINE_ORIGIN_RATIO = 0.48f;
+
 
     private static Color backgroundColor {
       get {
@@ -53,7 +61,7 @@ namespace Leap.Unity.Animation {
     }
 
     private static Color glowContentColor {
-      get { return Color.Lerp(Color.cyan, Color.white, 0.1f); }
+      get { return Color.Lerp(Color.cyan, Color.white, 0.7f); }
     }
 
     #endregion
@@ -102,7 +110,7 @@ namespace Leap.Unity.Animation {
         drawControllerBackground(rect);
       }
       else {
-        drawTreeBackground(rect);
+        drawTreeBackground(rect, isEvenRow);
       }
       
       Rect indentRect;
@@ -120,22 +128,53 @@ namespace Leap.Unity.Animation {
       //EditorGUI.DrawRect(fullButtonRect, Color.magenta);
 
       #endregion
-      
+
+      bool isNodeOn = node.isOn;
+      bool isParentOn = node.isParentOn;
+      bool glowFromParent = isParentOn && node.isOn;
 
       if (node.treeDepth != 0) {
-        drawCenteredLine(Direction4.Left, fullButtonRect);
+        if (glowFromParent) {
+          drawCenteredLine(Direction4.Left, fullButtonRect, LineType.OuterGlow);
+        }
+
+        drawCenteredLine(Direction4.Left, fullButtonRect, (glowFromParent ? LineType.InnerGlow : LineType.Default));
       }
       if (node.hasParent) {
+        // Leftward Rect lines
+
         Rect leftwardRect = indentRect.TakeRight(INDENT_WIDTH * 2f)
                                              .TakeLeft(INDENT_WIDTH);
-        drawCenteredLine(Direction4.Right | Direction4.Up, leftwardRect);
+        
+        if (glowFromParent) {
+          drawCenteredLine(Direction4.Right | Direction4.Up, leftwardRect, LineType.OuterGlow);
+        }
+
+        drawCenteredLine(Direction4.Right | Direction4.Up, leftwardRect,
+                         (glowFromParent ? LineType.InnerGlow : LineType.Default));
 
         if (node.hasPrevSibling) {
-          drawCenteredLine(Direction4.Down, leftwardRect);
+          bool prevSiblingGlowFromParent = isParentOn && node.prevSibling.isOn;
+
+          if (prevSiblingGlowFromParent) {
+            drawCenteredLine(Direction4.Down | Direction4.Up, leftwardRect, LineType.OuterGlow);
+          }
+
+          drawCenteredLine(Direction4.Down, leftwardRect,
+                           (prevSiblingGlowFromParent ? LineType.InnerGlow : LineType.Default));
+
+          if (prevSiblingGlowFromParent) {
+            drawCenteredLine(Direction4.Up, leftwardRect, LineType.InnerGlow);
+          }
         }
       }
       if (node.hasChildren) {
-        drawCenteredLine(Direction4.Down, fullButtonRect);
+        bool anyChildOn = node.children.Query().Any(n => n.isOn);
+        if (anyChildOn) {
+          drawCenteredLine(Direction4.Down, fullButtonRect, LineType.OuterGlow);
+        }
+
+        drawCenteredLine(Direction4.Down, fullButtonRect, (anyChildOn ? LineType.InnerGlow : LineType.Default));
       }
 
 
@@ -145,7 +184,11 @@ namespace Leap.Unity.Animation {
       Undo.IncrementCurrentGroup();
       var curGroupIdx = Undo.GetCurrentGroup();
 
-      bool isNodeOn = node.objSwitch.GetIsOnOrTurningOn();
+      bool test_isNodeOff = node.isOff;
+      if (test_isNodeOff) {
+        EditorGUI.DrawRect(buttonRect.PadTopPercent(0.50f), Color.red);
+      }
+
       Color origContentColor = GUI.contentColor;
       if (isNodeOn) {
         Rect glowRect = buttonRect.PadOuter(GLOW_WIDTH);
@@ -158,7 +201,7 @@ namespace Leap.Unity.Animation {
         // Note: It is the responsibility of the IPropertySwitch implementation
         // to perform operations that correctly report their actions in OnNow() to the
         // Undo history!
-        switchTree.SwitchTo(node.transform.name, immediately: true);
+        switchTree.SwitchTo(node.transform.name, immediately: !Application.isPlaying);
       }
 
       Undo.CollapseUndoOperations(curGroupIdx);
@@ -174,8 +217,9 @@ namespace Leap.Unity.Animation {
       EditorGUI.DrawRect(rect, headerBackgroundColor);
     }
 
-    private void drawTreeBackground(Rect rect) {
-      EditorGUI.DrawRect(rect, innerBackgroundColor);
+    private void drawTreeBackground(Rect rect, bool isEvenRow = true) {
+      Color color = (isEvenRow ? Color.Lerp(innerBackgroundColor, Color.white, 0.1f) : innerBackgroundColor);
+      EditorGUI.DrawRect(rect, color);
     }
 
     [System.Flags]
@@ -186,46 +230,74 @@ namespace Leap.Unity.Animation {
       Right = 1 << 3
     }
 
-    private void drawCenteredLine(Direction4 directions, Rect inRect) {
+    private enum LineType {
+      Default,
+      InnerGlow,
+      OuterGlow
+    }
+
+    private void drawCenteredLine(Direction4 directions, Rect inRect, LineType lineType = LineType.Default) {
+      float sideRatio, originRatio;
+      switch (lineType) {
+        case LineType.OuterGlow:
+          sideRatio = GLOW_LINE_SIDE_MARGIN_RATIO;
+          originRatio = GLOW_LINE_ORIGIN_RATIO;
+          break;
+        default:
+          sideRatio = LINE_SIDE_MARGIN_RATIO;
+          originRatio = LINE_ORIGIN_RATIO;
+          break;
+      }
+
+      Color lineColor;
+      switch (lineType) {
+        case LineType.OuterGlow:
+          lineColor = glowBackgroundColor;
+          break;
+        case LineType.InnerGlow:
+          lineColor = glowContentColor;
+          break;
+        default:
+          lineColor = Color.black;
+          break;
+      }
+
       if ((directions & Direction4.Up) > 0) {
-        drawCenteredLineUp(inRect);
+        drawCenteredLineUp(inRect, sideRatio, originRatio, lineColor);
       }
       if ((directions & Direction4.Down) > 0) {
-        drawCenteredLineDown(inRect);
+        drawCenteredLineDown(inRect, sideRatio, originRatio, lineColor);
       }
       if ((directions & Direction4.Left) > 0) {
-        drawCenteredLineLeft(inRect);
+        drawCenteredLineLeft(inRect, sideRatio, originRatio, lineColor);
       }
       if ((directions & Direction4.Right) > 0) {
-        drawCenteredLineRight(inRect);
+        drawCenteredLineRight(inRect, sideRatio, originRatio, lineColor);
       }
     }
 
-    private const float LINE_SIDE_MARGIN_RATIO = 0.46f;
-    private const float LINE_ORIGIN_RATIO = 0.50f;
-
-    private void drawCenteredLineUp(Rect rect) {
-      Rect middle = rect.PadLeftRightPercent(LINE_SIDE_MARGIN_RATIO);
-      Rect line = middle.PadBottomPercent(LINE_ORIGIN_RATIO);
-      EditorGUI.DrawRect(line, Color.black);
+    private void drawCenteredLineUp(Rect rect, float sideRatio, float originRatio, Color color) {
+      Rect middle = rect.PadLeftRightPercent(sideRatio);
+      Rect line = middle.PadBottomPercent(originRatio);
+      EditorGUI.DrawRect(line, color);
     }
 
-    private void drawCenteredLineDown(Rect rect) {
-      Rect middle = rect.PadLeftRightPercent(LINE_SIDE_MARGIN_RATIO);
-      Rect line = middle.PadTopPercent(LINE_ORIGIN_RATIO);
-      EditorGUI.DrawRect(line, Color.black);
+    private void drawCenteredLineDown(Rect rect, float sideRatio, float originRatio, Color color) {
+      Rect middle = rect.PadLeftRightPercent(sideRatio);
+      Rect line = middle.PadTopPercent(originRatio);
+      EditorGUI.DrawRect(line, color);
     }
 
-    private void drawCenteredLineLeft(Rect rect) {
-      Rect middle = rect.PadTopBottomPercent(LINE_SIDE_MARGIN_RATIO);
-      Rect line = middle.PadRightPercent(LINE_ORIGIN_RATIO);
-      EditorGUI.DrawRect(line, Color.black);
+    private void drawCenteredLineLeft(Rect rect, float sideRatio, float originRatio, Color color) {
+      Rect middle = rect.PadTopBottomPercent(sideRatio);
+      Rect line = middle.PadRightPercent(originRatio);
+      EditorGUI.DrawRect(line, color);
     }
 
-    private void drawCenteredLineRight(Rect rect) {
-      Rect middle = rect.PadTopBottomPercent(LINE_SIDE_MARGIN_RATIO);
-      Rect line = middle.PadLeftPercent(LINE_ORIGIN_RATIO);
-      EditorGUI.DrawRect(line, Color.black);
+    private void drawCenteredLineRight(Rect rect, float sideRatio, float originRatio, Color color) {
+      Rect middle = rect.PadTopBottomPercent(sideRatio);
+      Rect line = middle.PadLeftPercent(originRatio);
+      EditorGUI.DrawRect(line, color);
     }
 
     #region GUIStyle nonsense

@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace Leap.Unity.Animation {
 
+  [DisallowMultipleComponent]
   public class ObjectSwitch : MonoBehaviour, IPropertySwitch {
 
     #region Inspector

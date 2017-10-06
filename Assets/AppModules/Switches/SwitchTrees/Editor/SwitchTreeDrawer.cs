@@ -10,6 +10,8 @@ namespace Leap.Unity.Animation {
   [CustomPropertyDrawer(typeof(SwitchTree), true)]
   public class SwitchTreeDrawer : PropertyDrawer {
 
+    #region Pair Class
+
     public class Pair<T, U> {
       public T first;
       public U second;
@@ -20,10 +22,15 @@ namespace Leap.Unity.Animation {
       }
     }
 
+    #endregion
+
     #region GUI Properties & Colors
 
     private static float EXTRA_HEIGHT = 6f;
-    private static float INDENT_WIDTH = 15f;
+    private static float EXTRA_HEIGHT_PER_NODE = 1f;
+    private static float INDENT_WIDTH = 17f;
+    private static float BUTTON_RECT_INNER_PAD = 3f;
+    private static float GLOW_WIDTH = 1f;
 
     private static Color backgroundColor {
       get {
@@ -41,11 +48,20 @@ namespace Leap.Unity.Animation {
       get { return Color.Lerp(backgroundColor, Color.black, 0.15f); }
     }
 
+    private static Color glowBackgroundColor {
+      get { return Color.Lerp(Color.cyan, Color.blue, 0.05f); }
+    }
+
+    private static Color glowContentColor {
+      get { return Color.Lerp(Color.cyan, Color.white, 0.1f); }
+    }
+
     #endregion
 
     public override float GetPropertyHeight(SerializedProperty property,
                                             GUIContent label) {
-      return EditorGUIUtility.singleLineHeight * makeSwitchTree(property).NodeCount
+      return (EditorGUIUtility.singleLineHeight + EXTRA_HEIGHT_PER_NODE)
+             * makeSwitchTree(property).NodeCount
              + EXTRA_HEIGHT;
     }
 
@@ -63,7 +79,7 @@ namespace Leap.Unity.Animation {
                                                  return new Pair<SwitchTree.Node, Rect>
                                                               (node, rect);
                                                 })) {
-          drawNode(nodeRectPair.first, nodeRectPair.second, isEvenRow);
+          drawNode(nodeRectPair.first, nodeRectPair.second, switchTree, isEvenRow);
           isEvenRow = !isEvenRow;
         }
       }
@@ -79,7 +95,8 @@ namespace Leap.Unity.Animation {
                                          .objectReferenceValue as MonoBehaviour).transform);
     }
 
-    private void drawNode(SwitchTree.Node node, Rect rect, bool isEvenRow = true) {
+    private void drawNode(SwitchTree.Node node, Rect rect, SwitchTree switchTree,
+                          bool isEvenRow = true) {
 
       if (node.treeDepth == 0) {
         drawControllerBackground(rect);
@@ -122,8 +139,33 @@ namespace Leap.Unity.Animation {
       }
 
 
-      if (EditorGUI.Toggle(fullButtonRect, false)) {
+      Rect buttonRect = fullButtonRect.PadInner(BUTTON_RECT_INNER_PAD);
 
+      // Support undo history.
+      Undo.IncrementCurrentGroup();
+      var curGroupIdx = Undo.GetCurrentGroup();
+
+      bool isNodeOn = node.objSwitch.GetIsOnOrTurningOn();
+      Color origContentColor = GUI.contentColor;
+      if (isNodeOn) {
+        Rect glowRect = buttonRect.PadOuter(GLOW_WIDTH);
+        EditorGUI.DrawRect(glowRect, glowBackgroundColor);
+        GUI.contentColor = glowContentColor;
+      }
+
+      if (GUI.Button(buttonRect, new GUIContent("Switch to this node."))) {
+
+        // Note: It is the responsibility of the IPropertySwitch implementation
+        // to perform operations that correctly report their actions in OnNow() to the
+        // Undo history!
+        switchTree.SwitchTo(node.transform.name, immediately: true);
+      }
+
+      Undo.CollapseUndoOperations(curGroupIdx);
+      Undo.SetCurrentGroupName("Set Switch Tree State");
+
+      if (isNodeOn) {
+        GUI.contentColor = origContentColor;
       }
 
     }

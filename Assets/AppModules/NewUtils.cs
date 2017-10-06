@@ -66,6 +66,11 @@ public static class NewUtils {
 
   #region Rect Utils
 
+  public static Rect PadOuter(this Rect r, float width) {
+    return new Rect(r.x - width, r.y - width,
+                    r.width + (width * 2f), r.height + (width * 2f));
+  }
+
   #region Pad, No Out
 
   public static Rect PadTop(this Rect r, float padding) {

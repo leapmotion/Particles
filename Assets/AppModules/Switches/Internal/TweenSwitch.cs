@@ -97,7 +97,8 @@ namespace Leap.Unity.Animation {
 
     #endregion
 
-    #region Abstraction
+    #region Abstract
+
     /// <summary>
     /// Sets the switch state somewhere between 0 (off) and 1 (on). The "immediately"
     /// argument is a hint to know OnNow() or OffNow() was called, in which case any
@@ -114,7 +115,12 @@ namespace Leap.Unity.Animation {
     }
 
     public bool GetIsOnOrTurningOn() {
-      return _switchTween.direction == Direction.Forward;
+      if (!Application.isPlaying) {
+        return _startOn;
+      }
+      else {
+        return _switchTween.direction == Direction.Forward;
+      }
     }
 
     public void Off() {
@@ -122,7 +128,12 @@ namespace Leap.Unity.Animation {
     }
 
     public bool GetIsOffOrTurningOff() {
-      return _switchTween.direction == Direction.Backward;
+      if (!Application.isPlaying) {
+        return _startOn;
+      }
+      else {
+        return _switchTween.direction == Direction.Backward;
+      }
     }
 
     public void OnNow() {

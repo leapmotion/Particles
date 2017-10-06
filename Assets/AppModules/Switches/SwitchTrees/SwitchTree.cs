@@ -186,7 +186,8 @@ namespace Leap.Unity.Animation {
 
       var activeNodeChain = Pool<Stack<Node>>.Spawn();
       var visitedNodes = Pool<HashSet<Node>>.Spawn();
-      var curNodeRef = Pool<NodeRef>.Spawn();
+      var tempNodeRef = Pool<NodeRef>.Spawn();
+      var curNodeRef = tempNodeRef;
       curNodeRef.node = root;
 
       // This dictionary allows us to reverse-breadth-first traverse all nodes once;
@@ -270,7 +271,7 @@ namespace Leap.Unity.Animation {
         }
       }
       finally {
-        Pool<NodeRef>.Recycle(curNodeRef);
+        Pool<NodeRef>.Recycle(tempNodeRef);
 
         visitedNodes.Clear();
         Pool<HashSet<Node>>.Recycle(visitedNodes);

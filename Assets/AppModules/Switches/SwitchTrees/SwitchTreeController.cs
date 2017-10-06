@@ -6,8 +6,8 @@ namespace Leap.Unity.Animation {
   
   public class SwitchTreeController : ObjectSwitch {
     
+    [Header("Switch Tree")]
     [SerializeField]
-    //[SwitchTreeView]
     private SwitchTree tree;
 
     #region Unity Events

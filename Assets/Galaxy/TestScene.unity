@@ -3969,7 +3969,7 @@ MonoBehaviour:
   blackHoleCombineDistance: 0.05
   _enableTrails: 1
   _maxTrailLength: 1000
-  _trailUpdateRate: 4
+  _trailUpdateRate: 50
   prevPos: {fileID: 8400000, guid: 764aac97fed66fa4fbf9e7adac2deba5, type: 2}
   currPos: {fileID: 8400000, guid: c0e949789fc96134a9960080365d4588, type: 2}
   nextPos: {fileID: 8400000, guid: 18f7ea8f36308ff4597cc3d6773d17d3, type: 2}

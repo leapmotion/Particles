@@ -184,7 +184,7 @@ public class GalaxySimulation : MonoBehaviour {
     public Quaternion rotation;
   }
 
-  private unsafe class UniverseState {
+  public unsafe class UniverseState {
     public float time;
     public int count;
 
@@ -231,7 +231,7 @@ public class GalaxySimulation : MonoBehaviour {
     }
   }
 
-  private UniverseState _mainState;
+  public UniverseState mainState;
   private UniverseState _trailState;
   private Dictionary<int, List<Vector3>> _trails = new Dictionary<int, List<Vector3>>();
 
@@ -241,9 +241,9 @@ public class GalaxySimulation : MonoBehaviour {
 
   [DevButton("Reset Sim")]
   public unsafe void ResetSimulation() {
-    if (_mainState != null) {
-      _mainState.Dispose();
-      _mainState = null;
+    if (mainState != null) {
+      mainState.Dispose();
+      mainState = null;
     }
 
     if (_trailState != null) {
@@ -254,12 +254,12 @@ public class GalaxySimulation : MonoBehaviour {
     _trails.Clear();
 
     _prevTimestep = timestep;
-    _mainState = new UniverseState(blackHoleCount);
+    mainState = new UniverseState(blackHoleCount);
 
     {
       Random.InitState(_seed);
-      BlackHoleMainState* dstMain = _mainState.mainState;
-      BlackHoleSecondaryState* dstSecond = _mainState.secondaryState;
+      BlackHoleMainState* dstMain = mainState.mainState;
+      BlackHoleSecondaryState* dstSecond = mainState.secondaryState;
 
       for (int i = 0; i < blackHoleCount; i++) {
         Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
@@ -295,17 +295,17 @@ public class GalaxySimulation : MonoBehaviour {
     updateShaderConstants();
 
     {
-      BlackHoleMainState* src = _mainState.mainState;
-      for (int i = 0; i < _mainState.count; i++, src++) {
+      BlackHoleMainState* src = mainState.mainState;
+      for (int i = 0; i < mainState.count; i++, src++) {
         _vectorArray[i] = (*src).velocity;
       }
       simulateMat.SetVectorArray("_PlanetVelocities", _vectorArray);
     }
 
     {
-      BlackHoleMainState* src = _mainState.mainState;
+      BlackHoleMainState* src = mainState.mainState;
       _floatArray.Fill(0);
-      for (int i = 0; i < _mainState.count; i++, src++) {
+      for (int i = 0; i < mainState.count; i++, src++) {
         _floatArray[i] = Mathf.Lerp(1, (*src).mass, blackHoleMassAffectsDensity);
       }
       simulateMat.SetFloatArray("_PlanetDensities", _floatArray);
@@ -313,8 +313,8 @@ public class GalaxySimulation : MonoBehaviour {
     }
 
     {
-      BlackHoleMainState* src = _mainState.mainState;
-      for (int i = 0; i < _mainState.count; i++, src++) {
+      BlackHoleMainState* src = mainState.mainState;
+      for (int i = 0; i < mainState.count; i++, src++) {
         _floatArray[i] = Mathf.Lerp(1, (*src).mass, blackHoleMassAffectsSize);
       }
       simulateMat.SetFloatArray("_PlanetSizes", _floatArray);
@@ -343,7 +343,25 @@ public class GalaxySimulation : MonoBehaviour {
     GL.Vertex3(0, 1, 0);
     GL.End();
 
-    _trailState = _mainState.Clone();
+    _trailState = mainState.Clone();
+  }
+
+  [DevButton]
+  public void ResetTrails() {
+    if (_trailState != null) {
+      _trailState.Dispose();
+      _trailState = null;
+    }
+
+    _trailState = mainState.Clone();
+
+    _trails.Clear();
+    unsafe {
+      BlackHoleSecondaryState* src = mainState.secondaryState;
+      for (int i = 0; i < mainState.count; i++, src++) {
+        _trails[(*src).id] = new List<Vector3>();
+      }
+    }
   }
 
   private IEnumerator Start() {
@@ -362,9 +380,9 @@ public class GalaxySimulation : MonoBehaviour {
   }
 
   private void OnDisable() {
-    if (_mainState != null) {
-      _mainState.Dispose();
-      _mainState = null;
+    if (mainState != null) {
+      mainState.Dispose();
+      mainState = null;
     }
 
     if (_trailState != null) {
@@ -379,8 +397,8 @@ public class GalaxySimulation : MonoBehaviour {
     simulateMat.SetFloat("_MaxDiscHeight", maxDiscHeight);
 
     {
-      BlackHoleMainState* src = _mainState.mainState;
-      for (int i = 0; i < _mainState.count; i++, src++) {
+      BlackHoleMainState* src = mainState.mainState;
+      for (int i = 0; i < mainState.count; i++, src++) {
         Vector4 planet = (*src).position;
         planet.w = (*src).mass;
         _vectorArray[i] = planet;
@@ -389,14 +407,14 @@ public class GalaxySimulation : MonoBehaviour {
     }
 
     {
-      BlackHoleSecondaryState* src = _mainState.secondaryState;
-      for (int i = 0; i < _mainState.count; i++, src++) {
+      BlackHoleSecondaryState* src = mainState.secondaryState;
+      for (int i = 0; i < mainState.count; i++, src++) {
         _matrixArray[i] = Matrix4x4.Rotate((*src).rotation);
       }
       simulateMat.SetMatrixArray("_PlanetRotations", _matrixArray);
     }
 
-    simulateMat.SetInt("_PlanetCount", _mainState.count);
+    simulateMat.SetInt("_PlanetCount", mainState.count);
 
     simulateMat.SetFloat("_Force", starGravConstant);
     simulateMat.SetFloat("_FuzzValue", fuzzValue);
@@ -414,7 +432,7 @@ public class GalaxySimulation : MonoBehaviour {
       ResetSimulation();
     }
 
-    if ((loop && _mainState.time > loopTime) || respawnMode) {
+    if ((loop && mainState.time > loopTime) || respawnMode) {
       ResetSimulation();
       return;
     }
@@ -422,44 +440,44 @@ public class GalaxySimulation : MonoBehaviour {
     Random.InitState(Time.frameCount);
     _seed = Random.Range(int.MinValue, int.MaxValue);
 
-    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
+    if (_enableTrails) {
+      for (int i = 0; i < _trailUpdateRate; i++) {
+        stepState(_trailState);
+        bool isAtMaxLength = false;
 
-      if (_enableTrails) {
-        for (int i = 0; i < _trailUpdateRate; i++) {
-          stepState(_trailState);
-          bool isAtMaxLength = false;
-
-          unsafe {
-            BlackHoleMainState* main = _trailState.mainState;
-            BlackHoleSecondaryState* secondary = _trailState.secondaryState;
-            for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
-              _trails[(*secondary).id].Add((*main).position);
-
-              if (_trails[(*secondary).id].Count >= _maxTrailLength) {
-                isAtMaxLength = true;
-              }
+        unsafe {
+          BlackHoleMainState* main = _trailState.mainState;
+          BlackHoleSecondaryState* secondary = _trailState.secondaryState;
+          for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
+            if (_trails[(*secondary).id].Count >= _maxTrailLength) {
+              isAtMaxLength = true;
+              continue;
             }
-          }
 
-          if (isAtMaxLength) {
-            break;
+            _trails[(*secondary).id].Add((*main).position);
           }
         }
 
-        RuntimeGizmoDrawer drawer;
-        if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
-          drawer.color = Color.white;
-          foreach (var pair in _trails) {
-            foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
-              drawer.DrawLine(seg.prev, seg.value);
-            }
-          }
+        if (isAtMaxLength) {
+          break;
         }
       }
 
+      RuntimeGizmoDrawer drawer;
+      if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+        drawer.color = Color.white;
+        foreach (var pair in _trails) {
+          foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
+            drawer.DrawLine(seg.prev, seg.value);
+          }
+        }
+      }
+    }
+
+    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
       if (simulateBlackHoles) {
-        stepState(_mainState);
-        renderState(_mainState);
+        stepState(mainState);
+        renderState(mainState);
 
         foreach (var pair in _trails) {
           if (pair.Value.Count > 0) {
@@ -491,7 +509,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   private unsafe void stepState(UniverseState state) {
     using (new ProfilerSample("Step Galaxy")) {
-      _mainState.time += timestep * Time.deltaTime;
+      mainState.time += timestep * Time.deltaTime;
       float planetDT = 1.0f / blackHoleSubFrames;
 
       float preStepConstant = gravConstant * planetDT * timestep;

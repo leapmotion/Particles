@@ -4,105 +4,134 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FollowingController : MonoBehaviour {
-  
-  public Transform followTarget;
+namespace Leap.Unity.Animation {
 
-  public float lerpCoeffPerSec = 20F;
-  public float slerpCoeffPerSec = 10F;
+  public class FollowingController : MonoBehaviour {
 
-  /// <summary>
-  /// Smoothly slows down the following controller. The stiffenedMultiplier property
-  /// determines the strength of this effect.
-  /// </summary>
-  public bool stiffened = false;
+    #region Inspector
 
-  /// <summary>
-  /// The multiplier for this follower's lerp and slerp coefficients when the controller
-  /// is "stiffened." Capped between 0f and 1f.
-  /// </summary>
-  [MinValue(0f)]
-  [MaxValue(1f)]
-  public float stiffenedMultiplier = 0.1F;
+    [Tooltip("This transform will attempt to match the world position (and optionally "
+         + "rotation) of this target when it is non-null.")]
+    public Transform followTarget;
 
-  public bool locked = false;
+    [Header("Acceleration")]
 
-  private float _effLerpCoeffPerSec;
-  private float _effSlerpCoeffPerSec;
+    [Tooltip("This coefficient controls linear acceleration; higher valuers result in "
+         + "larger accelerations.")]
+    public float lerpCoeffPerSec = 20F;
 
-  void Start() {
-    _effLerpCoeffPerSec = lerpCoeffPerSec;
-    _effSlerpCoeffPerSec = slerpCoeffPerSec;
-  }
+    [Tooltip("Second-order slerp coefficient; larger values cause larger accelerations. "
+         + "This coefficient controls angular acceleration.")]
+    [DisableIf("followRotation", isEqualTo: false)]
+    public float slerpCoeffPerSec = 10F;
 
-  void Update() {
-    //if (locked) {
-    //  _effLerpCoeffPerSec = 0f;
-    //  _effSlerpCoeffPerSec = 0f;
-    //}
+    [Header("Rotation Settings")]
 
-    if (followTarget != null) {
-      float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F) * (locked ? 0f : 1f);
-      _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec, targetLerpCoeffPerSec, 5F * Time.deltaTime);
+    [Tooltip("Disable this to prevent the follower from matching the target's rotation.")]
+    public bool followRotation = true;
 
-      float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ? stiffenedMultiplier : 1F) * (locked ? 0f : 1f);
-      _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec, targetSlerpCoeffPerSec, 5F * Time.deltaTime);
+    public enum RotationType { ProjectForwardToHorizon, Free }
+    [Tooltip("The type of rotation the following controller is allowed to perform.")]
+    public RotationType rotationType = RotationType.ProjectForwardToHorizon;
 
+    [Header("Stiffening")]
 
-      // Update position and rotation gradually towards the targets.
-      Vector3 targetPosition = followTarget.transform.position;
-      this.transform.position = Vector3.Lerp(this.transform.position, targetPosition, _effLerpCoeffPerSec * Time.deltaTime);
+    /// <summary>
+    /// Smoothly slows down the following controller. The stiffenedMultiplier property
+    /// determines the strength of this effect.
+    /// </summary>
+    [Tooltip("Smoothly slows down the following controller. The stiffenedMultiplier "
+           + "property determines the strength of this effect.")]
+    public bool stiffened = false;
 
-      Quaternion targetRotation = Quaternion.LookRotation(followTarget.transform.forward.ProjectOnPlane(Vector3.up));
-      this.transform.rotation = Quaternion.Slerp(this.transform.rotation, targetRotation, _effSlerpCoeffPerSec * Time.deltaTime);
+    /// <summary>
+    /// The multiplier for this follower's lerp and slerp coefficients when the controller
+    /// is "stiffened." Capped between 0f and 1f.
+    /// </summary>
+    [Tooltip("The multiplier for this follower's lerp and slerp coefficients when the "
+           + "controller is \"stiffened.\" Capped between 0f and 1f.")]
+    [MinValue(0f)]
+    [MaxValue(1f)]
+    public float stiffenedMultiplier = 0.1F;
 
-      // Update position and rotation every frame so we don't see jittering
-      //if (_hasLastFixedUpdatePose) {
-      //  var timeSinceLastFixedUpdate = Time.time - Time.fixedTime;
+    [Tooltip("When locked, the target linear and angular velocities for this controller "
+           + "are set to 0.")]
+    public bool locked = false;
 
-      //  // For example:
-      //  // 0.2s since last fixed update (at this current update)
-      //  // was traveling at 1 m/s
-      //  // so at this current update, we should be at:
-      //  // 1m/s * 0.2s = 0.2m further than the last fixed update pose
+    #endregion
 
-      //  var updatePose = Pose.TimedExtrapolate(_lastFixedUpdatePose, 0f,
-      //                                         _fixedUpdatePose,     Time.fixedDeltaTime,
-      //                                         Time.fixedDeltaTime + timeSinceLastFixedUpdate);
+    #region Unity Events
 
-      //  this.transform.position = updatePose.position;
-      //  this.transform.rotation = updatePose.rotation;
-      //}
+    private float _effLerpCoeffPerSec;
+    private float _effSlerpCoeffPerSec;
+
+    void Start() {
+      _effLerpCoeffPerSec = lerpCoeffPerSec;
+      _effSlerpCoeffPerSec = slerpCoeffPerSec;
     }
+
+    void Update() {
+      //if (locked) {
+      //  _effLerpCoeffPerSec = 0f;
+      //  _effSlerpCoeffPerSec = 0f;
+      //}
+
+      if (followTarget != null) {
+        float targetLerpCoeffPerSec = lerpCoeffPerSec * (stiffened ?
+                                                           stiffenedMultiplier : 1F)
+                                                      * (locked ? 0f : 1f);
+        _effLerpCoeffPerSec = Mathf.Lerp(_effLerpCoeffPerSec,
+                                         targetLerpCoeffPerSec,
+                                         5F * Time.deltaTime);
+
+        float targetSlerpCoeffPerSec = slerpCoeffPerSec * (stiffened ?
+                                                             stiffenedMultiplier : 1F)
+                                                        * (locked ? 0f : 1f)
+                                                        * (followRotation ? 1f : 0f);
+        _effSlerpCoeffPerSec = Mathf.Lerp(_effSlerpCoeffPerSec,
+                                          targetSlerpCoeffPerSec,
+                                          5F * Time.deltaTime);
+
+
+        // Update position and rotation gradually towards the targets.
+        Vector3 targetPosition = followTarget.position;
+        this.transform.position = Vector3.Lerp(this.transform.position,
+                                               targetPosition,
+                                               _effLerpCoeffPerSec * Time.deltaTime);
+
+        if (followRotation) {
+          Quaternion targetRotation;
+          switch (rotationType) {
+            case RotationType.ProjectForwardToHorizon:
+              targetRotation =
+                Quaternion.LookRotation(followTarget.forward
+                                                    .ProjectOnPlane(Vector3.up));
+              break;
+            default:
+              targetRotation = followTarget.rotation;
+              break;
+          }
+          this.transform.rotation = Quaternion.Slerp(this.transform.rotation,
+                                                     targetRotation,
+                                                     _effSlerpCoeffPerSec * Time.deltaTime);
+        }
+      }
+    }
+
+    #endregion
+
   }
 
-  //private Pose _fixedUpdatePose;
-  //private Pose _lastFixedUpdatePose;
-  //private bool _hasFixedUpdatePose = false;
-  //private bool _hasLastFixedUpdatePose = false;
+  #region Extensions
 
-  //void FixedUpdate() {
-  //  if (_hasFixedUpdatePose) {
-  //    _lastFixedUpdatePose = _fixedUpdatePose;
-  //    _hasLastFixedUpdatePose = true;
+  public static class ToolbeltFollowControllerVector3Extensions {
 
-  //    Vector3 delta = followTarget.transform.position - this.transform.position;
-  //    this.transform.position = Vector3.Lerp(_fixedUpdatePose.position, followTarget.transform.position + (delta * 1F), _effLerpCoeffPerSec * Time.fixedDeltaTime);
+    public static Vector3 ProjectOnPlane(this Vector3 v, Vector3 n) {
+      return Vector3.ProjectOnPlane(v, n);
+    }
 
-  //    Quaternion targetRotation = Quaternion.LookRotation(followTarget.transform.forward.ProjectOnPlane(Vector3.up));
-  //    this.transform.rotation = Quaternion.Slerp(_fixedUpdatePose.rotation, targetRotation, _effSlerpCoeffPerSec * Time.fixedDeltaTime);
-  //  }
-
-  //  _fixedUpdatePose = new Pose(this.transform.position, this.transform.rotation);
-  //  _hasFixedUpdatePose = true;
-  //}
-
-}
-
-public static class ToolbeltFollowControllerVector3Extensions {
-
-  public static Vector3 ProjectOnPlane(this Vector3 v, Vector3 n) {
-    return Vector3.ProjectOnPlane(v, n);
   }
+
+  #endregion
 
 }

@@ -23,7 +23,7 @@ namespace Leap.Unity.Animation {
     
     public struct Node {
       
-      bool isValid;
+      bool _isValid;
 
       /// <summary>
       /// The serialized MonoBehaviour for this Node represents both its Transform
@@ -63,6 +63,10 @@ namespace Leap.Unity.Animation {
 
       public bool hasSibling { get { return hasParent && parent.node.numChildren > 1; } }
 
+      public bool isValid {
+        get { return _isValid; }
+      }
+
       public bool isOn {
         get {
           if (objSwitch == null) return false;
@@ -96,16 +100,61 @@ namespace Leap.Unity.Animation {
         }
       }
 
+      public bool isNextSiblingOn {
+        get {
+          return hasNextSibling && nextSibling.isOn;
+        }
+      }
+
       public bool hasPrevSibling {
         get {
-          return hasParent
-              && parent.node.GetIndexOfChild(this) != 0;
+          return hasParent && parent.node.GetIndexOfChild(this) != 0;
         }
       }
 
       public Node prevSibling {
         get {
           return parent.node.GetChild(parent.node.GetIndexOfChild(this) - 1);
+        }
+      }
+
+      public bool isPrevSiblingOn {
+        get {
+          return hasPrevSibling && prevSibling.isOn;
+        }
+      }
+
+      public PrevSiblingEnumerator prevSiblings {
+        get { return new PrevSiblingEnumerator(this); }
+      }
+
+      public struct PrevSiblingEnumerator : IQueryOp<Node> {
+        Node node;
+        int curIdx;
+
+        public PrevSiblingEnumerator(Node node) {
+          this.node = node;
+          if (!node.hasParent) { curIdx = -1; }
+          else { curIdx = node.parent.node.GetIndexOfChild(node); }
+        }
+
+        public Node Current { get { return node.parent.node.GetChild(curIdx); } }
+        public bool MoveNext() {
+          curIdx -= 1;
+          return curIdx >= 0;
+        }
+        public PrevSiblingEnumerator GetEnumerator() { return this; }
+
+        public bool TryGetNext(out Node t) {
+          bool hasNext = MoveNext();
+          if (!hasNext) { t = default(Node); return false; }
+          else { t = Current; return true; }
+        }
+
+        public void Reset() { curIdx = node.parent.node.GetIndexOfChild(node); }
+
+        public QueryWrapper<Node, PrevSiblingEnumerator> Query() {
+          return new QueryWrapper<Node, PrevSiblingEnumerator>(this);
         }
       }
 
@@ -117,7 +166,7 @@ namespace Leap.Unity.Animation {
         this.parent = parent;
         this.treeDepth = treeDepth;
 
-        isValid = true;
+        _isValid = true;
 
         children = new List<Node>();
         numAllChildren = 0;
@@ -172,6 +221,25 @@ namespace Leap.Unity.Animation {
           Pool<Stack<Transform>>.Recycle(stack);
         }
       }
+
+      public static bool operator ==(Node one, Node other) {
+        return one.Equals(other);
+      }
+      public static bool operator !=(Node one, Node other) {
+        return !one.Equals(other);
+      }
+      public override bool Equals(object obj) {
+        if (!(obj is Node)) return false;
+        return this.Equals((Node)obj);
+      }
+      public bool Equals(Node other) {
+        return isValid && this.switchBehaviour == other.switchBehaviour;
+      }
+      public override int GetHashCode() {
+        if (this.switchBehaviour == null) return 0;
+        return this.switchBehaviour.GetHashCode();
+      }
+
     }
 
     #endregion
@@ -310,8 +378,23 @@ namespace Leap.Unity.Animation {
         }
         while (activeNodeChain.Count > 0) {
           var node = activeNodeChain.Pop();
-          if (node.objSwitch.GetIsOffOrTurningOff()) {
-            turnOn(node, immediately);
+          turnOn(node, immediately);
+
+          // Furthermore, some nodes activate switches in their children as a part of
+          // their normal switching functionality. However, when the tree desires to
+          // switch to a specific node beneath one of these nodes, this behavior should
+          // be overridden.
+          // To do this, we need to deactivate all OTHER children when we still have a\
+          // child node to activate, just after activating any node.
+          if (activeNodeChain.Count > 0) {
+            var childToActivate = activeNodeChain.Pop();
+            foreach (var child in node.children) {
+              if (childToActivate == child) continue;
+              if (child.objSwitch.GetIsOnOrTurningOn()) {
+                turnOff(child, immediately);
+              }
+            }
+            activeNodeChain.Push(childToActivate);
           }
         }
       }

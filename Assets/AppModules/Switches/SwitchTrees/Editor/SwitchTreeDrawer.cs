@@ -119,7 +119,7 @@ namespace Leap.Unity.Animation {
                            new GUIContent(node.transform.name
                                           + (node.treeDepth == 0 ? " (root)" : "")));
 
-      Rect fullButtonRect = indentRect.TakeRight(INDENT_WIDTH);
+      Rect fullButtonRect = indentRect.TakeRight(INDENT_WIDTH, out indentRect);
 
 
       #region Debug Rects
@@ -129,52 +129,57 @@ namespace Leap.Unity.Animation {
 
       #endregion
 
-      bool isNodeOn = node.isOn;
-      bool isParentOn = node.isParentOn;
-      bool glowFromParent = isParentOn && node.isOn;
 
-      if (node.treeDepth != 0) {
-        if (glowFromParent) {
-          drawCenteredLine(Direction4.Left, fullButtonRect, LineType.OuterGlow);
-        }
-
-        drawCenteredLine(Direction4.Left, fullButtonRect, (glowFromParent ? LineType.InnerGlow : LineType.Default));
+      // Line drawing.
+      if (node.hasChildren) {
+        bool anyChildGlowDueToParent = node.isOn && node.children
+                                                        .Query()
+                                                        .Any(c => c.isOn);
+        drawCenteredLine(Direction4.Down, fullButtonRect,
+                         anyChildGlowDueToParent ? LineType.Glow : LineType.Default);
       }
       if (node.hasParent) {
-        // Leftward Rect lines
-
-        Rect leftwardRect = indentRect.TakeRight(INDENT_WIDTH * 2f)
-                                             .TakeLeft(INDENT_WIDTH);
-        
-        if (glowFromParent) {
-          drawCenteredLine(Direction4.Right | Direction4.Up, leftwardRect, LineType.OuterGlow);
-        }
-
-        drawCenteredLine(Direction4.Right | Direction4.Up, leftwardRect,
-                         (glowFromParent ? LineType.InnerGlow : LineType.Default));
-
-        if (node.hasPrevSibling) {
-          bool prevSiblingGlowFromParent = isParentOn && node.prevSibling.isOn;
-
-          if (prevSiblingGlowFromParent) {
-            drawCenteredLine(Direction4.Down | Direction4.Up, leftwardRect, LineType.OuterGlow);
-          }
-
-          drawCenteredLine(Direction4.Down, leftwardRect,
-                           (prevSiblingGlowFromParent ? LineType.InnerGlow : LineType.Default));
-
-          if (prevSiblingGlowFromParent) {
-            drawCenteredLine(Direction4.Up, leftwardRect, LineType.InnerGlow);
-          }
-        }
+        bool glowingDueToParent = node.isOn && node.isParentOn;
+        drawCenteredLine(Direction4.Left, fullButtonRect,
+                         glowingDueToParent ? LineType.Glow : LineType.Default);
       }
-      if (node.hasChildren) {
-        bool anyChildOn = node.children.Query().Any(n => n.isOn);
-        if (anyChildOn) {
-          drawCenteredLine(Direction4.Down, fullButtonRect, LineType.OuterGlow);
+
+      // Leftward rects.
+      var curNode = node;
+      bool firstLeftward = true;
+      while (curNode.hasParent) {
+        Rect leftwardRect = indentRect.TakeRight(INDENT_WIDTH, out indentRect);
+
+        bool glowingDueToParent = curNode.isOn && curNode.isParentOn;
+
+        bool isAnyPrevSiblingOnDueToParent = curNode.prevSiblings
+                                                    .Query()
+                                                    .Any(n => n.isOn && n.isParentOn);
+
+        bool isSelfOrAnyPrevSiblingOnDueToParent = glowingDueToParent
+          || isAnyPrevSiblingOnDueToParent;
+
+        if (firstLeftward) {
+          drawCenteredLine(Direction4.Right, leftwardRect,
+                           glowingDueToParent ? LineType.Glow : LineType.Default);
+          drawCenteredLine(Direction4.Up, leftwardRect,
+                           isSelfOrAnyPrevSiblingOnDueToParent ? LineType.Glow
+                                                               : LineType.Default);
+          firstLeftward = false;
+        }
+        else if (curNode.hasPrevSibling) {
+          drawCenteredLine(Direction4.Up, leftwardRect,
+                           isAnyPrevSiblingOnDueToParent ? LineType.Glow
+                                                         : LineType.Default);
         }
 
-        drawCenteredLine(Direction4.Down, fullButtonRect, (anyChildOn ? LineType.InnerGlow : LineType.Default));
+        if (curNode.hasPrevSibling) {
+          drawCenteredLine(Direction4.Down, leftwardRect,
+                           isAnyPrevSiblingOnDueToParent ? LineType.Glow
+                                                         : LineType.Default);
+        }
+
+        curNode = curNode.hasParent ? curNode.parent.node : default(SwitchTree.Node);
       }
 
 
@@ -186,11 +191,11 @@ namespace Leap.Unity.Animation {
 
       bool test_isNodeOff = node.isOff;
       if (test_isNodeOff) {
-        EditorGUI.DrawRect(buttonRect.PadTopPercent(0.50f), Color.red);
+        EditorGUI.DrawRect(buttonRect, Color.red);
       }
 
       Color origContentColor = GUI.contentColor;
-      if (isNodeOn) {
+      if (node.isOn) {
         Rect glowRect = buttonRect.PadOuter(GLOW_WIDTH);
         EditorGUI.DrawRect(glowRect, glowBackgroundColor);
         GUI.contentColor = glowContentColor;
@@ -207,7 +212,7 @@ namespace Leap.Unity.Animation {
       Undo.CollapseUndoOperations(curGroupIdx);
       Undo.SetCurrentGroupName("Set Switch Tree State");
 
-      if (isNodeOn) {
+      if (node.isOn) {
         GUI.contentColor = origContentColor;
       }
 
@@ -232,48 +237,44 @@ namespace Leap.Unity.Animation {
 
     private enum LineType {
       Default,
-      InnerGlow,
-      OuterGlow
+      Glow
     }
 
-    private void drawCenteredLine(Direction4 directions, Rect inRect, LineType lineType = LineType.Default) {
-      float sideRatio, originRatio;
-      switch (lineType) {
-        case LineType.OuterGlow:
-          sideRatio = GLOW_LINE_SIDE_MARGIN_RATIO;
-          originRatio = GLOW_LINE_ORIGIN_RATIO;
-          break;
-        default:
-          sideRatio = LINE_SIDE_MARGIN_RATIO;
-          originRatio = LINE_ORIGIN_RATIO;
-          break;
-      }
+    private delegate void DrawLineFunc(Rect inRect, float sideRatio, float originRatio, Color color);
 
-      Color lineColor;
-      switch (lineType) {
-        case LineType.OuterGlow:
-          lineColor = glowBackgroundColor;
-          break;
-        case LineType.InnerGlow:
-          lineColor = glowContentColor;
-          break;
-        default:
-          lineColor = Color.black;
-          break;
-      }
+    private void drawCenteredLine(Direction4 directions, Rect inRect,
+                                  LineType lineType = LineType.Default) {
 
+      var draws = new List<DrawLineFunc>();
       if ((directions & Direction4.Up) > 0) {
-        drawCenteredLineUp(inRect, sideRatio, originRatio, lineColor);
+        draws.Add(drawCenteredLineUp);
       }
       if ((directions & Direction4.Down) > 0) {
-        drawCenteredLineDown(inRect, sideRatio, originRatio, lineColor);
+        draws.Add(drawCenteredLineDown);
       }
       if ((directions & Direction4.Left) > 0) {
-        drawCenteredLineLeft(inRect, sideRatio, originRatio, lineColor);
+        draws.Add(drawCenteredLineLeft);
       }
       if ((directions & Direction4.Right) > 0) {
-        drawCenteredLineRight(inRect, sideRatio, originRatio, lineColor);
+        draws.Add(drawCenteredLineRight);
       }
+
+      switch (lineType) {
+        case LineType.Default:
+          foreach (var draw in draws) {
+            draw(inRect, LINE_SIDE_MARGIN_RATIO, LINE_ORIGIN_RATIO, Color.black);
+          }
+          break;
+        case LineType.Glow:
+          foreach (var draw in draws) {
+            draw(inRect, GLOW_LINE_SIDE_MARGIN_RATIO, GLOW_LINE_ORIGIN_RATIO, glowBackgroundColor);
+          }
+          foreach (var draw in draws) {
+            draw(inRect, LINE_SIDE_MARGIN_RATIO, LINE_ORIGIN_RATIO, glowContentColor);
+          }
+          break;
+      }
+
     }
 
     private void drawCenteredLineUp(Rect rect, float sideRatio, float originRatio, Color color) {

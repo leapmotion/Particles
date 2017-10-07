@@ -33,7 +33,7 @@ namespace Leap.Unity.Animation {
     public bool enforceNonzeroScale = true;
 
     /// <summary>
-    /// Deactivates this object when its target localScale is zero or very near zero.
+    /// Deactivates THIS OBJECT when its target localScale is zero or very near zero.
     /// </summary>
     public bool deactivateSelfWhenZero = true;
 
@@ -69,7 +69,9 @@ namespace Leap.Unity.Animation {
     protected override void updateSwitch(float time, bool immediately = false) {
 #if UNITY_EDITOR
       if (!Application.isPlaying) {
-        UnityEditor.Undo.RecordObject(localScaleTarget.transform, "Update Scale Switch");
+        if (localScaleTarget != null) {
+          UnityEditor.Undo.RecordObject(localScaleTarget.transform, "Update Scale Switch");
+        }
       }
 #endif
 
@@ -79,7 +81,9 @@ namespace Leap.Unity.Animation {
         targetScale = Vector3.Max(targetScale, Vector3.one * NEAR_ZERO);
       }
 
-      localScaleTarget.localScale = targetScale;
+      if (localScaleTarget != null) {
+        localScaleTarget.localScale = targetScale;
+      }
 
       if (deactivateSelfWhenZero) {
         this.gameObject.SetActive(!(targetScale.CompMin() <= NEAR_ZERO));

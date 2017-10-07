@@ -52,6 +52,15 @@ namespace Leap.Unity.Animation {
       tree.SwitchTo(nodeName);
     }
 
+    /// <summary>
+    /// Equivalent to calling SwitchTo with the name of the object that contains this
+    /// SwitchTreeController. This turns off all of the child pathways available from
+    /// the switch tree.
+    /// </summary>
+    public void SwitchToRoot() {
+      tree.SwitchTo(transform.name);
+    }
+
     #endregion
 
   }

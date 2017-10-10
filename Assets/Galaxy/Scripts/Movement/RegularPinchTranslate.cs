@@ -17,10 +17,14 @@ public class RegularPinchTranslate : MonoBehaviour {
           left.grasped = false;
         }
       } else {
-        if (Hands.Left.PinchStrength > 0.7f) {
+        if (Hands.Left.PinchStrength > 0.7f &&
+            Vector3.Angle(Camera.main.transform.forward,
+                          Hands.Left.GetPinchPosition() - Camera.main.transform.position) < 50) {
           left.grasped = true;
         }
       }
+    } else {
+      left.grasped = false;
     }
 
     if (Hands.Right != null) {
@@ -32,10 +36,14 @@ public class RegularPinchTranslate : MonoBehaviour {
           right.grasped = false;
         }
       } else {
-        if (Hands.Right.PinchStrength > 0.7f) {
+        if (Hands.Right.PinchStrength > 0.7f &&
+            Vector3.Angle(Camera.main.transform.forward,
+                          Hands.Right.GetPinchPosition() - Camera.main.transform.position) < 50) {
           right.grasped = true;
         }
       }
+    } else {
+      right.grasped = false;
     }
   }
 }

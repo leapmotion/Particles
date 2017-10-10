@@ -9,7 +9,8 @@ public enum ColorMode {
   BySpecies,
   BySpeciesWithMagnitude,
   ByVelocity,
-  ByInverseVelocity
+  ByInverseVelocity,
+  SmartVelocity
 }
 
 public enum TrailMode {

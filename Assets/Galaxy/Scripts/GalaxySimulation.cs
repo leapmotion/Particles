@@ -8,9 +8,17 @@ using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 using Leap.Unity.RuntimeGizmos;
 
+public interface ITimestepMultiplier {
+  float multiplier { get; }
+}
+
 [DevCategory("General Settings")]
 public class GalaxySimulation : MonoBehaviour {
   public const float TIME_FREEZE_THRESHOLD = 0.05f;
+
+  public System.Action OnReset;
+  public System.Action OnStep;
+  public List<ITimestepMultiplier> TimestepMultipliers = new List<ITimestepMultiplier>();
 
   //#######################
   //## General Settings ###
@@ -33,7 +41,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   [Range(0, 2)]
   [DevValue]
-  public float timestep = 1;
+  private float _timestep = 1;
 
   public GalaxyRenderer galaxyRenderer;
 
@@ -132,6 +140,16 @@ public class GalaxySimulation : MonoBehaviour {
   public RenderTexture nextPos;
 
   public Material simulateMat;
+
+  public float timestep {
+    get {
+      float t = _timestep;
+      foreach (var multiplier in TimestepMultipliers) {
+        t *= multiplier.multiplier;
+      }
+      return t;
+    }
+  }
 
   private float _prevTimestep = -1000;
   private int _seed = 0;
@@ -253,7 +271,7 @@ public class GalaxySimulation : MonoBehaviour {
 
     _trails.Clear();
 
-    _prevTimestep = timestep;
+    _prevTimestep = _timestep;
     mainState = new UniverseState(blackHoleCount);
 
     {
@@ -344,6 +362,10 @@ public class GalaxySimulation : MonoBehaviour {
     GL.End();
 
     _trailState = mainState.Clone();
+
+    if (OnReset != null) {
+      OnReset();
+    }
   }
 
   [DevButton]
@@ -419,11 +441,11 @@ public class GalaxySimulation : MonoBehaviour {
     simulateMat.SetFloat("_Force", starGravConstant);
     simulateMat.SetFloat("_FuzzValue", fuzzValue);
 
-    if (timestep > TIME_FREEZE_THRESHOLD) {
-      simulateMat.SetFloat("_Timestep", timestep);
+    if (_timestep > TIME_FREEZE_THRESHOLD) {
+      simulateMat.SetFloat("_Timestep", _timestep);
       simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
 
-      _prevTimestep = timestep;
+      _prevTimestep = _timestep;
     }
   }
 
@@ -466,6 +488,7 @@ public class GalaxySimulation : MonoBehaviour {
       RuntimeGizmoDrawer drawer;
       if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
         drawer.color = Color.white;
+        drawer.matrix = galaxyRenderer.displayAnchor.localToWorldMatrix;
         foreach (var pair in _trails) {
           foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
             drawer.DrawLine(seg.prev, seg.value);
@@ -474,7 +497,7 @@ public class GalaxySimulation : MonoBehaviour {
       }
     }
 
-    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
+    if (_timestep > TIME_FREEZE_THRESHOLD && simulate) {
       if (simulateBlackHoles) {
         stepState(mainState);
         renderState(mainState);
@@ -483,6 +506,10 @@ public class GalaxySimulation : MonoBehaviour {
           if (pair.Value.Count > 0) {
             pair.Value.RemoveAt(0);
           }
+        }
+
+        if (OnStep != null) {
+          OnStep();
         }
       }
 
@@ -509,10 +536,10 @@ public class GalaxySimulation : MonoBehaviour {
 
   private unsafe void stepState(UniverseState state) {
     using (new ProfilerSample("Step Galaxy")) {
-      mainState.time += timestep * Time.deltaTime;
+      state.time += _timestep * Time.deltaTime;
       float planetDT = 1.0f / blackHoleSubFrames;
 
-      float preStepConstant = gravConstant * planetDT * timestep;
+      float preStepConstant = gravConstant * planetDT * _timestep;
 
       for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
 
@@ -548,7 +575,7 @@ public class GalaxySimulation : MonoBehaviour {
         //Position intergration
         {
           BlackHoleMainState* src = state.mainState;
-          float combinedDT = planetDT * timestep;
+          float combinedDT = planetDT * _timestep;
           for (int j = 0; j < state.count; j++, src++) {
             (*src).x += (*src).vx * combinedDT;
             (*src).y += (*src).vy * combinedDT;

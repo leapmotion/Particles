@@ -26,6 +26,9 @@ public class GalaxyRenderer : MonoBehaviour {
 
   [SerializeField]
   private Transform _displayAnchor;
+  public Transform displayAnchor {
+    get { return _displayAnchor; }
+  }
 
   [DevCategory("General Settings")]
   [Range(0.01f, 2f)]

@@ -4,41 +4,29 @@ using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Animation;
 
-public class TRSSlowdown : MonoBehaviour {
+public class TRSSlowdown : MonoBehaviour, ITimestepMultiplier {
 
   public LeapRTS trs;
   public GalaxySimulation sim;
   public float slowdownTime;
   public float speedupTime;
 
-  private Tween _currTween;
-  private float _prevSpeed;
-  private bool _isSlow;
+  private Tween _tween;
+
+  public float multiplier { get; set; }
+
+  void Start() {
+    _tween = Tween.Persistent().Value(1, 0, t => multiplier = t).
+                                OverTime(slowdownTime);
+  }
 
   void Update() {
-    if (!trs._switchA.grasped && !trs._switchB.grasped && !_currTween.isValid) {
-      _prevSpeed = sim.timestep;
-    }
-
     if (trs._switchA.grasped || trs._switchB.grasped) {
-      if (_currTween.isValid) {
-        _currTween.Stop();
-      }
-
-      _currTween = Tween.Single().Value(sim.timestep, 0, t => sim.timestep = t).
-                                  OverTime(slowdownTime).
-                                  Play();
-      _isSlow = true;
-    } else if (_isSlow) {
-      if (_currTween.isValid) {
-        _currTween.Stop();
-      }
-
-      _currTween = Tween.Single().Value(0, _prevSpeed, t => sim.timestep = t).
-                                  OverTime(speedupTime).
-                                  Smooth(SmoothType.SmoothStart).
-                                  Play();
-      _isSlow = false;
+      _tween.OverTime(slowdownTime).
+             Play(Direction.Forward);
+    } else {
+      _tween.OverTime(speedupTime).
+             Play(Direction.Backward);
     }
   }
 

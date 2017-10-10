@@ -41,7 +41,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   [Range(0, 2)]
   [DevValue]
-  private float _timestep = 1;
+  private float _baseTimestep = 1;
 
   public GalaxyRenderer galaxyRenderer;
 
@@ -143,7 +143,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   public float timestep {
     get {
-      float t = _timestep;
+      float t = _baseTimestep;
       foreach (var multiplier in TimestepMultipliers) {
         t *= multiplier.multiplier;
       }
@@ -271,7 +271,7 @@ public class GalaxySimulation : MonoBehaviour {
 
     _trails.Clear();
 
-    _prevTimestep = _timestep;
+    _prevTimestep = timestep;
     mainState = new UniverseState(blackHoleCount);
 
     {
@@ -441,11 +441,11 @@ public class GalaxySimulation : MonoBehaviour {
     simulateMat.SetFloat("_Force", starGravConstant);
     simulateMat.SetFloat("_FuzzValue", fuzzValue);
 
-    if (_timestep > TIME_FREEZE_THRESHOLD) {
-      simulateMat.SetFloat("_Timestep", _timestep);
+    if (timestep > TIME_FREEZE_THRESHOLD) {
+      simulateMat.SetFloat("_Timestep", timestep);
       simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
 
-      _prevTimestep = _timestep;
+      _prevTimestep = timestep;
     }
   }
 
@@ -497,7 +497,7 @@ public class GalaxySimulation : MonoBehaviour {
       }
     }
 
-    if (_timestep > TIME_FREEZE_THRESHOLD && simulate) {
+    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
       if (simulateBlackHoles) {
         stepState(mainState);
         renderState(mainState);
@@ -536,10 +536,11 @@ public class GalaxySimulation : MonoBehaviour {
 
   private unsafe void stepState(UniverseState state) {
     using (new ProfilerSample("Step Galaxy")) {
-      state.time += _timestep * Time.deltaTime;
+      state.time += timestep * Time.deltaTime;
       float planetDT = 1.0f / blackHoleSubFrames;
-
-      float preStepConstant = gravConstant * planetDT * _timestep;
+      float combinedDT = planetDT * timestep;
+      float preStepConstant = gravConstant * planetDT * timestep;
+      float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
 
       for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
 
@@ -575,7 +576,6 @@ public class GalaxySimulation : MonoBehaviour {
         //Position intergration
         {
           BlackHoleMainState* src = state.mainState;
-          float combinedDT = planetDT * _timestep;
           for (int j = 0; j < state.count; j++, src++) {
             (*src).x += (*src).vx * combinedDT;
             (*src).y += (*src).vy * combinedDT;
@@ -585,8 +585,6 @@ public class GalaxySimulation : MonoBehaviour {
 
         //Black hole combination
         {
-          float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
-
           BlackHoleMainState* mainA = state.mainState;
           BlackHoleSecondaryState* secondA = state.secondaryState;
           for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {

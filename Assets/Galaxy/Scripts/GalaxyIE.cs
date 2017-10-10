@@ -32,11 +32,13 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
   private void OnEnable() {
     _sim.OnReset += onResetSim;
     _sim.OnStep += onStepSim;
+    _sim.TimestepMultipliers.Add(this);
   }
 
   private void OnDisable() {
     _sim.OnReset -= onResetSim;
     _sim.OnStep -= onStepSim;
+    _sim.TimestepMultipliers.Remove(this);
   }
 
   public void OnGrasp() {

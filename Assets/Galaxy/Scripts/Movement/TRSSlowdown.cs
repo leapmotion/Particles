@@ -20,6 +20,14 @@ public class TRSSlowdown : MonoBehaviour, ITimestepMultiplier {
                                 OverTime(slowdownTime);
   }
 
+  void OnEnable() {
+    sim.TimestepMultipliers.Add(this);
+  }
+
+  void OnDisable() {
+    sim.TimestepMultipliers.Remove(this);
+  }
+
   void Update() {
     if (trs._switchA.grasped || trs._switchB.grasped) {
       _tween.OverTime(slowdownTime).

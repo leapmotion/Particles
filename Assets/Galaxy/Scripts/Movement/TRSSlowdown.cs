@@ -16,7 +16,10 @@ public class TRSSlowdown : MonoBehaviour, ITimestepMultiplier {
   public float multiplier { get; set; }
 
   void Start() {
-    _tween = Tween.Persistent().Value(1, 0, t => multiplier = t).
+    multiplier = 1;
+    _tween = Tween.Persistent().Value(1, 0, t => {
+      multiplier = t;
+    }).
                                 OverTime(slowdownTime);
   }
 

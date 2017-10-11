@@ -30,6 +30,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
 
 
   private void OnEnable() {
+    multiplier = 1;
     _sim.OnReset += onResetSim;
     _sim.OnStep += onStepSim;
     _sim.TimestepMultipliers.Add(this);
@@ -51,6 +52,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
 
     if (_numGrasped == 0) {
       _sim.simulate = true;
+      multiplier = 1;
     }
   }
 
@@ -59,7 +61,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
       unsafe {
         GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
         for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
-          (*ptr).position = _spawned[i].transform.position;
+          (*ptr).position = _renderer.displayAnchor.InverseTransformPoint(_spawned[i].transform.position);
           (*ptr).velocity = _spawned[i].deltaRot * (*ptr).velocity;
         }
       }
@@ -96,7 +98,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     unsafe {
       GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
       for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
-        _spawned[i].transform.position = (*ptr).position;
+        _spawned[i].transform.position = _renderer.displayAnchor.TransformPoint((*ptr).position);
       }
     }
 
@@ -115,7 +117,9 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
       }
     }
 
+    //Debug.Log(minDist);
     float percent = Mathf.InverseLerp(_distRange.x, _distRange.y, minDist);
+    //Debug.Log(percent);
     float curvedPercent = _distCurve.Evaluate(percent);
 
     multiplier = curvedPercent;

@@ -42,6 +42,10 @@ namespace Leap.Unity.Animation {
 
     #region Public API
 
+    public string CurrentState {
+      get; set;
+    }
+
     /// <summary>
     /// Traverses the tree, deactivating all switch pathways that do not lead to the
     /// switch node identified by this nodeName, then activating all switches along the
@@ -51,6 +55,9 @@ namespace Leap.Unity.Animation {
     public void SwitchTo(string nodeName) {
       tree.SwitchTo(nodeName);
     }
+    public void SwitchTo(string nodeName, bool immediately = false) {
+      tree.SwitchTo(nodeName, immediately);
+    }
 
     /// <summary>
     /// Equivalent to calling SwitchTo with the name of the object that contains this
@@ -59,6 +66,22 @@ namespace Leap.Unity.Animation {
     /// </summary>
     public void SwitchToRoot() {
       tree.SwitchTo(transform.name);
+    }
+
+    public void SwitchToRoot(bool immediately) {
+      tree.SwitchTo(transform.name, immediately);
+    }
+    /// <summary>
+    /// If the specified state node is not active, the switch tree will switch to that
+    /// node. If switch tree will switch to that node's parent, deactivating the
+    /// specified node. (Calling this method will also deactivate any sibling nodes that
+    /// might have been activated out of the context of the SwitchTree.)
+    /// </summary>
+    public void ToggleState(string nodeName) {
+      tree.ToggleState(nodeName);
+    }
+    public void ToggleState(string nodeName, bool immediately) {
+      tree.ToggleState(nodeName, immediately);
     }
 
     #endregion

@@ -29,6 +29,12 @@ namespace Leap.Unity.Attributes {
 #endif
   }
 
+  public interface IPropertyHider {
+#if UNITY_EDITOR
+    bool ShouldHide(SerializedProperty property);
+#endif
+  }
+
   public interface IFullPropertyDrawer {
 #if UNITY_EDITOR
     void DrawProperty(Rect rect, SerializedProperty property, GUIContent label);

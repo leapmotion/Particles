@@ -17,8 +17,6 @@ namespace Leap.Unity.Interaction {
   [CustomEditor(typeof(InteractionBehaviour), editorForChildClasses: true)]
   public class InteractionBehaviourEditor : CustomEditorBase<InteractionBehaviour> {
 
-    private EnumEventTableEditor _tableEditor;
-
     protected override void OnEnable() {
       base.OnEnable();
 
@@ -210,6 +208,8 @@ namespace Leap.Unity.Interaction {
         EditorGUILayout.HelpBox(message, MessageType.Warning);
       }
     }
+
+    private EnumEventTableEditor _tableEditor;
 
     private void drawEventTable(SerializedProperty property) {
       if (_tableEditor == null) {

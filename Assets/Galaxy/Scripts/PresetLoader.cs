@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity.DevGui;
+using Leap.Unity.Attributes;
 
 public class PresetLoader : MonoBehaviour {
 
@@ -14,7 +15,7 @@ public class PresetLoader : MonoBehaviour {
     HeatMap
   }
 
-  [SerializeField]
+  [SerializeField, OnEditorChange("renderMode")]
   private PresetSelection _presetSelection = PresetSelection.Basic;
 
   [SerializeField]

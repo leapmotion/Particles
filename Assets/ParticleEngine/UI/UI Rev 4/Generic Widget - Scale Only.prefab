@@ -54,7 +54,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4999452351138824}
-  - component: {fileID: 114538829356365462}
   - component: {fileID: 114908250718703774}
   - component: {fileID: 114850469632216446}
   - component: {fileID: 114653723184676572}
@@ -398,7 +397,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1595381598985844}
-  m_LocalRotation: {x: 0.000000059604638, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -454,7 +453,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1888862336856450}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.013, z: 0.071}
   m_LocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
   m_Children:
   - {fileID: 224076238673338764}
@@ -467,8 +466,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1084357072699700}
-  m_LocalRotation: {x: 0.5120414, y: -0.43430835, z: 0.33691484, w: 0.66005933}
-  m_LocalPosition: {x: -0.3449408, y: -0.52175504, z: -0.16648409}
+  m_LocalRotation: {x: 0.39629093, y: -0.48388347, z: 0.26075298, w: 0.7354034}
+  m_LocalPosition: {x: -0.32422993, y: -0.5362084, z: -0.09528762}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4856806331067478}
@@ -668,13 +667,14 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1595381598985844}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12a9577be8b27b4449a50ca53f81820d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _tweenTime: 0.4
   _startOn: 1
+  localTranslateTarget: {fileID: 0}
   onLocalPosition: {x: 0, y: 0, z: 0}
   offLocalPosition: {x: 0, y: 0, z: 0.115}
   movementCurve:
@@ -712,6 +712,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isOn: 1
   overrideTweenTime: 1
   tweenTime: 0.33
 --- !u!114 &114063086583750232
@@ -725,6 +726,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isOn: 0
   overrideTweenTime: 0
   tweenTime: 1
 --- !u!114 &114064814286373070
@@ -738,6 +740,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 141476d83afdbb24c876300606d784e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isOn: 0
   overrideTweenTime: 1
   tweenTime: 0.33
 --- !u!114 &114077039407687046
@@ -801,7 +804,30 @@ MonoBehaviour:
     position: {x: 0, y: 0, z: 0}
     rotation: {x: 0, y: 0, z: 0, w: 0}
   simulator: {fileID: 114380844974183922}
-  lerpDuration: 0.001
+  lerpToPoseCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 0.50024885
+      value: 0.49736455
+      inSlope: 2.6625428
+      outSlope: 2.6625428
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!114 &114265855366839592
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1034,7 +1060,7 @@ MonoBehaviour:
   _isSimulating: 0
   overrideGravity: 1
   customGravity: {x: 0, y: -2.4525, z: 0}
-  drag: 2
+  drag: 0.5
   angularDrag: 0.01
   _drawRuntimeGizmos: 0
 --- !u!114 &114433479338321194
@@ -1050,8 +1076,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tweenTime: 0.33
   _startOn: 0
-  onLocalPosition: {x: 0, y: 0, z: 0}
-  offLocalPosition: {x: 0, y: 0, z: 0.114}
+  localTranslateTarget: {fileID: 4856806331067478}
+  onLocalPosition: {x: 0, y: 0.261, z: 0.05}
+  offLocalPosition: {x: 0, y: 0.013, z: 0.071}
   movementCurve:
     serializedVersion: 2
     m_Curve:
@@ -1204,57 +1231,6 @@ MonoBehaviour:
   additionalDepth: 0.025
   additionalNegativeDepth: 0.015
   additionalXYPadding: 0
---- !u!114 &114538829356365462
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1084357072699700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0a50561188605c947b58cdefd6a66563, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  states:
-    _keys:
-    - Ball
-    - Panel
-    _values:
-    - _switch: {fileID: 114045828273944314}
-      onSwitchedOn:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 114850469632216446}
-            m_MethodName: MoveToPanel
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-          PublicKeyToken=null
-    - _switch: {fileID: 114064814286373070}
-      onSwitchedOn:
-        m_PersistentCalls:
-          m_Calls:
-          - m_Target: {fileID: 114850469632216446}
-            m_MethodName: MoveToBall
-            m_Mode: 1
-            m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-              m_IntArgument: 0
-              m_FloatArgument: 0
-              m_StringArgument: 
-              m_BoolArgument: 0
-            m_CallState: 2
-        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine, Version=0.0.0.0, Culture=neutral,
-          PublicKeyToken=null
-  _curState: Ball
 --- !u!114 &114564157389895140
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1893,7 +1869,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parent: {fileID: 114750237781704370}
   space: {fileID: 114750237781704370}
-  _radius: 1000
+  _radius: 0.7
 --- !u!114 &114760707246475942
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1967,9 +1943,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _handle: {fileID: 114966221319103294}
-  stateController: {fileID: 114538829356365462}
-  panelClosedState: Ball
-  panelOpenState: Panel
+  stateController: {fileID: 114954474889142292}
+  panelClosedState: Widget Sphere
+  panelOpenState: Panel Pivot
   currentlyFollowing: {fileID: 4263645406100726}
   ballTransform: {fileID: 4263645406100726}
   panelTransform: {fileID: 4856806331067478}
@@ -2125,6 +2101,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebb477410e1926a4eac655c999527e18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _isOn: 0
   overrideTweenTime: 0
   tweenTime: 1
   tree:
@@ -2198,7 +2175,7 @@ MonoBehaviour:
   _OnPress:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 114538829356365462}
+      - m_Target: {fileID: 0}
         m_MethodName: SetState
         m_Mode: 5
         m_Arguments:
@@ -2234,8 +2211,8 @@ RectTransform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1507733605802318}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0.114}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 224101423744150776}

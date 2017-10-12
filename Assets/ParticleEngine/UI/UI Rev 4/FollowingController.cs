@@ -42,7 +42,12 @@ namespace Leap.Unity.Animation {
     /// </summary>
     [Tooltip("Smoothly slows down the following controller. The stiffenedMultiplier "
            + "property determines the strength of this effect.")]
-    public bool stiffened = false;
+    [SerializeField]
+    private bool _stiffened = false;
+    public bool stiffened {
+      get { return _stiffened; }
+      set { _stiffened = value; }
+    }
 
     /// <summary>
     /// The multiplier for this follower's lerp and slerp coefficients when the controller
@@ -56,7 +61,11 @@ namespace Leap.Unity.Animation {
 
     [Tooltip("When locked, the target linear and angular velocities for this controller "
            + "are set to 0.")]
-    public bool locked = false;
+    private bool _locked = false;
+    public bool locked {
+      get { return _locked; }
+      set { _locked = value; }
+    }
 
     #endregion
 

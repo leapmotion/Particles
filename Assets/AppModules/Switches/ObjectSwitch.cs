@@ -10,6 +10,9 @@ namespace Leap.Unity.Animation {
 
     #region Inspector
 
+    [SerializeField]
+    private bool _isOn;
+
     [Header("Attached Tween Overrides")]
 
     [Tooltip("If checked, you can specify the tween times for all tween-based "
@@ -71,6 +74,8 @@ namespace Leap.Unity.Animation {
     #region Switch Implementation
 
     public void On() {
+      _isOn = true;
+
       if (!_refreshed) RefreshSwitches();
       
       foreach (var propertySwitch in _switches) {
@@ -79,28 +84,42 @@ namespace Leap.Unity.Animation {
     }
 
     public void OnNow() {
+#if UNITY_EDITOR
+      UnityEditor.Undo.RecordObject(this, "Activate ObjectSwitch");
+#endif
+      _isOn = true;
+
       foreach (var propertySwitch in _switches) {
         propertySwitch.OnNow();
       }
     }
 
     public bool GetIsOnOrTurningOn() {
+      if (_switches.Count == 0) return _isOn;
       return _switches.Query().Any(c => c.GetIsOnOrTurningOn());
     }
 
     public void Off() {
+      _isOn = false;
+
       foreach (var propertySwitch in _switches) {
         propertySwitch.Off();
       }
     }
 
     public void OffNow() {
+#if UNITY_EDITOR
+      UnityEditor.Undo.RecordObject(this, "Deactivate ObjectSwitch");
+#endif
+      _isOn = false;
+
       foreach (var propertySwitch in _switches) {
         propertySwitch.OffNow();
       }
     }
 
     public bool GetIsOffOrTurningOff() {
+      if (_switches.Count == 0) return !_isOn;
       return _switches.Query().Any(c => c.GetIsOffOrTurningOff());
     }
 

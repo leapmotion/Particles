@@ -77,6 +77,9 @@ namespace Leap.Unity.Animation {
 
     #region Public API
 
+    public Vector3 position { get { return _position; } }
+    public Vector3 velocity { get { return _velocity; } }
+
     public void StartSimulating() {
       _isSimulating = true;
     }
@@ -114,7 +117,6 @@ namespace Leap.Unity.Animation {
     private Vector3 _velocity = Vector3.zero;
     private Quaternion _rotation = Quaternion.identity;
     private Vector3 _angularVelocity = Vector3.zero;
-
 
     private void initSimulation() {
       _rigidbody = GetComponent<Rigidbody>();

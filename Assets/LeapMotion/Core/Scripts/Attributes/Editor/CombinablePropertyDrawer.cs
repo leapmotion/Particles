@@ -44,7 +44,18 @@ namespace Leap.Unity.Attributes {
       }
     }
 
-    
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
+      getAttributes(property);
+
+      var hider = attributes.Query().FirstOrDefault(a => a is IPropertyHider) as IPropertyHider;
+      if (hider != null) {
+        if (hider.ShouldHide(property)) {
+          return 0f;
+        }
+      }
+
+      return base.GetPropertyHeight(property, label);
+    }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
       getAttributes(property);
@@ -54,6 +65,7 @@ namespace Leap.Unity.Attributes {
 
       bool canUseDefaultDrawer = true;
       bool shouldDisable = false;
+      bool shouldHide = false;
 
       RangeAttribute rangeAttribute = fieldInfo.GetCustomAttributes(typeof(RangeAttribute), true).FirstOrDefault() as RangeAttribute;
 
@@ -86,6 +98,10 @@ namespace Leap.Unity.Attributes {
           shouldDisable |= (a as IPropertyDisabler).ShouldDisable(property);
         }
 
+        if (a is IPropertyHider) {
+          shouldHide |= (a as IPropertyHider).ShouldHide(property);
+        }
+
         if (a is IFullPropertyDrawer) {
           if (fullPropertyDrawer != null) {
             Debug.LogError("Cannot have 2 advanced attributes that both override the field drawing");
@@ -103,6 +119,9 @@ namespace Leap.Unity.Attributes {
         Debug.LogError("Cannot have an advanced attribute drawer that draws a custom field, and also have an advanced attribute drawer that draws between label and field!");
         return;
       }
+
+      // No need to do further processing if we should be hiding this property.
+      if (shouldHide) return;
 
       Rect r = position;
       
@@ -149,7 +168,7 @@ namespace Leap.Unity.Attributes {
 
       drawAdditive<IAfterFieldAdditiveDrawer>(ref r, property);
 
-    EditorGUI.EndDisabledGroup();
+      EditorGUI.EndDisabledGroup();
       bool didChange = EditorGUI.EndChangeCheck();
 
       if (didChange || !property.hasMultipleDifferentValues) {

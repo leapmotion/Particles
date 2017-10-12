@@ -288,8 +288,10 @@ namespace Leap.Unity.Animation {
     /// switch node identified by this nodeName, then activating all switches along the
     /// path to the switch node identified by this nodeName, but no deeper. Switches that
     /// are children of the named node are also deactivated.
+    /// 
+    /// Returns true if the node identified by nodeName was found, false otherwise.
     /// </summary>
-    public void SwitchTo(string nodeName, bool immediately = false) {
+    public bool SwitchTo(string nodeName, bool immediately = false, bool toggle = false) {
       ensureTreeReady();
 
       // We have to traverse the whole tree because we don't know where the node matching
@@ -308,7 +310,7 @@ namespace Leap.Unity.Animation {
       var nodesAtDepthLevel = Pool<Dictionary<int, List<Node>>>.Spawn();
       int curDepth = 0, largestDepth = 0;
 
-      Node activeNode;
+      Node activeNode = default(Node);
       try {
         // Depth-first traversal.
         while (curNodeRef != null) {
@@ -364,39 +366,52 @@ namespace Leap.Unity.Animation {
         // Deeper nodes should deactivate before their parent nodes. Nodes in the chain
         // we desire active should not deactivate, and if they are not already active,
         // they should activate from the root down.
-        if (nodesAtDepthLevel.Count == 0) return;
-        List<Node> depthNodes;
-        for (int d = largestDepth; d >= 0; d--) {
-          depthNodes = nodesAtDepthLevel[d];
+        if (nodesAtDepthLevel.Count != 0) {
+          List<Node> depthNodes;
+          for (int d = largestDepth; d >= 0; d--) {
+            depthNodes = nodesAtDepthLevel[d];
 
-          foreach (var node in depthNodes) {
-            if (node.objSwitch.GetIsOnOrTurningOn()
-                && !activeNodeChain.Contains(node)) {
-              turnOff(node, immediately);
-            }
-          }
-        }
-        while (activeNodeChain.Count > 0) {
-          var node = activeNodeChain.Pop();
-          turnOn(node, immediately);
-
-          // Furthermore, some nodes activate switches in their children as a part of
-          // their normal switching functionality. However, when the tree desires to
-          // switch to a specific node beneath one of these nodes, this behavior should
-          // be overridden.
-          // To do this, we need to deactivate all OTHER children when we still have a\
-          // child node to activate, just after activating any node.
-          if (activeNodeChain.Count > 0) {
-            var childToActivate = activeNodeChain.Pop();
-            foreach (var child in node.children) {
-              if (childToActivate == child) continue;
-              if (child.objSwitch.GetIsOnOrTurningOn()) {
-                turnOff(child, immediately);
+            foreach (var node in depthNodes) {
+              if (node.objSwitch.GetIsOnOrTurningOn()
+                  && !activeNodeChain.Contains(node)) {
+                turnOff(node, immediately);
               }
             }
-            activeNodeChain.Push(childToActivate);
+          }
+          while (activeNodeChain.Count > 0) {
+            var node = activeNodeChain.Pop();
+            if (toggle && activeNode.isOn && node == activeNode) {
+              // The current node is the target "active" node, but if we're trying to
+              // _toggle_ this node and the node is on, then we only desire to switch to
+              // its parent, and have the node itself off.
+              turnOff(node, immediately);
+              continue;
+            }
+            else {
+              turnOn(node, immediately);
+            }
+
+            // Furthermore, some nodes activate switches in their children as a part of
+            // their normal switching functionality. However, when the tree desires to
+            // switch to a specific node beneath one of these nodes, this behavior should
+            // be overridden.
+            // To do this, we need to deactivate all OTHER children when we still have a\
+            // child node to activate, just after activating any node.
+            if (activeNodeChain.Count > 0) {
+              var childToActivate = activeNodeChain.Pop();
+              foreach (var child in node.children) {
+                if (childToActivate == child) continue;
+                if (child.objSwitch.GetIsOnOrTurningOn()) {
+                  turnOff(child, immediately);
+                }
+              }
+              activeNodeChain.Push(childToActivate);
+            }
           }
         }
+
+        // Return true if we were able to find our target active node.
+        return activeNode != default(Node);
       }
       finally {
         Pool<NodeRef>.Recycle(tempNodeRef);
@@ -415,6 +430,19 @@ namespace Leap.Unity.Animation {
         activeNodeChain.Clear();
         Pool<Stack<Node>>.Recycle(activeNodeChain);
       }
+    }
+
+    /// <summary>
+    /// If the specified state node is not active, the switch tree will switch to that
+    /// node. If switch tree will switch to that node's parent, deactivating the
+    /// specified node. (Calling this method will also deactivate any sibling nodes that
+    /// might have been activated out of the context of the SwitchTree.)
+    /// 
+    /// Returns true if the node identified by nodeName was found in the tree,
+    /// false otherwise.
+    /// </summary>
+    public bool ToggleState(string nodeName, bool immediately = false) {
+      return SwitchTo(nodeName, immediately, toggle: true);
     }
 
     /// <summary>
@@ -466,6 +494,8 @@ namespace Leap.Unity.Animation {
     public DepthFirstEnumerator Traverse(HashSet<Node> visitedNodesCache) {
       return new DepthFirstEnumerator(this, visitedNodesCache);
     }
+
+    #region Enumerators
 
     public struct DepthFirstEnumerator : IQueryOp<Node> {
       private Maybe<Node> maybeCurNode;
@@ -534,6 +564,8 @@ namespace Leap.Unity.Animation {
       }
 
     }
+
+    #endregion
 
   }
 

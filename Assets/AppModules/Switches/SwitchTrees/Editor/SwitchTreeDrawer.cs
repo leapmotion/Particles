@@ -115,9 +115,7 @@ namespace Leap.Unity.Animation {
       
       Rect indentRect;
       Rect labelRect = rect.PadLeft(INDENT_WIDTH * (node.treeDepth + 1), out indentRect);
-      EditorGUI.LabelField(labelRect,
-                           new GUIContent(node.transform.name
-                                          + (node.treeDepth == 0 ? " (root)" : "")));
+      drawNodeLabel(labelRect, node);
 
       Rect fullButtonRect = indentRect.TakeRight(INDENT_WIDTH, out indentRect);
 
@@ -216,6 +214,18 @@ namespace Leap.Unity.Animation {
         GUI.contentColor = origContentColor;
       }
 
+    }
+
+    private void drawNodeLabel(Rect labelRect, SwitchTree.Node node) {
+      if (Event.current.isMouse && labelRect.Contains(Event.current.mousePosition)
+          && Event.current.button == 0
+          && Event.current.type == EventType.MouseDown) {
+        EditorGUIUtility.PingObject(node.objSwitch as MonoBehaviour);
+      }
+
+      EditorGUI.LabelField(labelRect,
+                           new GUIContent(node.transform.name
+                                          + (node.treeDepth == 0 ? " (root)" : "")));
     }
 
     private void drawControllerBackground(Rect rect) {

@@ -12,6 +12,8 @@ namespace Leap.Unity.Animation {
 
     [Header("Translation")]
 
+    public Transform localTranslateTarget;
+
     [QuickButton("Use Current",
                  "setOnLocalPosition",
                  "Sets this property with the object's current local position.")]
@@ -32,8 +34,15 @@ namespace Leap.Unity.Animation {
     #region Unity Events
 
     protected virtual void Reset() {
-      onLocalPosition  = this.transform.localPosition;
-      offLocalPosition = this.transform.localPosition + Vector3.back * 0.20f;
+      if (localTranslateTarget == null) localTranslateTarget = this.transform;
+      onLocalPosition  = localTranslateTarget.localPosition;
+      offLocalPosition = localTranslateTarget.localPosition + Vector3.back * 0.20f;
+    }
+
+    protected override void Start() {
+      base.Start();
+
+      if (localTranslateTarget == null) localTranslateTarget = this.transform;
     }
 
     #endregion
@@ -41,9 +50,10 @@ namespace Leap.Unity.Animation {
     #region Switch Implementation
 
     protected override void updateSwitch(float time, bool immediately = false) {
-      this.transform.localPosition = Vector3.LerpUnclamped(offLocalPosition,
-                                                           onLocalPosition,
-                                                           movementCurve.Evaluate(time));
+      localTranslateTarget.localPosition = Vector3.LerpUnclamped(
+                                                     offLocalPosition,
+                                                     onLocalPosition,
+                                                     movementCurve.Evaluate(time));
     }
 
     #endregion
@@ -54,14 +64,14 @@ namespace Leap.Unity.Animation {
     /// Sets the "onLocalPosition" field with the transform's current local position.
     /// </summary>
     private void setOnLocalPosition() {
-      this.onLocalPosition = this.transform.localPosition;
+      this.onLocalPosition = localTranslateTarget.localPosition;
     }
 
     /// <summary>
     /// Sets the "setOffLocalPosition" field with the transform's current local position.
     /// </summary>
     private void setOffLocalPosition() {
-      this.offLocalPosition = this.transform.localPosition;
+      this.offLocalPosition = localTranslateTarget.localPosition;
     }
 
     #endregion

@@ -21,11 +21,11 @@ namespace Leap.Unity.Animation {
 
     [Header("Animation")]
 
-    [MinValue(0.001f)]
-    public float lerpDuration = 1f;
+    //[MinValue(0.001f)]
+    //public float lerpDuration = 1f;
 
     [UnitCurve]
-    private AnimationCurve lerpToPoseCurve = DefaultCurve.SigmoidUp;
+    public AnimationCurve lerpToPoseCurve = DefaultCurve.SigmoidUp;
 
     #endregion
 
@@ -35,7 +35,7 @@ namespace Leap.Unity.Animation {
 
     private Tween CreateAnimationTween(float duration) {
       _tween = Tween.Single().Value(0f, 1f, onTweenValue)
-                             .OverTime(lerpDuration);
+                             .OverTime(duration);
       return _tween;
     }
 
@@ -87,16 +87,27 @@ namespace Leap.Unity.Animation {
       if (targetPose.HasValue) {
         this.targetPose = targetPose.Value;
       }
+
+      float duration;
       if (movementDuration.HasValue) {
-        lerpDuration = movementDuration.Value;
+        duration = movementDuration.Value;
+      }
+      else {
+        duration = getMovementDurationBasedOnVelocity();
       }
 
       simulator.StartSimulating();
 
-      CreateAnimationTween(lerpDuration).Play();
+      CreateAnimationTween(duration).Play();
     }
 
     #endregion
+
+    private float getMovementDurationBasedOnVelocity() {
+      if (simulator == null) return 0f;
+
+      return simulator.velocity.magnitude.Map(0.02f, 10f, 0f, 2.0f);
+    }
 
   }
 

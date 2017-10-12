@@ -68,8 +68,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1870173422019186}
-  m_LocalRotation: {x: 0.5120414, y: -0.43430832, z: 0.3369149, w: 0.66005933}
-  m_LocalPosition: {x: 0.2669433, y: 0.06224495, z: -0.4984841}
+  m_LocalRotation: {x: 0.39629093, y: -0.48388347, z: 0.26075298, w: 0.7354034}
+  m_LocalPosition: {x: 0.2757701, y: 0.066791594, z: -0.5022876}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4517222758719232}
@@ -181,9 +181,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _tweenTime: 0.33
-  _startOn: 0
+  _startOn: 1
   localScaleTarget: {fileID: 4316486024729964}
-  baseLocalScale: {x: 1, y: 1, z: 1}
+  onLocalScale: {x: 1, y: 1, z: 1}
+  offLocalScale: {x: 0, y: 0, z: 0}
   enforceNonzeroScale: 1
   deactivateSelfWhenZero: 1
   scaleCurve:
@@ -273,5 +274,5 @@ MonoBehaviour:
   leapSpace: {fileID: 0}
   localRectangularPosition: {x: 0, y: 0, z: 0}
   matchRotation: 1
-  localRectangularRotation: {x: 20, y: 0, z: 0}
+  localRectangularRotation: {x: 0, y: 0, z: 0}
   localPositionProvider: {fileID: 0}

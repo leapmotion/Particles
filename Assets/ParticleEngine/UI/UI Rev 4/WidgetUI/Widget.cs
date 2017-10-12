@@ -24,16 +24,18 @@ public class Widget : MonoBehaviour {
   [Header("State Changes")]
 
   [Tooltip("This controller opens and closes the panel.")]
-  public ZZOLD_SwitchStateController stateController;
+  public SwitchTreeController stateController;
 
   [Tooltip("Switch to this state when the widget panel should be closed.")]
-  public string panelClosedState = "Ball";
+  public string panelClosedState = "Widget Sphere";
   [Tooltip("Switch to this state when the widget panel should be open.")]
-  public string panelOpenState   = "Panel";
+  public string panelOpenState   = "Panel Pivot";
 
   // TODO: Arrgh this is not general...
   public Transform currentlyFollowing = null;
+  [QuickButton("Move Here", "MoveToBall")]
   public Transform ballTransform;
+  [QuickButton("Move Here", "MoveToPanel")]
   public Transform panelTransform;
 
   [Header("Widget Placement")]
@@ -77,6 +79,10 @@ public class Widget : MonoBehaviour {
 
   private void onHandlePickedUp() {
     movementToPose.Cancel();
+
+    if (stateController.CurrentState.Equals(panelOpenState)) {
+      stateController.SwitchTo(panelClosedState);
+    }
   }
 
   private void onHandleMoved() {
@@ -84,11 +90,11 @@ public class Widget : MonoBehaviour {
   }
 
   private void onHandlePlaced() {
-    initiateMovementToTarget(duration: 0.0f);
+    initiateMovementToTarget();
   }
 
   private void onHandleThrown(Vector3 velocity) {
-    initiateMovementToTarget(duration: velocity.magnitude.Map(0f, 3f, 0f, 1f));
+    initiateMovementToTarget();
   }
 
   private void onHandlePlacedInContainer() {
@@ -97,10 +103,10 @@ public class Widget : MonoBehaviour {
 
   #endregion
 
-  private void initiateMovementToTarget(float duration) {
+  private void initiateMovementToTarget() {
     var targetPose = targetPoseProvider.GetTargetPose();
 
-    movementToPose.MoveToTarget(targetPose, duration);
+    movementToPose.MoveToTarget(targetPose);
   }
 
   private void onMovementUpdate() {
@@ -111,7 +117,7 @@ public class Widget : MonoBehaviour {
   }
 
   private void onPlacementTargetReached() {
-    stateController.SetState(panelOpenState);
+    stateController.SwitchTo(panelOpenState);
   }
 
   #region Move To Child // TODO: Needs generalization

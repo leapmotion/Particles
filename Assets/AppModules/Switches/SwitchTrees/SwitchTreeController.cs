@@ -41,9 +41,9 @@ namespace Leap.Unity.Animation {
     #endregion
 
     #region Public API
-
-    public string CurrentState {
-      get; set;
+    
+    public string currentState {
+      get { return tree.curActiveNodeName; }
     }
 
     /// <summary>
@@ -53,6 +53,9 @@ namespace Leap.Unity.Animation {
     /// are children of the named node are also deactivated.
     /// </summary>
     public void SwitchTo(string nodeName) {
+#if UNITY_EDITOR
+      UnityEditor.Undo.RecordObject(this, "Set SwitchTreeController State");
+#endif
       tree.SwitchTo(nodeName);
     }
     public void SwitchTo(string nodeName, bool immediately = false) {
@@ -78,7 +81,7 @@ namespace Leap.Unity.Animation {
     /// might have been activated out of the context of the SwitchTree.)
     /// </summary>
     public void ToggleState(string nodeName) {
-      tree.ToggleState(nodeName);
+      tree.ToggleState(nodeName, !Application.isPlaying);
     }
     public void ToggleState(string nodeName, bool immediately) {
       tree.ToggleState(nodeName, immediately);

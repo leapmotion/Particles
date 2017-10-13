@@ -125,7 +125,7 @@ public class ToolbeltController : MonoBehaviour {
       var localOpenPose   = new Pose(localOpenPosition,   Quaternion.Euler(localOpenEuler));
       var localUpdatePose = Pose.Interpolate(localClosedPose, localOpenPose, _openCloseTweenTime);
 
-      toolbeltAnchor.transform.SetLocalPose(_baseLocalTargetPose + localUpdatePose);
+      toolbeltAnchor.transform.SetLocalPose(_baseLocalTargetPose.Then(localUpdatePose));
 
       toolbeltAnchor.transform.localPosition = localUpdatePose.position;
       toolbeltAnchor.transform.localRotation = localUpdatePose.rotation;

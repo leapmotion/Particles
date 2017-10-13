@@ -14,7 +14,7 @@ namespace Leap.Unity.Layout {
       var cameraPose = Camera.main.transform.ToWorldPose();
 
       return new Pose(this.transform.position,
-                      PoseUtil.FaceTargetWithoutTwist(this.transform.position,
+                      NewUtils.FaceTargetWithoutTwist(this.transform.position,
                                                       cameraPose.position,
                                                       flipPose));
     }

@@ -80,7 +80,7 @@ namespace Leap.Unity.Interaction {
       _points.Clear(); _refPoints.Clear();
       Vector3    bodyPosition = _intObj.rigidbody.position;
       Quaternion bodyRotation = _intObj.rigidbody.rotation;
-      Matrix4x4 it = Matrix4x4.TRS(bodyPosition, bodyRotation, Vector3.one);
+      Matrix4x4 bodyMatrix = Matrix4x4.TRS(bodyPosition, bodyRotation, Vector3.one);
 
       _controllerCentroid = Vector3.zero; _objectCentroid = Vector3.zero; _manipulatorCount = 0f;
 
@@ -95,7 +95,7 @@ namespace Leap.Unity.Interaction {
 
           // Perform the solve such that the objects' positions are matched to the new
           // manipulator positions.
-          Vector3 point1 = (it.MultiplyPoint3x4(originalManipulatorPos) - bodyPosition);
+          Vector3 point1 = (bodyMatrix.MultiplyPoint3x4(originalManipulatorPos) - bodyPosition);
           Vector3 point2 = (currentManipulatorPos - bodyPosition);
 
           if (_intObj.isPositionLocked) {

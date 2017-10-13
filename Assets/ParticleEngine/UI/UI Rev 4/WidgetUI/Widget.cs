@@ -30,9 +30,9 @@ public class Widget : MonoBehaviour {
   public string panelClosedState = "Widget Sphere";
   [Tooltip("Switch to this state when the widget panel should be open.")]
   public string panelOpenState   = "Panel Pivot";
-
-  // TODO: Arrgh this is not general...
-  public Transform currentlyFollowing = null;
+  
+  // Not "general" but only utilized at edit-time currently.
+  // TODO: Make the Handled Object work at edit-time? hrmm....
   [QuickButton("Move Here", "MoveToBall")]
   public Transform ballTransform;
   [QuickButton("Move Here", "MoveToPanel")]
@@ -80,7 +80,7 @@ public class Widget : MonoBehaviour {
   private void onHandlePickedUp() {
     movementToPose.Cancel();
 
-    if (stateController.CurrentState.Equals(panelOpenState)) {
+    if (stateController.currentState.Equals(panelOpenState)) {
       stateController.SwitchTo(panelClosedState);
     }
   }

@@ -23,11 +23,27 @@ namespace Leap.Unity.PhysicalInterfaces {
     /// </summary>
     Pose pose { get; }
 
+
+    /// <summary>
+    /// Sets the world-space pose of this handle.
+    /// </summary>
+    void SetPose(Pose pose);
+
     /// <summary>
     /// The current velocity and angular velocity (as an angle-axis vector) of this
-    /// handle in world space.
+    /// handle in world space. These should be in standard units of m/s and radians/s.
     /// </summary>
     Movement movement { get; }
+
+    /// <summary>
+    /// The change in position and the change in rotation (as an angle-axis vector) of
+    /// this handle in world space between the current render frame and the last render
+    /// frame.
+    /// 
+    /// These values should not be divided by frame-time and are useful for manipulating
+    /// objects attached to the handles without any loss of precision.
+    /// </summary>
+    Pose deltaPose { get; }
 
     /// <summary>
     /// Whether or not this handle is currently being held by the user.
@@ -43,8 +59,22 @@ namespace Leap.Unity.PhysicalInterfaces {
     /// <summary> Fired when the user has picked up this handle. </summary>
     event Action OnPickedUp;
 
+    /// <summary>
+    /// Fired when the user has picked up this handle, and passes itself as the event
+    /// argument.
+    /// </summary>
+    event Action<IHandle> OnPickedUpHandle;
+
+
     /// <summary> Fired as the user is moving this handle. </summary>
     event Action OnMoved;
+
+    /// <summary>
+    /// Fired when the user is moving this handle, and passes itself as the event
+    /// argument.
+    /// </summary>
+    event Action<IHandle> OnMovedHandle;
+
 
     /// <summary>
     /// Fired when the user has placed this handle without much velocity. This is also
@@ -57,6 +87,12 @@ namespace Leap.Unity.PhysicalInterfaces {
     event Action OnPlaced;
 
     /// <summary>
+    /// As OnPlaced, but also includes the handle itself as an event argument.
+    /// </summary>
+    event Action<IHandle> OnPlacedHandle;
+
+
+    /// <summary>
     /// Fired when the user has placed this handle inside an handle container, such as an
     /// inventory slot or an anchor.
     /// 
@@ -64,7 +100,13 @@ namespace Leap.Unity.PhysicalInterfaces {
     /// placement action.
     /// </summary>
     event Action OnPlacedInContainer;
+
+    /// <summary>
+    /// As OnPlacedInContainer, but also includes the handle itself as an event argument.
+    /// </summary>
+    event Action<IHandle> OnPlacedHandleInContainer;
     
+
     /// <summary>
     /// Fired when the user throws this handle. The provided vector represents the throw
     /// velocity of the handle.
@@ -73,6 +115,11 @@ namespace Leap.Unity.PhysicalInterfaces {
     /// user-placement action.
     /// </summary>
     event Action<Vector3> OnThrown;
+
+    /// <summary>
+    /// As OnThrown, but also includes the handle itself as an event argument.
+    /// </summary>
+    event Action<IHandle, Vector3> OnThrownHandle;
 
   }
   

@@ -51,7 +51,86 @@ public static class NewUtils {
     return allChildren;
   }
 
+
+  /// <summary>
+  /// Recursively searches the hierarchy of the argument Transform to find all of the
+  /// Components of type ComponentType (the first type argument) that should be "owned"
+  /// by the OwnerType component type (the second type argument).
+  /// 
+  /// If a child GameObject itself has an OwnerType component, that
+  /// child is ignored, and its children are ignored -- the assumption being that such
+  /// a child owns itself and any ComponentType components beneath it.
+  /// 
+  /// For example, a call to FindOwnedChildComponents with ComponentType Collider and
+  /// OwnerType Rigidbody would return all of the Colliders that are attached to the
+  /// rootObj Rigidbody, but none of the colliders that are attached to a rootObj's
+  /// child's own Rigidbody.
+  /// 
+  /// Optionally, ComponentType components of inactive GameObjects can be included
+  /// in the returned list; by default, these components are skipped.
+  /// 
+  /// This is not a cheap method to call, but it does not allocate garbage, so it is safe
+  /// for use at runtime.
+  /// </summary>
+  /// 
+  /// <typeparam name="ComponentType">
+  /// The component type to search for.
+  /// </typeparam>
+  /// 
+  /// <typeparam name="OwnerType">
+  /// The component type that assumes ownership of any ComponentType in its own Transform
+  /// or its Transform's children/grandchildren.
+  /// </typeparam>
+  public static void FindOwnedChildComponents<ComponentType, OwnerType>
+                                               (OwnerType rootObj,
+                                                List<ComponentType> ownedComponents,
+                                                bool includeInactiveObjects = false)
+                                             where OwnerType : Component {
+    ownedComponents.Clear();
+    Stack<Transform> toVisit = Pool<Stack<Transform>>.Spawn();
+    List<ComponentType> componentsBuffer = Pool<List<ComponentType>>.Spawn();
+
+    try {
+      // Traverse the hierarchy of this object's transform to find
+      // all of its Colliders.
+      toVisit.Push(rootObj.transform);
+      Transform curTransform;
+      while (toVisit.Count > 0) {
+        curTransform = toVisit.Pop();
+
+        // Recursively search children and children's children.
+        foreach (var child in curTransform.GetChildren()) {
+          // Ignore children with OwnerType components of their own; its own OwnerType
+          // component owns its own ComponentType components and the ComponentType
+          // components of its children.
+          if (child.GetComponent<OwnerType>() == null
+              && (includeInactiveObjects || child.gameObject.activeSelf)) {
+            toVisit.Push(child);
+          }
+        }
+
+        // Since we'll visit every valid child, all we need to do is add the
+        // ComponentType components of every transform we visit.
+        componentsBuffer.Clear();
+        curTransform.GetComponents<ComponentType>(componentsBuffer);
+        foreach (var component in componentsBuffer) {
+          ownedComponents.Add(component);
+        }
+      }
+    }
+    finally {
+      toVisit.Clear();
+      Pool<Stack<Transform>>.Recycle(toVisit);
+
+      componentsBuffer.Clear();
+      Pool<List<ComponentType>>.Recycle(componentsBuffer);
+    }
+  }
+
   #endregion
+
+
+  #region Quaternion Utils
 
   /// <summary>
   /// Converts the quaternion into an axis and an angle and returns the vector
@@ -63,6 +142,17 @@ public static class NewUtils {
     q.ToAngleAxis(out angle, out axis);
     return axis * angle;
   }
+
+  /// <summary>
+  /// Returns a Quaternion described by the provided angle axis vector.
+  /// </summary>
+  public static Quaternion QuaternionFromAngleAxisVector(Vector3 angleAxisVector) {
+    if (angleAxisVector == Vector3.zero) return Quaternion.identity;
+    return Quaternion.AngleAxis(angleAxisVector.magnitude, angleAxisVector.normalized);
+  }
+
+  #endregion
+
 
   #region Rect Utils
 
@@ -222,6 +312,8 @@ public static class NewUtils {
     return new Rect(r.x, (fromTop ? r.y : r.y + r.height - lineHeight), r.width, lineHeight);
   }
 
+  #region Enumerators
+
   /// <summary>
   /// Slices numLines horizontal line Rects from this Rect and returns an enumerator that
   /// will return each line Rect.
@@ -275,6 +367,41 @@ public static class NewUtils {
 
   #endregion
 
+  #endregion
+
+
+  #region Pose Utils
+
+  /// <summary>
+  /// Returns the rotation thatm akes a transform at objectPosition point its forward
+  /// vector at targetPosition and keep its rightward vector parallel with the horizon
+  /// defined by a normal of Vector3.up.
+  /// 
+  /// For example, this will point an interface panel at a user camera while
+  /// maintaining the alignment of text and other elements with the horizon line.
+  /// </summary>
+  /// <returns></returns>
+  public static Quaternion FaceTargetWithoutTwist(Vector3 fromPosition, Vector3 targetPosition, bool flip180 = false) {
+    return FaceTargetWithoutTwist(fromPosition, targetPosition, Vector3.up, flip180);
+  }
+
+  /// <summary>
+  /// Returns the rotation that makes a transform at objectPosition point its forward
+  /// vector at targetPosition and keep its rightward vector parallel with the horizon
+  /// defined by the upwardDirection normal.
+  /// 
+  /// For example, this will point an interface panel at a user camera while
+  /// maintaining the alignment of text and other elements with the horizon line.
+  /// </summary>
+  public static Quaternion FaceTargetWithoutTwist(Vector3 objectPosition, Vector3 targetPosition, Vector3 upwardDirection, bool flip180 = false) {
+    Vector3 objToTarget = -1f * (Camera.main.transform.position - objectPosition);
+    Vector3 horizonRight = Vector3.Cross(upwardDirection, objToTarget);
+    Vector3 objUp = Vector3.Cross(objToTarget.normalized, horizonRight.normalized);
+    return Quaternion.LookRotation((flip180 ? -1 : 1) * objToTarget, objUp);
+  }
+
+  #endregion
+
 
   public static void SplitHorizontallyWithLeft(this Rect rect, out Rect left, out Rect right, float leftWidth) {
     left = rect;
@@ -283,4 +410,5 @@ public static class NewUtils {
     right.x += left.width;
     right.width = rect.width - leftWidth;
   }
+
 }

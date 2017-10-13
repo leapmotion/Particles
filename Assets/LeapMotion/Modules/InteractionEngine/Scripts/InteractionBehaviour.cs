@@ -821,6 +821,12 @@ namespace Leap.Unity.Interaction {
       }
     }
 
+    public Pose worldDeltaPose {
+      get {
+        return _worldPose.From(_worldPoseLastFrame);
+      }
+    }
+
     public Movement worldMovement {
       get {
         if (!rigidbody.isKinematic) {

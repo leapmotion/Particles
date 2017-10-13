@@ -26,22 +26,25 @@ namespace Leap.Unity.Animation {
       bool _isValid;
 
       /// <summary>
-      /// The serialized MonoBehaviour for this Node represents both its Transform
-      /// (via its transform property) and its IPropertySwitch (because the MonoBehaviour
-      /// itself must implement IPropertySwitch).
+      /// The MonoBehaviour for this Node represents both its Transform (via its
+      /// transform property) and its IPropertySwitch (because the MonoBehaviour itself
+      /// must implement IPropertySwitch).
       /// </summary>
-      MonoBehaviour switchBehaviour;
+      private MonoBehaviour _switchBehaviour;
+      public MonoBehaviour switchBehaviour {
+        get { return _switchBehaviour; }
+      }
 
       public Transform transform {
         get {
           if (!isValid) return null;
-          return switchBehaviour.transform;
+          return _switchBehaviour.transform;
         }
       }
       public IPropertySwitch objSwitch {
         get {
           if (!isValid) return null;
-          return switchBehaviour as IPropertySwitch;
+          return _switchBehaviour as IPropertySwitch;
         }
       }
       
@@ -161,7 +164,7 @@ namespace Leap.Unity.Animation {
       public Node(MonoBehaviour switchBehaviour,
                   NodeRef parent = null,
                   int treeDepth = 0) {
-        this.switchBehaviour = switchBehaviour;
+        this._switchBehaviour = switchBehaviour;
 
         this.parent = parent;
         this.treeDepth = treeDepth;
@@ -233,11 +236,11 @@ namespace Leap.Unity.Animation {
         return this.Equals((Node)obj);
       }
       public bool Equals(Node other) {
-        return isValid && this.switchBehaviour == other.switchBehaviour;
+        return isValid && this._switchBehaviour == other._switchBehaviour;
       }
       public override int GetHashCode() {
-        if (this.switchBehaviour == null) return 0;
-        return this.switchBehaviour.GetHashCode();
+        if (this._switchBehaviour == null) return 0;
+        return this._switchBehaviour.GetHashCode();
       }
 
     }
@@ -251,8 +254,13 @@ namespace Leap.Unity.Animation {
     [SerializeField]
     public MonoBehaviour rootSwitchBehaviour;
 
-    private Node root;
-    private bool treeReady;
+    private Node _root;
+    private bool _treeReady;
+
+    private string _curActiveNodeName = "";
+    public string curActiveNodeName {
+      get { return _curActiveNodeName; }
+    }
 
     public SwitchTree(Transform transform) {
       var objSwitch = transform.GetComponent<IPropertySwitch>();
@@ -263,24 +271,25 @@ namespace Leap.Unity.Animation {
       }
 
       rootSwitchBehaviour = (objSwitch as MonoBehaviour);
-      treeReady = false;
+      _curActiveNodeName = rootSwitchBehaviour.name;
+      _treeReady = false;
     }
 
     public int NodeCount {
       get {
         ensureTreeReady();
-        return root.numAllChildren + 1;
+        return _root.numAllChildren + 1;
       }
     }
 
     private void ensureTreeReady() {
-      if (!treeReady) {
+      if (!_treeReady) {
         initTree();
       }
     }
 
     private void initTree() {
-      root = new Node(rootSwitchBehaviour, null);
+      _root = new Node(rootSwitchBehaviour, null);
     }
 
     /// <summary>
@@ -294,6 +303,8 @@ namespace Leap.Unity.Animation {
     public bool SwitchTo(string nodeName, bool immediately = false, bool toggle = false) {
       ensureTreeReady();
 
+      _curActiveNodeName = "";
+
       // We have to traverse the whole tree because we don't know where the node matching
       // nodeName resides. This is fine, because the contract of the tree is to maintain
       // every node's state anyway, not just the ones that are currently activating or
@@ -303,7 +314,7 @@ namespace Leap.Unity.Animation {
       var visitedNodes = Pool<HashSet<Node>>.Spawn();
       var tempNodeRef = Pool<NodeRef>.Spawn();
       var curNodeRef = tempNodeRef;
-      curNodeRef.node = root;
+      curNodeRef.node = _root;
 
       // This dictionary allows us to reverse-breadth-first traverse all nodes once;
       // we build it during the depth-first traversal.
@@ -332,6 +343,7 @@ namespace Leap.Unity.Animation {
             if (node.transform.name.Equals(nodeName)) {
               // We've found the node we want active.
               activeNode = node;
+              _curActiveNodeName = activeNode.switchBehaviour.name;
               buildNodeChain(activeNode, activeNodeChain);
             }
           }
@@ -385,6 +397,14 @@ namespace Leap.Unity.Animation {
               // _toggle_ this node and the node is on, then we only desire to switch to
               // its parent, and have the node itself off.
               turnOff(node, immediately);
+
+              if (!node.hasParent) {
+                _curActiveNodeName = "";
+              }
+              else {
+                _curActiveNodeName = node.parent.node.switchBehaviour.name;
+              }
+
               continue;
             }
             else {
@@ -515,7 +535,7 @@ namespace Leap.Unity.Animation {
 
       public bool MoveNext() {
         if (!maybeCurNode.hasValue) {
-          maybeCurNode = Maybe.Some(tree.root);
+          maybeCurNode = Maybe.Some(tree._root);
           return true;
         }
 

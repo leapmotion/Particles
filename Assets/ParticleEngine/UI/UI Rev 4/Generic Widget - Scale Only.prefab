@@ -58,8 +58,24 @@ GameObject:
   - component: {fileID: 114850469632216446}
   - component: {fileID: 114653723184676572}
   - component: {fileID: 114954474889142292}
+  - component: {fileID: 114239660419321150}
   m_Layer: 0
   m_Name: Generic Widget - Scale Only
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!1 &1150101545029196
+GameObject:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 224166203067149874}
+  m_Layer: 0
+  m_Name: Look Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -403,6 +419,7 @@ Transform:
   m_Children:
   - {fileID: 4583675577698036}
   - {fileID: 4391575588786490}
+  - {fileID: 224166203067149874}
   m_Father: {fileID: 4999452351138824}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -467,7 +484,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1084357072699700}
   m_LocalRotation: {x: 0.39629093, y: -0.48388347, z: 0.26075298, w: 0.7354034}
-  m_LocalPosition: {x: -0.32422993, y: -0.5362084, z: -0.09528762}
+  m_LocalPosition: {x: -0.32422993, y: -0.5362084, z: -0.0012876093}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4856806331067478}
@@ -755,6 +772,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   flipPose: 0
+  lookAnchor: {fileID: 224166203067149874}
 --- !u!114 &114097150436237578
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -828,6 +846,17 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 0
+--- !u!114 &114239660419321150
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c84fe105fafeb6e41b8e426db9b7c24b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114265855366839592
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -988,7 +1017,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _tweenTime: 1
-  _startOn: 0
+  _startOn: 1
   leapRadialSpace: {fileID: 114750237781704370}
   onRadius: 1
   offRadius: 0.1
@@ -1059,7 +1088,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isSimulating: 0
   overrideGravity: 1
-  customGravity: {x: 0, y: -2.4525, z: 0}
+  customGravity: {x: 0, y: -4.905, z: 0}
   drag: 0.5
   angularDrag: 0.01
   _drawRuntimeGizmos: 0
@@ -1869,7 +1898,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   parent: {fileID: 114750237781704370}
   space: {fileID: 114750237781704370}
-  _radius: 0.7
+  _radius: 1
 --- !u!114 &114760707246475942
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2260,6 +2289,24 @@ RectTransform:
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!224 &224166203067149874
+RectTransform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1150101545029196}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.050000012}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4263645406100726}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.0000003054738, y: 0.2609993}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!224 &224312964573616912
 RectTransform:

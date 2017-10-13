@@ -10,15 +10,15 @@ namespace Leap.Unity.Layout {
 
     public bool flipPose = false;
 
-    public Pose GetTargetPose() {
-      var cameraPose = Camera.main.transform.ToWorldPose();
-
-      return new Pose(this.transform.position,
-                      NewUtils.FaceTargetWithoutTwist(this.transform.position,
-                                                      cameraPose.position,
-                                                      flipPose));
+    public Vector3 GetTargetPosition() {
+      return this.transform.position;
     }
 
+    public Quaternion GetTargetRotation() {
+      return NewUtils.FaceTargetWithoutTwist(this.transform.position,
+                                             Camera.main.transform.position,
+                                             flipPose);
+    }
   }
 
 }

@@ -106,7 +106,16 @@ namespace Leap.Unity.Animation {
     private float getMovementDurationBasedOnVelocity() {
       if (simulator == null) return 0f;
 
-      return simulator.velocity.magnitude.Map(0.02f, 10f, 0f, 2.0f);
+      float minDurationDueToVelocity = Mathf.Clamp(simulator.velocity.magnitude,
+                                                   0f, PhysicalInterfaceUtils.MAX_THROW_SPEED)
+                                       .Map(0f, PhysicalInterfaceUtils.MID_THROW_SPEED,
+                                            0f, 2.5f);
+
+      float minDurationDueToDistance = Vector3.Distance(targetPose.position,
+                                                        simulator.position)
+                                         / PhysicalInterfaceUtils.STANDARD_SPEED;
+
+      return Mathf.Max(minDurationDueToDistance, minDurationDueToVelocity);
     }
 
   }

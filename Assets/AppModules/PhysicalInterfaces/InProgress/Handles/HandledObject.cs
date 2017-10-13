@@ -215,14 +215,14 @@ namespace Leap.Unity.PhysicalInterfaces {
     private Dictionary<IHandle, Pose> _origHandlePoses = new Dictionary<IHandle, Pose>();
 
     private void updatePreKabschState() {
-      // Ensure there's a reference pose for all currently held handles.
+      // Ensure there's a reference pose for all currently attached handles.
       foreach (var handle in _attachedHandles) {
         if (!_origHandlePoses.ContainsKey(handle)) {
           _origHandlePoses[handle] = handle.pose;
         }
       }
 
-      // Ensure there's NO reference pose for non-held handles.
+      // Ensure there's NO reference pose for non-attached handles.
       var removeHandlesFromKabsch = Pool<List<IHandle>>.Spawn();
       removeHandlesFromKabsch.Clear();
       try {
@@ -252,10 +252,6 @@ namespace Leap.Unity.PhysicalInterfaces {
       List<Vector3> curPoints = Pool<List<Vector3>>.Spawn();
       curPoints.Clear();
 
-      // DELETE ME
-      Pose aRefPose = new Pose(Vector3.one * 100000, Quaternion.identity);
-      Pose aCurPose = new Pose(Vector3.one * 100000, Quaternion.identity);
-
       try {
         Vector3 objectPos = this.pose.position;
 
@@ -264,13 +260,11 @@ namespace Leap.Unity.PhysicalInterfaces {
           origPoints.Add(origPose.position - objectPos);
           origPoints.Add(origPose.position + origPose.rotation * Vector3.up * 0.01f - objectPos);
           origPoints.Add(origPose.position + origPose.rotation * Vector3.right * 0.01f - objectPos);
-          aRefPose = origPose;
 
           Pose curPose = handlePosePair.Key.pose;
           curPoints.Add(curPose.position - objectPos);
           curPoints.Add(curPose.position + curPose.rotation * Vector3.up * 0.01f - objectPos);
           curPoints.Add(curPose.position + curPose.rotation * Vector3.right * 0.01f - objectPos);
-          aCurPose = curPose;
         }
 
         kabschResult = _kabsch.SolveKabsch(origPoints, curPoints);

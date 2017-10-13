@@ -1,10 +1,21 @@
-﻿using Leap.Unity.PhysicalInterfaces;
+﻿using UnityEngine;
 
 namespace Leap.Unity.Layout {
 
   public interface IPoseProvider {
+
+    Vector3 GetTargetPosition();
+
+    Quaternion GetTargetRotation();
+
+  }
+
+  public static class IPoseProviderExtensions {
     
-    Pose GetTargetPose();
+    public static Pose GetTargetPose(this IPoseProvider poseProvider) {
+      return new Pose(poseProvider.GetTargetPosition(),
+                      poseProvider.GetTargetRotation());
+    }
 
   }
 

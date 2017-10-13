@@ -59,6 +59,7 @@ GameObject:
   - component: {fileID: 114653723184676572}
   - component: {fileID: 114954474889142292}
   - component: {fileID: 114239660419321150}
+  - component: {fileID: 114120397476361316}
   m_Layer: 0
   m_Name: Generic Widget - Scale Only
   m_TagString: Untagged
@@ -149,6 +150,7 @@ GameObject:
   - component: {fileID: 114693086155942622}
   - component: {fileID: 114328666758107968}
   - component: {fileID: 114433479338321194}
+  - component: {fileID: 114108032478340850}
   m_Layer: 0
   m_Name: Panel Pivot
   m_TagString: Untagged
@@ -772,7 +774,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   flipPose: 0
-  lookAnchor: {fileID: 224166203067149874}
 --- !u!114 &114097150436237578
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -807,6 +808,33 @@ MonoBehaviour:
   _horizontalAlignment: 0
   _verticalAlignment: 1
   _color: {r: 0.81022924, g: 0.8320086, b: 0.86764705, a: 1}
+--- !u!114 &114108032478340850
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1507733605802318}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2bbcb70d52f531047acb0792d7d0f89d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lookAnchorTransform: {fileID: 224076238673338764}
+  lookAnchorTranslationSwitch: {fileID: 114433479338321194}
+--- !u!114 &114120397476361316
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084357072699700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32178672dce82a943a26326a598e35b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiAnchorHandle: {fileID: 114966221319103294}
+  _uiLookAnchor: {fileID: 114108032478340850}
+  flip180: 0
 --- !u!114 &114173908366360780
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1975,10 +2003,9 @@ MonoBehaviour:
   stateController: {fileID: 114954474889142292}
   panelClosedState: Widget Sphere
   panelOpenState: Panel Pivot
-  currentlyFollowing: {fileID: 4263645406100726}
   ballTransform: {fileID: 4263645406100726}
   panelTransform: {fileID: 4856806331067478}
-  _targetPoseProvider: {fileID: 114077039407687046}
+  _targetPoseProvider: {fileID: 114120397476361316}
   _movementToPose: {fileID: 114173908366360780}
 --- !u!114 &114855920101779262
 MonoBehaviour:

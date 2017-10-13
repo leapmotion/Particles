@@ -112,7 +112,7 @@ public class Widget : MonoBehaviour {
   private void onMovementUpdate() {
     movementToPose.targetPose = new Pose() {
       position = movementToPose.targetPose.position,
-      rotation = targetPoseProvider.GetTargetPose().rotation
+      rotation = targetPoseProvider.GetTargetRotation()
     };
   }
 

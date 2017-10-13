@@ -32,8 +32,6 @@ namespace Leap.Unity.PhysicalInterfaces {
 
       if (anchObj != null) {
         anchObj.OnPostTryAnchorOnGraspEnd += onGraspEnd;
-        anchObj.OnAttachedToAnchor += onAttachedToAnchor;
-        anchObj.OnDetachedFromAnchor += onDetachedFromAnchor;
       }
       else {
         intObj.OnGraspEnd += onGraspEnd;
@@ -41,12 +39,11 @@ namespace Leap.Unity.PhysicalInterfaces {
     }
 
     private void onGraspEnd() {
-      float throwThreshold = 0.02f;
       if (anchObj != null && anchObj.preferredAnchor != null) {
         OnPlacedInContainer();
         OnPlacedHandleInContainer(this);
       }
-      else if (intObj.rigidbody.velocity.sqrMagnitude > throwThreshold * throwThreshold) {
+      else if (intObj.rigidbody.velocity.magnitude > PhysicalInterfaceUtils.MIN_THROW_SPEED) {
         OnThrown(intObj.rigidbody.velocity);
         OnThrownHandle(this, intObj.rigidbody.velocity);
       }
@@ -54,17 +51,8 @@ namespace Leap.Unity.PhysicalInterfaces {
         OnPlaced();
         OnPlacedHandle(this);
       }
-    }
 
-    private void onAttachedToAnchor(AnchorableBehaviour anchobj, Anchor anchor) {
-      OnPickedUp();
-      OnPickedUpHandle(this);
-    }
-
-    private void onDetachedFromAnchor(AnchorableBehaviour anchobj, Anchor anchor) {
-      if (!intObj.isGrasped) {
-        OnPlaced();
-      }
+      DebugPing.Ping(intObj.transform.position, LeapColor.orange, 0.5f);
     }
 
     private void fireOnPickedUp() {
@@ -74,11 +62,15 @@ namespace Leap.Unity.PhysicalInterfaces {
 
       OnPickedUp();
       OnPickedUpHandle(this);
+
+      DebugPing.Ping(intObj.transform.position, LeapColor.cyan, 0.5f);
     }
 
     private void fireOnMoved() {
       OnMoved();
       OnMovedHandle(this);
+
+      DebugPing.Ping(intObj.transform.position, LeapColor.blue, 0.075f);
     }
 
     #endregion

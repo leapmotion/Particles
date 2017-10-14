@@ -70,7 +70,9 @@ namespace Leap.Unity.Animation {
                                             GUIContent label) {
       return (EditorGUIUtility.singleLineHeight + EXTRA_HEIGHT_PER_NODE)
              * makeSwitchTree(property).NodeCount
-             + EXTRA_HEIGHT;
+             + EXTRA_HEIGHT
+             + EditorGUIUtility.singleLineHeight // "Current node" label
+             ;
     }
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
@@ -78,16 +80,22 @@ namespace Leap.Unity.Animation {
       var switchTree = makeSwitchTree(property);
       int nodeCount = switchTree.NodeCount;
 
+      Rect curNodeStateLabelRect;
+      position = position.PadTop(EditorGUIUtility.singleLineHeight, out curNodeStateLabelRect);
+      drawCurNodeLabel(curNodeStateLabelRect, switchTree);
+
       var visitedNodesCache = Pool<HashSet<SwitchTree.Node>>.Spawn();
       try {
         bool isEvenRow = true;
-        foreach (var nodeRectPair in switchTree.Traverse(visitedNodesCache).Query()
+        foreach (var nodeRectPair in switchTree.Traverse(visitedNodesCache)
+                                               .Query()
                                                .Zip(position.TakeAllLines(nodeCount)
-                                                            .Query(), (node, rect) => {
-                                                 return new Pair<SwitchTree.Node, Rect>
-                                                              (node, rect);
-                                                })) {
-          drawNode(nodeRectPair.first, nodeRectPair.second, switchTree, isEvenRow);
+                                                            .Query(),
+                                                    (node, rect) => {
+                                                      return new Pair<SwitchTree.Node, Rect>
+                                                                   (node, rect);
+                                                    })) {
+          drawNode(nodeRectPair.first, nodeRectPair.second, switchTree, property, isEvenRow);
           isEvenRow = !isEvenRow;
         }
       }
@@ -100,10 +108,13 @@ namespace Leap.Unity.Animation {
 
     private SwitchTree makeSwitchTree(SerializedProperty treeProperty) {
       return new SwitchTree((treeProperty.FindPropertyRelative("rootSwitchBehaviour")
-                                         .objectReferenceValue as MonoBehaviour).transform);
+                                         .objectReferenceValue as MonoBehaviour).transform,
+                            (treeProperty.FindPropertyRelative("_curActiveNodeName")
+                                         .stringValue));
     }
 
     private void drawNode(SwitchTree.Node node, Rect rect, SwitchTree switchTree,
+                          SerializedProperty treeProperty,
                           bool isEvenRow = true) {
 
       if (node.treeDepth == 0) {
@@ -205,6 +216,7 @@ namespace Leap.Unity.Animation {
         // to perform operations that correctly report their actions in OnNow() to the
         // Undo history!
         switchTree.SwitchTo(node.transform.name, immediately: !Application.isPlaying);
+        treeProperty.FindPropertyRelative("_curActiveNodeName").stringValue = node.transform.name;
       }
 
       Undo.CollapseUndoOperations(curGroupIdx);
@@ -214,6 +226,13 @@ namespace Leap.Unity.Animation {
         GUI.contentColor = origContentColor;
       }
 
+    }
+
+    private void drawCurNodeLabel(Rect labelRect, SwitchTree tree) {
+      EditorGUI.LabelField(labelRect, new GUIContent("Current active state: "
+                                                     + tree.curActiveNodeName,
+                                            "This is the node name that will be returned "
+                                          + "by the currentState property."));
     }
 
     private void drawNodeLabel(Rect labelRect, SwitchTree.Node node) {

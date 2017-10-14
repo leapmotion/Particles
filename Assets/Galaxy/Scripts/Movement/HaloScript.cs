@@ -30,7 +30,9 @@ public class HaloScript : MonoBehaviour {
   private Vector3 _startPosition;
   private float _startRadius;
 
+#pragma warning disable 0414
   private RuntimeGizmoDrawer drawer;
+#pragma warning restore 0414
 
   public enum Mode {
     None,

@@ -52,7 +52,9 @@ namespace Leap.Unity.Attributes {
       }
 
       if (GUI.Button(rect.PadInner(0, 0, 0, PADDING_RIGHT), new GUIContent(label, tooltip))) {
-        Undo.RecordObjects(targets, "Perform QuickButton Action");
+        foreach (var target in targets) {
+          Undo.RegisterFullObjectHierarchyUndo(target, "Perform QuickButton Action");
+        }
         foreach (var target in targets) {
           method.Invoke(target, new object[] { });
         }

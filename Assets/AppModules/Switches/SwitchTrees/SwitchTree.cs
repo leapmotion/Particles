@@ -254,15 +254,20 @@ namespace Leap.Unity.Animation {
     [SerializeField]
     public MonoBehaviour rootSwitchBehaviour;
 
-    private Node _root;
-    private bool _treeReady;
-
+    /// <summary>
+    /// Unity also serializes the name of the currently active node; when the tree is
+    /// initialized, this will be the node it attempts to switch to.
+    /// </summary>
+    [SerializeField]
     private string _curActiveNodeName = "";
     public string curActiveNodeName {
       get { return _curActiveNodeName; }
     }
 
-    public SwitchTree(Transform transform) {
+    private Node _root;
+    private bool _treeReady;
+
+    public SwitchTree(Transform transform, string startingActiveNode = null) {
       var objSwitch = transform.GetComponent<IPropertySwitch>();
       if (objSwitch == null) {
         throw new System.InvalidOperationException("Cannot build a Switch Tree for "
@@ -271,8 +276,18 @@ namespace Leap.Unity.Animation {
       }
 
       rootSwitchBehaviour = (objSwitch as MonoBehaviour);
-      _curActiveNodeName = rootSwitchBehaviour.name;
       _treeReady = false;
+
+      if (startingActiveNode == null) {
+        _curActiveNodeName = rootSwitchBehaviour.name;
+      }
+      else {
+        _curActiveNodeName = startingActiveNode;
+
+        ensureTreeReady();
+
+        SwitchTo(startingActiveNode);
+      }
     }
 
     public int NodeCount {
@@ -302,8 +317,6 @@ namespace Leap.Unity.Animation {
     /// </summary>
     public bool SwitchTo(string nodeName, bool immediately = false, bool toggle = false) {
       ensureTreeReady();
-
-      _curActiveNodeName = "";
 
       // We have to traverse the whole tree because we don't know where the node matching
       // nodeName resides. This is fine, because the contract of the tree is to maintain

@@ -2,10 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
+using Leap.Unity.Interaction;
 
 public class RegularPinchTranslate : MonoBehaviour {
 
   public GrabSwitch left, right;
+
+  [Header("Optional -- Gesture Exclusivity")]
+
+  public InteractionHand leftInteractionHand;
+  public InteractionHand rightInteractionHand;
 
   private void Update() {
     if (Hands.Left != null) {
@@ -21,6 +27,10 @@ public class RegularPinchTranslate : MonoBehaviour {
           left.grasped = true;
         }
       }
+
+      if (leftInteractionHand != null && leftInteractionHand.isGraspingObject) {
+        left.grasped = false;
+      }
     }
 
     if (Hands.Right != null) {
@@ -35,6 +45,10 @@ public class RegularPinchTranslate : MonoBehaviour {
         if (Hands.Right.PinchStrength > 0.7f) {
           right.grasped = true;
         }
+      }
+
+      if (rightInteractionHand != null && rightInteractionHand.isGraspingObject) {
+        right.grasped = false;
       }
     }
   }

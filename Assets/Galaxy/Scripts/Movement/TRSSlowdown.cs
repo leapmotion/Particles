@@ -17,7 +17,7 @@ public class TRSSlowdown : MonoBehaviour {
 
   void Update() {
     if (!trs._switchA.grasped && !trs._switchB.grasped && !_currTween.isValid) {
-      _prevSpeed = sim.timestep;
+      _prevSpeed = sim.trsTimestep;
     }
 
     if (trs._switchA.grasped || trs._switchB.grasped) {
@@ -25,7 +25,7 @@ public class TRSSlowdown : MonoBehaviour {
         _currTween.Stop();
       }
 
-      _currTween = Tween.Single().Value(sim.timestep, 0, t => sim.timestep = t).
+      _currTween = Tween.Single().Value(sim.timestep, 0, t => sim.trsTimestep = t).
                                   OverTime(slowdownTime).
                                   Play();
       _isSlow = true;
@@ -34,7 +34,7 @@ public class TRSSlowdown : MonoBehaviour {
         _currTween.Stop();
       }
 
-      _currTween = Tween.Single().Value(0, _prevSpeed, t => sim.timestep = t).
+      _currTween = Tween.Single().Value(0, _prevSpeed, t => sim.trsTimestep = t).
                                   OverTime(speedupTime).
                                   Smooth(SmoothType.SmoothStart).
                                   Play();

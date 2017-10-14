@@ -21,6 +21,8 @@ namespace Leap.Unity.Layout {
 
     public Vector3 GetTargetWorldPosition() {
       if (lookAnchorTranslationSwitch != null) {
+        // This is the magic that allows an "expandable" UI return its "open" world
+        // position instead of its current position, which may be subject to animation.
         return lookAnchorTranslationSwitch.localTranslateTarget
                                           .parent
                                           .TransformPoint(lookAnchorTranslationSwitch.onLocalPosition);

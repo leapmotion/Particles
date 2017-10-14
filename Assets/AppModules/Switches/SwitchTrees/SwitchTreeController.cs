@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Leap.Unity.Attributes;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,7 +36,7 @@ namespace Leap.Unity.Animation {
     }
 
     private void refreshTree() {
-      tree = new SwitchTree(this.transform);
+      tree = new SwitchTree(this.transform, tree.curActiveNodeName);
     }
 
     #endregion
@@ -74,6 +75,7 @@ namespace Leap.Unity.Animation {
     public void SwitchToRoot(bool immediately) {
       tree.SwitchTo(transform.name, immediately);
     }
+
     /// <summary>
     /// If the specified state node is not active, the switch tree will switch to that
     /// node. If switch tree will switch to that node's parent, deactivating the

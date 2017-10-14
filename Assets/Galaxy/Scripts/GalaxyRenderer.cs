@@ -33,7 +33,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private float _scale = 1;
 
   [SerializeField, DevValue]
+#pragma warning disable 0414
   private float _forwardOffset = 0;
+#pragma warning restore 0414
 
   [Header("Black Hole Rendering"), DevCategory]
   [SerializeField, DevValue("Render")]
@@ -62,6 +64,10 @@ public class GalaxyRenderer : MonoBehaviour {
   [FormerlySerializedAs("starBrightness")]
   [SerializeField, DevValue]
   private float _starBrightness;
+  public float starBrightness {
+    get { return _starBrightness; }
+    set { _starBrightness = value; }
+  }
 
   [Disable]
   [SerializeField]

@@ -49,8 +49,14 @@ namespace Leap.Unity.Interaction {
             _isLockedToAnchor = false;
             _isRotationLockedToAnchor = false;
 
-            OnDetachedFromAnchor.Invoke(this, _anchor);
-            _anchor.NotifyDetached(this);
+            // Sometimes the anchor is nullified beneath our feet (e.g. due to prefab
+            // copies that copy attachment state but lose the anchor reference,
+            // so check for null; it's (probably) not problematic for the anchor to be
+            // nullified in this manner.
+            if (_anchor != null) {
+              OnDetachedFromAnchor.Invoke(this, _anchor);
+              _anchor.NotifyDetached(this);
+            }
 
             _hasTargetPositionLastUpdate = false;
             _hasTargetRotationLastUpdate = false;
@@ -288,6 +294,8 @@ namespace Leap.Unity.Interaction {
     void OnValidate() {
       refreshInteractionBehaviour();
       refreshInspectorConveniences();
+
+      validateAttachmentState();
     }
 
     void Reset() {
@@ -297,6 +305,8 @@ namespace Leap.Unity.Interaction {
     void Awake() {
       refreshInteractionBehaviour();
       refreshInspectorConveniences();
+
+      validateAttachmentState();
 
       if (interactionBehaviour != null) {
         interactionBehaviour.OnGraspBegin += detachAnchorOnGraspBegin;
@@ -375,6 +385,12 @@ namespace Leap.Unity.Interaction {
 
       detachWhenGrasped = !_interactionBehaviourIsNull;
       if (_interactionBehaviourIsNull) useTrajectory = false;
+    }
+
+    private void validateAttachmentState() {
+      if (_isAttached && _anchor == null) {
+        isAttached = false;
+      }
     }
 
     /// <summary>

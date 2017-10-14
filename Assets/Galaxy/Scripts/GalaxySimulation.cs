@@ -32,8 +32,28 @@ public class GalaxySimulation : MonoBehaviour {
   public float loopTime = 10;
 
   [Range(0, 2)]
+  [SerializeField]
   [DevValue]
-  public float timestep = 1;
+  private float _timestep = 1;
+  public float timestep {
+    get {
+      // Sorry Alex this is super sneaky but I needed a quick way to have a UI slider
+      // play nice with the grasp TRS timestep alteration. -Nick
+      return _timestep * timestepCoefficient;
+    }
+  }
+
+  // The TRS system was modified to modify this property so that it can only see and touch
+  // _timestep, while the effective system timestep is calculated in combination with the
+  // UI slider. -Nick
+  public float trsTimestep {
+    get { return _timestep; }
+    set { _timestep = value; }
+  }
+
+  [Range(0, 1)]
+  // Used by the Simulation Speed UI slider (GalaxyUIOperations.SetMaxSimulationSpeed)
+  public float timestepCoefficient = 1f;
 
   public GalaxyRenderer galaxyRenderer;
 

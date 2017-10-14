@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Leap.Unity.PhysicalInterfaces;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,6 +27,9 @@ namespace Leap.Unity.Layout {
       }
     }
 
+    /// <summary>
+    /// IE Workstation Example-style UI layout.
+    /// </summary>
     public static Vector3 LayoutThrownUIPosition(Pose userHeadPose,
                                                  Vector3 thrownUIInitPosition,
                                                  Vector3 thrownUIInitVelocity,
@@ -78,6 +82,70 @@ namespace Leap.Unity.Layout {
       }
 
       return placementPosition;
+    }
+
+    /// <summary>
+    /// Original LeapPaint-style UI layout.
+    /// </summary>
+    public static Vector3 LayoutThrownUIPosition2(Pose userHeadPose,
+                                                  Vector3 initPosition,
+                                                  Vector3 initVelocity) {
+      Vector3 headPosition = userHeadPose.position;
+      Quaternion headRotation = userHeadPose.rotation;
+
+      Vector3 workstationPosition = Vector3.zero;
+      //bool modifyHeight = true;
+      if (initVelocity.magnitude < PhysicalInterfaces.PhysicalInterfaceUtils.MIN_THROW_SPEED) {
+        // Just use current position as the position to choose.
+        workstationPosition = initPosition;
+        //modifyHeight = false;
+      }
+      else {
+        // Find projection direction
+        Vector3 projectDirection;
+        Vector3 groundAlignedInitVelocity = new Vector3(initVelocity.x, 0F, initVelocity.z);
+        Vector3 effectiveLookDirection = headRotation * Vector3.forward;
+        effectiveLookDirection = new Vector3(effectiveLookDirection.x, 0F, effectiveLookDirection.z);
+        if (effectiveLookDirection.magnitude < 0.01F) {
+          if (effectiveLookDirection.y > 0F) {
+            projectDirection = headRotation * -Vector3.up;
+          }
+          else {
+            projectDirection = headRotation * -Vector3.up;
+          }
+        }
+        if (initVelocity.magnitude < 0.5F || groundAlignedInitVelocity.magnitude < 0.01F) {
+          projectDirection = effectiveLookDirection;
+        }
+        else {
+          projectDirection = groundAlignedInitVelocity;
+        }
+
+        // Add a little bit of the effective look direction to the projectDirection to skew towards winding up
+        // in front of the user unless they really throw it hard behind them
+        float forwardSkewAmount = 1F;
+        projectDirection += effectiveLookDirection * forwardSkewAmount;
+        projectDirection = projectDirection.normalized;
+
+        // Find good workstation position based on projection direction
+        Vector3 workstationDirection = (initPosition + (projectDirection * 20F) - headPosition);
+        Vector3 groundAlignedWorkstationDirection = new Vector3(workstationDirection.x, 0F, workstationDirection.z).normalized;
+        workstationPosition = headPosition + PhysicalInterfaceUtils.OPTIMAL_UI_DISTANCE * groundAlignedWorkstationDirection;
+
+        // Allow the WearableManager to pick a new location if the target location overlaps with another workstation
+        //workstationPosition = _manager.ValidateTargetWorkstationPosition(workstationPosition, this);
+      }
+
+      return workstationPosition;
+
+      // Find a good workstation orientation
+      //Vector3 optimalLookVector = GetOptimalOrientationLookVector(centerEyeAnchor, workstationPosition);
+
+      // Set the workstation target transform.
+      //toSet.position = new Vector3(workstationPosition.x,
+      //  (modifyHeight ? centerEyeAnchor.position.y + GetOptimalWorkstationVerticalOffset() : workstationPosition.y),
+      //  workstationPosition.z);
+      //toSet.rotation = Quaternion.LookRotation(optimalLookVector);
     }
 
   }

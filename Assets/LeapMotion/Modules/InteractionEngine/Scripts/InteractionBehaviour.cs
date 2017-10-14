@@ -879,7 +879,6 @@ namespace Leap.Unity.Interaction {
       foreach (var collider in _interactionColliders) {
         if (!hasColliders) hasColliders = true;
 
-        // Custom, slower ClosestPoint
         if (collider is MeshCollider) {
           // Native, faster ClosestPoint, but no support for off-center colliders; use to
           // support MeshColliders.
@@ -889,6 +888,7 @@ namespace Leap.Unity.Interaction {
                                                collider.attachedRigidbody.rotation)
                           - worldPosition).magnitude;
         }
+        // Custom, slower ClosestPoint
         else {
           // Note: Should be using rigidbody position instead of transform; this will
           // cause problems when colliders are moving very fast (one-frame delay).

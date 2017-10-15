@@ -29,9 +29,9 @@ namespace Leap.Unity.PhysicalInterfaces {
     }
 
     void Start() {
-      intObj.OnGraspBegin += fireOnPickedUp;
+      intObj.OnGraspBegin += onGraspBegin;
 
-      intObj.OnGraspedMovement += (a, b, c, d, e) => { fireOnMoved(); }; // TODO: This sucks
+      intObj.OnGraspedMovement += onGraspedMovement;
 
       if (anchObj != null) {
         anchObj.OnPostTryAnchorOnGraspEnd += onGraspEnd;
@@ -39,6 +39,16 @@ namespace Leap.Unity.PhysicalInterfaces {
       else {
         intObj.OnGraspEnd += onGraspEnd;
       }
+    }
+
+    private void onGraspBegin() {
+      fireOnPickedUp();
+    }
+
+    private void onGraspedMovement(Vector3 preMovedPos, Quaternion preMovedRot,
+                                   Vector3 postMovedPos, Quaternion postMovedRot,
+                                   List<InteractionController> graspingControllers) {
+      fireOnMoved(new Pose(postMovedPos, postMovedRot));
     }
 
     private void onGraspEnd() {
@@ -73,9 +83,9 @@ namespace Leap.Unity.PhysicalInterfaces {
       }
     }
 
-    private void fireOnMoved() {
+    private void fireOnMoved(Pose movedToPose) {
       OnMoved();
-      OnMovedHandle(this);
+      OnMovedHandle(this, movedToPose);
 
       if (drawDebugGizmos) {
         DebugPing.Ping(intObj.transform.position, LeapColor.blue, 0.075f);
@@ -94,6 +104,8 @@ namespace Leap.Unity.PhysicalInterfaces {
       intObj.transform.SetWorldPose(pose);
       intObj.rigidbody.position = pose.position;
       intObj.rigidbody.rotation = pose.rotation;
+      //intObj.rigidbody.MovePosition(pose.position);
+      //intObj.rigidbody.MoveRotation(pose.rotation);
     }
 
     public Movement movement {
@@ -113,17 +125,17 @@ namespace Leap.Unity.PhysicalInterfaces {
                                     : anchObj.anchor.transform.position; }
     }
 
-    public event Action OnPickedUp;
-    public event Action OnMoved;
-    public event Action OnPlaced;
-    public event Action OnPlacedInContainer;
-    public event Action<Vector3> OnThrown;
+    public event Action OnPickedUp = () => { };
+    public event Action OnMoved = () => { };
+    public event Action OnPlaced = () => { };
+    public event Action OnPlacedInContainer = () => { };
+    public event Action<Vector3> OnThrown = (v) => { };
 
-    public event Action<IHandle> OnPickedUpHandle;
-    public event Action<IHandle> OnMovedHandle;
-    public event Action<IHandle> OnPlacedHandle;
-    public event Action<IHandle> OnPlacedHandleInContainer;
-    public event Action<IHandle, Vector3> OnThrownHandle;
+    public event Action<IHandle> OnPickedUpHandle = (x) => { };
+    public event Action<IHandle, Pose> OnMovedHandle = (x, p) => { };
+    public event Action<IHandle> OnPlacedHandle = (x) => { };
+    public event Action<IHandle> OnPlacedHandleInContainer = (x) => { };
+    public event Action<IHandle, Vector3> OnThrownHandle = (x, v) => { };
 
     #endregion
 

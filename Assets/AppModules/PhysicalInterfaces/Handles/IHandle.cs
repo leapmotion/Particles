@@ -23,7 +23,6 @@ namespace Leap.Unity.PhysicalInterfaces {
     /// </summary>
     Pose pose { get; }
 
-
     /// <summary>
     /// Sets the world-space pose of this handle.
     /// </summary>
@@ -70,10 +69,10 @@ namespace Leap.Unity.PhysicalInterfaces {
     event Action OnMoved;
 
     /// <summary>
-    /// Fired when the user is moving this handle, and passes itself as the event
-    /// argument.
+    /// Fired when the user is moving this handle, and passes itself and where it moved
+    /// as event arguments.
     /// </summary>
-    event Action<IHandle> OnMovedHandle;
+    event Action<IHandle, Pose> OnMovedHandle;
 
 
     /// <summary>
@@ -131,6 +130,18 @@ namespace Leap.Unity.PhysicalInterfaces {
     public IHandle handle {
       get { return _handle as IHandle; }
     }
+  }
+
+  public static class IHandleExtensions {
+
+    public static HandledObject GetHandledObject(this IHandle handle) {
+      var handleBehaviour = handle as MonoBehaviour;
+      if (handleBehaviour != null) {
+        return handleBehaviour.GetComponentInParent<HandledObject>();
+      }
+      return null;
+    }
+
   }
 
 }

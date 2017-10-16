@@ -8,7 +8,7 @@ public class RegularPinchTranslate : MonoBehaviour {
 
   public GrabSwitch left, right;
 
-  [Header("Optional -- Gesture Exclusivity")]
+  [Header("Optional -- Grasping Exclusivity")]
 
   public InteractionHand leftInteractionHand;
   public InteractionHand rightInteractionHand;
@@ -32,6 +32,9 @@ public class RegularPinchTranslate : MonoBehaviour {
         left.grasped = false;
       }
     }
+    else {
+      left.grasped = false;
+    }
 
     if (Hands.Right != null) {
       right.Position = Hands.Right.GetPinchPosition();
@@ -50,6 +53,9 @@ public class RegularPinchTranslate : MonoBehaviour {
       if (rightInteractionHand != null && rightInteractionHand.isGraspingObject) {
         right.grasped = false;
       }
+    }
+    else {
+      right.grasped = false;
     }
   }
 }

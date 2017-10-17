@@ -8,7 +8,7 @@ Material:
   m_PrefabInternal: {fileID: 0}
   m_Name: Stars_Bright
   m_Shader: {fileID: 4800000, guid: 8d406ec0c0a175c4ebf51a6ef0191887, type: 3}
-  m_ShaderKeywords: 
+  m_ShaderKeywords: BY_BLACK_HOLE USE_RAMP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0

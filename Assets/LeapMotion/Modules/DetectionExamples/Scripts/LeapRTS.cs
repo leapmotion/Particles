@@ -39,6 +39,13 @@ namespace Leap.Unity {
     private bool _allowScale = true;
 
     [SerializeField]
+    private float _minScale = 0.01f;
+
+    [SerializeField]
+    private float _maxScale = 500f;
+
+    [Header("Rotation Settings (POC Alex M)")]
+    [SerializeField]
     public bool vroomVroom = true;
 
     [SerializeField]
@@ -101,6 +108,19 @@ namespace Leap.Unity {
 
       if (didUpdate) {
         transform.SetParent(_anchor, true);
+      }
+
+      // Enforce minimum and maximum scales.
+      Maybe<float> maybeCorrectScale = Maybe.None;
+      if (this.transform.lossyScale.x > _maxScale) {
+        maybeCorrectScale = Maybe.Some(_maxScale);
+      }
+      else if (this.transform.lossyScale.x < _minScale) {
+        maybeCorrectScale = Maybe.Some(_minScale);
+      }
+      if (maybeCorrectScale.hasValue) {
+        float scaleCorrection = maybeCorrectScale.valueOrDefault / this.transform.lossyScale.x;
+        this.transform.localScale *= scaleCorrection;
       }
     }
 

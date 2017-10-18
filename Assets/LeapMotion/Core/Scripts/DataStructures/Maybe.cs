@@ -54,7 +54,7 @@ namespace Leap.Unity {
 
   /// <summary>
   /// A struct that represents a value that could or could not exist.  Unlike
-  /// the built-int nullable types, you are unable to access the value unless
+  /// the built-in nullable types, you are unable to access the value unless
   /// it does exist, and will never recieve a null value.
   /// </summary>
   public struct Maybe<T> : IEquatable<Maybe<T>>, IComparable, IComparable<Maybe<T>> {

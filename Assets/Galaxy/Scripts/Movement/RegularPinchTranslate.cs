@@ -3,10 +3,24 @@ using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Interaction;
+using Leap.Unity.Attributes;
+using Leap;
 
 public class RegularPinchTranslate : MonoBehaviour {
 
   public GrabSwitch left, right;
+
+  float _leftPinchStrengthLastFrame = 0.0f;
+  float _rightPinchStrengthLastFrame = 0.0f;
+
+  public const float PINCH_BEGIN_THRESHOLD = 0.7f;
+  public const float PINCH_END_THRESHOLD = 0.3f;
+
+  [Header("Additional Pinch Settings")]
+
+  public bool requireFOVAngle = false;
+  [DisableIf("requireFOVAngle", isEqualTo: false)]
+  public float maximumFOVAngle = 50;
 
   [Header("Optional -- Grasping Exclusivity")]
 
@@ -14,48 +28,52 @@ public class RegularPinchTranslate : MonoBehaviour {
   public InteractionHand rightInteractionHand;
 
   private void Update() {
-    if (Hands.Left != null) {
-      left.Position = Hands.Left.GetPinchPosition();
-      left.Rotation = Hands.Left.Rotation.ToQuaternion();
-
-      if (left.grasped) {
-        if (Hands.Left.PinchStrength < 0.3f) {
-          left.grasped = false;
-        }
-      } else {
-        if (Hands.Left.PinchStrength > 0.7f) {
-          left.grasped = true;
-        }
-      }
-
-      if (leftInteractionHand != null && leftInteractionHand.isGraspingObject) {
-        left.grasped = false;
-      }
-    }
-    else {
-      left.grasped = false;
-    }
-
-    if (Hands.Right != null) {
-      right.Position = Hands.Right.GetPinchPosition();
-      right.Rotation = Hands.Right.Rotation.ToQuaternion();
-
-      if (right.grasped) {
-        if (Hands.Right.PinchStrength < 0.3f) {
-          right.grasped = false;
-        }
-      } else {
-        if (Hands.Right.PinchStrength > 0.7f) {
-          right.grasped = true;
-        }
-      }
-
-      if (rightInteractionHand != null && rightInteractionHand.isGraspingObject) {
-        right.grasped = false;
-      }
-    }
-    else {
-      right.grasped = false;
-    }
+    UpdateForHand(Hands.Left, ref _leftPinchStrengthLastFrame, left, leftInteractionHand);
+    UpdateForHand(Hands.Right, ref _rightPinchStrengthLastFrame, right, rightInteractionHand);
   }
+
+  private void UpdateForHand(Hand hand, ref float pinchStrengthLastFrame,
+                             GrabSwitch grabSwitch,
+                             Maybe<InteractionHand> maybeIntHand) {
+    if (hand == null) {
+      pinchStrengthLastFrame = 0.0f;
+      grabSwitch.grasped = false;
+      return;
+    }
+
+    grabSwitch.Position = hand.GetPredictedPinchPosition();
+    grabSwitch.Rotation = hand.Rotation.ToQuaternion();
+
+    bool graspedLastFrame = grabSwitch.grasped;
+
+    bool canBeginGrasp = true;
+    if (requireFOVAngle) {
+      if (Vector3.Angle(grabSwitch.Position - Camera.main.transform.position,
+                        Camera.main.transform.forward) > maximumFOVAngle) {
+        canBeginGrasp = false;
+      }
+    }
+
+    if (grabSwitch.grasped) {
+      if (hand.PinchStrength < PINCH_END_THRESHOLD) {
+        grabSwitch.grasped = false;
+      }
+    }
+    else if (canBeginGrasp) {
+      if (hand.PinchStrength > PINCH_BEGIN_THRESHOLD
+          && pinchStrengthLastFrame < PINCH_BEGIN_THRESHOLD) {
+        grabSwitch.grasped = true;
+      }
+    }
+
+    if (maybeIntHand.hasValue) {
+      var intHand = maybeIntHand.valueOrDefault;
+      if (intHand.isGraspingObject) {
+        grabSwitch.grasped = false;
+      }
+    }
+
+    pinchStrengthLastFrame = hand.PinchStrength;
+  }
+
 }

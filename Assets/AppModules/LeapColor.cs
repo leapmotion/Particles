@@ -50,7 +50,7 @@ namespace Leap.Unity {
     }
 
     public static Color coral {
-      get { return Utils.ParseHtmlColorString("	#FF7F50"); }
+      get { return Utils.ParseHtmlColorString("#FF7F50"); }
     }
 
     public static Color orange {

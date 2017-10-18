@@ -373,7 +373,7 @@ public static class NewUtils {
   #region Pose Utils
 
   /// <summary>
-  /// Returns the rotation thatm akes a transform at objectPosition point its forward
+  /// Returns the rotation that makes a transform at objectPosition point its forward
   /// vector at targetPosition and keep its rightward vector parallel with the horizon
   /// defined by a normal of Vector3.up.
   /// 
@@ -398,6 +398,33 @@ public static class NewUtils {
     Vector3 horizonRight = Vector3.Cross(upwardDirection, objToTarget);
     Vector3 objUp = Vector3.Cross(objToTarget.normalized, horizonRight.normalized);
     return Quaternion.LookRotation((flip180 ? -1 : 1) * objToTarget, objUp);
+  }
+
+  #endregion
+
+
+  #region Matrix4x4 Utils
+
+  public static Matrix4x4 From(this Matrix4x4 thisMatrix, Matrix4x4 otherMatrix) {
+    return otherMatrix.inverse * thisMatrix;
+  }
+
+  public static Matrix4x4 Then(this Matrix4x4 thisMatrix, Matrix4x4 otherMatrix) {
+    return thisMatrix * otherMatrix;
+  }
+
+  #endregion
+
+
+  #region Vector3 Utils
+
+  public static Vector3 From(this Vector3 thisVector, Vector3 otherVector) {
+    // More commonly written as "thisVector - otherVector"!
+    return -1 * otherVector + thisVector;
+  }
+
+  public static Vector3 Then(this Vector3 thisVector, Vector3 otherVector) {
+    return thisVector + otherVector;
   }
 
   #endregion

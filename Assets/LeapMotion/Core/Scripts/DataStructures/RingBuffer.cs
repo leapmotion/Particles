@@ -57,6 +57,13 @@ public class RingBuffer<T> {
     return arr[(firstIdx + idx) % arr.Length];
   }
 
+  /// <summary>
+  /// Oldest element is at index 0, youngest is at Length - 1.
+  /// </summary>
+  public T this[int idx] {
+    get { return Get(idx); }
+  }
+
   public T GetLatest() {
     return Get(Length - 1);
   }

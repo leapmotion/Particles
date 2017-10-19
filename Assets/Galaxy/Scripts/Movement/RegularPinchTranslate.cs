@@ -5,8 +5,9 @@ using Leap.Unity;
 using Leap.Unity.Interaction;
 using Leap.Unity.Attributes;
 using Leap;
+using Leap.Unity.RuntimeGizmos;
 
-public class RegularPinchTranslate : MonoBehaviour {
+public class RegularPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
 
   public GrabSwitch left, right;
 
@@ -74,6 +75,10 @@ public class RegularPinchTranslate : MonoBehaviour {
     }
 
     pinchStrengthLastFrame = hand.PinchStrength;
+  }
+
+  public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
+
   }
 
 }

@@ -33,20 +33,42 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
   [Header("Position Constraint")]
   
   [SerializeField]
+  [Tooltip("Constrains the maximum distance from the TRS object, only if the user isn't "
+         + "actively performing the TRS action.")]
   private bool _constrainPosition = false;
 
   [SerializeField]
-  private float _constraintStrength = 1f;
-
-  [Header("Debug Runtime Gizmos")]
+  [Tooltip("The maximum distance from the base position in the OBJECT'S space.")]
+  private float _constraintDistance = 60f;
 
   [SerializeField]
-  private bool _drawDebug = false;
+  [Tooltip("The maximum distance from the base position in world space.")]
+  private float _maxWorldDistance = 120f;
+
+  [SerializeField]
+  [DisableIf("_constrainPosition", isEqualTo: false)]
+  private float _constraintStrength = 4f;
+
+  [SerializeField]
+  private float _maxConstraintSpeed = 1f;
+
+  [SerializeField, Disable]
+  private Vector3 _basePosition = Vector3.zero;
+
+  [SerializeField]
+  private Transform _overrideBaseTransform;
+
+  [SerializeField, Disable]
+  private float _localDistanceFromBase = 1f;
 
   [Header("Momentum (when not pinching)")]
 
   [SerializeField]
   private bool _allowMomentum = false;
+  public bool allowMomentum {
+    get { return _allowMomentum; }
+    set { _allowMomentum = value; }
+  }
 
   [SerializeField]
   private float      _linearFriction = 1f;
@@ -66,8 +88,20 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
   [SerializeField, Disable, MinValue(0.001f)]
   private float      _scaleMomentum = 1f;
 
-  [SerializeField]
+  [SerializeField, Disable]
   private Vector3   _lastKnownCentroid = Vector3.zero;
+
+  [Header("Debug Runtime Gizmos")]
+
+  [SerializeField]
+  private bool _drawDebug = false;
+  public bool drawDebug {
+    get { return _drawDebug; }
+    set { _drawDebug = value; }
+  }
+
+  [SerializeField]
+  private bool _drawPositionConstraints = false;
 
   #endregion
 
@@ -85,6 +119,8 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
   private RingBuffer<Pose> _bPoses = new RingBuffer<Pose>(2);
 
   private void updateTRS() {
+    
+    // Get basic grab switch state information.
     var aGrasped = _switchA != null && _switchA.grasped;
     var bGrasped = _switchB != null && _switchB.grasped;
 
@@ -113,11 +149,13 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
     var twist = 0f;
     var applyPositionalMomentum = false;
     var applyRotateScaleMomentum = false;
+    var applyPositionConstraint = false;
 
-    // Fill information based on the number of elements in the TRS.
+    // Fill information based on grab switch state.
     if (numGrasping == 0) {
       applyPositionalMomentum  = true;
       applyRotateScaleMomentum = true;
+      applyPositionConstraint = true;
     }
     else if (numGrasping == 1) {
 
@@ -142,10 +180,12 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
         // Scale changes.
         float dist0 = Vector3.Distance(_aPoses[0].position, _bPoses[0].position);
         float dist1 = Vector3.Distance(_aPoses[1].position, _bPoses[1].position);
-
+        
         float scaleChange = dist1 / dist0;
-
-        objectScale *= scaleChange;
+        
+        if (!float.IsNaN(scaleChange) && !float.IsInfinity(scaleChange)) {
+          objectScale *= scaleChange;
+        }
 
         // Translation.
         origCentroid = (_aPoses[0].position + _bPoses[0].position) / 2f;
@@ -185,19 +225,80 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
     Quaternion finalRotDelta;
     float      finalScaleRatio;
 
-    // Translation.
-
-    // Apply momentum, or just apply the transformations and record momentum.
+    // Translation: apply momentum, or just apply the translation and record momentum.
     finalPosDelta = (nextCentroid - origCentroid);
 
-    if (_allowMomentum && applyPositionalMomentum) {
-      // Apply (and decay) momentum only.
+    // Determine base position if we expect to apply positional constraints.
+    float distanceToEdge = 0f;
+    if (_constrainPosition) {
+      if (_overrideBaseTransform) {
+        _basePosition = _overrideBaseTransform.position;
+      }
+      else if (objectTransform.parent != null) {
+        _basePosition = objectTransform.parent.position;
+      }
+      else {
+        _basePosition = Vector3.zero;
+      }
+
+      var worldDistanceFromBase = Vector3.Distance(_basePosition, objectTransform.position);
+
+      _localDistanceFromBase = objectTransform.InverseTransformVector(
+                                 worldDistanceFromBase
+                                 * Vector3.right).magnitude;
+
+      distanceToEdge = Mathf.Max(0f, _localDistanceFromBase - _constraintDistance);
+
+      if (distanceToEdge == 0f) {
+        var worldDistanceToEdge = Mathf.Max(0f, worldDistanceFromBase - _maxWorldDistance);
+        distanceToEdge = objectTransform.InverseTransformVector(
+                           worldDistanceToEdge
+                           * Vector3.right).magnitude;
+      }
+
+    }
+
+    // Apply momentum if necessary, otherwise we'll perform direct TRS.
+    if ((_allowMomentum && applyPositionalMomentum)
+        || (applyPositionalMomentum && _constrainPosition && distanceToEdge > 0f)) {
+      
+      // Constrain momentum to constrain the object's position if necessary.
+      if (_constrainPosition && applyPositionConstraint) {
+        var constraintDir = _basePosition.From(objectTransform.position).normalized;
+
+        // If we're not allowed to have normal momentum, immediately cancel any momentum
+        // that isn't part of the constraint momentum.
+        if (!_allowMomentum) {
+          _positionMomentum = Vector3.ClampMagnitude(_positionMomentum,
+                                Mathf.Max(0f, Vector3.Dot(_positionMomentum, constraintDir)));
+        }
+
+        var constraintMomentum = distanceToEdge * _constraintStrength * 0.0005f
+                                 * constraintDir;
+
+        constraintMomentum = Vector3.ClampMagnitude(constraintMomentum,
+                                          _maxConstraintSpeed * Time.deltaTime);
+
+        _positionMomentum = Vector3.Lerp(_positionMomentum, constraintMomentum,
+                                         2f * Time.deltaTime);
+      }
+
+      // Apply (and decay) momentum.
       objectTransform.position += _positionMomentum;
 
-      _positionMomentum = Vector3.Lerp(_positionMomentum, Vector3.zero, _linearFriction * Time.deltaTime);
+      var _frictionDir = -_positionMomentum.normalized;
+      _positionMomentum += _frictionDir * _positionMomentum.magnitude
+                                        * _linearFriction
+                                        * Time.deltaTime;
+
+      //_positionMomentum = Vector3.Lerp(_positionMomentum, Vector3.zero, _linearFriction * Time.deltaTime);
+
+
+      // Also apply some drag so we never explode...
+      _positionMomentum += (_frictionDir) * _positionMomentum.sqrMagnitude * _linearFriction * 0.1f;
     }
     else {
-      // Apply transformation.
+      // Apply transformation!
       objectTransform.position = objectTransform.position.Then(finalPosDelta);
 
       // Measure momentum only.
@@ -229,16 +330,6 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
                                                         _rotationMomentum.normalized));
       objectTransform.localScale *= _scaleMomentum;
 
-      // Apply scale constraints.
-      if (objectTransform.localScale.x < _minScale) {
-        objectTransform.localScale = _minScale * Vector3.one;
-        _scaleMomentum = 1f;
-      }
-      else if (objectTransform.localScale.x > _maxScale) {
-        objectTransform.localScale = _maxScale * Vector3.one;
-        _scaleMomentum = 1f;
-      }
-
       _rotationMomentum = Vector3.Lerp(_rotationMomentum, Vector3.zero, _angularFriction * Time.deltaTime);
       _scaleMomentum = Mathf.Lerp(_scaleMomentum, 1f, _scaleFriction * Time.deltaTime);
     }
@@ -251,6 +342,16 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
       // Measure momentum only.
       _rotationMomentum = Vector3.Lerp(_rotationMomentum, finalRotDelta.ToAngleAxisVector(), 40f * Time.deltaTime);
       _scaleMomentum = Mathf.Lerp(_scaleMomentum, finalScaleRatio, 20f * Time.deltaTime);
+    }
+
+    // Apply scale constraints.
+    if (objectTransform.localScale.x < _minScale) {
+      objectTransform.localScale = _minScale * Vector3.one;
+      _scaleMomentum = 1f;
+    }
+    else if (objectTransform.localScale.x > _maxScale) {
+      objectTransform.localScale = _maxScale * Vector3.one;
+      _scaleMomentum = 1f;
     }
 
     // Restore centroid pivot.
@@ -273,6 +374,17 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
     drawer.DrawWireCube(Vector3.zero, Vector3.one * 0.10f);
 
     drawer.PopMatrix();
+
+    if (_constrainPosition && _drawPositionConstraints) { 
+      drawer.color = LeapColor.lavender;
+      var dir = (Camera.main.transform.position.From(_basePosition)).normalized;
+      drawer.DrawWireSphere(_basePosition,
+                            objectTransform.TransformVector(Vector3.right * _constraintDistance).magnitude);
+
+      drawer.color = LeapColor.violet;
+      drawer.DrawWireSphere(_basePosition,
+                            _maxWorldDistance);
+    }
   }
 
   #endregion

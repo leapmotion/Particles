@@ -36,7 +36,7 @@ namespace Leap.Unity {
     /// </summary>
     public Pose From(Pose other) {
       return new Pose(this.position - other.position,
-                      Quaternion.Inverse(other.rotation) * this.rotation);
+                      this.rotation * Quaternion.Inverse(other.rotation));
     }
 
     /// <summary>
@@ -48,7 +48,7 @@ namespace Leap.Unity {
     /// </summary>
     public Pose Then(Pose other) {
       return new Pose(this.position + other.position,
-                      this.rotation * other.rotation);
+                      other.rotation * this.rotation);
     }
 
     public bool ApproxEquals(Pose other) {

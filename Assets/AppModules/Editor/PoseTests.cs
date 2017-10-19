@@ -37,14 +37,6 @@ namespace Leap.Unity.Tests {
     }
 
     [Test]
-    public void AccumulatePoses() {
-      Pose aThenB = POSE_A.Then(POSE_B);
-
-      Assert.That(AreVector3sEqual(aThenB.position, VEC_A + VEC_B));
-      Assert.That(AreQuaternionsEqual(aThenB.rotation, QUAT_A * QUAT_B));
-    }
-
-    [Test]
     public void FromAPoseToBPose() {
       Pose aFromB = POSE_A.From(POSE_B);
 

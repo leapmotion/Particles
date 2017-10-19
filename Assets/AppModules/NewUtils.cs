@@ -19,7 +19,7 @@ public static class NewUtils {
   public static List<Transform> GetSelfAndAllChildren(this Transform t,
                                                      bool includeInactiveObjects = false) {
     var allChildren = new List<Transform>();
-    
+
     Stack<Transform> toVisit = Pool<Stack<Transform>>.Spawn();
 
     try {
@@ -149,6 +149,14 @@ public static class NewUtils {
   public static Quaternion QuaternionFromAngleAxisVector(Vector3 angleAxisVector) {
     if (angleAxisVector == Vector3.zero) return Quaternion.identity;
     return Quaternion.AngleAxis(angleAxisVector.magnitude, angleAxisVector.normalized);
+  }
+
+  public static Quaternion From(this Quaternion thisQuaternion, Quaternion otherQuaternion) {
+    return thisQuaternion * Quaternion.Inverse(otherQuaternion);
+  }
+
+  public static Quaternion Then(this Quaternion thisQuaternion, Quaternion otherQuaternion) {
+    return otherQuaternion * thisQuaternion;
   }
 
   #endregion
@@ -403,14 +411,27 @@ public static class NewUtils {
   #endregion
 
 
+  #region Float Utils
+
+  public static float From(this float thisFloat, float otherFloat) {
+    return thisFloat - otherFloat;
+  }
+
+  public static float Then(this float thisFloat, float otherFloat) {
+    return thisFloat + otherFloat;
+  }
+
+  #endregion
+
+
   #region Matrix4x4 Utils
 
   public static Matrix4x4 From(this Matrix4x4 thisMatrix, Matrix4x4 otherMatrix) {
-    return otherMatrix.inverse * thisMatrix;
+    return thisMatrix * otherMatrix.inverse;
   }
 
   public static Matrix4x4 Then(this Matrix4x4 thisMatrix, Matrix4x4 otherMatrix) {
-    return thisMatrix * otherMatrix;
+    return otherMatrix * thisMatrix;
   }
 
   #endregion
@@ -425,6 +446,10 @@ public static class NewUtils {
 
   public static Vector3 Then(this Vector3 thisVector, Vector3 otherVector) {
     return thisVector + otherVector;
+  }
+
+  public static Vector3 Rotate(this Vector3 thisVector, Quaternion byQuaternion) {
+    return byQuaternion * thisVector;
   }
 
   #endregion

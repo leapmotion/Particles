@@ -1,4 +1,5 @@
 ﻿using Leap.Unity;
+using Leap.Unity.Attributes;
 using Leap.Unity.RuntimeGizmos;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
   [Header("Transform To Manipulate")]
 
-  public Transform target;
+  public Transform objectTransform;
 
   [Header("Grab Switches")]
 
@@ -37,6 +38,37 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
   [SerializeField]
   private float _constraintStrength = 1f;
 
+  [Header("Debug Runtime Gizmos")]
+
+  [SerializeField]
+  private bool _drawDebug = false;
+
+  [Header("Momentum (when not pinching)")]
+
+  [SerializeField]
+  private bool _allowMomentum = false;
+
+  [SerializeField]
+  private float      _linearFriction = 1f;
+
+  [SerializeField]
+  private float      _angularFriction = 1f;
+
+  [SerializeField]
+  private float      _scaleFriction = 1f;
+
+  [SerializeField, Disable]
+  private Vector3    _positionMomentum;
+
+  [SerializeField, Disable]
+  private Vector3    _rotationMomentum;
+
+  [SerializeField, Disable, MinValue(0.001f)]
+  private float      _scaleMomentum = 1f;
+
+  [SerializeField]
+  private Vector3   _lastKnownCentroid = Vector3.zero;
+
   #endregion
 
   #region Unity Events
@@ -49,36 +81,61 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
   #region TRS
 
-  //private KabschSolver _kabsch = new KabschSolver();
-
   private RingBuffer<Pose> _aPoses = new RingBuffer<Pose>(2);
   private RingBuffer<Pose> _bPoses = new RingBuffer<Pose>(2);
 
   private void updateTRS() {
-    int numGrasping = (_switchA != null && _switchA.grasped ? 1 : 0)
-                    + (_switchB != null && _switchB.grasped ? 1 : 0);
+    var aGrasped = _switchA != null && _switchA.grasped;
+    var bGrasped = _switchB != null && _switchB.grasped;
 
-    // Clear two-handed TRS state when not using two hands.
-    if (numGrasping != 2) {
+    int numGrasping = (aGrasped? 1 : 0) + (bGrasped ? 1 : 0);
+
+    if (!aGrasped) {
       _aPoses.Clear();
-      _bPoses.Clear();
-    }
-
-    // Declare information for applying the TRS.
-    var targetScale = target.localScale.x;
-    var origCentroid = Vector3.zero;
-    var nextCentroid = Vector3.zero;
-
-    // Fill information based on the number of elements in the TRS.
-    if (numGrasping == 0) {
-
-    }
-    else if (numGrasping == 1) {
-
     }
     else {
       _aPoses.Add(_switchA.pose);
+    }
+
+    if (!bGrasped) {
+      _bPoses.Clear();
+    }
+    else {
       _bPoses.Add(_switchB.pose);
+    }
+
+    // Declare information for applying the TRS.
+    var objectScale = objectTransform.localScale.x;
+    var origCentroid = Vector3.zero;
+    var nextCentroid = Vector3.zero;
+    var origAxis = Vector3.zero;
+    var nextAxis = Vector3.zero;
+    var twist = 0f;
+    var applyPositionalMomentum = false;
+    var applyRotateScaleMomentum = false;
+
+    // Fill information based on the number of elements in the TRS.
+    if (numGrasping == 0) {
+      applyPositionalMomentum  = true;
+      applyRotateScaleMomentum = true;
+    }
+    else if (numGrasping == 1) {
+
+      var poses = aGrasped ? _aPoses : (bGrasped ? _bPoses : null);
+
+      if (poses != null && poses.IsFull) {
+
+        // Translation.
+        origCentroid = poses[0].position;
+        nextCentroid = poses[1].position;
+
+      }
+
+      applyRotateScaleMomentum = true;
+
+      _lastKnownCentroid = nextCentroid;
+    }
+    else {
 
       if (_aPoses.IsFull && _bPoses.IsFull) {
 
@@ -88,46 +145,126 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
         float scaleChange = dist1 / dist0;
 
-        targetScale *= scaleChange;
+        objectScale *= scaleChange;
 
         // Translation.
         origCentroid = (_aPoses[0].position + _bPoses[0].position) / 2f;
-
         nextCentroid = (_aPoses[1].position + _bPoses[1].position) / 2f;
 
-        // Twist.
+        // Axis rotation.
+        origAxis = (_bPoses[0].position - _aPoses[0].position);
+        nextAxis = (_bPoses[1].position - _aPoses[1].position);
 
+        // Twist.
+        var perp = Utils.Perpendicular(nextAxis);
+        
+        var aRotatedPerp = perp.Rotate(_aPoses[1].rotation.From(_aPoses[0].rotation));
+        //aRotatedPerp = (_aPoses[1].rotation * Quaternion.Inverse(_aPoses[0].rotation))
+        //               * perp;
+        var aTwist = Vector3.SignedAngle(perp, aRotatedPerp, nextAxis);
+
+        var bRotatedPerp = perp.Rotate(_bPoses[1].rotation.From(_bPoses[0].rotation));
+        //bRotatedPerp = (_bPoses[1].rotation * Quaternion.Inverse(_bPoses[0].rotation))
+        //               * perp;
+        var bTwist = Vector3.SignedAngle(perp, bRotatedPerp, nextAxis);
+
+        twist = (aTwist + bTwist) * 0.5f;
+
+        _lastKnownCentroid = nextCentroid;
       }
     }
 
-    // Apply constraints.
-    targetScale = Mathf.Clamp(targetScale, _minScale, _maxScale);
 
+    // Calculate TRS.
+    Vector3    origTargetPos = objectTransform.transform.position;
+    Quaternion origTargetRot = objectTransform.transform.rotation;
+    float      origTargetScale = objectTransform.transform.localScale.x;
 
-    // Apply TRS.
-    var centroid = nextCentroid;
+    // Declare delta properties.
+    Vector3    finalPosDelta;
+    Quaternion finalRotDelta;
+    float      finalScaleRatio;
 
     // Translation.
-    target.transform.position += (nextCentroid - origCentroid);
 
-    // Scale from centroid pivot; remember local offset, scale, then correct.
-    var centroidFromTarget = centroid.From(target.position);
-    var centroidFromTarget_local = target.worldToLocalMatrix
-                                         .MultiplyPoint3x4(centroidFromTarget);
-    if (targetScale != target.localScale.x) {
-      target.localScale = Vector3.one * targetScale;
+    // Apply momentum, or just apply the transformations and record momentum.
+    finalPosDelta = (nextCentroid - origCentroid);
+
+    if (_allowMomentum && applyPositionalMomentum) {
+      // Apply (and decay) momentum only.
+      objectTransform.position += _positionMomentum;
+
+      _positionMomentum = Vector3.Lerp(_positionMomentum, Vector3.zero, _linearFriction * Time.deltaTime);
     }
-    var scaledCentroidFromTarget = target.localToWorldMatrix
-                                         .MultiplyPoint3x4(centroidFromTarget_local);
-    target.position += (centroidFromTarget - scaledCentroidFromTarget);
+    else {
+      // Apply transformation.
+      objectTransform.position = objectTransform.position.Then(finalPosDelta);
+
+      // Measure momentum only.
+      _positionMomentum = Vector3.Lerp(_positionMomentum, finalPosDelta, 20f * Time.deltaTime);
+    }
+
+    // Remember last known centroid as pivot; remember local offset, scale, rotation,
+    // then correct.
+    var centroid = _lastKnownCentroid;
+    var centroid_local = objectTransform.worldToLocalMatrix.MultiplyPoint3x4(centroid);
+    
+    // Scale.
+    finalScaleRatio = objectScale / objectTransform.localScale.x;
+
+    // Rotation.
+    var axis = nextAxis;
+    var poleRotation = Quaternion.FromToRotation(origAxis, nextAxis);
+    var poleTwist = Quaternion.AngleAxis(twist, nextAxis);
+    finalRotDelta = objectTransform.rotation
+                                   .Then(poleRotation)
+                                   .Then(poleTwist)
+                                   .From(objectTransform.rotation);
+
+    // Apply scale and rotation, or use momentum for these properties.
+    if (_allowMomentum && applyRotateScaleMomentum) {
+      // Apply (and decay) momentum only.
+      objectTransform.rotation = objectTransform.rotation.Then(
+                                   Quaternion.AngleAxis(_rotationMomentum.magnitude,
+                                                        _rotationMomentum.normalized));
+      objectTransform.localScale *= _scaleMomentum;
+
+      // Apply scale constraints.
+      if (objectTransform.localScale.x < _minScale) {
+        objectTransform.localScale = _minScale * Vector3.one;
+        _scaleMomentum = 1f;
+      }
+      else if (objectTransform.localScale.x > _maxScale) {
+        objectTransform.localScale = _maxScale * Vector3.one;
+        _scaleMomentum = 1f;
+      }
+
+      _rotationMomentum = Vector3.Lerp(_rotationMomentum, Vector3.zero, _angularFriction * Time.deltaTime);
+      _scaleMomentum = Mathf.Lerp(_scaleMomentum, 1f, _scaleFriction * Time.deltaTime);
+    }
+    else {
+      // Apply transformations.
+      objectTransform.rotation = objectTransform.rotation.Then(finalRotDelta);
+      objectTransform.localScale = Vector3.one * (objectTransform.localScale.x
+                                                  * finalScaleRatio);
+
+      // Measure momentum only.
+      _rotationMomentum = Vector3.Lerp(_rotationMomentum, finalRotDelta.ToAngleAxisVector(), 40f * Time.deltaTime);
+      _scaleMomentum = Mathf.Lerp(_scaleMomentum, finalScaleRatio, 20f * Time.deltaTime);
+    }
+
+    // Restore centroid pivot.
+    var movedCentroid = objectTransform.localToWorldMatrix.MultiplyPoint3x4(centroid_local);
+    objectTransform.position += (centroid - movedCentroid);
   }
 
   public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-    if (target == null) return;
+    if (!_drawDebug) return;
+
+    if (objectTransform == null) return;
 
     drawer.PushMatrix();
-    //drawer.matrix = _prevTargetToAnchorMatrix;
-    drawer.matrix = target.localToWorldMatrix;
+    drawer.matrix = objectTransform.localToWorldMatrix;
 
     drawer.color = LeapColor.coral;
     drawer.DrawWireCube(Vector3.zero, Vector3.one * 0.20f);
@@ -140,6 +277,7 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
   #endregion
 
+  // TODO: Put this somewhere else -- Kabsch with scaling is useful, but it's unused here!!
   #region KabschSolver (with scaling)
 
   public class KabschSolver {
@@ -228,62 +366,9 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
   }
 
   #endregion
-
-  //private bool _hasPrev;
-  //private Matrix4x4 _prevTargetToAnchorMatrix;
-  //private Pose _prevA, _prevB;
-  //private float _prevDistance;
-
-  //private void updateTRS() {
-
-  //  var A = new Pose(_switchA.Position, _switchA.Rotation);
-  //  var B = new Pose(_switchB.Position, _switchB.Rotation);
-
-  //  var translation = Vector3.zero;
-  //  if (_hasPrev) {
-  //    var centroid = (A.position + B.position) / 2f;
-  //    var prevCentroid = (_prevA.position + _prevB.position) / 2f;
-  //    translation = centroid - prevCentroid;
-  //  }
-
-  //  var rotation = Quaternion.identity;
-  //  if (_hasPrev) {
-  //    var axis = A.position - B.position;
-  //    var perpendicular = Utils.Perpendicular(axis);
-
-  //    var deltaA = A.rotation * Quaternion.Inverse(_prevA.rotation) * perpendicular;
-  //    var deltaAngleA = Vector3.SignedAngle(perpendicular, deltaA, axis);
-
-  //    var deltaB = B.rotation * Quaternion.Inverse(_prevB.rotation) * perpendicular;
-  //    var deltaAngleB = Vector3.SignedAngle(perpendicular, deltaB, axis);
-
-  //    var totalDeltaTwist = (deltaAngleA + deltaAngleB) * 0.5f;
-
-  //    var deltaRotation = Quaternion.FromToRotation(_prevB.position - _prevA.position,
-  //                                                  A.position - B.position);
-
-  //    rotation = Quaternion.AngleAxis(totalDeltaTwist, axis) * deltaRotation;
-  //  }
-
-  //  var distance = Vector3.Distance(A.position, B.position);
-  //  var scale = 1f;
-  //  if (_hasPrev) {
-  //    var prevScale = _prevTargetToAnchorMatrix;
-
-  //  }
-
-  //  var deltaMatrix = Matrix4x4.TRS(translation, rotation, Vector3.one * scale);
-
-  //  var targetToAnchorMatrix = target.localToWorldMatrix;
-
-  //  _hasPrev = true;
-  //  _prevA = A;
-  //  _prevB = B;
-  //  _prevDistance = distance;
-  //  _prevTargetToAnchorMatrix = targetToAnchorMatrix;
-  //}
 }
 
+// TODO: Part of KabschSolver implementation that includes scaling
 public static class FromMatrixExtension {
   public static Vector3 GetVector3(this Matrix4x4 m) { return m.GetColumn(3); }
   public static Quaternion GetQuaternion(this Matrix4x4 m) {

@@ -7,6 +7,7 @@ using Leap.Unity.Animation;
 public class TRSSlowdown : MonoBehaviour {
 
   public LeapRTS trs;
+  public LeapTRS2 trs2;
   public GalaxySimulation sim;
   public float slowdownTime;
   public float speedupTime;
@@ -16,11 +17,14 @@ public class TRSSlowdown : MonoBehaviour {
   private bool _isSlow;
 
   void Update() {
-    if (!trs._switchA.grasped && !trs._switchB.grasped && !_currTween.isValid) {
+    var trsSwitchA = (trs.enabled ? trs._switchA : trs2.switchA);
+    var trsSwitchB = (trs.enabled ? trs._switchB : trs2.switchB);
+
+    if (!trsSwitchA.grasped && !trsSwitchB.grasped && !_currTween.isValid) {
       _prevSpeed = sim.trsTimestep;
     }
 
-    if (trs._switchA.grasped || trs._switchB.grasped) {
+    if (trsSwitchA.grasped || trsSwitchB.grasped) {
       if (_currTween.isValid) {
         _currTween.Stop();
       }

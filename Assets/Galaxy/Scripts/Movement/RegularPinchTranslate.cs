@@ -45,8 +45,6 @@ public class RegularPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
     grabSwitch.Position = hand.GetPredictedPinchPosition();
     grabSwitch.Rotation = hand.Rotation.ToQuaternion();
 
-    bool graspedLastFrame = grabSwitch.grasped;
-
     bool canBeginGrasp = true;
     if (requireFOVAngle) {
       if (Vector3.Angle(grabSwitch.Position - Camera.main.transform.position,

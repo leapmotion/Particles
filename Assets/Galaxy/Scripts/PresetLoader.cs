@@ -12,8 +12,10 @@ public class PresetLoader : MonoBehaviour {
     AccelRamp,
     ByDirection,
     ByStartingBlackHole,
-    HeatMap,
-    RainbowHeatMap
+    HeatMapA,
+    HeatMapB,
+    RealisticA,
+    RealisticB
   }
 
   [SerializeField, OnEditorChange("renderMode")]
@@ -30,9 +32,13 @@ public class PresetLoader : MonoBehaviour {
   [SerializeField]
   public RenderPreset _byStartingBlackHole;
   [SerializeField]
-  public RenderPreset _heatMap;
+  public RenderPreset _heatMapA;
   [SerializeField]
-  public RenderPreset _rainbowHeatMap;
+  public RenderPreset _heatMapB;
+  [SerializeField]
+  public RenderPreset _realisticA;
+  [SerializeField]
+  public RenderPreset _realisticB;
 
   [DevCategory("Star Rendering")]
   [DevValue]
@@ -58,11 +64,17 @@ public class PresetLoader : MonoBehaviour {
         case PresetSelection.ByStartingBlackHole:
           GetComponent<GalaxyRenderer>().SetPreset(_byStartingBlackHole);
           break;
-        case PresetSelection.HeatMap:
-          GetComponent<GalaxyRenderer>().SetPreset(_heatMap);
+        case PresetSelection.HeatMapA:
+          GetComponent<GalaxyRenderer>().SetPreset(_heatMapA);
           break;
-        case PresetSelection.RainbowHeatMap:
-          GetComponent<GalaxyRenderer>().SetPreset(_rainbowHeatMap);
+        case PresetSelection.HeatMapB:
+          GetComponent<GalaxyRenderer>().SetPreset(_heatMapB);
+          break;
+        case PresetSelection.RealisticA:
+          GetComponent<GalaxyRenderer>().SetPreset(_realisticA);
+          break;
+        case PresetSelection.RealisticB:
+          GetComponent<GalaxyRenderer>().SetPreset(_realisticB);
           break;
       }
     }

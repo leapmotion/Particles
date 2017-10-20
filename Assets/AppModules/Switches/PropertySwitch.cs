@@ -95,43 +95,6 @@ namespace Leap.Unity.Animation {
           || propertyType == PropertyType.Vector3;
     }
 
-    // TODO: Delete
-    //#region Events API
-    
-    //public event Action<bool>    OnBoolSwitchValue    = (b) => { };
-    //public event Action<float>   OnFloatSwitchValue   = (i) => { };
-    //public event Action<int>     OnIntSwitchValue     = (f) => { };
-    //public event Action<string>  OnStringSwitchValue  = (s) => { };
-    //public event Action<Vector2> OnVector2SwitchValue = (v) => { };
-    //public event Action<Vector3> OnVector3SwitchValue = (v) => { };
-
-    //[SerializeField]
-    //private EnumEventTable _eventTable;
-
-    //private void InitUnityEvents() {
-    //  // If the interaction component is added at runtime, _eventTable won't have been
-    //  // constructed yet.
-    //  if (_eventTable == null) _eventTable = new EnumEventTable();
-
-    //  setupCallback(ref OnBoolSwitchValue,    PropertyType.Bool);
-    //  setupCallback(ref OnFloatSwitchValue,   PropertyType.Float);
-    //  setupCallback(ref OnIntSwitchValue,     PropertyType.Int);
-    //  setupCallback(ref OnStringSwitchValue,  PropertyType.String);
-    //  setupCallback(ref OnVector2SwitchValue, PropertyType.Vector2);
-    //  setupCallback(ref OnVector3SwitchValue, PropertyType.Vector3);
-    //}
-
-    //private void setupCallback<T>(ref Action<T> action, PropertyType type) {
-    //  if (_eventTable.HasUnityEvent((int)type)) {
-    //    action += (x) => _eventTable.Invoke((int)type);
-    //  }
-    //  else {
-    //    action += (x) => { };
-    //  }
-    //}
-    
-    //#endregion
-
   }
 
 }

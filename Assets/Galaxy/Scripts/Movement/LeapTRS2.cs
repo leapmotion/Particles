@@ -15,9 +15,11 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
   [SerializeField]
   private GrabSwitch _switchA;
+  public GrabSwitch switchA { get {  return _switchA; } }
 
   [SerializeField]
   private  GrabSwitch _switchB;
+  public GrabSwitch switchB { get { return _switchB; } }
 
   [Header("Scale")]
 
@@ -183,7 +185,7 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
         
         float scaleChange = dist1 / dist0;
         
-        if (!float.IsNaN(scaleChange) && !float.IsInfinity(scaleChange)) {
+        if (_allowScale && !float.IsNaN(scaleChange) && !float.IsInfinity(scaleChange)) {
           objectScale *= scaleChange;
         }
 
@@ -291,9 +293,6 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
                                         * _linearFriction
                                         * Time.deltaTime;
 
-      //_positionMomentum = Vector3.Lerp(_positionMomentum, Vector3.zero, _linearFriction * Time.deltaTime);
-
-
       // Also apply some drag so we never explode...
       _positionMomentum += (_frictionDir) * _positionMomentum.sqrMagnitude * _linearFriction * 0.1f;
     }
@@ -330,7 +329,14 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
                                                         _rotationMomentum.normalized));
       objectTransform.localScale *= _scaleMomentum;
 
-      _rotationMomentum = Vector3.Lerp(_rotationMomentum, Vector3.zero, _angularFriction * Time.deltaTime);
+      var rotationFrictionDir = -_rotationMomentum.normalized;
+      _rotationMomentum += rotationFrictionDir * _rotationMomentum.magnitude
+                                               * _angularFriction
+                                               * Time.deltaTime;
+      // Also add some angular drag.
+      _rotationMomentum += rotationFrictionDir * _rotationMomentum.sqrMagnitude * _angularFriction * 0.1f;
+      _rotationMomentum = Vector3.Lerp(_rotationMomentum, Vector3.zero, _angularFriction * 5f * Time.deltaTime);
+
       _scaleMomentum = Mathf.Lerp(_scaleMomentum, 1f, _scaleFriction * Time.deltaTime);
     }
     else {

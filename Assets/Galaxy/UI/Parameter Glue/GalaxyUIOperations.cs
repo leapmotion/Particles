@@ -53,6 +53,14 @@ public static class GalaxyUIOperations {
     return s_galaxyRenderer.starBrightness;
   }
 
+  public static void SetStarGamma(float normalizedValue) {
+    s_galaxyRenderer.normalizedGammaValue = normalizedValue;
+  }
+
+  public static float GetStarGamma() {
+    return s_galaxyRenderer.normalizedGammaValue;
+  }
+
   public static void ResetSimulation() {
     s_galaxySimulation.ResetSimulation();
   }
@@ -63,6 +71,22 @@ public static class GalaxyUIOperations {
 
   public static void RemoveBlackHole() {
     s_galaxySimulation.blackHoleCount -= 1;
+  }
+
+  public static void SetNumGalaxies(int number) {
+    s_galaxySimulation.blackHoleCount = number;
+  }
+
+  public static int GetMinNumGalaxies() {
+    return 1;
+  }
+
+  public static int GetMaxNumGalaxies() {
+    return 75;
+  }
+
+  public static int GetNumGalaxies() {
+    return s_galaxySimulation.blackHoleCount;
   }
 
   public static void SetMaxSimulationSpeed(float normalizedValue) {

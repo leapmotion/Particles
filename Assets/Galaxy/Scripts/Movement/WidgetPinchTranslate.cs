@@ -36,6 +36,8 @@ public class WidgetPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
   private bool _switchAWithinRange = false;
   private bool _switchBWithinRange = false;
 
+  private AnimationCurve _widgetAlphaCurve = DefaultCurve.SigmoidUp;
+
   #region Unity Events
 
   private float _lastLeftPinchStrength = 0f;
@@ -80,7 +82,7 @@ public class WidgetPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
                         && (optionalIntHand == null
                             || (!optionalIntHand.isGraspingObject
                                 && (!optionalIntHand.isPrimaryHovering
-                                    || optionalIntHand.primaryHoverDistance > 0.15f)));
+                                    || optionalIntHand.primaryHoverDistance > 0.05f)));
 
     if (curPinchStrength > 0.7f
         && lastPinchStrength < 0.7f
@@ -100,35 +102,30 @@ public class WidgetPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
 
   #endregion
 
-  private float _targetWidgetAlphaMult = 0f;
+  private float _widgetAlphaT = 0f;
   private float _widgetAlphaMult = 0f;
+  private float _widgetAlphaSpeed = 3f;
 
   public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
     if (!this.enabled) return;
     if (!_drawDebug) return;
 
-    // Alpha multiplier
-    _targetWidgetAlphaMult = 0f;
-    if (_switchAWithinRange || _switchBWithinRange) {
-      _targetWidgetAlphaMult = 1f;
-    }
-
     // Sphere gizmo
 
-    drawer.color = LeapColor.forest.WithAlpha(0.2f);
-    float initAlpha = 0.2f;
-    int numRings = 8;
-    for (int i = 0; i < numRings; i++) {
-      drawer.color = LeapColor.forest.WithAlpha(Mathf.Lerp(initAlpha, 0f, i / (float)numRings) * _widgetAlphaMult);
-      float r = _widgetRadius - (_widgetRadius * (i / (float)numRings));
-      drawer.DrawWireSphere(this.transform.position, r);
-    }
+    //drawer.color = LeapColor.forest.WithAlpha(0.2f);
+    //float initAlpha = 0.2f;
+    //int numRings = 8;
+    //for (int i = 0; i < numRings; i++) {
+    //  drawer.color = LeapColor.forest.WithAlpha(Mathf.Lerp(initAlpha, 0f, i / (float)numRings) * _widgetAlphaMult);
+    //  float r = _widgetRadius - (_widgetRadius * (i / (float)numRings));
+    //  drawer.DrawWireSphere(this.transform.position, r);
+    //}
 
     var dir = Camera.main.transform.position.From(this.transform.position).normalized;
     drawer.color = LeapColor.forest;
-    int numDirRings = 16;
-    float angleStep = 1f;
-    float initDirAlpha = 0.6f;
+    int numDirRings = 8;
+    float angleStep = 2f;
+    float initDirAlpha = 0.9f;
     for (int i = 0; i < numDirRings; i++) {
       drawer.color = drawer.color.WithAlpha(Mathf.Lerp(initDirAlpha, 0f, i / (float)numDirRings) * _widgetAlphaMult);
       drawer.DrawWireArc(this.transform.position + (_widgetRadius * dir * Mathf.Sin(angleStep * i * Mathf.Deg2Rad)),
@@ -142,30 +139,49 @@ public class WidgetPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
 
     float graspGizmoRadius = 0.03f;
 
+    if (!Application.isPlaying) {
+      drawer.color = LeapColor.forest;
+      drawer.DrawWireSphere(this.transform.position, _widgetRadius);
+    }
+
     if (_switchA != null) {
       if (_switchA.grasped) {
-        drawer.color = LeapColor.mint.WithAlpha(0.7f);
+        drawer.color = LeapColor.forest.WithAlpha(0.7f);
         drawer.DrawWireSphere(_switchA.Position, graspGizmoRadius);
 
-        var dirA = Camera.main.transform.position.From(_switchA.Position);
-        drawer.DrawWireArc(_switchA.Position,
-                           dirA, dirA.Perpendicular(),
-                           graspGizmoRadius, 1.0f, 24);
+        var dirA = Camera.main.transform.position.From(_switchA.Position).normalized;
+        int numGizmoDirRings = 8;
+        angleStep = 9f;
+        initDirAlpha = 0.8f;
+        for (int i = 0; i < numGizmoDirRings; i++) {
+          drawer.color = drawer.color.WithAlpha(Mathf.Lerp(initDirAlpha, 0f, i / (float)numGizmoDirRings) * _widgetAlphaMult);
+          drawer.DrawWireArc(_switchA.Position + (graspGizmoRadius * dirA * Mathf.Sin(angleStep * i * Mathf.Deg2Rad)),
+                             dirA, dirA.Perpendicular(),
+                             graspGizmoRadius * Mathf.Cos(angleStep * i * Mathf.Deg2Rad),
+                             1.0f, (i == 0 ? 24 : 16));
+        }
       }
       else if (_switchAWithinRange) {
-        drawer.color = LeapColor.mint.WithAlpha(0.4f);
+        drawer.color = LeapColor.forest.WithAlpha(0.4f);
         drawer.DrawWireSphere(_switchA.Position, graspGizmoRadius * 0.7f);
       }
     }
     if (_switchB != null) {
       if (_switchB.grasped) {
-        drawer.color = LeapColor.mint.WithAlpha(0.7f);
+        drawer.color = LeapColor.forest.WithAlpha(0.7f);
         drawer.DrawWireSphere(_switchB.Position, graspGizmoRadius);
 
-        var dirB = Camera.main.transform.position.From(_switchB.Position);
-        drawer.DrawWireArc(_switchB.Position,
-                           dirB, dirB.Perpendicular(),
-                           graspGizmoRadius, 1.0f, 24);
+        var dirB = Camera.main.transform.position.From(_switchB.Position).normalized;
+        int numGizmoDirRings = 8;
+        angleStep = 9f;
+        initDirAlpha = 0.8f;
+        for (int i = 0; i < numGizmoDirRings; i++) {
+          drawer.color = drawer.color.WithAlpha(Mathf.Lerp(initDirAlpha, 0f, i / (float)numGizmoDirRings) * _widgetAlphaMult);
+          drawer.DrawWireArc(_switchB.Position + (dirB * graspGizmoRadius * Mathf.Sin(angleStep * i * Mathf.Deg2Rad)),
+                             dirB, dirB.Perpendicular(),
+                             graspGizmoRadius * Mathf.Cos(angleStep * i * Mathf.Deg2Rad),
+                             1.0f, (i == 0 ? 24 : 16));
+        }
       }
       else if (_switchBWithinRange) {
         drawer.color = LeapColor.mint.WithAlpha(0.4f);
@@ -184,7 +200,30 @@ public class WidgetPinchTranslate : MonoBehaviour, IRuntimeGizmoComponent {
                       _switchB.Position - (ATowardsB) * graspGizmoRadius);
     }
 
-    _widgetAlphaMult = Mathf.Lerp(_widgetAlphaMult, _targetWidgetAlphaMult, 5f * Time.deltaTime);
+
+    // Alpha multiplier
+    var targetAlphaT = 0f;
+    if (_switchAWithinRange || _switchBWithinRange) {
+      targetAlphaT = 0.6f;
+
+      if (_switchAWithinRange && _switchA.grasped) {
+        targetAlphaT = 1.0f;
+      }
+      else if (_switchBWithinRange && _switchB.grasped) {
+        targetAlphaT = 1.0f;
+      }
+    }
+
+    if (_widgetAlphaT < targetAlphaT) {
+      _widgetAlphaT += _widgetAlphaSpeed * Time.deltaTime;
+      _widgetAlphaT = Mathf.Min(_widgetAlphaT, targetAlphaT);
+    }
+    if (_widgetAlphaT > targetAlphaT) {
+      _widgetAlphaT -= _widgetAlphaSpeed * Time.deltaTime;
+      _widgetAlphaT = Mathf.Max(_widgetAlphaT, targetAlphaT);
+    }
+
+    _widgetAlphaMult = _widgetAlphaCurve.Evaluate(_widgetAlphaT);
   }
 
 }

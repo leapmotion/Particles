@@ -93,6 +93,10 @@ public class GalaxyRenderer : MonoBehaviour {
   [Range(0, 2)]
   [SerializeField, DevValue]
   private float _gammaValue = 0.3f;
+  public float normalizedGammaValue {
+    get { return _gammaValue / 2f; }
+    set { _gammaValue = Mathf.Clamp01(value) * 2f; }
+  }
 
   [SerializeField, DevValue]
   private bool _enableBoxFilter = true;

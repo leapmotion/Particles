@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f83ef941d2c6e64c9315732bc9fb76c, type: 3}
+  m_Name: RealisticB
+  m_EditorClassIdentifier: 
+  blitMode: 3
+  baseColor: {r: 1, g: 1, b: 1, a: 1}
+  enableStarGradient: 1
+  preScalar: 3468.2
+  starRamp:
+    serializedVersion: 2
+    key0: {r: 0, g: 0, b: 0, a: 1}
+    key1: {r: 0.38035855, g: 0.318656, b: 0.766, a: 1}
+    key2: {r: 0.72077256, g: 0.49464798, b: 0.803, a: 0}
+    key3: {r: 0.822, g: 0.664998, b: 0.71330637, a: 0}
+    key4: {r: 1, g: 0.78962165, b: 0.722, a: 0}
+    key5: {r: 1, g: 0.78962165, b: 0.722, a: 0}
+    key6: {r: 1, g: 1, b: 1, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 21203
+    ctime2: 32382
+    ctime3: 48573
+    ctime4: 65535
+    ctime5: 65535
+    ctime6: 65535
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 5
+    m_NumAlphaKeys: 2
+  postScalar: 2.5
+  postProcessMode: 0
+  heatGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0.36556795, g: 0.33935297, b: 0.5294118, a: 0}
+    key3: {r: 0.61456823, g: 0.4389451, b: 0.6784314, a: 0}
+    key4: {r: 0.809, g: 0.728909, b: 0.75355244, a: 0}
+    key5: {r: 1, g: 0.804, b: 0.741, a: 0}
+    key6: {r: 1, g: 1, b: 1, a: 0}
+    key7: {r: 1, g: 1, b: 1, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 17540
+    ctime3: 27756
+    ctime4: 44140
+    ctime5: 55319
+    ctime6: 65535
+    ctime7: 65535
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2

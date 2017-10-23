@@ -3,6 +3,8 @@ using Leap.Unity.Attributes;
 using Leap.Unity.RuntimeGizmos;
 using UnityEngine;
 
+using Pose = Leap.Unity.Pose;
+
 public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
 
   #region Inspector
@@ -313,7 +315,6 @@ public class LeapTRS2 : MonoBehaviour, IRuntimeGizmoComponent {
     finalScaleRatio = objectScale / objectTransform.localScale.x;
 
     // Rotation.
-    var axis = nextAxis;
     var poleRotation = Quaternion.FromToRotation(origAxis, nextAxis);
     var poleTwist = Quaternion.AngleAxis(twist, nextAxis);
     finalRotDelta = objectTransform.rotation

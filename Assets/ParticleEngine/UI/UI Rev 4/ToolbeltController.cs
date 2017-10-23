@@ -6,6 +6,8 @@ using Leap.Unity.PhysicalInterfaces;
 using System;
 using UnityEngine;
 
+using Pose = Leap.Unity.Pose;
+
 public class ToolbeltController : MonoBehaviour {
 
   [Tooltip("The controller that makes the toolbelt anchor follow the player.")]
@@ -123,7 +125,7 @@ public class ToolbeltController : MonoBehaviour {
     if (_lastOpenCloseTweenTime != _openCloseTweenTime) {
       var localClosedPose = new Pose(localClosedPosition, Quaternion.Euler(localClosedEuler));
       var localOpenPose   = new Pose(localOpenPosition,   Quaternion.Euler(localOpenEuler));
-      var localUpdatePose = Pose.Interpolate(localClosedPose, localOpenPose, _openCloseTweenTime);
+      var localUpdatePose = Pose.Lerp(localClosedPose, localOpenPose, _openCloseTweenTime);
 
       toolbeltAnchor.transform.SetLocalPose(_baseLocalTargetPose.Then(localUpdatePose));
 

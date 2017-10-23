@@ -15,7 +15,6 @@ using Leap.Unity.Space;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Leap.Unity.PhysicalInterfaces;
 
 namespace Leap.Unity.Interaction {
 
@@ -554,13 +553,15 @@ namespace Leap.Unity.Interaction {
     new 
     #endif
     /// <summary> The Rigidbody associated with this interaction object. </summary>
-    public Rigidbody rigidbody { get { return _rigidbody; }
-                                 protected set { _rigidbody = value; } }
+    public Rigidbody rigidbody {
+      get { return _rigidbody; }
+      protected set { _rigidbody = value; }
+    }
 
     public ISpaceComponent space { get; protected set; }
 
     [Header("Interaction Overrides")]
-    
+
     [Tooltip("This object will not receive callbacks from left controllers, right "
            + "controllers, or either hand if this mode is set to anything other than "
            + "None.")]
@@ -623,7 +624,7 @@ namespace Leap.Unity.Interaction {
         if (_ignoreGrasping && isGrasped) {
           graspingController.ReleaseGrasp();
         }
-      } 
+      }
     }
 
     [Header("Contact Settings")]
@@ -634,8 +635,10 @@ namespace Leap.Unity.Interaction {
            + "touches; for normal physical objects, you'll almost always want Object.")]
     [SerializeField]
     private ContactForceMode _contactForceMode = ContactForceMode.Object;
-    public ContactForceMode contactForceMode { get { return _contactForceMode; }
-                                               set { _contactForceMode = value; } }
+    public ContactForceMode contactForceMode {
+      get { return _contactForceMode; }
+      set { _contactForceMode = value; }
+    }
 
     [Header("Grasp Settings")]
 
@@ -643,16 +646,20 @@ namespace Leap.Unity.Interaction {
            + "controllers?")]
     [SerializeField]
     private bool _allowMultiGrasp = false;
-    public bool allowMultiGrasp { get { return _allowMultiGrasp; }
-                                  set { _allowMultiGrasp = value; } }
+    public bool allowMultiGrasp {
+      get { return _allowMultiGrasp; }
+      set { _allowMultiGrasp = value; }
+    }
 
     [Tooltip("Should interaction controllers move this object when it is grasped? "
            + "Without this property checked, objects will still receive grasp callbacks, "
            + "but you will need to move them manually via script.")]
     [SerializeField]
     private bool _moveObjectWhenGrasped = true;
-    public bool moveObjectWhenGrasped { get { return _moveObjectWhenGrasped; }
-                                        set { _moveObjectWhenGrasped = value; } }
+    public bool moveObjectWhenGrasped {
+      get { return _moveObjectWhenGrasped; }
+      set { _moveObjectWhenGrasped = value; }
+    }
 
     public enum GraspedMovementType {
       Inherit,
@@ -700,7 +707,7 @@ namespace Leap.Unity.Interaction {
         _overrideInteractionLayer = value;
       }
     }
-    
+
     [Tooltip("Sets the override layer to use for this object when it is not grasped and "
            + "not ignoring contact.")]
     [SerializeField]
@@ -812,36 +819,25 @@ namespace Leap.Unity.Interaction {
     #region Pose & Movement
 
     private Pose _worldPose;
-    private Pose _worldPoseLastFrame = new Pose();
-    private bool _hasWorldPoseLastFrame = false;
+    private Maybe<Pose> _worldPoseLastFrame = Maybe.None;
 
     public Pose worldPose {
       get {
-        return _worldPose;
+        return new Pose(rigidbody.position, rigidbody.rotation);
       }
     }
 
     public Pose worldDeltaPose {
       get {
-        return _worldPose.From(_worldPoseLastFrame);
-      }
-    }
-
-    public Movement worldMovement {
-      get {
-        if (!rigidbody.isKinematic) {
-          return new Movement(rigidbody.velocity, rigidbody.angularVelocity);
+        if (!_worldPoseLastFrame.hasValue) return Pose.identity;
+        else {
+          return worldPose.From(_worldPoseLastFrame.valueOrDefault);
         }
-        else if (!_hasWorldPoseLastFrame) {
-          return new Movement();
-        }
-        else return new Movement(_worldPoseLastFrame, worldPose, Time.fixedDeltaTime);
       }
     }
 
     private void fixedUpdatePose() {
       _worldPoseLastFrame = _worldPose;
-      _hasWorldPoseLastFrame = true;
 
       _worldPose = new Pose(rigidbody.position, rigidbody.rotation);
     }
@@ -973,8 +969,8 @@ namespace Leap.Unity.Interaction {
         float distance = GetHoverDistance(controller.hoverPoint);
         if (closestHoveringHand == null
             || distance < closestHoveringControllerDist) {
-              closestHoveringController = controller;
-              closestHoveringControllerDist = distance;
+          closestHoveringController = controller;
+          closestHoveringControllerDist = distance;
         }
       }
 
@@ -1260,7 +1256,7 @@ namespace Leap.Unity.Interaction {
         if (moveObjectWhenGrasped) {
           graspedPoseHandler.AddController(controller);
         }
-        
+
         // Fire interaction callback.
         OnPerControllerGraspBegin(controller);
       }
@@ -1429,7 +1425,7 @@ namespace Leap.Unity.Interaction {
     private void initLayers() {
       refreshInteractionLayer();
       refreshNoContactLayer();
-      
+
       (manager as IInternalInteractionManager).NotifyIntObjAddedInteractionLayer(this, interactionLayer, false);
       (manager as IInternalInteractionManager).NotifyIntObjAddedNoContactLayer(this, noContactLayer, false);
       (manager as IInternalInteractionManager).RefreshLayersNow();
@@ -1447,7 +1443,7 @@ namespace Leap.Unity.Interaction {
       noContactLayer = overrideNoContactLayer ? this.noContactLayer
                                               : manager.interactionNoContactLayer;
     }
-    
+
     private void fixedUpdateLayers() {
       int layer;
       refreshInteractionLayer();
@@ -1456,7 +1452,8 @@ namespace Leap.Unity.Interaction {
       // Update the object's layer based on interaction state.
       if (ignoreContact) {
         layer = noContactLayer;
-      } else {
+      }
+      else {
         if (isGrasped) {
           layer = noContactLayer;
         }
@@ -1471,7 +1468,7 @@ namespace Leap.Unity.Interaction {
       }
 
       // Update the manager if necessary.
-      
+
       if (interactionLayer != _lastInteractionLayer) {
         (manager as IInternalInteractionManager).NotifyIntObjHasNewInteractionLayer(this, oldInteractionLayer: _lastInteractionLayer,
                                                                                           newInteractionLayer: interactionLayer);
@@ -1540,7 +1537,8 @@ namespace Leap.Unity.Interaction {
        && (rigidbody.constraints & RigidbodyConstraints.FreezePositionZ) > 0) {
         _isPositionLocked = true;
         return;
-      } else {
+      }
+      else {
         _isPositionLocked = false;
 
         Joint[] joints = rigidbody.GetComponents<Joint>();

@@ -109,7 +109,9 @@ namespace Leap.Unity.PhysicalInterfaces {
     }
 
     public Movement movement {
-      get { return intObj.worldMovement; }
+      get { return new Movement(intObj.worldPose,
+                                intObj.worldPose.Then(intObj.worldDeltaPose),
+                                Time.fixedDeltaTime); }
     }
 
     public Pose deltaPose {

@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+using Pose = Leap.Unity.Pose;
+
 public class GrabSwitch : MonoBehaviour {
   public bool grasped;
   public Vector3 Position;

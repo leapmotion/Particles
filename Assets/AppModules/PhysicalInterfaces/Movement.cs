@@ -11,7 +11,7 @@ namespace Leap.Unity.PhysicalInterfaces {
 
     /// <summary>
     /// Angular velocity expressed as an angle-axis vector with angle equal to the length
-    /// of the vector.
+    /// of the vector in degrees.
     /// </summary>
     public Vector3 angularVelocity;
     

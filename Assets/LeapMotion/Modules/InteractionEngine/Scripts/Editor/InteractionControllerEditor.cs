@@ -68,7 +68,7 @@ namespace Leap.Unity.Interaction {
       bool anyNotParentedToInteractionManager;
 
       anyNotParentedToInteractionManager = targets.Query()
-                                                  .Any(c => c.GetComponentInParent<InteractionManager>() == null);
+                                                  .Any(c => c.GetComponentInParent<UnityEngine.XR.WSA.Input.InteractionManager>() == null);
 
       if (anyNotParentedToInteractionManager) {
         string message = "";

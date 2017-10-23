@@ -46,9 +46,7 @@ namespace Leap.Unity.Animation {
     #endregion
 
     private void updateLerp(float t) {
-      this.transform.SetWorldPose(Pose.Interpolate(simulator.GetSimulatedPose(),
-                                                   targetPose,
-                                                   t));
+      this.transform.SetWorldPose(Pose.Lerp(simulator.GetSimulatedPose(), targetPose, t));
 
       // Reset the absolute rotation of the object being simulated;
       // this adds a lot of rotational "drag" but prevents flips due to the complex

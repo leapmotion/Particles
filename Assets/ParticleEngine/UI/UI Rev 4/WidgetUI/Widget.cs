@@ -110,7 +110,7 @@ public class Widget : MonoBehaviour {
   }
 
   private void onMovementUpdate() {
-    movementToPose.targetPose = new Pose() {
+    movementToPose.targetPose = new UnityEngine.Pose() {
       position = movementToPose.targetPose.position,
       rotation = targetPoseProvider.GetTargetRotation()
     };
@@ -131,7 +131,7 @@ public class Widget : MonoBehaviour {
   }
 
   public void MoveTo(Transform t) {
-    Pose followingPose = t.ToWorldPose();
+    UnityEngine.Pose followingPose = t.ToWorldPose();
 
     this.transform.SetWorldPose(followingPose);
 

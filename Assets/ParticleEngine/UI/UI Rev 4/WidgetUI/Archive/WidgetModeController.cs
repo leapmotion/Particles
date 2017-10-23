@@ -65,14 +65,14 @@ public class WidgetModeController : MonoBehaviour {
   }
 
   public void MoveSelfToBall() {
-    Pose ballPose = new Pose(ballTransform.position, ballTransform.rotation);
+    UnityEngine.Pose ballPose = new UnityEngine.Pose(ballTransform.position, ballTransform.rotation);
 
     this.transform.SetWorldPose(ballPose);
     ballTransform.SetWorldPose(ballPose);
   }
 
   public void MoveSelfToPanel() {
-    Pose panelPose = new Pose(panelTransform.position, panelTransform.rotation);
+    UnityEngine.Pose panelPose = new UnityEngine.Pose(panelTransform.position, panelTransform.rotation);
 
     this.transform.SetWorldPose(panelPose);
     panelTransform.SetWorldPose(panelPose);

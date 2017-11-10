@@ -8,12 +8,15 @@
  ******************************************************************************/
 
 using UnityEngine;
+using System;
+using System.Collections.Generic;
+using Leap.Unity.Query;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
-using System.Collections.Generic;
-using System;
-using Leap.Unity.Query;
+
+using UnityObject = UnityEngine.Object;
 
 namespace Leap.Unity.Attributes {
 
@@ -36,15 +39,14 @@ namespace Leap.Unity.Attributes {
 #if UNITY_EDITOR
     public void ConstrainValue(SerializedProperty property) {
       if (property.objectReferenceValue != null) {
-        var implementer = FindImplementer(property.objectReferenceValue);
 
-        if (implementer == null) {
-          Debug.LogError(property.objectReferenceValue.GetType().Name
-                         + " does not implement " + type.Name);
+        UnityObject implementingObject = FindImplementer(property.objectReferenceValue);
+
+        if (implementingObject == null) {
+          Debug.LogError(property.objectReferenceValue.GetType().Name + " does not implement " + type.Name);
         }
-        else {
-          property.objectReferenceValue = implementer;
-        }
+
+        property.objectReferenceValue = implementingObject;
       }
     }
 
@@ -53,25 +55,30 @@ namespace Leap.Unity.Attributes {
     /// the interface that this attribute constrains objects to, and returns the object
     /// that implements that interface, or null if none was found.
     /// </summary>
-    public UnityEngine.Object FindImplementer(UnityEngine.Object obj) {
-      if (obj.GetType().ImplementsInterface(type)) {
-        // All good! This Component implements the interface.
+    public UnityObject FindImplementer(UnityObject obj) {
+      if (objectReferenceValue.GetType().ImplementsInterface(type)) {
+        // All good! This object reference implements the interface.
         return obj;
       }
       else {
-        // Search the rest of the GameObject for a component that implements the
-        // interface.
-        Component[] components;
-        if (obj is GameObject) {
-          components = (obj as GameObject).GetComponents<Component>();
-        }
+        UnityObject implementingObject;
+
+        if (objectReferenceValue is Component) {
+          // If the object is a Component, first search the rest of the GameObject 
+          // for a component that implements the interface. If found, assign it instead,
+          // otherwise null out the property.
+          implementingObject = (objectReferenceValue as Component)
+                               .GetComponents<Component>()
+                               .Query()
+                               .Where(c => c.GetType().ImplementsInterface(type))
+                               .FirstOrDefault();
+        } 
         else {
-          components = (obj as Component).GetComponents<Component>();
+          // If the object is not a Component, just null out the property.
+          implementingObject = null;
         }
 
-        return components.Query()
-                         .Where(c => c.GetType().ImplementsInterface(type))
-                         .FirstOrDefault();
+        return implementObject;
       }
     }
 
@@ -109,8 +116,6 @@ namespace Leap.Unity.Attributes {
         yield return SerializedPropertyType.ObjectReference;
       }
     }
-
 #endif
   }
-
 }

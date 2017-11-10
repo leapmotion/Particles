@@ -56,18 +56,18 @@ namespace Leap.Unity.Attributes {
     /// that implements that interface, or null if none was found.
     /// </summary>
     public UnityObject FindImplementer(UnityObject obj) {
-      if (objectReferenceValue.GetType().ImplementsInterface(type)) {
+      if (obj.GetType().ImplementsInterface(type)) {
         // All good! This object reference implements the interface.
         return obj;
       }
       else {
         UnityObject implementingObject;
 
-        if (objectReferenceValue is Component) {
+        if (obj is Component) {
           // If the object is a Component, first search the rest of the GameObject 
           // for a component that implements the interface. If found, assign it instead,
           // otherwise null out the property.
-          implementingObject = (objectReferenceValue as Component)
+          implementingObject = (obj as Component)
                                .GetComponents<Component>()
                                .Query()
                                .Where(c => c.GetType().ImplementsInterface(type))
@@ -78,7 +78,7 @@ namespace Leap.Unity.Attributes {
           implementingObject = null;
         }
 
-        return implementObject;
+        return implementingObject;
       }
     }
 

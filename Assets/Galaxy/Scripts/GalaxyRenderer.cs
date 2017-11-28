@@ -35,8 +35,8 @@ public class GalaxyRenderer : MonoBehaviour {
   [SerializeField, DevValue]
   private float _scale = 1;
 
-  [SerializeField, DevValue]
-  private float _forwardOffset = 0;
+  //[SerializeField, DevValue]
+  //private float _forwardOffset = 0;
 
   [Header("Black Hole Rendering"), DevCategory]
   [SerializeField, DevValue("Render")]

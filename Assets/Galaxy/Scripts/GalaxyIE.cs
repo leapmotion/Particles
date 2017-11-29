@@ -52,7 +52,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
 
     if (_numGrasped == 0) {
       _sim.simulate = true;
-      multiplier = 1;
+      //multiplier = 1;
     }
   }
 
@@ -106,15 +106,22 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     foreach (var spawned in _spawned) {
       spawned.transform.localScale = Vector3.one / spawned.transform.parent.lossyScale.x;
 
+      float distToBlackHole = float.MaxValue;
+
       if (Hands.Left != null) {
-        minDist = Mathf.Min(minDist, Vector3.Distance(Hands.Left.PalmPosition.ToVector3(),
+        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Left.PalmPosition.ToVector3(),
                                                       spawned.transform.position));
       }
 
       if (Hands.Right != null) {
-        minDist = Mathf.Min(minDist, Vector3.Distance(Hands.Right.PalmPosition.ToVector3(),
+        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Right.PalmPosition.ToVector3(),
                                                       spawned.transform.position));
       }
+
+      var renderer = spawned.GetComponentInChildren<Renderer>();
+      renderer.material.color = renderer.material.color.WithAlpha(1 - Mathf.InverseLerp(_distRange.x, _distRange.y, distToBlackHole));
+
+      minDist = Mathf.Min(distToBlackHole, minDist);
     }
 
     //Debug.Log(minDist);
@@ -123,9 +130,5 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     float curvedPercent = _distCurve.Evaluate(percent);
 
     multiplier = curvedPercent;
-    foreach (var spawned in _spawned) {
-      var renderer = spawned.GetComponentInChildren<Renderer>();
-      renderer.material.color = renderer.material.color.WithAlpha(1 - curvedPercent);
-    }
   }
 }

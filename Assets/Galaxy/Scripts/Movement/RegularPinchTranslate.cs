@@ -6,6 +6,7 @@ using Leap.Unity;
 public class RegularPinchTranslate : MonoBehaviour {
 
   public GrabSwitch left, right;
+  public bool twoHandedOnly = false;
 
   private void Update() {
     if (Hands.Left != null) {
@@ -44,6 +45,13 @@ public class RegularPinchTranslate : MonoBehaviour {
       }
     } else {
       right.grasped = false;
+    }
+
+    if (twoHandedOnly) {
+      if (right.grasped != left.grasped) {
+        right.grasped = false;
+        left.grasped = false;
+      }
     }
   }
 }

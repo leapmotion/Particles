@@ -226,16 +226,21 @@ public class GalaxySimulation : MonoBehaviour {
     }
 
     public UniverseState Clone() {
-      UniverseState clone = new UniverseState(count);
-      clone.time = time;
+      var clone = new UniverseState(count);
+      clone.CopyFrom(this);
+      return clone;
+    }
 
-      int toCopy = clone.count;
+    public void CopyFrom(UniverseState other) {
+      time = other.time;
 
-      BlackHoleMainState* srcMain = mainState;
-      BlackHoleMainState* dstMain = clone.mainState;
+      int toCopy = other.count;
 
-      BlackHoleSecondaryState* srcSecond = secondaryState;
-      BlackHoleSecondaryState* dstSecond = clone.secondaryState;
+      BlackHoleMainState* srcMain = other.mainState;
+      BlackHoleMainState* dstMain = mainState;
+
+      BlackHoleSecondaryState* srcSecond = other.secondaryState;
+      BlackHoleSecondaryState* dstSecond = secondaryState;
       do {
         *dstMain = *srcMain;
         *dstSecond = *srcSecond;
@@ -244,8 +249,6 @@ public class GalaxySimulation : MonoBehaviour {
         dstSecond++;
         srcSecond++;
       } while (--toCopy != 0);
-
-      return clone;
     }
   }
 
@@ -464,7 +467,7 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (_enableTrails) {
       for (int i = 0; i < _trailUpdateRate; i++) {
-        stepState(_trailState);
+        stepState(_trailState, Time.deltaTime);
         bool isAtMaxLength = false;
 
         unsafe {
@@ -499,7 +502,7 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
       if (simulateBlackHoles) {
-        stepState(mainState);
+        stepState(mainState, Time.deltaTime * timestep);
         renderState(mainState);
 
         foreach (var pair in _trails) {
@@ -534,12 +537,14 @@ public class GalaxySimulation : MonoBehaviour {
     galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
   }
 
-  private unsafe void stepState(UniverseState state) {
+  private unsafe void stepState(UniverseState state, float deltaTime) {
     using (new ProfilerSample("Step Galaxy")) {
-      state.time += timestep * Time.deltaTime;
+      float timestempFactor = deltaTime * 90.0f;
+
+      state.time += deltaTime;
       float planetDT = 1.0f / blackHoleSubFrames;
-      float combinedDT = planetDT * timestep;
-      float preStepConstant = gravConstant * planetDT * timestep;
+      float combinedDT = planetDT * timestempFactor;
+      float preStepConstant = gravConstant * planetDT * timestempFactor;
       float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
 
       for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {

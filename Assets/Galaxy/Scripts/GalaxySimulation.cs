@@ -15,6 +15,7 @@ public interface ITimestepMultiplier {
 [DevCategory("General Settings")]
 public class GalaxySimulation : MonoBehaviour {
   public const float TIME_FREEZE_THRESHOLD = 0.05f;
+  public const float REFERENCE_FRAMERATE = 90.0f;
 
   public System.Action OnReset;
   public System.Action OnStep;
@@ -41,7 +42,12 @@ public class GalaxySimulation : MonoBehaviour {
 
   [Range(0, 2)]
   [DevValue]
-  private float _baseTimestep = 1;
+  [SerializeField]
+  private float _timescale = 1;
+
+  [DevValue]
+  [SerializeField]
+  private bool _limitStepsPerFrame = true;
 
   public GalaxyRenderer galaxyRenderer;
 
@@ -49,8 +55,6 @@ public class GalaxySimulation : MonoBehaviour {
   //### Star Settings ###
   //#####################
   [Header("Stars"), DevCategory]
-  public bool simulateStars = true;
-
   [DevValue("Grav Constant")]
   public float starGravConstant = 5e-05f;
 
@@ -72,8 +76,6 @@ public class GalaxySimulation : MonoBehaviour {
   //### Black Hole Settings ###
   //###########################
   [Header("Black Holes"), DevCategory]
-  public bool simulateBlackHoles = true;
-
   public int blackHoleSubFrames = 10;
 
   [Range(0, 1)]
@@ -141,9 +143,9 @@ public class GalaxySimulation : MonoBehaviour {
 
   public Material simulateMat;
 
-  public float timestep {
+  public float timescale {
     get {
-      float t = _baseTimestep;
+      float t = _timescale;
       foreach (var multiplier in TimestepMultipliers) {
         t *= multiplier.multiplier;
       }
@@ -151,7 +153,6 @@ public class GalaxySimulation : MonoBehaviour {
     }
   }
 
-  private float _prevTimestep = -1000;
   private int _seed = 0;
   private int _nextId = 0;
 
@@ -204,6 +205,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   public unsafe class UniverseState {
     public float time;
+    public int frames;
     public int count;
 
     public byte* totalState;
@@ -252,7 +254,10 @@ public class GalaxySimulation : MonoBehaviour {
     }
   }
 
+  public float simulationTime = 0;
   public UniverseState mainState;
+  public UniverseState prevState;
+
   private UniverseState _trailState;
   private Dictionary<int, List<Vector3>> _trails = new Dictionary<int, List<Vector3>>();
 
@@ -267,6 +272,11 @@ public class GalaxySimulation : MonoBehaviour {
       mainState = null;
     }
 
+    if (prevState != null) {
+      prevState.Dispose();
+      prevState = null;
+    }
+
     if (_trailState != null) {
       _trailState.Dispose();
       _trailState = null;
@@ -274,7 +284,7 @@ public class GalaxySimulation : MonoBehaviour {
 
     _trails.Clear();
 
-    _prevTimestep = timestep;
+    simulationTime = 0;
     mainState = new UniverseState(blackHoleCount);
 
     {
@@ -364,6 +374,9 @@ public class GalaxySimulation : MonoBehaviour {
     GL.Vertex3(0, 1, 0);
     GL.End();
 
+    prevState = mainState.Clone();
+    prevState.time = mainState.time - 1.0f / REFERENCE_FRAMERATE;
+
     _trailState = mainState.Clone();
 
     if (OnReset != null) {
@@ -410,6 +423,11 @@ public class GalaxySimulation : MonoBehaviour {
       mainState = null;
     }
 
+    if (prevState != null) {
+      prevState.Dispose();
+      prevState = null;
+    }
+
     if (_trailState != null) {
       _trailState.Dispose();
       _trailState = null;
@@ -443,13 +461,6 @@ public class GalaxySimulation : MonoBehaviour {
 
     simulateMat.SetFloat("_Force", starGravConstant);
     simulateMat.SetFloat("_FuzzValue", fuzzValue);
-
-    if (timestep > TIME_FREEZE_THRESHOLD) {
-      simulateMat.SetFloat("_Timestep", timestep);
-      simulateMat.SetFloat("_PrevTimestep", _prevTimestep);
-
-      _prevTimestep = timestep;
-    }
   }
 
   private void Update() {
@@ -465,25 +476,25 @@ public class GalaxySimulation : MonoBehaviour {
     Random.InitState(Time.frameCount);
     _seed = Random.Range(int.MinValue, int.MaxValue);
 
+    if (simulate) {
+      stepSimulation();
+    }
+
     if (_enableTrails) {
-      for (int i = 0; i < _trailUpdateRate; i++) {
-        stepState(_trailState, Time.deltaTime);
-        bool isAtMaxLength = false;
+      int simTime = 0;
+      while (_trailState.frames < mainState.frames + _maxTrailLength) {
+        stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
 
         unsafe {
           BlackHoleMainState* main = _trailState.mainState;
           BlackHoleSecondaryState* secondary = _trailState.secondaryState;
           for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
-            if (_trails[(*secondary).id].Count >= _maxTrailLength) {
-              isAtMaxLength = true;
-              continue;
-            }
-
             _trails[(*secondary).id].Add((*main).position);
           }
         }
 
-        if (isAtMaxLength) {
+        simTime++;
+        if (simTime >= _trailUpdateRate) {
           break;
         }
       }
@@ -500,23 +511,36 @@ public class GalaxySimulation : MonoBehaviour {
       }
     }
 
-    if (timestep > TIME_FREEZE_THRESHOLD && simulate) {
-      if (simulateBlackHoles) {
-        stepState(mainState, Time.deltaTime * timestep);
-        renderState(mainState);
+    renderState(mainState);
+  }
 
+  private void LateUpdate() {
+    galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
+  }
+
+  private void stepSimulation() {
+    float deltaTime = timescale / REFERENCE_FRAMERATE;
+
+    simulationTime += deltaTime;
+    while (mainState.time < simulationTime) {
+
+      //Simulate black holes
+      {
+        prevState.CopyFrom(mainState);
+        stepState(mainState, 1.0f / REFERENCE_FRAMERATE);
+      }
+
+      //Update trails
+      {
         foreach (var pair in _trails) {
           if (pair.Value.Count > 0) {
             pair.Value.RemoveAt(0);
           }
         }
-
-        if (OnStep != null) {
-          OnStep();
-        }
       }
 
-      if (simulateStars) {
+      //Simulate stars
+      {
         updateShaderConstants();
 
         nextPos.DiscardContents();
@@ -530,21 +554,29 @@ public class GalaxySimulation : MonoBehaviour {
         simulateMat.SetTexture("_PrevPositions", prevPos);
         simulateMat.SetTexture("_CurrPositions", currPos);
       }
-    }
-  }
 
-  private void LateUpdate() {
-    galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
+      if (_limitStepsPerFrame) {
+        if (mainState.time < simulationTime) {
+          simulationTime = mainState.time;
+        }
+        break;
+      }
+    }
+
+    if (OnStep != null) {
+      OnStep();
+    }
   }
 
   private unsafe void stepState(UniverseState state, float deltaTime) {
     using (new ProfilerSample("Step Galaxy")) {
-      float timestempFactor = deltaTime * 90.0f;
+      float timestepFactor = deltaTime * REFERENCE_FRAMERATE;
 
       state.time += deltaTime;
+      state.frames++;
       float planetDT = 1.0f / blackHoleSubFrames;
-      float combinedDT = planetDT * timestempFactor;
-      float preStepConstant = gravConstant * planetDT * timestempFactor;
+      float combinedDT = planetDT * timestepFactor;
+      float preStepConstant = gravConstant * planetDT * timestepFactor;
       float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
 
       for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {

@@ -249,10 +249,10 @@ public class GalaxyRenderer : MonoBehaviour {
 
     switch (preset.blitMode) {
       case RenderPreset.BlitMode.BySpeed:
-        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timestep);
+        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timescale);
         break;
       case RenderPreset.BlitMode.ByAccel:
-        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timestep / _sim.timestep);
+        mat.SetFloat("_PreScalar", preset.preScalar / _sim.timescale / _sim.timescale);
         break;
       default:
         mat.SetFloat("_PreScalar", preset.preScalar);

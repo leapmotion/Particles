@@ -16,8 +16,6 @@
 
   float _Force;
 
-  float _PrevTimestep;
-  float _Timestep;
   float _FuzzValue;
 
   float4x4 _PlanetRotations[100];
@@ -68,7 +66,7 @@
       accel += target.w * normalize(toTarget) / (_FuzzValue + dot(toTarget, toTarget));
     }
 
-    return float4(currPos.xyz + (currPos.xyz - prevPos.xyz) * (_Timestep / _PrevTimestep) + accel * _Timestep * _Timestep * _Force, currPos.w);
+    return float4(2 * currPos.xyz - prevPos.xyz + accel * _Force, currPos.w);
   }
 
   fragOut initDisc(v2f i) {
@@ -118,7 +116,7 @@
     float planetIndex = index / (float)_PlanetCount;
 
     fragOut o;
-    o.dest0 = float4(discPos - discVel * _Timestep, planetIndex);
+    o.dest0 = float4(discPos - discVel, planetIndex);
     o.dest1 = float4(discPos, planetIndex);
     return o;
   }

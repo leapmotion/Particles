@@ -22,6 +22,8 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string ADJACENT_PROPERTY = "_AdjacentFilter";
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
+  private const string CROSS_TEX_KEYWORD = "INTERPOLATION_CROSSES_TEX_BOUNDARY";
+
   [SerializeField]
   private GalaxySimulation _sim;
 
@@ -250,9 +252,18 @@ public class GalaxyRenderer : MonoBehaviour {
       mat.DisableKeyword(STAR_RAMP_KEYWORD);
     }
 
-    mat.mainTexture = _currRenderState.currPosition;
+    mat.SetTexture("_CurrPosition", _currRenderState.currPosition);
     mat.SetTexture("_PrevPosition", _currRenderState.prevPosition);
     mat.SetTexture("_LastPosition", _currRenderState.lastPosition);
+
+    mat.SetFloat("_CurrInterpolation", _currRenderState.interpolationFraction);
+    mat.SetFloat("_PrevInterpolation", _prevRenderState.interpolationFraction);
+
+    if (_currRenderState.currPosition != _prevRenderState.currPosition) {
+      mat.EnableKeyword(CROSS_TEX_KEYWORD);
+    } else {
+      mat.DisableKeyword(CROSS_TEX_KEYWORD);
+    }
 
     switch (preset.blitMode) {
       case RenderPreset.BlitMode.BySpeed:

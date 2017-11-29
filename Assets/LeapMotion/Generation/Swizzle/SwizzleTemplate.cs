@@ -9,9 +9,9 @@
 
 using UnityEngine;
 
-namespace Leap.Unity.Generation {
+namespace Leap.Unity.Swizzle.Generation {
 
-  public abstract class GeneratorBase : ScriptableObject {
-    public abstract void Generate();
+  public static class Swizzle {
+//__SWIZZLE__
   }
 }

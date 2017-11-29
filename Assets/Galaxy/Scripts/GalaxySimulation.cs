@@ -566,6 +566,17 @@ public class GalaxySimulation : MonoBehaviour {
     if (OnStep != null) {
       OnStep();
     }
+
+    //Render the black holes themselves
+    unsafe {
+      BlackHoleMainState* prevSrc = prevState.mainState;
+      BlackHoleMainState* mainSrc = mainState.mainState;
+      float fraction = Mathf.InverseLerp(prevState.time, mainState.time, simulationTime);
+      for (int j = 0; j < mainState.count; j++, prevSrc++, mainSrc++) {
+        Vector3 position = Vector3.Lerp((*prevSrc).position, (*mainSrc).position, fraction);
+        galaxyRenderer.DrawBlackHole(position);
+      }
+    }
   }
 
   private unsafe void stepState(UniverseState state, float deltaTime) {
@@ -658,13 +669,6 @@ public class GalaxySimulation : MonoBehaviour {
           }
         }
       }
-    }
-  }
-
-  private unsafe void renderState(UniverseState state) {
-    BlackHoleMainState* src = state.mainState;
-    for (int j = 0; j < state.count; j++, src++) {
-      galaxyRenderer.DrawBlackHole((*src).position);
     }
   }
 }

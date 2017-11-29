@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
+using UnityEngine.Serialization;
 using Leap.Unity;
 using Leap.Unity.DevGui;
 using Leap.Unity.Attributes;
-using UnityEngine.Serialization;
 
 [RequireComponent(typeof(Camera))]
 public class GalaxyRenderer : MonoBehaviour {
@@ -103,9 +104,9 @@ public class GalaxyRenderer : MonoBehaviour {
   private float _diagonalFilter = 0.5f;
 
   private Camera _myCamera;
-  private Texture _currPosition;
-  private Texture _prevPosition;
-  private Texture _lastPosition;
+
+  private RenderState _currRenderState;
+  private RenderState _prevRenderState;
 
   public float scale {
     get {
@@ -136,21 +137,27 @@ public class GalaxyRenderer : MonoBehaviour {
     Camera.onPostRender += drawCamera;
 
     uploadGradientTextures();
+
+    StartCoroutine(endOfFrameCoroutine());
   }
 
   private void OnDisable() {
     Camera.onPostRender -= drawCamera;
   }
 
-  private void LateUpdate() {
-    //_displayAnchor.localScale = _scale * Vector3.one;
-    //_displayAnchor.localPosition = Vector3.forward * _forwardOffset * _scale;
+  private IEnumerator endOfFrameCoroutine() {
+    var eofWaiter = new WaitForEndOfFrame();
+    while (true) {
+      yield return eofWaiter;
+      _prevRenderState.CopyFrom(_currRenderState);
+    }
   }
 
-  public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition) {
-    _currPosition = currPosition;
-    _prevPosition = prevPosition;
-    _lastPosition = lastPosition;
+  public void UpdatePositions(Texture currPosition, Texture prevPosition, Texture lastPosition, float interpolationFraction) {
+    _currRenderState.currPosition = currPosition;
+    _currRenderState.prevPosition = prevPosition;
+    _currRenderState.lastPosition = lastPosition;
+    _currRenderState.interpolationFraction = interpolationFraction;
   }
 
   public void DrawBlackHole(Vector3 position) {
@@ -165,6 +172,8 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void OnRenderImage(RenderTexture source, RenderTexture destination) {
+    _prevRenderState.CopyFrom(_currRenderState);
+
     if (!_renderStars) {
       Graphics.Blit(source, destination);
       return;
@@ -202,8 +211,6 @@ public class GalaxyRenderer : MonoBehaviour {
   }
 
   private void drawStars() {
-
-
     Material mat = null;
 
     switch (_renderType) {
@@ -243,9 +250,9 @@ public class GalaxyRenderer : MonoBehaviour {
       mat.DisableKeyword(STAR_RAMP_KEYWORD);
     }
 
-    mat.mainTexture = _currPosition;
-    mat.SetTexture("_PrevPosition", _prevPosition);
-    mat.SetTexture("_LastPosition", _lastPosition);
+    mat.mainTexture = _currRenderState.currPosition;
+    mat.SetTexture("_PrevPosition", _currRenderState.prevPosition);
+    mat.SetTexture("_LastPosition", _currRenderState.lastPosition);
 
     switch (preset.blitMode) {
       case RenderPreset.BlitMode.BySpeed:
@@ -272,7 +279,7 @@ public class GalaxyRenderer : MonoBehaviour {
 
     if (_renderStars) {
       mat.SetPass(0);
-      Graphics.DrawProcedural(MeshTopology.Points, _currPosition.width * _currPosition.height);
+      Graphics.DrawProcedural(MeshTopology.Points, _currRenderState.currPosition.width * _currRenderState.currPosition.height);
     }
   }
 
@@ -283,5 +290,19 @@ public class GalaxyRenderer : MonoBehaviour {
     _pointMat.SetTexture("_Ramp", starTex);
     _quadMat.SetTexture("_Ramp", starTex);
     _lightMat.SetTexture("_Ramp", starTex);
+  }
+
+  private struct RenderState {
+    public Texture currPosition;
+    public Texture prevPosition;
+    public Texture lastPosition;
+    public float interpolationFraction;
+
+    public void CopyFrom(RenderState other) {
+      currPosition = other.currPosition;
+      prevPosition = other.prevPosition;
+      lastPosition = other.lastPosition;
+      interpolationFraction = other.interpolationFraction;
+    }
   }
 }

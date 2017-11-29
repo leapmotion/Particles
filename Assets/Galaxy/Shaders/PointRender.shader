@@ -1,6 +1,6 @@
 ﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
-Shader "Unlit/PointDisplayShader"{
+Shader "Galaxy//Stars/Point"{
 	Properties { 
     _MainTex ("Positions", 2D) = "" {}
     _Velocity ("Velocity", 2D) = "" {}

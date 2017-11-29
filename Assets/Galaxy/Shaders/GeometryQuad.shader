@@ -1,4 +1,4 @@
-﻿Shader "Unlit/QuadDisplayShader"{
+﻿Shader "Galaxy/Stars/Quad"{
 	Properties { 
     _MainTex ("Positions", 2D) = "" {}
     _Particle("Particle", 2D) = "white" {}

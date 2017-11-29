@@ -1,4 +1,4 @@
-﻿Shader "Unlit/StochasticRender" {
+﻿Shader "Galaxy/Stars/Point Bright" {
 	Properties {
 		_MainTex ("Texture", 2D) = "white" {}
     _Noise   ("Noise", 2D) = "white" {}

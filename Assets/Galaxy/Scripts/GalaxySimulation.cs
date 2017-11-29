@@ -511,11 +511,20 @@ public class GalaxySimulation : MonoBehaviour {
       }
     }
 
-    renderState(mainState);
+    //Render the black holes themselves
+    unsafe {
+      BlackHoleMainState* prevSrc = prevState.mainState;
+      BlackHoleMainState* mainSrc = mainState.mainState;
+      float fraction = Mathf.InverseLerp(prevState.time, mainState.time, simulationTime);
+      for (int j = 0; j < mainState.count; j++, prevSrc++, mainSrc++) {
+        Vector3 position = Vector3.Lerp((*prevSrc).position, (*mainSrc).position, fraction);
+        galaxyRenderer.DrawBlackHole(position);
+      }
+    }
   }
 
   private void LateUpdate() {
-    galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos);
+    galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos, Mathf.InverseLerp(prevState.time, mainState.time, simulationTime));
   }
 
   private void stepSimulation() {
@@ -565,17 +574,6 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (OnStep != null) {
       OnStep();
-    }
-
-    //Render the black holes themselves
-    unsafe {
-      BlackHoleMainState* prevSrc = prevState.mainState;
-      BlackHoleMainState* mainSrc = mainState.mainState;
-      float fraction = Mathf.InverseLerp(prevState.time, mainState.time, simulationTime);
-      for (int j = 0; j < mainState.count; j++, prevSrc++, mainSrc++) {
-        Vector3 position = Vector3.Lerp((*prevSrc).position, (*mainSrc).position, fraction);
-        galaxyRenderer.DrawBlackHole(position);
-      }
     }
   }
 

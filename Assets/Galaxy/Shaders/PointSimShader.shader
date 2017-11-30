@@ -1,9 +1,9 @@
 ﻿Shader "Unlit/PointSimShader" {
-	Properties {
-		_MainTex ("Texture", 2D) = "white" {}
+  Properties {
+    _MainTex ("Texture", 2D) = "white" {}
     _Noise   ("Noise", 2D) = "white" {}
     _Force   ("Force", Float) = 0.01
-	}
+  }
 
   CGINCLUDE
   #include "UnityCG.cginc"
@@ -31,6 +31,10 @@
   float _MinDiscRadius;
   float _MaxDiscRadius;
   float _MaxDiscHeight;
+
+  float4 _DragCenter;
+  float4 _DragFalloff;
+  float4x4 _DragTransform;
   
 
   struct appdata {
@@ -121,10 +125,22 @@
     return o;
   }
 
+  float4 applyDrag(v2f i) : SV_Target {
+	float4 pos = tex2D(_CurrPositions, i.uv);
+
+	float distFromDragCenter = length(pos.xyz - _DragCenter.xyz);
+	float dragFalloff = saturate(_DragFalloff.x / (distFromDragCenter + _DragFalloff.y));
+
+	float4 newPos = mul(_DragTransform, float4(pos.xyz, 1));
+	pos.xyz = lerp(pos.xyz, newPos.xyz, dragFalloff);
+
+	return pos;
+  }
+
   ENDCG
 
-	SubShader {
-		Tags { "RenderType"="Opaque" }
+  SubShader {
+    Tags { "RenderType"="Opaque" }
     LOD 100
     Cull Off
     ZTest Off
@@ -132,19 +148,26 @@
     Blend One Zero
 
     //Pass 0: integrate velocities
-		Pass {
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment integratePositions
+    Pass {
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment integratePositions
       ENDCG
-		}
+    }
 
     //Pass 1: init galaxy states
-		Pass {
-			CGPROGRAM
-			#pragma vertex vert
-			#pragma fragment initDisc
+    Pass {
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment initDisc
       ENDCG
-		}
+    }
+
+	Pass {
+	  CGPROGRAM
+      #pragma vertex vert
+	  #pragma fragment applyDrag
+	  ENDCG
 	}
+  }
 }

@@ -42,13 +42,19 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     _sim.TimestepMultipliers.Remove(this);
   }
 
-  public void OnGrasp() {
+  public void OnGrasp(BlackHoleBehaviour graspedBehaviour) {
     _numGrasped++;
     _sim.simulate = false;
+
+    int index = _spawned.IndexOf(graspedBehaviour);
+    _sim.BeginDrag(_renderer.displayAnchor.worldToLocalMatrix * graspedBehaviour.transform.localToWorldMatrix, index);
   }
 
-  public void OnRelease() {
+  public void OnRelease(BlackHoleBehaviour releasedBehaviour) {
     _numGrasped--;
+
+    int index = _spawned.IndexOf(releasedBehaviour);
+    _sim.EndDrag(index);
 
     if (_numGrasped == 0) {
       _sim.simulate = true;
@@ -56,8 +62,17 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     }
   }
 
-  public void OnMove() {
+  public void OnMove(BlackHoleBehaviour movedBehaviour) {
     if (_numGrasped > 0) {
+      for (int i = 0; i < _sim.mainState.count; i++) {
+        var ie = _spawned[i].GetComponent<InteractionBehaviour>();
+        if (!ie.isGrasped) {
+          continue;
+        }
+
+        _sim.UpdateDrag(_renderer.displayAnchor.worldToLocalMatrix * _spawned[i].transform.localToWorldMatrix, i);
+      }
+
       unsafe {
         GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
         for (int i = 0; i < _sim.mainState.count; i++, ptr++) {

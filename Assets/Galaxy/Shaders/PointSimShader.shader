@@ -34,10 +34,9 @@
   float _MaxDiscRadius;
   float _MaxDiscHeight;
 
-  float4 _DragCenter;
-  float4 _DragFalloff;
-  float4x4 _DragTransform;
-  
+  uint _NumDrags;
+  float _DragIds[4];
+  float4x4 _DragTransforms[4];
 
   struct appdata {
     float4 vertex : POSITION;
@@ -130,16 +129,13 @@
   float4 applyDrag(v2f i) : SV_Target {
 	float4 pos = tex2D(_DragPositions, i.uv);
 
-	//Always use the current position to calculate falloff, that way all textures
-	//use the same falloff
-	float4 currPos = tex2D(_CurrPositions, i.uv);
-
-	float distFromDragCenter = length(currPos.xyz - _DragCenter.xyz);
-	float dragFalloff = saturate(_DragFalloff.x / (distFromDragCenter + _DragFalloff.y));
-
-	float4 newPos = mul(_DragTransform, float4(pos.xyz, 1));
-
-	pos.xyz = lerp(pos.xyz, newPos.xyz, dragFalloff);
+	for (uint i = 0; i < _NumDrags; i++) {
+		float id = _DragIds[i];
+		float4x4 transform = _DragTransforms[i];
+		if (abs(pos.w - id) < 0.01) {
+			pos.xyz = mul(transform, float4(pos.xyz, 1));
+		}
+	}
 
 	return pos;
   }
@@ -170,6 +166,7 @@
       ENDCG
     }
 
+	//Pass 2: perform drag calculations
 	Pass {
 	  CGPROGRAM
       #pragma vertex vert

@@ -4754,10 +4754,10 @@ MonoBehaviour:
           m_Calls:
           - m_Target: {fileID: 1489295043}
             m_MethodName: OnGrasp
-            m_Mode: 1
+            m_Mode: 2
             m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_ObjectArgument: {fileID: 1725129127}
+              m_ObjectArgumentAssemblyTypeName: BlackHoleBehaviour, Assembly-CSharp
               m_IntArgument: 0
               m_FloatArgument: 0
               m_StringArgument: 
@@ -4771,10 +4771,10 @@ MonoBehaviour:
           m_Calls:
           - m_Target: {fileID: 1489295043}
             m_MethodName: OnRelease
-            m_Mode: 1
+            m_Mode: 2
             m_Arguments:
-              m_ObjectArgument: {fileID: 0}
-              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_ObjectArgument: {fileID: 1725129127}
+              m_ObjectArgumentAssemblyTypeName: BlackHoleBehaviour, Assembly-CSharp
               m_IntArgument: 0
               m_FloatArgument: 0
               m_StringArgument: 
@@ -4813,10 +4813,10 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1489295043}
         m_MethodName: OnMove
-        m_Mode: 1
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 1725129127}
+          m_ObjectArgumentAssemblyTypeName: BlackHoleBehaviour, Assembly-CSharp
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -4826,6 +4826,24 @@ MonoBehaviour:
       Culture=neutral, PublicKeyToken=null
   movementThreshold: 0.004
   rotationThreshold: 5
+  _renderer: {fileID: 87496864}
+  deltaTransform:
+    e00: 0
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 0
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 0
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 0
 --- !u!1 &1763927581
 GameObject:
   m_ObjectHideFlags: 0

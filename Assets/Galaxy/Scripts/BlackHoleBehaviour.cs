@@ -17,6 +17,9 @@ public class BlackHoleBehaviour : MonoBehaviour {
   [NonSerialized]
   public Quaternion prevRot;
 
+  [SerializeField]
+  private GalaxyRenderer _renderer;
+
   public Vector3 deltaPos {
     get {
       return transform.position - prevPos;
@@ -29,12 +32,20 @@ public class BlackHoleBehaviour : MonoBehaviour {
     }
   }
 
+  private Matrix4x4 _prevDeltaTransform;
+  public Matrix4x4 deltaTransform;
+
   void Update() {
     if (Vector3.Distance(transform.position, prevPos) > movementThreshold ||
         Quaternion.Angle(prevRot, transform.rotation) > rotationThreshold) {
       OnMove.Invoke();
+
       prevPos = transform.position;
       prevRot = transform.rotation;
+
+      Matrix4x4 tr = _renderer.displayAnchor.worldToLocalMatrix * transform.localToWorldMatrix;
+      deltaTransform = tr * _prevDeltaTransform.inverse;
+      _prevDeltaTransform = tr;
     }
   }
 }

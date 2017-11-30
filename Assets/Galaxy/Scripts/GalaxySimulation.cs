@@ -144,6 +144,11 @@ public class GalaxySimulation : MonoBehaviour {
   public RenderTexture currPos;
   public RenderTexture nextPos;
 
+  private RenderTexture tmpPrev;
+  private RenderTexture tmpCurr;
+  private RenderTexture tmpNext;
+  private List<Drag> drags = new List<Drag>();
+
   public Material simulateMat;
 
   public float timescale {
@@ -158,6 +163,19 @@ public class GalaxySimulation : MonoBehaviour {
 
   private int _seed = 0;
   private int _nextId = 0;
+
+  public struct Drag {
+    public Matrix4x4 startTransform;
+    public Matrix4x4 currTransform;
+
+    public int index;
+
+    public Matrix4x4 deltaTransform {
+      get {
+        return currTransform * startTransform.inverse;
+      }
+    }
+  }
 
   [StructLayout(LayoutKind.Sequential)]
   public struct BlackHoleMainState {
@@ -573,6 +591,82 @@ public class GalaxySimulation : MonoBehaviour {
 
   private void LateUpdate() {
     galaxyRenderer.UpdatePositions(currPos, prevPos, nextPos, Mathf.InverseLerp(prevState.time, mainState.time, simulationTime));
+  }
+
+  public void BeginDrag(Matrix4x4 startTransform, int blackHoleIndex) {
+    if (tmpCurr == null) {
+      tmpCurr = RenderTexture.GetTemporary(currPos.width, currPos.height, 0, currPos.format, RenderTextureReadWrite.Linear);
+      tmpNext = RenderTexture.GetTemporary(currPos.width, currPos.height, 0, currPos.format, RenderTextureReadWrite.Linear);
+      tmpPrev = RenderTexture.GetTemporary(currPos.width, currPos.height, 0, currPos.format, RenderTextureReadWrite.Linear);
+
+      tmpCurr.Create();
+      tmpNext.Create();
+      tmpPrev.Create();
+
+      Graphics.CopyTexture(currPos, tmpCurr);
+      Graphics.CopyTexture(nextPos, tmpNext);
+      Graphics.CopyTexture(prevPos, tmpPrev);
+    }
+
+    if (drags.Query().Any(d => d.index == blackHoleIndex)) {
+      Debug.LogError("Cannot start a second drag with an existing index.");
+      return;
+    }
+
+    drags.Add(new Drag() {
+      startTransform = startTransform,
+      currTransform = startTransform,
+      index = blackHoleIndex
+    });
+  }
+
+  public void EndDrag(int blackHoleIndex) {
+    int index = drags.Query().IndexOf(g => g.index == blackHoleIndex);
+    var drag = drags[index];
+    drags.RemoveAt(index);
+
+    applyDrags(drag);
+
+    if (drags.Count == 0) {
+      RenderTexture.ReleaseTemporary(tmpCurr);
+      RenderTexture.ReleaseTemporary(tmpNext);
+      RenderTexture.ReleaseTemporary(tmpPrev);
+      tmpCurr = tmpNext = tmpPrev = null;
+    } else {
+      Graphics.CopyTexture(currPos, tmpCurr);
+      Graphics.CopyTexture(nextPos, tmpNext);
+      Graphics.CopyTexture(prevPos, tmpPrev);
+    }
+  }
+
+  public void UpdateDrag(Matrix4x4 currTransform, int blackHoleIndex) {
+    int index = drags.Query().IndexOf(g => g.index == blackHoleIndex);
+    var drag = drags[index];
+    drag.currTransform = currTransform;
+    drags[index] = drag;
+
+    applyDrags(drags.ToArray());
+  }
+
+  private void applyDrags(params Drag[] drags) {
+    simulateMat.SetInt("_NumDrags", drags.Length);
+
+    float[] floatArray = new float[4];
+    Matrix4x4[] matArray = new Matrix4x4[4];
+    drags.Query().Select(t => (float)t.index / mainState.count).FillArray(floatArray);
+    drags.Query().Select(t => t.deltaTransform).FillArray(matArray);
+
+    simulateMat.SetFloatArray("_DragIds", floatArray);
+    simulateMat.SetMatrixArray("_DragTransforms", matArray);
+
+    simulateMat.SetTexture("_DragPositions", tmpCurr);
+    Graphics.Blit(null, currPos, simulateMat, 2);
+
+    simulateMat.SetTexture("_DragPositions", tmpPrev);
+    Graphics.Blit(null, prevPos, simulateMat, 2);
+
+    simulateMat.SetTexture("_DragPositions", tmpNext);
+    Graphics.Blit(null, nextPos, simulateMat, 2);
   }
 
   private void stepSimulation() {

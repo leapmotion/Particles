@@ -532,6 +532,7 @@ public class GalaxySimulation : MonoBehaviour {
 
       //Build and display trail mesh
       using (new ProfilerSample("Display Trails")) {
+
         _trailVerts.Clear();
         _trailIndices.Clear();
 
@@ -772,42 +773,42 @@ public class GalaxySimulation : MonoBehaviour {
         }
 
         //Black hole combination
-        {
-          BlackHoleMainState* mainA = state.mainState;
-          BlackHoleSecondaryState* secondA = state.secondaryState;
-          for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {
+        //{
+        //  BlackHoleMainState* mainA = state.mainState;
+        //  BlackHoleSecondaryState* secondA = state.secondaryState;
+        //  for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {
 
-            BlackHoleMainState* mainB = state.mainState + indexA + 1;
-            BlackHoleSecondaryState* secondB = state.secondaryState + indexA + 1;
-            for (int indexB = indexA + 1; indexB < state.count; indexB++, mainB++, secondB++) {
-              float dx = (*mainA).x - (*mainB).x;
-              float dy = (*mainA).y - (*mainB).y;
-              float dz = (*mainA).z - (*mainB).z;
+        //    BlackHoleMainState* mainB = state.mainState + indexA + 1;
+        //    BlackHoleSecondaryState* secondB = state.secondaryState + indexA + 1;
+        //    for (int indexB = indexA + 1; indexB < state.count; indexB++, mainB++, secondB++) {
+        //      float dx = (*mainA).x - (*mainB).x;
+        //      float dy = (*mainA).y - (*mainB).y;
+        //      float dz = (*mainA).z - (*mainB).z;
 
-              float distSqrd = dx * dx + dy * dy + dz * dz;
-              if (distSqrd <= combineDistSqrd) {
-                float totalMass = (*mainA).mass + (*mainB).mass;
-                (*mainA).x = ((*mainA).x * (*mainA).mass + (*mainB).x * (*mainB).mass) / totalMass;
-                (*mainA).y = ((*mainA).y * (*mainA).mass + (*mainB).y * (*mainB).mass) / totalMass;
-                (*mainA).z = ((*mainA).z * (*mainA).mass + (*mainB).z * (*mainB).mass) / totalMass;
+        //      float distSqrd = dx * dx + dy * dy + dz * dz;
+        //      if (distSqrd <= combineDistSqrd) {
+        //        float totalMass = (*mainA).mass + (*mainB).mass;
+        //        (*mainA).x = ((*mainA).x * (*mainA).mass + (*mainB).x * (*mainB).mass) / totalMass;
+        //        (*mainA).y = ((*mainA).y * (*mainA).mass + (*mainB).y * (*mainB).mass) / totalMass;
+        //        (*mainA).z = ((*mainA).z * (*mainA).mass + (*mainB).z * (*mainB).mass) / totalMass;
 
-                (*mainA).vx = ((*mainA).vx * (*mainA).mass + (*mainB).vx * (*mainB).mass) / totalMass;
-                (*mainA).vy = ((*mainA).vy * (*mainA).mass + (*mainB).vy * (*mainB).mass) / totalMass;
-                (*mainA).vz = ((*mainA).vz * (*mainA).mass + (*mainB).vz * (*mainB).mass) / totalMass;
+        //        (*mainA).vx = ((*mainA).vx * (*mainA).mass + (*mainB).vx * (*mainB).mass) / totalMass;
+        //        (*mainA).vy = ((*mainA).vy * (*mainA).mass + (*mainB).vy * (*mainB).mass) / totalMass;
+        //        (*mainA).vz = ((*mainA).vz * (*mainA).mass + (*mainB).vz * (*mainB).mass) / totalMass;
 
-                (*mainA).mass += (*mainB).mass;
+        //        (*mainA).mass += (*mainB).mass;
 
-                state.count--;
-                *mainB = *(state.mainState + state.count);
-                *secondB = *(state.secondaryState + state.count);
+        //        state.count--;
+        //        *mainB = *(state.mainState + state.count);
+        //        *secondB = *(state.secondaryState + state.count);
 
-                indexB--;
-                mainB--;
-                secondB--;
-              }
-            }
-          }
-        }
+        //        indexB--;
+        //        mainB--;
+        //        secondB--;
+        //      }
+        //    }
+        //  }
+        //}
       }
     }
   }

@@ -133,6 +133,9 @@ public class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private int _trailUpdateRate = 2;
 
+  [SerializeField]
+  private Material _trailMaterial;
+
   //##################
   //### References ###
   //##################
@@ -264,6 +267,11 @@ public class GalaxySimulation : MonoBehaviour {
   private float[] _floatArray = new float[100];
   private Vector4[] _vectorArray = new Vector4[100];
   private Matrix4x4[] _matrixArray = new Matrix4x4[100];
+
+  private Mesh _trailMesh;
+  private List<Vector3> _trailVerts = new List<Vector3>();
+  private List<int> _trailIndices = new List<int>();
+  private Dictionary<int, int[]> _trailIndexCache = new Dictionary<int, int[]>();
 
   [DevButton("Reset Sim")]
   public unsafe void ResetSimulation() {
@@ -403,6 +411,9 @@ public class GalaxySimulation : MonoBehaviour {
   }
 
   private IEnumerator Start() {
+    _trailMesh = new Mesh();
+    _trailMesh.MarkDynamic();
+
     prevPos.Create();
     currPos.Create();
     nextPos.Create();
@@ -481,32 +492,69 @@ public class GalaxySimulation : MonoBehaviour {
     }
 
     if (_enableTrails) {
-      int simTime = 0;
-      while (_trailState.frames < mainState.frames + _maxTrailLength) {
-        stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
+      using (new ProfilerSample("Simulate Trails")) {
+        int simTime = 0;
+        while (_trailState.frames < mainState.frames + _maxTrailLength) {
+          stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
 
-        unsafe {
-          BlackHoleMainState* main = _trailState.mainState;
-          BlackHoleSecondaryState* secondary = _trailState.secondaryState;
-          for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
-            _trails[(*secondary).id].Add((*main).position);
+          unsafe {
+            BlackHoleMainState* main = _trailState.mainState;
+            BlackHoleSecondaryState* secondary = _trailState.secondaryState;
+            for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
+              _trails[(*secondary).id].Add((*main).position);
+            }
           }
-        }
 
-        simTime++;
-        if (simTime >= _trailUpdateRate) {
-          break;
+          simTime++;
+          if (simTime >= _trailUpdateRate) {
+            break;
+          }
         }
       }
 
-      RuntimeGizmoDrawer drawer;
-      if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
-        drawer.color = Color.white;
-        drawer.matrix = galaxyRenderer.displayAnchor.localToWorldMatrix;
-        foreach (var pair in _trails) {
-          foreach (var seg in pair.Value.Query().Zip(Values.From(0), (a, b) => new KeyValuePair<int, Vector3>(b, a)).Where(p => p.Key % 16 == 0).Select(p => p.Value).WithPrevious()) {
-            drawer.DrawLine(seg.prev, seg.value);
+      //Build and display trail mesh
+      using (new ProfilerSample("Display Trails")) {
+        _trailVerts.Clear();
+        _trailIndices.Clear();
+
+        using (new ProfilerSample("Build Vertex List")) {
+          foreach (var pair in _trails) {
+            bool isFirst = true;
+            foreach (var point in pair.Value) {
+              if (!isFirst) {
+                _trailIndices.Add(_trailVerts.Count);
+                _trailIndices.Add(_trailVerts.Count - 1);
+              }
+
+              _trailVerts.Add(point);
+              isFirst = false;
+            }
           }
+        }
+
+        int[] indexArray;
+        using (new ProfilerSample("Build Index Array")) {
+          int goalLength = Mathf.NextPowerOfTwo(_trailIndices.Count);
+
+          if (!_trailIndexCache.TryGetValue(goalLength, out indexArray)) {
+            indexArray = new int[goalLength];
+            _trailIndexCache[goalLength] = indexArray;
+          }
+
+          for (int i = 0; i < _trailIndices.Count; i++) {
+            indexArray[i] = _trailIndices[i];
+          }
+
+          for (int i = _trailIndices.Count; i < goalLength; i++) {
+            indexArray[i] = 0;
+          }
+        }
+
+        using (new ProfilerSample("Upload Mesh")) {
+          _trailMesh.Clear();
+          _trailMesh.SetVertices(_trailVerts);
+          _trailMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
+          Graphics.DrawMesh(_trailMesh, galaxyRenderer.displayAnchor.localToWorldMatrix, _trailMaterial, 0);
         }
       }
     }

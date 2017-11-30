@@ -62,7 +62,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
         GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
         for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
           (*ptr).position = _renderer.displayAnchor.InverseTransformPoint(_spawned[i].transform.position);
-          (*ptr).velocity = _spawned[i].deltaRot * (*ptr).velocity;
+          (*ptr).velocity = _renderer.displayAnchor.InverseTransformDirection(_spawned[i].transform.forward * (*ptr).velocity.magnitude);
         }
       }
       _sim.ResetTrails();
@@ -99,6 +99,7 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
       GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
       for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
         _spawned[i].transform.position = _renderer.displayAnchor.TransformPoint((*ptr).position);
+        _spawned[i].transform.rotation = _renderer.displayAnchor.rotation * Quaternion.LookRotation((*ptr).velocity);
       }
     }
 

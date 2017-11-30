@@ -565,8 +565,6 @@ MonoBehaviour:
     IsLeftToBeSpawned: 0
     RightModel: {fileID: 772335583}
     IsRightToBeSpawned: 0
-    modelList: []
-    modelsCheckedOut: []
     IsEnabled: 1
     CanDuplicate: 0
     HandPostProcesses:
@@ -5093,7 +5091,7 @@ MeshFilter:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1786236360}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300000, guid: e91aab3111b2573409ef3d8c851ec187, type: 3}
 --- !u!1 &1940216655
 GameObject:
   m_ObjectHideFlags: 0

@@ -14,6 +14,8 @@
   sampler2D_float _Noise;
   sampler2D_float _RadiusDistribution;
 
+  sampler2D_float _DragPositions;
+
   float _Force;
 
   float _FuzzValue;
@@ -126,12 +128,17 @@
   }
 
   float4 applyDrag(v2f i) : SV_Target {
-	float4 pos = tex2D(_CurrPositions, i.uv);
+	float4 pos = tex2D(_DragPositions, i.uv);
 
-	float distFromDragCenter = length(pos.xyz - _DragCenter.xyz);
+	//Always use the current position to calculate falloff, that way all textures
+	//use the same falloff
+	float4 currPos = tex2D(_CurrPositions, i.uv);
+
+	float distFromDragCenter = length(currPos.xyz - _DragCenter.xyz);
 	float dragFalloff = saturate(_DragFalloff.x / (distFromDragCenter + _DragFalloff.y));
 
 	float4 newPos = mul(_DragTransform, float4(pos.xyz, 1));
+
 	pos.xyz = lerp(pos.xyz, newPos.xyz, dragFalloff);
 
 	return pos;

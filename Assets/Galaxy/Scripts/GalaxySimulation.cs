@@ -309,6 +309,7 @@ public class GalaxySimulation : MonoBehaviour {
     }
 
     _trails.Clear();
+    _trailMesh.Clear();
 
     simulationTime = 0;
     mainState = new UniverseState(blackHoleCount);
@@ -531,51 +532,54 @@ public class GalaxySimulation : MonoBehaviour {
       }
 
       //Build and display trail mesh
-      using (new ProfilerSample("Display Trails")) {
+      //but only if it's already reached its max length
+      if (_trailState.frames - mainState.frames == _maxTrailLength) {
+        using (new ProfilerSample("Display Trails")) {
+          _trailVerts.Clear();
+          _trailIndices.Clear();
 
-        _trailVerts.Clear();
-        _trailIndices.Clear();
+          using (new ProfilerSample("Build Vertex List")) {
+            foreach (var pair in _trails) {
+              bool isFirst = true;
+              foreach (var point in pair.Value) {
+                if (!isFirst) {
+                  _trailIndices.Add(_trailVerts.Count);
+                  _trailIndices.Add(_trailVerts.Count - 1);
+                }
 
-        using (new ProfilerSample("Build Vertex List")) {
-          foreach (var pair in _trails) {
-            bool isFirst = true;
-            foreach (var point in pair.Value) {
-              if (!isFirst) {
-                _trailIndices.Add(_trailVerts.Count);
-                _trailIndices.Add(_trailVerts.Count - 1);
+                _trailVerts.Add(point);
+                isFirst = false;
               }
-
-              _trailVerts.Add(point);
-              isFirst = false;
             }
           }
-        }
 
-        int[] indexArray;
-        using (new ProfilerSample("Build Index Array")) {
-          int goalLength = Mathf.NextPowerOfTwo(_trailIndices.Count);
+          int[] indexArray;
+          using (new ProfilerSample("Build Index Array")) {
+            int goalLength = Mathf.NextPowerOfTwo(_trailIndices.Count);
 
-          if (!_trailIndexCache.TryGetValue(goalLength, out indexArray)) {
-            indexArray = new int[goalLength];
-            _trailIndexCache[goalLength] = indexArray;
+            if (!_trailIndexCache.TryGetValue(goalLength, out indexArray)) {
+              indexArray = new int[goalLength];
+              _trailIndexCache[goalLength] = indexArray;
+            }
+
+            for (int i = 0; i < _trailIndices.Count; i++) {
+              indexArray[i] = _trailIndices[i];
+            }
+
+            for (int i = _trailIndices.Count; i < goalLength; i++) {
+              indexArray[i] = 0;
+            }
           }
 
-          for (int i = 0; i < _trailIndices.Count; i++) {
-            indexArray[i] = _trailIndices[i];
+          using (new ProfilerSample("Upload Mesh")) {
+            _trailMesh.Clear();
+            _trailMesh.SetVertices(_trailVerts);
+            _trailMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
           }
-
-          for (int i = _trailIndices.Count; i < goalLength; i++) {
-            indexArray[i] = 0;
-          }
-        }
-
-        using (new ProfilerSample("Upload Mesh")) {
-          _trailMesh.Clear();
-          _trailMesh.SetVertices(_trailVerts);
-          _trailMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
-          Graphics.DrawMesh(_trailMesh, galaxyRenderer.displayAnchor.localToWorldMatrix, _trailMaterial, 0);
         }
       }
+
+      Graphics.DrawMesh(_trailMesh, galaxyRenderer.displayAnchor.localToWorldMatrix, _trailMaterial, 0);
     }
 
     //Render the black holes themselves

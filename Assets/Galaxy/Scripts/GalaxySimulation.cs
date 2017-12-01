@@ -733,7 +733,7 @@ public class GalaxySimulation : MonoBehaviour {
       float planetDT = 1.0f / blackHoleSubFrames;
       float combinedDT = planetDT * timestepFactor;
       float preStepConstant = gravConstant * planetDT * timestepFactor;
-      float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
+      //float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
 
       for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
 

@@ -133,6 +133,13 @@ public class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private int _trailUpdateRate = 2;
 
+  [Range(1, 10000)]
+  [SerializeField, DevValue]
+  private int _trailShowLength = 500;
+
+  [SerializeField, DevValue]
+  private bool _onlyResetWhenComplete = true;
+
   [SerializeField]
   private Material _trailMaterial;
 
@@ -280,6 +287,7 @@ public class GalaxySimulation : MonoBehaviour {
   public UniverseState prevState;
 
   private UniverseState _trailState;
+  private bool _trailResetQueued = false;
   private Dictionary<int, List<Vector3>> _trails = new Dictionary<int, List<Vector3>>();
 
   private float[] _floatArray = new float[100];
@@ -412,19 +420,24 @@ public class GalaxySimulation : MonoBehaviour {
   }
 
   [DevButton]
-  public void ResetTrails() {
-    if (_trailState != null) {
-      _trailState.Dispose();
-      _trailState = null;
-    }
+  public void ResetTrails(bool forceReset = false) {
+    if (!forceReset && _onlyResetWhenComplete) {
+      _trailResetQueued = true;
+    } else {
+      _trailResetQueued = false;
+      if (_trailState != null) {
+        _trailState.Dispose();
+        _trailState = null;
+      }
 
-    _trailState = mainState.Clone();
+      _trailState = mainState.Clone();
 
-    _trails.Clear();
-    unsafe {
-      BlackHoleSecondaryState* src = mainState.secondaryState;
-      for (int i = 0; i < mainState.count; i++, src++) {
-        _trails[(*src).id] = new List<Vector3>();
+      _trails.Clear();
+      unsafe {
+        BlackHoleSecondaryState* src = mainState.secondaryState;
+        for (int i = 0; i < mainState.count; i++, src++) {
+          _trails[(*src).id] = new List<Vector3>();
+        }
       }
     }
   }
@@ -533,7 +546,7 @@ public class GalaxySimulation : MonoBehaviour {
 
       //Build and display trail mesh
       //but only if it's already reached its max length
-      if (_trailState.frames - mainState.frames == _maxTrailLength) {
+      if (_trailState.frames - mainState.frames >= _trailShowLength) {
         using (new ProfilerSample("Display Trails")) {
           _trailVerts.Clear();
           _trailIndices.Clear();
@@ -575,6 +588,10 @@ public class GalaxySimulation : MonoBehaviour {
             _trailMesh.Clear();
             _trailMesh.SetVertices(_trailVerts);
             _trailMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
+          }
+
+          if (_trailResetQueued) {
+            ResetTrails(forceReset: true);
           }
         }
       }

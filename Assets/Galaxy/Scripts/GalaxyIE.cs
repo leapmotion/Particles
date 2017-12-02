@@ -42,6 +42,25 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     _sim.TimestepMultipliers.Remove(this);
   }
 
+  private void Update() {
+    foreach (var spawned in _spawned) {
+      float distToBlackHole = float.MaxValue;
+
+      if (Hands.Left != null) {
+        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Left.PalmPosition.ToVector3(),
+                                                      spawned.transform.position));
+      }
+
+      if (Hands.Right != null) {
+        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Right.PalmPosition.ToVector3(),
+                                                      spawned.transform.position));
+      }
+
+      var renderer = spawned.GetComponentInChildren<Renderer>();
+      renderer.material.color = renderer.material.color.WithAlpha(1 - Mathf.InverseLerp(_distRange.x, _distRange.y, distToBlackHole));
+    }
+  }
+
   public void OnGrasp(BlackHoleBehaviour graspedBehaviour) {
     _numGrasped++;
     _sim.simulate = false;
@@ -122,27 +141,18 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
     foreach (var spawned in _spawned) {
       spawned.transform.localScale = Vector3.one / spawned.transform.parent.lossyScale.x;
 
-      float distToBlackHole = float.MaxValue;
-
       if (Hands.Left != null) {
-        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Left.PalmPosition.ToVector3(),
+        minDist = Mathf.Min(minDist, Vector3.Distance(Hands.Left.PalmPosition.ToVector3(),
                                                       spawned.transform.position));
       }
 
       if (Hands.Right != null) {
-        distToBlackHole = Mathf.Min(distToBlackHole, Vector3.Distance(Hands.Right.PalmPosition.ToVector3(),
+        minDist = Mathf.Min(minDist, Vector3.Distance(Hands.Right.PalmPosition.ToVector3(),
                                                       spawned.transform.position));
       }
-
-      var renderer = spawned.GetComponentInChildren<Renderer>();
-      renderer.material.color = renderer.material.color.WithAlpha(1 - Mathf.InverseLerp(_distRange.x, _distRange.y, distToBlackHole));
-
-      minDist = Mathf.Min(distToBlackHole, minDist);
     }
 
-    //Debug.Log(minDist);
     float percent = Mathf.InverseLerp(_distRange.x, _distRange.y, minDist);
-    //Debug.Log(percent);
     float curvedPercent = _distCurve.Evaluate(percent);
 
     multiplier = curvedPercent;

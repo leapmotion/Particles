@@ -58,7 +58,8 @@ public class RegularPinchTranslate : MonoBehaviour {
     }
 
     //Can't move the world if any interaction hand is grasping anything
-    if (manager.interactionControllers.Query().Any(t => t.isGraspingObject)) {
+    if (manager.interactionControllers.Query().Any(t => t.isGraspingObject ||
+        manager.interactionControllers.Query().Any(t => t.isPrimaryHovering)) {
       left.grasped = false;
       right.grasped = false;
     }

@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
+using Leap.Unity.Query;
+using Leap.Unity.Interaction;
 
 public class RegularPinchTranslate : MonoBehaviour {
 
   public GrabSwitch left, right;
   public bool twoHandedOnly = false;
+  public InteractionManager manager;
 
   private void Update() {
     if (Hands.Left != null) {
@@ -52,6 +55,12 @@ public class RegularPinchTranslate : MonoBehaviour {
         right.grasped = false;
         left.grasped = false;
       }
+    }
+
+    //Can't move the world if any interaction hand is grasping anything
+    if (manager.interactionControllers.Query().Any(t => t.isGraspingObject)) {
+      left.grasped = false;
+      right.grasped = false;
     }
   }
 }

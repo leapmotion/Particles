@@ -4199,6 +4199,7 @@ MonoBehaviour:
   left: {fileID: 414461053}
   right: {fileID: 1326112675}
   twoHandedOnly: 1
+  manager: {fileID: 1562905667}
 --- !u!1 &1461926255
 GameObject:
   m_ObjectHideFlags: 0

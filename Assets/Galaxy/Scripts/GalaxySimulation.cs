@@ -125,6 +125,8 @@ public class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private bool _enableTrails = false;
 
+
+
   [Range(1, 10000)]
   [SerializeField, DevValue]
   private int _maxTrailLength = 100;
@@ -142,6 +144,12 @@ public class GalaxySimulation : MonoBehaviour {
 
   [SerializeField]
   private Material _trailMaterial;
+
+  [SerializeField]
+  private bool _profileTrails = false;
+
+  [SerializeField]
+  private double _trailFramerate = 0;
 
   //##################
   //### References ###
@@ -525,21 +533,36 @@ public class GalaxySimulation : MonoBehaviour {
 
     if (_enableTrails) {
       using (new ProfilerSample("Simulate Trails")) {
-        int simTime = 0;
-        while (_trailState.frames < mainState.frames + _maxTrailLength) {
-          stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
-
-          unsafe {
-            BlackHoleMainState* main = _trailState.mainState;
-            BlackHoleSecondaryState* secondary = _trailState.secondaryState;
-            for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
-              _trails[(*secondary).id].Add((*main).position);
-            }
+        if (_profileTrails) {
+          var stopwatch = new System.Diagnostics.Stopwatch();
+          stopwatch.Reset();
+          stopwatch.Start();
+          const int FRAMES_TO_TEST = 1000;
+          for (int i = 0; i < FRAMES_TO_TEST; i++) {
+            stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
           }
+          double seconds = stopwatch.ElapsedTicks / (double)System.Diagnostics.Stopwatch.Frequency;
+          double framesPerSecond = FRAMES_TO_TEST / seconds;
+          double framesPer16Ms = (16.0 / 1000.0) * framesPerSecond;
+          _trailFramerate = framesPerSecond;
+          Debug.Log("#####: " + _trailFramerate);
+        } else {
+          int simTime = 0;
+          while (_trailState.frames < mainState.frames + _maxTrailLength) {
+            stepState(_trailState, 1.0f / REFERENCE_FRAMERATE);
 
-          simTime++;
-          if (simTime >= _trailUpdateRate) {
-            break;
+            unsafe {
+              BlackHoleMainState* main = _trailState.mainState;
+              BlackHoleSecondaryState* secondary = _trailState.secondaryState;
+              for (int j = 0; j < _trailState.count; j++, main++, secondary++) {
+                _trails[(*secondary).id].Add((*main).position);
+              }
+            }
+
+            simTime++;
+            if (simTime >= _trailUpdateRate) {
+              break;
+            }
           }
         }
       }
@@ -742,95 +765,93 @@ public class GalaxySimulation : MonoBehaviour {
   }
 
   private unsafe void stepState(UniverseState state, float deltaTime) {
-    using (new ProfilerSample("Step Galaxy")) {
-      float timestepFactor = deltaTime * REFERENCE_FRAMERATE;
+    float timestepFactor = deltaTime * REFERENCE_FRAMERATE;
 
-      state.time += deltaTime;
-      state.frames++;
-      float planetDT = 1.0f / blackHoleSubFrames;
-      float combinedDT = planetDT * timestepFactor;
-      float preStepConstant = gravConstant * planetDT * timestepFactor;
-      //float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
+    state.time += deltaTime;
+    state.frames++;
+    float planetDT = 1.0f / blackHoleSubFrames;
+    float combinedDT = planetDT * timestepFactor;
+    float preStepConstant = gravConstant * planetDT * timestepFactor;
+    //float combineDistSqrd = blackHoleCombineDistance * blackHoleCombineDistance;
 
-      for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
+    for (int stepVar = 0; stepVar < blackHoleSubFrames; stepVar++) {
 
-        //Force accumulation
-        {
-          BlackHoleMainState* srcA = state.mainState;
-          for (int indexA = 0; indexA < state.count; indexA++, srcA++) {
+      //Force accumulation
+      {
+        BlackHoleMainState* srcA = state.mainState;
+        for (int indexA = 0; indexA < state.count; indexA++, srcA++) {
 
-            BlackHoleMainState* srcB = state.mainState + indexA + 1;
-            for (int indexB = indexA + 1; indexB < state.count; indexB++, srcB++) {
-              float toBX = (*srcB).x - (*srcA).x;
-              float toBY = (*srcB).y - (*srcA).y;
-              float toBZ = (*srcB).z - (*srcA).z;
+          BlackHoleMainState* srcB = state.mainState + indexA + 1;
+          for (int indexB = indexA + 1; indexB < state.count; indexB++, srcB++) {
+            float toBX = (*srcB).x - (*srcA).x;
+            float toBY = (*srcB).y - (*srcA).y;
+            float toBZ = (*srcB).z - (*srcA).z;
 
-              float dist = Mathf.Sqrt(toBX * toBX + toBY * toBY + toBZ * toBZ);
-              float forceConst = (*srcA).mass * (*srcB).mass * preStepConstant / (dist * dist * dist);
+            float dist = Mathf.Sqrt(toBX * toBX + toBY * toBY + toBZ * toBZ);
+            float forceConst = (*srcA).mass * (*srcB).mass * preStepConstant / (dist * dist * dist);
 
-              float forceX = toBX * forceConst;
-              float forceY = toBY * forceConst;
-              float forceZ = toBZ * forceConst;
+            float forceX = toBX * forceConst;
+            float forceY = toBY * forceConst;
+            float forceZ = toBZ * forceConst;
 
-              (*srcA).vx += forceX;
-              (*srcA).vy += forceY;
-              (*srcA).vz += forceZ;
+            (*srcA).vx += forceX;
+            (*srcA).vy += forceY;
+            (*srcA).vz += forceZ;
 
-              (*srcB).vx -= forceX;
-              (*srcB).vy -= forceY;
-              (*srcB).vz -= forceZ;
-            }
+            (*srcB).vx -= forceX;
+            (*srcB).vy -= forceY;
+            (*srcB).vz -= forceZ;
           }
         }
-
-        //Position intergration
-        {
-          BlackHoleMainState* src = state.mainState;
-          for (int j = 0; j < state.count; j++, src++) {
-            (*src).x += (*src).vx * combinedDT;
-            (*src).y += (*src).vy * combinedDT;
-            (*src).z += (*src).vz * combinedDT;
-          }
-        }
-
-        //Black hole combination
-        //{
-        //  BlackHoleMainState* mainA = state.mainState;
-        //  BlackHoleSecondaryState* secondA = state.secondaryState;
-        //  for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {
-
-        //    BlackHoleMainState* mainB = state.mainState + indexA + 1;
-        //    BlackHoleSecondaryState* secondB = state.secondaryState + indexA + 1;
-        //    for (int indexB = indexA + 1; indexB < state.count; indexB++, mainB++, secondB++) {
-        //      float dx = (*mainA).x - (*mainB).x;
-        //      float dy = (*mainA).y - (*mainB).y;
-        //      float dz = (*mainA).z - (*mainB).z;
-
-        //      float distSqrd = dx * dx + dy * dy + dz * dz;
-        //      if (distSqrd <= combineDistSqrd) {
-        //        float totalMass = (*mainA).mass + (*mainB).mass;
-        //        (*mainA).x = ((*mainA).x * (*mainA).mass + (*mainB).x * (*mainB).mass) / totalMass;
-        //        (*mainA).y = ((*mainA).y * (*mainA).mass + (*mainB).y * (*mainB).mass) / totalMass;
-        //        (*mainA).z = ((*mainA).z * (*mainA).mass + (*mainB).z * (*mainB).mass) / totalMass;
-
-        //        (*mainA).vx = ((*mainA).vx * (*mainA).mass + (*mainB).vx * (*mainB).mass) / totalMass;
-        //        (*mainA).vy = ((*mainA).vy * (*mainA).mass + (*mainB).vy * (*mainB).mass) / totalMass;
-        //        (*mainA).vz = ((*mainA).vz * (*mainA).mass + (*mainB).vz * (*mainB).mass) / totalMass;
-
-        //        (*mainA).mass += (*mainB).mass;
-
-        //        state.count--;
-        //        *mainB = *(state.mainState + state.count);
-        //        *secondB = *(state.secondaryState + state.count);
-
-        //        indexB--;
-        //        mainB--;
-        //        secondB--;
-        //      }
-        //    }
-        //  }
-        //}
       }
+
+      //Position intergration
+      {
+        BlackHoleMainState* src = state.mainState;
+        for (int j = 0; j < state.count; j++, src++) {
+          (*src).x += (*src).vx * combinedDT;
+          (*src).y += (*src).vy * combinedDT;
+          (*src).z += (*src).vz * combinedDT;
+        }
+      }
+
+      //Black hole combination
+      //{
+      //  BlackHoleMainState* mainA = state.mainState;
+      //  BlackHoleSecondaryState* secondA = state.secondaryState;
+      //  for (int indexA = 0; indexA < state.count; indexA++, mainA++, secondA++) {
+
+      //    BlackHoleMainState* mainB = state.mainState + indexA + 1;
+      //    BlackHoleSecondaryState* secondB = state.secondaryState + indexA + 1;
+      //    for (int indexB = indexA + 1; indexB < state.count; indexB++, mainB++, secondB++) {
+      //      float dx = (*mainA).x - (*mainB).x;
+      //      float dy = (*mainA).y - (*mainB).y;
+      //      float dz = (*mainA).z - (*mainB).z;
+
+      //      float distSqrd = dx * dx + dy * dy + dz * dz;
+      //      if (distSqrd <= combineDistSqrd) {
+      //        float totalMass = (*mainA).mass + (*mainB).mass;
+      //        (*mainA).x = ((*mainA).x * (*mainA).mass + (*mainB).x * (*mainB).mass) / totalMass;
+      //        (*mainA).y = ((*mainA).y * (*mainA).mass + (*mainB).y * (*mainB).mass) / totalMass;
+      //        (*mainA).z = ((*mainA).z * (*mainA).mass + (*mainB).z * (*mainB).mass) / totalMass;
+
+      //        (*mainA).vx = ((*mainA).vx * (*mainA).mass + (*mainB).vx * (*mainB).mass) / totalMass;
+      //        (*mainA).vy = ((*mainA).vy * (*mainA).mass + (*mainB).vy * (*mainB).mass) / totalMass;
+      //        (*mainA).vz = ((*mainA).vz * (*mainA).mass + (*mainB).vz * (*mainB).mass) / totalMass;
+
+      //        (*mainA).mass += (*mainB).mass;
+
+      //        state.count--;
+      //        *mainB = *(state.mainState + state.count);
+      //        *secondB = *(state.secondaryState + state.count);
+
+      //        indexB--;
+      //        mainB--;
+      //        secondB--;
+      //      }
+      //    }
+      //  }
+      //}
     }
   }
 }

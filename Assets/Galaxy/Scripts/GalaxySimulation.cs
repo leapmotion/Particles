@@ -543,7 +543,6 @@ public class GalaxySimulation : MonoBehaviour {
           }
           double seconds = stopwatch.ElapsedTicks / (double)System.Diagnostics.Stopwatch.Frequency;
           double framesPerSecond = FRAMES_TO_TEST / seconds;
-          double framesPer16Ms = (16.0 / 1000.0) * framesPerSecond;
           _trailFramerate = framesPerSecond;
           Debug.Log("#####: " + _trailFramerate);
         } else {

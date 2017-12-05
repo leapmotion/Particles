@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-[CreateAssetMenu]
+[CreateAssetMenu(order = 900)]
 public class RenderPreset : ScriptableObject {
 
   [Header("Star Coloring")]

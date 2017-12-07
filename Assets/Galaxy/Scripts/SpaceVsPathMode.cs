@@ -19,6 +19,7 @@ public class SpaceVsPathMode : MonoBehaviour, IPropertyMultiplier {
   public float multiplier { get; set; }
 
   private void OnEnable() {
+    multiplier = 1;
     galaxyRenderer.startBrightnessMultipliers.Add(this);
   }
 

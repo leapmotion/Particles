@@ -78,20 +78,31 @@ public class PalmTapGesture : MonoBehaviour, IRuntimeGizmoComponent {
     Vector3 palmPos = target.PalmPosition.ToVector3();
     Vector3 normalVector = target.PalmNormal.ToVector3();
 
-    Vector3 tipPos = hand.GetIndex().Bone(Bone.BoneType.TYPE_DISTAL).NextJoint.ToVector3();
-    Vector3 deltaTip = tipPos - palmPos;
+    foreach (var finger in hand.Fingers) {
+      if (finger.Type == Finger.FingerType.TYPE_THUMB ||
+          !finger.IsExtended) {
+        continue;
+      }
 
-    var tipSide = Vector3.Dot(deltaTip, normalVector) > 0 ? TargetSide.Palm : TargetSide.Back;
-    if ((tipSide & side) == 0) {
-      return false;
+      Vector3 tipPos = finger.Bone(Bone.BoneType.TYPE_DISTAL).NextJoint.ToVector3();
+      Vector3 deltaTip = tipPos - palmPos;
+
+      var tipSide = Vector3.Dot(deltaTip, normalVector) > 0 ? TargetSide.Palm : TargetSide.Back;
+      if ((tipSide & side) == 0) {
+        continue;
+      }
+
+      Vector3 projected = Vector3.Project(deltaTip, normalVector);
+
+      float heightAxis = projected.magnitude;
+      float radialAxis = (deltaTip - projected).magnitude;
+
+      if (heightAxis < height && radialAxis < radius) {
+        return true;
+      }
     }
 
-    Vector3 projected = Vector3.Project(deltaTip, normalVector);
-
-    float heightAxis = projected.magnitude;
-    float radialAxis = (deltaTip - projected).magnitude;
-
-    return heightAxis < height && radialAxis < radius;
+    return false;
   }
 
   public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {

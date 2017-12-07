@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: RightHandBlue
+  m_Name: RightHandPath
   m_Shader: {fileID: 4800000, guid: 874f4d9da4c976641b7758937b868fe3, type: 3}
   m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
@@ -73,5 +73,5 @@ Material:
     - _ZWrite: 1
     - _isLeftHand: 0
     m_Colors:
-    - _Color: {r: 0, g: 0.08965492, b: 1, a: 1}
+    - _Color: {r: 0.41075036, g: 0.3897059, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

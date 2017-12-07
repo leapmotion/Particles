@@ -6,9 +6,9 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: LeftHandRed
+  m_Name: RightHandSpace
   m_Shader: {fileID: 4800000, guid: 874f4d9da4c976641b7758937b868fe3, type: 3}
-  m_ShaderKeywords: _EMISSION _ISLEFTHAND_ON
+  m_ShaderKeywords: _EMISSION
   m_LightmapFlags: 1
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -71,7 +71,7 @@ Material:
     - _SrcBlend: 1
     - _UVSec: 0
     - _ZWrite: 1
-    - _isLeftHand: 1
+    - _isLeftHand: 0
     m_Colors:
-    - _Color: {r: 1, g: 0, b: 0, a: 1}
+    - _Color: {r: 0.59908724, g: 1, b: 0.5661765, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

@@ -2204,6 +2204,11 @@ Prefab:
       propertyPath: m_LocalRotation.x
       value: 0.99997807
       objectReference: {fileID: 0}
+    - target: {fileID: 137091762490896592, guid: 2aa010a1e75292e49a24f3f71bb9cddb,
+        type: 2}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 76c9094b806cbf84a9927b314b832a54, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2aa010a1e75292e49a24f3f71bb9cddb, type: 2}
   m_IsPrefabParent: 0
@@ -2218,6 +2223,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 690065969}
   m_Script: {fileID: 11500000, guid: 9e0ed5922e911b343b8400997c95409c, type: 3}
+--- !u!137 &690065972 stripped
+SkinnedMeshRenderer:
+  m_PrefabParentObject: {fileID: 137091762490896592, guid: 2aa010a1e75292e49a24f3f71bb9cddb,
+    type: 2}
+  m_PrefabInternal: {fileID: 690065969}
 --- !u!1 &716222553
 GameObject:
   m_ObjectHideFlags: 0
@@ -3422,6 +3432,11 @@ Prefab:
       propertyPath: m_LocalRotation.z
       value: -5.5511138e-17
       objectReference: {fileID: 0}
+    - target: {fileID: 137723638835135990, guid: 2276723046d707c4f94d431ceb80ab92,
+        type: 2}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 467367e1e533dfd46b39158ee9fc98cd, type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2276723046d707c4f94d431ceb80ab92, type: 2}
   m_IsPrefabParent: 0
@@ -3436,6 +3451,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 772335581}
   m_Script: {fileID: 11500000, guid: 9e0ed5922e911b343b8400997c95409c, type: 3}
+--- !u!137 &772335584 stripped
+SkinnedMeshRenderer:
+  m_PrefabParentObject: {fileID: 137723638835135990, guid: 2276723046d707c4f94d431ceb80ab92,
+    type: 2}
+  m_PrefabInternal: {fileID: 772335581}
 --- !u!1 &891335625
 GameObject:
   m_ObjectHideFlags: 0
@@ -3541,6 +3561,64 @@ Transform:
   m_Father: {fileID: 1940216656}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &977765818
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 977765819}
+  - component: {fileID: 977765820}
+  m_Layer: 0
+  m_Name: SpaceVsPathController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &977765819
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 977765818}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1280041021}
+  - {fileID: 1400861989}
+  m_Father: {fileID: 0}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &977765820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 977765818}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 425b98346095419408b896a029f4b66a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftHandRenderer: {fileID: 690065972}
+  rightHandRenderer: {fileID: 772335584}
+  galaxySim: {fileID: 1245413931}
+  galaxyRenderer: {fileID: 87496864}
+  spaceBehaviour: {fileID: 1441537859}
+  galaxyIE: {fileID: 1489295043}
+  pathSettings:
+    leftMaterial: {fileID: 2100000, guid: 166ecde2831eccd4b992d6bd0b12faa6, type: 2}
+    rightMaterial: {fileID: 2100000, guid: 90443e8b41e174c4ba85fde053bab9a5, type: 2}
+    trailColor: {r: 0.77205884, g: 0.9622718, b: 1, a: 1}
+    starBrightness: 0.3
+  spaceSettings:
+    leftMaterial: {fileID: 2100000, guid: 76c9094b806cbf84a9927b314b832a54, type: 2}
+    rightMaterial: {fileID: 2100000, guid: 467367e1e533dfd46b39158ee9fc98cd, type: 2}
+    trailColor: {r: 0.1929521, g: 0.27205884, b: 0.17803851, a: 1}
+    starBrightness: 1
 --- !u!1 &1012015448
 GameObject:
   m_ObjectHideFlags: 0
@@ -3977,6 +4055,7 @@ MonoBehaviour:
   blackHoleSpawnRadius: 3.806
   blackHoleCombineDistance: 0.05
   _enableTrails: 1
+  _trailColor: {r: 0, g: 0, b: 0, a: 0}
   _maxTrailLength: 1000
   _trailUpdateRate: 150
   _trailShowLength: 500
@@ -4030,11 +4109,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _eventTable:
-    _entries: []
+    _entries:
+    - enumValue: 100
+      callback:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 977765820}
+            m_MethodName: EnterPathMode
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
   tappedHand: 0
   targetSide: 1
   areaRadius: 0.05
-  areaHeight: 0.03
+  areaHeight: 0.04
   palmNormalTolerance: 45
   radialAngleTolerance: 90
   hysteresis: 0.01
@@ -4045,11 +4141,11 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1280041019}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.024216987, y: -3.0804014, z: 9.172642}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_Father: {fileID: 977765819}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1326112673
 GameObject:
@@ -4209,11 +4305,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _eventTable:
-    _entries: []
+    _entries:
+    - enumValue: 100
+      callback:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 977765820}
+            m_MethodName: EnterSpaceMode
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
   tappedHand: 1
   targetSide: 1
   areaRadius: 0.05
-  areaHeight: 0.03
+  areaHeight: 0.04
   palmNormalTolerance: 45
   radialAngleTolerance: 90
   hysteresis: 0.01
@@ -4224,11 +4337,11 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1400861987}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.024216987, y: -3.0804014, z: 9.172642}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 11
+  m_Father: {fileID: 977765819}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1408525950
 GameObject:
@@ -4401,6 +4514,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cd76a6612d91dc4e8a7425e9ddc6f3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _canAct: 1
   _sim: {fileID: 1245413931}
   _renderer: {fileID: 87496864}
   _iePrefab: {fileID: 1725129127}

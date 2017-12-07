@@ -16,13 +16,13 @@ public class PalmTapGesture : TwoHandedGesture, IRuntimeGizmoComponent {
   public float areaRadius = 0.05f;
 
   [Range(0, 0.15f)]
-  public float areaHeight = 0.03f;
+  public float areaHeight = 0.04f;
 
   [Range(0, 180)]
   public float palmNormalTolerance = 45;
 
   [Range(0, 180)]
-  public float radialAngleTolerance = 45;
+  public float radialAngleTolerance = 90;
 
   [Range(0, 0.15f)]
   public float hysteresis = 0.01f;

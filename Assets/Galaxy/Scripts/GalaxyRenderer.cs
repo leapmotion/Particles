@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Leap.Unity;
@@ -23,6 +24,8 @@ public class GalaxyRenderer : MonoBehaviour {
   private const string DIAGONAL_PROPERTY = "_DiagonalFilter";
 
   private const string CROSS_TEX_KEYWORD = "INTERPOLATION_CROSSES_TEX_BOUNDARY";
+
+  public List<IPropertyMultiplier> startBrightnessMultipliers = new List<IPropertyMultiplier>();
 
   [SerializeField]
   private GalaxySimulation _sim;
@@ -282,7 +285,14 @@ public class GalaxyRenderer : MonoBehaviour {
     mat.SetMatrix("_ToWorldMat", _displayAnchor.localToWorldMatrix);
     mat.SetFloat("_Scale", _displayAnchor.lossyScale.x);
     mat.SetFloat("_Size", _starSize);
-    mat.SetFloat("_Bright", _starBrightness);
+
+
+    float finalBrightness = _starBrightness;
+    foreach (var multiplier in startBrightnessMultipliers) {
+      finalBrightness *= multiplier.multiplier;
+    }
+
+    mat.SetFloat("_Bright", finalBrightness);
 
 #if UNITY_EDITOR
     uploadGradientTextures();

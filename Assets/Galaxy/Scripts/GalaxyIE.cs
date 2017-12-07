@@ -5,7 +5,7 @@ using Leap.Unity;
 using Leap.Unity.Interaction;
 using Leap.Unity.Attributes;
 
-public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
+public class GalaxyIE : MonoBehaviour, IPropertyMultiplier {
 
   [SerializeField]
   private bool _canAct = true;

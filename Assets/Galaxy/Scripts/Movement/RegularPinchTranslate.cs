@@ -11,6 +11,11 @@ public class RegularPinchTranslate : MonoBehaviour {
   public bool twoHandedOnly = false;
   public InteractionManager manager;
 
+  private void OnDisable() {
+    left.grasped = false;
+    right.grasped = false;
+  }
+
   private void Update() {
     if (Hands.Left != null) {
       left.Position = Hands.Left.GetPinchPosition();

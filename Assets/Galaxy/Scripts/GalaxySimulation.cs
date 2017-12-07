@@ -8,7 +8,7 @@ using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 using Leap.Unity.RuntimeGizmos;
 
-public interface ITimestepMultiplier {
+public interface IPropertyMultiplier {
   float multiplier { get; }
 }
 
@@ -19,7 +19,7 @@ public class GalaxySimulation : MonoBehaviour {
 
   public System.Action OnReset;
   public System.Action OnStep;
-  public List<ITimestepMultiplier> TimestepMultipliers = new List<ITimestepMultiplier>();
+  public List<IPropertyMultiplier> TimestepMultipliers = new List<IPropertyMultiplier>();
 
   //#######################
   //## General Settings ###

@@ -4,7 +4,7 @@ using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.Animation;
 
-public class TRSSlowdown : MonoBehaviour, ITimestepMultiplier {
+public class TRSSlowdown : MonoBehaviour, IPropertyMultiplier {
 
   public LeapRTS trs;
   public GalaxySimulation sim;

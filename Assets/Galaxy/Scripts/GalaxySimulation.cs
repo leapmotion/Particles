@@ -125,7 +125,12 @@ public class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private bool _enableTrails = false;
 
-
+  [SerializeField]
+  private Color _trailColor;
+  public Color trailColor {
+    get { return _trailColor; }
+    set { _trailColor = value; }
+  }
 
   [Range(1, 10000)]
   [SerializeField, DevValue]
@@ -305,6 +310,7 @@ public class GalaxySimulation : MonoBehaviour {
   private Mesh _trailMesh;
   private List<Vector3> _trailVerts = new List<Vector3>();
   private List<int> _trailIndices = new List<int>();
+  private MaterialPropertyBlock _trailPropertyBlock;
   private Dictionary<int, int[]> _trailIndexCache = new Dictionary<int, int[]>();
 
   [DevButton("Reset Sim")]
@@ -453,6 +459,8 @@ public class GalaxySimulation : MonoBehaviour {
   private IEnumerator Start() {
     _trailMesh = new Mesh();
     _trailMesh.MarkDynamic();
+
+    _trailPropertyBlock = new MaterialPropertyBlock();
 
     prevPos.Create();
     currPos.Create();
@@ -618,7 +626,8 @@ public class GalaxySimulation : MonoBehaviour {
         }
       }
 
-      Graphics.DrawMesh(_trailMesh, galaxyRenderer.displayAnchor.localToWorldMatrix, _trailMaterial, 0);
+      _trailPropertyBlock.SetColor("_Color", _trailColor);
+      Graphics.DrawMesh(_trailMesh, galaxyRenderer.displayAnchor.localToWorldMatrix, _trailMaterial, 0, null, 0, _trailPropertyBlock);
     }
 
     //Render the black holes themselves

@@ -8,6 +8,13 @@ using Leap.Unity.Attributes;
 public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
 
   [SerializeField]
+  private bool _canAct = true;
+  public bool canAct {
+    get { return _canAct; }
+    set { _canAct = value; }
+  }
+
+  [SerializeField]
   private GalaxySimulation _sim;
 
   [SerializeField]
@@ -57,7 +64,15 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
       }
 
       var renderer = spawned.GetComponentInChildren<Renderer>();
-      renderer.material.color = renderer.material.color.WithAlpha(1 - Mathf.InverseLerp(_distRange.x, _distRange.y, distToBlackHole));
+
+      float dstAlpha;
+      if (canAct) {
+        dstAlpha = 1 - Mathf.InverseLerp(_distRange.x, _distRange.y, distToBlackHole);
+      } else {
+        dstAlpha = 0;
+      }
+
+      renderer.material.color = renderer.material.color.WithAlpha(dstAlpha);
     }
   }
 
@@ -77,7 +92,6 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
 
     if (_numGrasped == 0) {
       _sim.simulate = true;
-      //multiplier = 1;
     }
   }
 
@@ -127,6 +141,16 @@ public class GalaxyIE : MonoBehaviour, ITimestepMultiplier {
   private void onStepSim() {
     if (_sim.mainState.count != _spawned.Count) {
       onResetSim();
+    }
+
+    if (canAct) {
+      foreach (var item in _spawned) {
+        item.GetComponent<InteractionBehaviour>().ignoreGrasping = false;
+      }
+    } else if (_numGrasped == 0) {
+      foreach (var item in _spawned) {
+        item.GetComponent<InteractionBehaviour>().ignoreGrasping = true;
+      }
     }
 
     unsafe {

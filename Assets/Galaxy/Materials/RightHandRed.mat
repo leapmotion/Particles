@@ -6,7 +6,7 @@ Material:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
-  m_Name: LeftHandRed 1
+  m_Name: RightHandRed
   m_Shader: {fileID: 4800000, guid: 874f4d9da4c976641b7758937b868fe3, type: 3}
   m_ShaderKeywords: _EMISSION _ISLEFTHAND_ON
   m_LightmapFlags: 1

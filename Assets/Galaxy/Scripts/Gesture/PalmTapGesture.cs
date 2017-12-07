@@ -4,9 +4,10 @@ using UnityEngine;
 using UnityEngine.Events;
 using Leap;
 using Leap.Unity;
+using Leap.Unity.Gestures;
 using Leap.Unity.RuntimeGizmos;
 
-public class PalmTapGesture : MonoBehaviour, IRuntimeGizmoComponent {
+public class PalmTapGesture : TwoHandedGesture, IRuntimeGizmoComponent {
 
   public TappedHand tappedHand = TappedHand.Left;
   public TargetSide targetSide = TargetSide.Palm;
@@ -17,87 +18,78 @@ public class PalmTapGesture : MonoBehaviour, IRuntimeGizmoComponent {
   [Range(0, 0.15f)]
   public float areaHeight = 0.03f;
 
+  [Range(0, 180)]
+  public float palmNormalTolerance = 45;
+
+  [Range(0, 180)]
+  public float radialAngleTolerance = 45;
+
   [Range(0, 0.15f)]
   public float hysteresis = 0.01f;
 
-  public UnityEvent OnTap;
-
-  private State _state = State.Inactive;
-
-  enum State {
-    Inactive,
-    Hover,
-    Active
-  }
-
-  private void Update() {
-    var leftHand = Hands.Left;
-    var rightHand = Hands.Right;
-
-    if (leftHand == null || rightHand == null) {
-      _state = State.Inactive;
-      return;
-    }
-
+  protected override bool ShouldGestureActivate(Hand leftHand, Hand rightHand) {
     var handThatIsTapped = tappedHand == TappedHand.Left ? leftHand : rightHand;
     var handThatTaps = tappedHand == TappedHand.Left ? rightHand : leftHand;
 
-    switch (_state) {
-      case State.Inactive:
-        if (isHandInsideCylinder(handThatTaps, handThatIsTapped, 2, 2, targetSide) &&
-           !isHandInsideCylinder(handThatTaps, handThatIsTapped, areaRadius - hysteresis * 0.5f, areaHeight - hysteresis * 0.5f, targetSide)) {
-          _state = State.Hover;
-          break;
-        }
-
-        break;
-      case State.Hover:
-        if (!isHandInsideCylinder(handThatTaps, handThatIsTapped, 2, 2, targetSide)) {
-          _state = State.Inactive;
-          break;
-        }
-
-        if (isHandInsideCylinder(handThatTaps, handThatIsTapped, areaRadius - hysteresis * 0.5f, areaHeight - hysteresis * 0.5f, targetSide)) {
-          _state = State.Active;
-          OnTap.Invoke();
-          break;
-        }
-
-        break;
-      case State.Active:
-        if (!isHandInsideCylinder(handThatTaps, handThatIsTapped, areaRadius + hysteresis * 0.5f, areaHeight + hysteresis * 0.5f, TargetSide.Back | TargetSide.Palm)) {
-          _state = State.Inactive;
-          break;
-        }
-
-        break;
+    if (targetSide == TargetSide.Palm) {
+      return doesSatisfy(handThatTaps, handThatIsTapped, facingSameDirection: false, facingRadialAxis: true);
+    } else {
+      return doesSatisfy(handThatTaps, handThatIsTapped, facingSameDirection: true, facingRadialAxis: false);
     }
   }
 
-  private bool isHandInsideCylinder(Hand hand, Hand target, float radius, float height, TargetSide side) {
-    Vector3 palmPos = target.PalmPosition.ToVector3();
-    Vector3 normalVector = target.PalmNormal.ToVector3();
+  protected override bool ShouldGestureDeactivate(Hand leftHand, Hand rightHand, out DeactivationReason? deactivationReason) {
+    var handThatIsTapped = tappedHand == TappedHand.Left ? leftHand : rightHand;
+    var handThatTaps = tappedHand == TappedHand.Left ? rightHand : leftHand;
 
-    foreach (var finger in hand.Fingers) {
-      if (finger.Type == Finger.FingerType.TYPE_THUMB ||
-          !finger.IsExtended) {
-        continue;
-      }
+    deactivationReason = DeactivationReason.FinishedGesture;
+    if (targetSide == TargetSide.Palm) {
+      return !doesSatisfy(handThatTaps, handThatIsTapped, facingSameDirection: false, facingRadialAxis: true);
+    } else {
+      return !doesSatisfy(handThatTaps, handThatIsTapped, facingSameDirection: true, facingRadialAxis: false);
+    }
+  }
 
-      Vector3 tipPos = finger.Bone(Bone.BoneType.TYPE_DISTAL).NextJoint.ToVector3();
-      Vector3 deltaTip = tipPos - palmPos;
 
-      var tipSide = Vector3.Dot(deltaTip, normalVector) > 0 ? TargetSide.Palm : TargetSide.Back;
-      if ((tipSide & side) == 0) {
-        continue;
-      }
+  private bool doesSatisfy(Hand tappingHand, Hand targetHand, bool facingSameDirection, bool facingRadialAxis) {
+    Vector3 tappingNormal = tappingHand.PalmNormal.ToVector3();
+    Vector3 targetNormal = targetHand.PalmNormal.ToVector3();
 
-      Vector3 projected = Vector3.Project(deltaTip, normalVector);
+    Vector3 tappingRadial = tappingHand.DistalAxis();
+    Vector3 targetRadial = targetHand.RadialAxis();
 
-      float heightAxis = projected.magnitude;
-      float radialAxis = (deltaTip - projected).magnitude;
+    float normalAngle;
+    if (facingSameDirection) {
+      normalAngle = Vector3.Angle(tappingNormal, targetNormal);
+    } else {
+      normalAngle = Vector3.Angle(tappingNormal, -targetNormal);
+    }
 
-      if (heightAxis < height && radialAxis < radius) {
+    if (normalAngle > palmNormalTolerance) {
+      return false;
+    }
+
+    float radialAngle;
+    if (facingRadialAxis) {
+      radialAngle = Mathf.Abs(Vector3.SignedAngle(tappingRadial, targetRadial, targetNormal));
+    } else {
+      radialAngle = Mathf.Abs(Vector3.SignedAngle(tappingRadial, -targetRadial, targetNormal));
+    }
+
+    if (radialAngle > radialAngleTolerance) {
+      return false;
+    }
+
+    Vector3 targetPalm = targetHand.PalmPosition.ToVector3();
+    foreach (var finger in tappingHand.Fingers) {
+      Vector3 tip = finger.Bone(Bone.BoneType.TYPE_DISTAL).NextJoint.ToVector3();
+      Vector3 tipDelta = tip - targetPalm;
+      Vector3 projectedTip = Vector3.Project(tipDelta, targetNormal);
+
+      float heightAxis = projectedTip.magnitude;
+      float radialAxis = (tipDelta - projectedTip).magnitude;
+
+      if (heightAxis < areaHeight && radialAxis < areaRadius) {
         return true;
       }
     }
@@ -105,32 +97,26 @@ public class PalmTapGesture : MonoBehaviour, IRuntimeGizmoComponent {
     return false;
   }
 
+
   public void OnDrawRuntimeGizmos(RuntimeGizmoDrawer drawer) {
-    var leftHand = Hands.Left;
-    var rightHand = Hands.Right;
+    //var leftHand = Hands.Left;
+    //var rightHand = Hands.Right;
 
-    var handThatIsTapped = tappedHand == TappedHand.Left ? leftHand : rightHand;
-    var handThatTaps = tappedHand == TappedHand.Left ? rightHand : leftHand;
+    //var handThatIsTapped = tappedHand == TappedHand.Left ? leftHand : rightHand;
+    //var handThatTaps = tappedHand == TappedHand.Left ? rightHand : leftHand;
 
-    if (handThatIsTapped == null) {
-      return;
-    }
+    //if (handThatIsTapped == null) {
+    //  return;
+    //}
 
-    switch (_state) {
-      case State.Inactive:
-        drawer.color = handThatTaps == null ? Color.gray : Color.white;
-        break;
-      case State.Hover:
-        drawer.color = Color.yellow;
-        break;
-      case State.Active:
-        drawer.color = Color.green;
-        break;
-    }
+    //if (handThatIsTapped != null && handThatTaps != null) {
+    //  if (doesSatisfy(rightHand, leftHand, false, true)) {
+    //    drawer.color = Color.green;
+    //  }
+    //}
 
 
-
-    drawer.DrawSphere(handThatIsTapped.PalmPosition.ToVector3(), 0.02f);
+    //drawer.DrawSphere(handThatIsTapped.PalmPosition.ToVector3(), 0.04f);
   }
 
   public enum TargetSide {

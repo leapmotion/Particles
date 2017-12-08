@@ -6,6 +6,8 @@ using Leap.Unity.Attributes;
 
 public class SolarSystemSimulator : MonoBehaviour {
 
+  public static List<IPropertyMultiplier> speedMultiplier = new List<IPropertyMultiplier>();
+
   [SerializeField]
   private Planet _planetPrefab;
 
@@ -19,6 +21,10 @@ public class SolarSystemSimulator : MonoBehaviour {
     get { return _simulate; }
     set { _simulate = value; }
   }
+
+  [Range(0, 2)]
+  [SerializeField, DevValue]
+  private float _simulationSpeed = 1;
 
   [Header("Solar System Generation"), DevCategory]
   [SerializeField, DevValue]
@@ -156,6 +162,16 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
   }
 
+  public float simulationSpeed {
+    get {
+      float baseSpeed = _simulationSpeed;
+      foreach (var multiplier in speedMultiplier) {
+        baseSpeed *= multiplier.multiplier;
+      }
+      return baseSpeed;
+    }
+  }
+
   #endregion
 
   #region UNITY MESSAGES
@@ -264,7 +280,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   }
 
   private void stepSimulation() {
-    _simTime += Time.deltaTime;
+    _simTime += Time.deltaTime * simulationSpeed;
 
     while (_simTime > _currState.simTime) {
       _prevState.CopyFrom(_currState);

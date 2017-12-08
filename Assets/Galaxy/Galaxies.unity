@@ -4472,7 +4472,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _displayInGameView: 1
   _enabledForBuild: 1
-  _sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
+  _sphereMesh: {fileID: 4300000, guid: c2ad509010f0af845a8d743f17b3ac63, type: 3}
   _gizmoShader: {fileID: 4800000, guid: 309635e4933310a4d98f0e016c806769, type: 3}
 --- !u!4 &1464676596
 Transform:

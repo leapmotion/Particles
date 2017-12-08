@@ -7,10 +7,7 @@ using Leap.Unity.Attributes;
 public class SolarSystemSimulator : MonoBehaviour {
 
   [SerializeField]
-  private GameObject _planetPrefab;
-
-  [SerializeField]
-  private float _gravityConstant = 0.001f;
+  private Planet _planetPrefab;
 
   [Header("Simulation")]
   [SerializeField]
@@ -27,6 +24,12 @@ public class SolarSystemSimulator : MonoBehaviour {
   [MinMax(0, 1)]
   [SerializeField]
   private Vector2 _orbitRadiusRange = new Vector2(0.05f, 0.3f);
+
+  [SerializeField, DevValue]
+  private float _sunMass = 1;
+
+  [SerializeField, DevValue]
+  private float _gravitationalConstant = 0.001f;
 
   [Header("Planet Generation"), DevCategory]
   [MinMax(0, 1)]
@@ -67,9 +70,9 @@ public class SolarSystemSimulator : MonoBehaviour {
 
   public class SolarSystemState {
     public const float TIMESTEP = 1 / 60.0f;
-    public const float GRAV_CONSTANT = 0.001f;
 
     public float sunMass;
+    public float gravivationalConstant;
     public float simTime;
     public List<PlanetState> planets = new List<PlanetState>();
     public List<CometState> comets = new List<CometState>();
@@ -82,6 +85,7 @@ public class SolarSystemSimulator : MonoBehaviour {
 
     public void CopyFrom(SolarSystemState other) {
       sunMass = other.sunMass;
+      gravivationalConstant = other.gravivationalConstant;
       simTime = other.simTime;
       planets = new List<PlanetState>(other.planets);
       comets = new List<CometState>(other.comets);
@@ -108,14 +112,14 @@ public class SolarSystemSimulator : MonoBehaviour {
           Vector3 toPlanet = planet.position - comet.position;
           float distToPlanet = toPlanet.magnitude;
 
-          Vector3 accelOnComet = planet.mass * GRAV_CONSTANT * toPlanet / (distToPlanet * distToPlanet * distToPlanet);
+          Vector3 accelOnComet = planet.mass * gravivationalConstant * toPlanet / (distToPlanet * distToPlanet * distToPlanet);
           comet.velocity += accelOnComet * TIMESTEP;
         }
 
         Vector3 toSun = -comet.position;
         float distToSun = toSun.magnitude;
 
-        Vector3 accelToSun = sunMass * GRAV_CONSTANT * toSun / (distToSun * distToSun * distToSun);
+        Vector3 accelToSun = sunMass * gravivationalConstant * toSun / (distToSun * distToSun * distToSun);
         comet.velocity += accelToSun * TIMESTEP;
 
         comet.position += comet.velocity * TIMESTEP;
@@ -165,17 +169,39 @@ public class SolarSystemSimulator : MonoBehaviour {
 
     _currState = new SolarSystemState();
     for (int i = 0; i < _planetCount; i++) {
+      var planet = Instantiate(_planetPrefab);
+      var planetState = new PlanetState();
 
+      float orbitRadius = Random.Range(_orbitRadiusRange.x, _orbitRadiusRange.y);
+      float mass = Random.Range(_massRange.x, _massRange.y);
+      float revolutionSpeed = Random.Range(_revolutionRange.x, _revolutionRange.y);
+      float axisTilt = _axisTiltDistribution.Evaluate(Random.value);
 
+      float orbitalVelocity = Mathf.Sqrt(_gravitationalConstant * _sunMass / orbitRadius);
+      float orbitLength = Mathf.PI * 2 * orbitRadius;
+      float orbitPeriod = orbitalVelocity * orbitLength;
+      float angularSpeed = Mathf.PI * 2 / orbitPeriod;
 
+      if (Random.value > _chanceToRevolveBackwards) {
+        revolutionSpeed = -revolutionSpeed;
+      }
 
+      float hue = Random.value;
+      float saturation = Random.Range(_saturationRange.x, _saturationRange.y);
+      float value = Random.Range(_valueRange.x, _valueRange.y);
 
+      planetState.angle = Random.Range(0, Mathf.PI * 2);
+      planetState.angularSpeed = angularSpeed;
+      planetState.distanceFromCenter = orbitRadius;
+      planetState.mass = mass;
 
+      planet.Init(revolutionSpeed, mass, axisTilt, Color.HSVToRGB(hue, saturation, value));
 
-
+      _currState.planets.Add(planetState);
+      _spawnedPlanets.Add(planet);
     }
 
-
+    _prevState = _currState.Clone();
   }
 
   private void destroySimulation() {

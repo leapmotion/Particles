@@ -59,6 +59,13 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Vector2 _valueRange;
 
+  [Header("Planet Orbit Visualization")]
+  [SerializeField]
+  private Material _planetOrbitMaterial;
+
+  [SerializeField]
+  private int _planetOrbitResolution = 32;
+
   public struct PlanetState {
     public Vector3 position;
     public float mass;
@@ -139,6 +146,8 @@ public class SolarSystemSimulator : MonoBehaviour {
 
   private List<Planet> _spawnedPlanets = new List<Planet>();
 
+  private Mesh _planetOrbitMesh;
+
   #region PUBLIC API
 
   public float simulationTime {
@@ -160,6 +169,8 @@ public class SolarSystemSimulator : MonoBehaviour {
       stepSimulation();
       updatePlanetPositions();
     }
+
+    Graphics.DrawMesh(_planetOrbitMesh, _displayAnchor.localToWorldMatrix, _planetOrbitMaterial, 0);
   }
 
   #endregion
@@ -217,6 +228,29 @@ public class SolarSystemSimulator : MonoBehaviour {
     });
 
     _prevState = _currState.Clone();
+
+    List<Vector3> verts = new List<Vector3>();
+    List<int> lines = new List<int>();
+    foreach (var planet in _currState.planets) {
+      for (int i = 0; i < _planetOrbitResolution; i++) {
+        lines.Add(i + verts.Count);
+        lines.Add((i + 1) % _planetOrbitResolution + verts.Count);
+      }
+
+      for (int i = 0; i < _planetOrbitResolution; i++) {
+        float angle = Mathf.PI * 2 * i / (float)_planetOrbitResolution;
+        float dx = Mathf.Cos(angle) * planet.distanceFromCenter;
+        float dz = Mathf.Sin(angle) * planet.distanceFromCenter;
+        verts.Add(new Vector3(dx, 0, dz));
+      }
+    }
+
+    if (_planetOrbitMesh == null) {
+      _planetOrbitMesh = new Mesh();
+    }
+    _planetOrbitMesh.Clear();
+    _planetOrbitMesh.SetVertices(verts);
+    _planetOrbitMesh.SetIndices(lines.ToArray(), MeshTopology.Lines, 0);
   }
 
   private void destroySimulation() {

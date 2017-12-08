@@ -620,6 +620,9 @@ MonoBehaviour:
   _chanceToRevolveBackwards: 0.1
   _saturationRange: {x: 0, y: 1}
   _valueRange: {x: 0, y: 1}
+  _planetOrbitMaterial: {fileID: 2100000, guid: 0c197ff5390bcaa429e560637086d4bf,
+    type: 2}
+  _planetOrbitResolution: 64
 --- !u!4 &1279336355
 Transform:
   m_ObjectHideFlags: 0

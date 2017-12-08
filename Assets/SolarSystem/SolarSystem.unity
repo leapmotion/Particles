@@ -587,7 +587,7 @@ MonoBehaviour:
   _planetPrefab: {fileID: 1807328025}
   _displayAnchor: {fileID: 1416119071}
   _simulate: 1
-  _planetCount: 8
+  _planetCount: 4
   _orbitRadiusRange: {x: 0.18392856, y: 0.99999994}
   _sunMass: 100
   _gravitationalConstant: 0.001

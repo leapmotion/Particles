@@ -116,7 +116,7 @@ public class SolarSystemSimulator : MonoBehaviour {
           Vector3 toPlanet = planet.position - comet.position;
           float distToPlanet = toPlanet.magnitude;
 
-          Vector3 accelOnComet = planet.mass * gravivationalConstant * toPlanet / (distToPlanet * distToPlanet * distToPlanet);
+          Vector3 accelOnComet = 10 * planet.mass * gravivationalConstant * toPlanet / (distToPlanet * distToPlanet * distToPlanet);
           comet.velocity += accelOnComet * TIMESTEP;
         }
 
@@ -172,6 +172,9 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
 
     _currState = new SolarSystemState();
+    _currState.sunMass = _sunMass;
+    _currState.gravivationalConstant = _gravitationalConstant;
+
     for (int i = 0; i < _planetCount; i++) {
       var planet = Instantiate(_planetPrefab);
       planet.transform.parent = _displayAnchor;
@@ -208,6 +211,11 @@ public class SolarSystemSimulator : MonoBehaviour {
       _spawnedPlanets.Add(planet);
     }
 
+    _currState.comets.Add(new CometState() {
+      position = Vector3.right * 0.3f,
+      velocity = Vector3.forward * 0.4f
+    });
+
     _prevState = _currState.Clone();
   }
 
@@ -238,4 +246,13 @@ public class SolarSystemSimulator : MonoBehaviour {
   }
 
   #endregion
+
+  private void OnDrawGizmos() {
+    if (_currState != null) {
+      Gizmos.color = Color.white;
+      foreach (var comet in _currState.comets) {
+        Gizmos.DrawSphere(comet.position, 0.05f);
+      }
+    }
+  }
 }

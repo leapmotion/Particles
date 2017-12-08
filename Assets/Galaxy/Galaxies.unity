@@ -266,7 +266,7 @@ MonoBehaviour:
   _scale: 1
   _renderBlackHoles: 0
   _blackHoleSize: 0.05
-  _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
   _blackHoleMat: {fileID: 2100000, guid: 9d30d8bee9d12a742a4235d76c16b104, type: 2}
   _renderStars: 1
   _starSize: 0.0099
@@ -4115,7 +4115,7 @@ MonoBehaviour:
         m_PersistentCalls:
           m_Calls:
           - m_Target: {fileID: 977765820}
-            m_MethodName: EnterPathMode
+            m_MethodName: ToggleMode
             m_Mode: 1
             m_Arguments:
               m_ObjectArgument: {fileID: 0}
@@ -4311,7 +4311,7 @@ MonoBehaviour:
         m_PersistentCalls:
           m_Calls:
           - m_Target: {fileID: 977765820}
-            m_MethodName: EnterSpaceMode
+            m_MethodName: ToggleMode
             m_Mode: 1
             m_Arguments:
               m_ObjectArgument: {fileID: 0}
@@ -4472,7 +4472,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _displayInGameView: 1
   _enabledForBuild: 1
-  _sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  _sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
   _gizmoShader: {fileID: 4800000, guid: 309635e4933310a4d98f0e016c806769, type: 3}
 --- !u!4 &1464676596
 Transform:

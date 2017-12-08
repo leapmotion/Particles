@@ -39,6 +39,14 @@ public class SpaceVsPathMode : MonoBehaviour, IPropertyMultiplier {
     spaceBehaviour.enabled = false;
   }
 
+  public void ToggleMode() {
+    if (galaxyIE.canAct) {
+      EnterSpaceMode();
+    } else {
+      EnterPathMode();
+    }
+  }
+
   private void applySettings(Settings settings) {
     leftHandRenderer.sharedMaterial = settings.leftMaterial;
     rightHandRenderer.sharedMaterial = settings.rightMaterial;

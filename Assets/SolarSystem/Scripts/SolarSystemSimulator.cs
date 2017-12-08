@@ -200,7 +200,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   private void updatePlanetPositions() {
     float interpFactor = Mathf.InverseLerp(_prevState.simTime, _currState.simTime, _simTime);
     for (int i = 0; i < _currState.planets.Count; i++) {
-      _spawnedPlanets[i].transform.position = Vector3.Lerp(_prevState.planets[i].position, _currState.planets[i].position, interpFactor); a
+      _spawnedPlanets[i].transform.position = Vector3.Lerp(_prevState.planets[i].position, _currState.planets[i].position, interpFactor);
     }
   }
 

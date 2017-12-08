@@ -13,6 +13,9 @@ public class Planet : MonoBehaviour {
   [SerializeField]
   private SolarSystemSimulator _simulator;
 
+  [SerializeField]
+  private float _radiusScalar = 0.1f;
+
   private float _revolutionSpeed;
 
   public void Init(float revolutionSpeed, float mass, float axisTilt, Color color) {
@@ -20,11 +23,11 @@ public class Planet : MonoBehaviour {
     _orbitAnchor.eulerAngles = new Vector3(axisTilt, Random.Range(0, 360), 0);
 
     _renderer.material.color = color;
-    _renderer.transform.localScale = Vector3.one * mass;
+    _renderer.transform.localScale = Vector3.one * mass * _radiusScalar;
   }
 
   private void LateUpdate() {
-    _renderer.transform.localEulerAngles = new Vector3(0, 0, _revolutionSpeed * _simulator.simulationTime);
+    _renderer.transform.localEulerAngles = new Vector3(0, _revolutionSpeed * _simulator.simulationTime, 0);
   }
 }
 

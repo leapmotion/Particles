@@ -9,6 +9,9 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Planet _planetPrefab;
 
+  [SerializeField]
+  private Transform _displayAnchor;
+
   [Header("Simulation")]
   [SerializeField]
   private bool _simulate;
@@ -36,10 +39,11 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Vector2 _massRange = new Vector2(0.1f, 0.2f);
 
-  [MinMax(0, 1)]
+  [MinMax(0, 500)]
   [SerializeField]
   private Vector2 _revolutionRange = new Vector2(0.1f, 0.2f);
 
+  [CurveBounds(1, 90)]
   [SerializeField]
   private AnimationCurve _axisTiltDistribution;
 
@@ -98,7 +102,7 @@ public class SolarSystemSimulator : MonoBehaviour {
         PlanetState planet = planets[i];
 
         planet.angle += planet.angularSpeed * TIMESTEP;
-        planet.position = new Vector3(Mathf.Cos(planet.angle), 0, Mathf.Sin(planet.angle));
+        planet.position = new Vector3(planet.distanceFromCenter * Mathf.Cos(planet.angle), 0, planet.distanceFromCenter * Mathf.Sin(planet.angle));
 
         planets[i] = planet;
       }
@@ -148,7 +152,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   #region UNITY MESSAGES
 
   private void Start() {
-
+    createSimulation();
   }
 
   private void Update() {
@@ -170,6 +174,8 @@ public class SolarSystemSimulator : MonoBehaviour {
     _currState = new SolarSystemState();
     for (int i = 0; i < _planetCount; i++) {
       var planet = Instantiate(_planetPrefab);
+      planet.transform.parent = _displayAnchor;
+
       var planetState = new PlanetState();
 
       float orbitRadius = Random.Range(_orbitRadiusRange.x, _orbitRadiusRange.y);
@@ -179,7 +185,7 @@ public class SolarSystemSimulator : MonoBehaviour {
 
       float orbitalVelocity = Mathf.Sqrt(_gravitationalConstant * _sunMass / orbitRadius);
       float orbitLength = Mathf.PI * 2 * orbitRadius;
-      float orbitPeriod = orbitalVelocity * orbitLength;
+      float orbitPeriod = orbitLength / orbitalVelocity;
       float angularSpeed = Mathf.PI * 2 / orbitPeriod;
 
       if (Random.value > _chanceToRevolveBackwards) {
@@ -195,6 +201,7 @@ public class SolarSystemSimulator : MonoBehaviour {
       planetState.distanceFromCenter = orbitRadius;
       planetState.mass = mass;
 
+      planet.gameObject.SetActive(true);
       planet.Init(revolutionSpeed, mass, axisTilt, Color.HSVToRGB(hue, saturation, value));
 
       _currState.planets.Add(planetState);
@@ -226,7 +233,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   private void updatePlanetPositions() {
     float interpFactor = Mathf.InverseLerp(_prevState.simTime, _currState.simTime, _simTime);
     for (int i = 0; i < _currState.planets.Count; i++) {
-      _spawnedPlanets[i].transform.position = Vector3.Lerp(_prevState.planets[i].position, _currState.planets[i].position, interpFactor);
+      _spawnedPlanets[i].transform.localPosition = Vector3.Lerp(_prevState.planets[i].position, _currState.planets[i].position, interpFactor);
     }
   }
 

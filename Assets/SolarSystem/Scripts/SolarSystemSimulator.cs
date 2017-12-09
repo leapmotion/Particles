@@ -185,6 +185,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   private SolarSystemState _currState;
   private SolarSystemState _prevState;
   private float _simTime;
+  private int _simBlockers = 0;
 
   //Planet vars
   private List<Planet> _spawnedPlanets = new List<Planet>();
@@ -197,6 +198,15 @@ public class SolarSystemSimulator : MonoBehaviour {
   private Dictionary<int, int[]> _trailIndexCache = new Dictionary<int, int[]>();
 
   #region PUBLIC API
+
+  public int simBlockers {
+    get {
+      return _simBlockers;
+    }
+    set {
+      _simBlockers = value;
+    }
+  }
 
   public float simulationTime {
     get {
@@ -246,7 +256,7 @@ public class SolarSystemSimulator : MonoBehaviour {
       createSimulation();
     }
 
-    if (_simulate) {
+    if (_simulate && _simBlockers == 0) {
       stepSimulation();
       updatePlanetPositions();
     }
@@ -262,7 +272,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   #region SIMULATION
 
   private void createSimulation() {
-    Random.InitState(_generationSeed);
+    //Random.InitState(_generationSeed);
 
     _simTime = 0;
     if (_currState != null || _prevState != null) {

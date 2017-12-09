@@ -16,6 +16,7 @@ public class CometLauncher : MonoBehaviour {
 
   private void Start() {
     StartCoroutine(pinchSpawn(() => Hands.Right));
+    StartCoroutine(pinchSpawn(() => Hands.Left));
   }
 
   IEnumerator pinchSpawn(Func<Hand> getHand) {
@@ -32,7 +33,7 @@ public class CometLauncher : MonoBehaviour {
         yield return null;
       }
 
-      sim.simulate = false;
+      sim.simBlockers++;
 
       int index = sim.currState.comets.Count;
       sim.currState.comets.Add(new SolarSystemSimulator.CometState() {
@@ -57,7 +58,7 @@ public class CometLauncher : MonoBehaviour {
         yield return null;
       }
 
-      sim.simulate = true;
+      sim.simBlockers--;
     }
   }
 }

@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity;
 using Leap.Unity.DevGui;
 using Leap.Unity.Attributes;
 
@@ -14,15 +14,18 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Transform _displayAnchor;
 
-  [Header("Simulation")]
   [SerializeField]
+  private int _generationSeed = 0;
+
+  [Header("Simulation"), DevCategory("Solar System Simulation")]
+  [SerializeField, DevValue]
   private bool _simulate;
   public bool simulate {
     get { return _simulate; }
     set { _simulate = value; }
   }
 
-  [Range(0, 2)]
+  [Range(0, 10)]
   [SerializeField, DevValue]
   private float _simulationSpeed = 1;
 
@@ -65,12 +68,22 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Vector2 _valueRange;
 
-  [Header("Planet Orbit Visualization")]
+  [Header("Planet Orbit Visualization"), DevCategory]
   [SerializeField]
   private Material _planetOrbitMaterial;
 
   [SerializeField]
   private int _planetOrbitResolution = 32;
+
+  [Header("Comet Paths"), DevCategory]
+  [SerializeField, DevValue]
+  private int _cometPathLength = 1000;
+
+  [SerializeField, DevValue]
+  private int _maxPathStepsPerFrame = 200;
+
+  [SerializeField]
+  private Material _cometPathMaterial;
 
   public struct PlanetState {
     public Vector3 position;
@@ -88,6 +101,7 @@ public class SolarSystemSimulator : MonoBehaviour {
   public class SolarSystemState {
     public const float TIMESTEP = 1 / 60.0f;
 
+    public int frames;
     public float sunMass;
     public float gravivationalConstant;
     public float simTime;
@@ -101,6 +115,7 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
 
     public void CopyFrom(SolarSystemState other) {
+      frames = other.frames;
       sunMass = other.sunMass;
       gravivationalConstant = other.gravivationalConstant;
       simTime = other.simTime;
@@ -109,6 +124,7 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
 
     public void Step() {
+      frames++;
       simTime += TIMESTEP;
 
       for (int i = 0; i < planets.Count; i++) {
@@ -146,13 +162,24 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
   }
 
+  //Temp vars
+  private List<Vector3> _tempVerts = new List<Vector3>();
+  private List<int> _tempLines = new List<int>();
+
+  //Simulation vars
   private SolarSystemState _currState;
   private SolarSystemState _prevState;
   private float _simTime;
 
+  //Planet vars
   private List<Planet> _spawnedPlanets = new List<Planet>();
-
   private Mesh _planetOrbitMesh;
+
+  //Comet path vars
+  private SolarSystemState _cometPathState;
+  private Queue<Vector3>[] _cometPaths;
+  private Mesh _cometPathMesh;
+  private Dictionary<int, int[]> _trailIndexCache = new Dictionary<int, int[]>();
 
   #region PUBLIC API
 
@@ -172,19 +199,44 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
   }
 
+  public SolarSystemState currState {
+    get {
+      return _currState;
+    }
+  }
+
+  public void RestartPaths() {
+    _cometPathState = _currState.Clone();
+
+    _cometPaths = new Queue<Vector3>[_cometPathState.comets.Count];
+    for (int i = 0; i < _cometPaths.Length; i++) {
+      _cometPaths[i] = new Queue<Vector3>();
+    }
+  }
+
   #endregion
 
   #region UNITY MESSAGES
 
   private void Start() {
     createSimulation();
+
+    _cometPathMesh = new Mesh();
+    _cometPathMesh.MarkDynamic();
+    _cometPathMesh.name = "Comet Paths Mesh";
   }
 
-  private void Update() {
+  private void LateUpdate() {
+    if (Input.GetKeyDown(KeyCode.Space)) {
+      createSimulation();
+    }
+
     if (_simulate) {
       stepSimulation();
       updatePlanetPositions();
     }
+
+    updateTrails();
 
     Graphics.DrawMesh(_planetOrbitMesh, _displayAnchor.localToWorldMatrix, _planetOrbitMaterial, 0);
   }
@@ -194,6 +246,9 @@ public class SolarSystemSimulator : MonoBehaviour {
   #region SIMULATION
 
   private void createSimulation() {
+    Random.InitState(_generationSeed);
+
+    _simTime = 0;
     if (_currState != null || _prevState != null) {
       destroySimulation();
     }
@@ -202,6 +257,7 @@ public class SolarSystemSimulator : MonoBehaviour {
     _currState.sunMass = _sunMass;
     _currState.gravivationalConstant = _gravitationalConstant;
 
+    //Generate the planets for the solar system
     for (int i = 0; i < _planetCount; i++) {
       var planet = Instantiate(_planetPrefab);
       planet.transform.parent = _displayAnchor;
@@ -238,35 +294,43 @@ public class SolarSystemSimulator : MonoBehaviour {
       _spawnedPlanets.Add(planet);
     }
 
+    //Add a DEBUG comet
     _currState.comets.Add(new CometState() {
-      position = Vector3.right * 0.3f,
+      position = Vector3.right * 0.3f + Vector3.up * 0.05f,
       velocity = Vector3.forward * 0.4f
     });
 
     _prevState = _currState.Clone();
 
-    List<Vector3> verts = new List<Vector3>();
-    List<int> lines = new List<int>();
-    foreach (var planet in _currState.planets) {
-      for (int i = 0; i < _planetOrbitResolution; i++) {
-        lines.Add(i + verts.Count);
-        lines.Add((i + 1) % _planetOrbitResolution + verts.Count);
+    //Generate planet orbit mesh
+    {
+      foreach (var planet in _currState.planets) {
+        for (int i = 0; i < _planetOrbitResolution; i++) {
+          _tempLines.Add(i + _tempVerts.Count);
+          _tempLines.Add((i + 1) % _planetOrbitResolution + _tempVerts.Count);
+        }
+
+        for (int i = 0; i < _planetOrbitResolution; i++) {
+          float angle = Mathf.PI * 2 * i / (float)_planetOrbitResolution;
+          float dx = Mathf.Cos(angle) * planet.distanceFromCenter;
+          float dz = Mathf.Sin(angle) * planet.distanceFromCenter;
+          _tempVerts.Add(new Vector3(dx, 0, dz));
+        }
       }
 
-      for (int i = 0; i < _planetOrbitResolution; i++) {
-        float angle = Mathf.PI * 2 * i / (float)_planetOrbitResolution;
-        float dx = Mathf.Cos(angle) * planet.distanceFromCenter;
-        float dz = Mathf.Sin(angle) * planet.distanceFromCenter;
-        verts.Add(new Vector3(dx, 0, dz));
+      if (_planetOrbitMesh == null) {
+        _planetOrbitMesh = new Mesh();
       }
+      _planetOrbitMesh.Clear();
+      _planetOrbitMesh.SetVertices(_tempVerts);
+      _planetOrbitMesh.SetIndices(_tempLines.ToArray(), MeshTopology.Lines, 0);
+
+      _tempVerts.Clear();
+      _tempLines.Clear();
     }
 
-    if (_planetOrbitMesh == null) {
-      _planetOrbitMesh = new Mesh();
-    }
-    _planetOrbitMesh.Clear();
-    _planetOrbitMesh.SetVertices(verts);
-    _planetOrbitMesh.SetIndices(lines.ToArray(), MeshTopology.Lines, 0);
+    //Restart the comet paths
+    RestartPaths();
   }
 
   private void destroySimulation() {
@@ -286,6 +350,75 @@ public class SolarSystemSimulator : MonoBehaviour {
       _prevState.CopyFrom(_currState);
       _currState.Step();
     }
+  }
+
+  private void updateTrails() {
+    int stepsTaken = 0;
+    while (_cometPathState.frames < (_currState.frames + _cometPathLength)) {
+      _cometPathState.Step();
+      stepsTaken++;
+
+      for (int i = 0; i < _cometPaths.Length; i++) {
+        _cometPaths[i].Enqueue(_cometPathState.comets[i].position);
+        while (_cometPaths[i].Count > _cometPathLength) {
+          _cometPaths[i].Dequeue();
+        }
+      }
+
+      if (stepsTaken >= _maxPathStepsPerFrame) {
+        break;
+      }
+    }
+
+    if (_cometPathState.frames - _currState.frames >= _cometPathLength) {
+      using (new ProfilerSample("Build Comet Paths")) {
+        _tempVerts.Clear();
+        _tempLines.Clear();
+
+        using (new ProfilerSample("Build Vertex List")) {
+          for (int i = 0; i < _cometPaths.Length; i++) {
+            bool isFirst = true;
+            foreach (var point in _cometPaths[i]) {
+              if (!isFirst) {
+                _tempLines.Add(_tempVerts.Count);
+                _tempLines.Add(_tempVerts.Count - 1);
+              }
+
+              _tempVerts.Add(point);
+              isFirst = false;
+            }
+          }
+        }
+
+        int[] indexArray;
+        using (new ProfilerSample("Build Index Array")) {
+          int goalLength = Mathf.NextPowerOfTwo(_tempLines.Count);
+
+          if (!_trailIndexCache.TryGetValue(goalLength, out indexArray)) {
+            indexArray = new int[goalLength];
+            _trailIndexCache[goalLength] = indexArray;
+          }
+
+          for (int i = 0; i < _tempLines.Count; i++) {
+            indexArray[i] = _tempLines[i];
+          }
+
+          for (int i = _tempLines.Count; i < goalLength; i++) {
+            indexArray[i] = 0;
+          }
+        }
+
+        using (new ProfilerSample("Upload Mesh")) {
+          _cometPathMesh.Clear();
+          _cometPathMesh.SetVertices(_tempVerts);
+          _cometPathMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
+          _tempVerts.Clear();
+          _tempLines.Clear();
+        }
+      }
+    }
+
+    Graphics.DrawMesh(_cometPathMesh, _displayAnchor.localToWorldMatrix, _cometPathMaterial, 0);
   }
 
   private void updatePlanetPositions() {

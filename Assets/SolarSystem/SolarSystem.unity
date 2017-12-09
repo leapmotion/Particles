@@ -384,6 +384,37 @@ Transform:
   m_Father: {fileID: 1909282825}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &820966979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 820966980}
+  m_Layer: 0
+  m_Name: Mode4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &820966980
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 820966979}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.5966873, y: 1.4858267, z: -1.2308458}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1796908943}
+  - {fileID: 1888184506}
+  - {fileID: 1933542353}
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &899182786
 GameObject:
   m_ObjectHideFlags: 0
@@ -566,6 +597,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1279336355}
   - component: {fileID: 1279336354}
+  - component: {fileID: 1279336356}
   m_Layer: 0
   m_Name: SolarSystemSimulator
   m_TagString: Untagged
@@ -586,6 +618,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _planetPrefab: {fileID: 1807328025}
   _displayAnchor: {fileID: 1416119071}
+  _generationSeed: 0
   _simulate: 1
   _simulationSpeed: 1
   _planetCount: 4
@@ -624,6 +657,9 @@ MonoBehaviour:
   _planetOrbitMaterial: {fileID: 2100000, guid: 83ad3da31437a6a479fbecf03aaa0b4b,
     type: 2}
   _planetOrbitResolution: 64
+  _cometPathLength: 200
+  _maxPathStepsPerFrame: 200
+  _cometPathMaterial: {fileID: 2100000, guid: be730b31c63465f4fa73bad0f786cd0f, type: 2}
 --- !u!4 &1279336355
 Transform:
   m_ObjectHideFlags: 0
@@ -639,6 +675,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1279336356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1279336353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa3421c6dca06ee4884249f5e1627198, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canAct: 1
+  sim: {fileID: 1279336354}
+  velocityScale: 6
 --- !u!1001 &1332137781
 Prefab:
   m_ObjectHideFlags: 0
@@ -1690,6 +1740,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1416119071}
+  - component: {fileID: 1416119073}
   m_Layer: 0
   m_Name: DisplayAnchor
   m_TagString: Untagged
@@ -1711,6 +1762,26 @@ Transform:
   m_Father: {fileID: 1279336355}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1416119073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1416119070}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 16a1f1e7fe03f4967aedc21b646b884a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _switchA: {fileID: 1888184507}
+  _switchB: {fileID: 1933542354}
+  _oneHandedRotationMethod: 0
+  _twoHandedRotationMethod: 2
+  _allowScale: 1
+  vroomVroom: 1
+  _stateFull: 1
+  _toggleGuiState: 0
+  _showGUI: 0
 --- !u!1 &1455484081
 GameObject:
   m_ObjectHideFlags: 0
@@ -2989,6 +3060,50 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &1796908942
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1796908943}
+  - component: {fileID: 1796908944}
+  m_Layer: 0
+  m_Name: Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1796908943
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1796908942}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 820966980}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1796908944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1796908942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 822c9191d76c009449660e0331afcf20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  left: {fileID: 1888184507}
+  right: {fileID: 1933542354}
+  twoHandedOnly: 1
+  manager: {fileID: 1909282826}
 --- !u!1 &1807328023
 GameObject:
   m_ObjectHideFlags: 0
@@ -3034,6 +3149,50 @@ MonoBehaviour:
   _renderer: {fileID: 1511553564}
   _simulator: {fileID: 1279336354}
   _radiusScalar: 0.1
+--- !u!1 &1888184505
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1888184506}
+  - component: {fileID: 1888184507}
+  m_Layer: 0
+  m_Name: Left
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1888184506
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1888184505}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 820966980}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1888184507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1888184505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 346262a3b0c95ce4b93a730d5e04935c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grasped: 0
+  Position: {x: 0, y: 0, z: 0}
+  Rotation: {x: 0, y: 0, z: 0, w: 0}
+  autoUpdateTransform: 0
 --- !u!1 &1909282824
 GameObject:
   m_ObjectHideFlags: 0
@@ -3092,3 +3251,47 @@ MonoBehaviour:
   _contactBoneLayer:
     layerIndex: 13
   _drawControllerRuntimeGizmos: 0
+--- !u!1 &1933542352
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1933542353}
+  - component: {fileID: 1933542354}
+  m_Layer: 0
+  m_Name: Right
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1933542353
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1933542352}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 820966980}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1933542354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1933542352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 346262a3b0c95ce4b93a730d5e04935c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  grasped: 0
+  Position: {x: 0, y: 0, z: 0}
+  Rotation: {x: 0, y: 0, z: 0, w: 0}
+  autoUpdateTransform: 0

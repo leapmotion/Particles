@@ -2391,8 +2391,8 @@ MonoBehaviour:
   _allowScale: 1
   vroomVroom: 1
   _stateFull: 1
-  _toggleGuiState: 293
-  _showGUI: 1
+  _toggleGuiState: 0
+  _showGUI: 0
 --- !u!114 &753507342
 MonoBehaviour:
   m_ObjectHideFlags: 0

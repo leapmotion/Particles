@@ -452,7 +452,14 @@ public class SolarSystemSimulator : MonoBehaviour {
   private void displayComets() {
     float interpFactor = Mathf.InverseLerp(_prevState.simTime, _currState.simTime, _simTime);
     for (int i = 0; i < _currState.comets.Count; i++) {
-      Vector3 cometPos = Vector3.Lerp(_prevState.comets[i].position, _currState.comets[i].position, interpFactor);
+      Vector3 cometPos;
+
+      if (i >= _prevState.comets.Count) {
+        cometPos = _currState.comets[i].position;
+      } else {
+        cometPos = Vector3.Lerp(_prevState.comets[i].position, _currState.comets[i].position, interpFactor);
+      }
+
       Matrix4x4 transform = Matrix4x4.TRS(cometPos, Quaternion.identity, Vector3.one * _cometScale);
       Graphics.DrawMesh(_cometMesh, transform, _cometMaterial, 0);
     }

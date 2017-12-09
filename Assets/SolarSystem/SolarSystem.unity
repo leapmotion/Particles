@@ -660,6 +660,39 @@ MonoBehaviour:
   _cometPathLength: 200
   _maxPathStepsPerFrame: 200
   _cometPathMaterial: {fileID: 2100000, guid: be730b31c63465f4fa73bad0f786cd0f, type: 2}
+  _cometMaterial: {fileID: 2100000, guid: 1ebe29dd6d5984f4f857084c4c67caa4, type: 2}
+  _cometMesh: {fileID: 4300002, guid: 2f496b1b1bec86743b418551f859020c, type: 3}
+  _cometScale: 0.01
+  _cometPathGradient:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: -0.20618449
+      outSlope: 53.245308
+      tangentMode: 65
+    - serializedVersion: 2
+      time: 0.018780997
+      value: 1
+      inSlope: 53.245308
+      outSlope: 0
+      tangentMode: 69
+    - serializedVersion: 2
+      time: 0.25
+      value: 1
+      inSlope: -0
+      outSlope: 0.033873096
+      tangentMode: 5
+    - serializedVersion: 2
+      time: 1
+      value: 0
+      inSlope: -1.7398876
+      outSlope: -1.7398876
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!4 &1279336355
 Transform:
   m_ObjectHideFlags: 0

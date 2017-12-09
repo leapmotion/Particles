@@ -85,6 +85,20 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Material _cometPathMaterial;
 
+  [SerializeField]
+  private Material _cometMaterial;
+
+  [SerializeField]
+  private Mesh _cometMesh;
+
+  [Range(0, 0.1f)]
+  [SerializeField, DevValue]
+  private float _cometScale;
+
+  [UnitCurve]
+  [SerializeField]
+  private AnimationCurve _cometPathGradient;
+
   public struct PlanetState {
     public Vector3 position;
     public float mass;
@@ -164,6 +178,7 @@ public class SolarSystemSimulator : MonoBehaviour {
 
   //Temp vars
   private List<Vector3> _tempVerts = new List<Vector3>();
+  private List<Color32> _tempColors = new List<Color32>();
   private List<int> _tempLines = new List<int>();
 
   //Simulation vars
@@ -237,6 +252,7 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
 
     updateTrails();
+    displayComets();
 
     Graphics.DrawMesh(_planetOrbitMesh, _displayAnchor.localToWorldMatrix, _planetOrbitMaterial, 0);
   }
@@ -377,15 +393,17 @@ public class SolarSystemSimulator : MonoBehaviour {
 
         using (new ProfilerSample("Build Vertex List")) {
           for (int i = 0; i < _cometPaths.Length; i++) {
-            bool isFirst = true;
+            int index = 0;
             foreach (var point in _cometPaths[i]) {
-              if (!isFirst) {
+              if (index != 0) {
                 _tempLines.Add(_tempVerts.Count);
                 _tempLines.Add(_tempVerts.Count - 1);
               }
 
               _tempVerts.Add(point);
-              isFirst = false;
+              _tempColors.Add(_cometPathGradient.Evaluate(index / (_cometPaths[i].Count - 1.0f)) * Color.white);
+
+              index++;
             }
           }
         }
@@ -411,9 +429,12 @@ public class SolarSystemSimulator : MonoBehaviour {
         using (new ProfilerSample("Upload Mesh")) {
           _cometPathMesh.Clear();
           _cometPathMesh.SetVertices(_tempVerts);
+          _cometPathMesh.SetColors(_tempColors);
           _cometPathMesh.SetIndices(indexArray, MeshTopology.Lines, 0);
+
           _tempVerts.Clear();
           _tempLines.Clear();
+          _tempColors.Clear();
         }
       }
     }
@@ -428,14 +449,14 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
   }
 
-  #endregion
-
-  private void OnDrawGizmos() {
-    if (_currState != null) {
-      Gizmos.color = Color.white;
-      foreach (var comet in _currState.comets) {
-        Gizmos.DrawSphere(comet.position, 0.05f);
-      }
+  private void displayComets() {
+    float interpFactor = Mathf.InverseLerp(_prevState.simTime, _currState.simTime, _simTime);
+    for (int i = 0; i < _currState.comets.Count; i++) {
+      Vector3 cometPos = Vector3.Lerp(_prevState.comets[i].position, _currState.comets[i].position, interpFactor);
+      Matrix4x4 transform = Matrix4x4.TRS(cometPos, Quaternion.identity, Vector3.one * _cometScale);
+      Graphics.DrawMesh(_cometMesh, transform, _cometMaterial, 0);
     }
   }
+
+  #endregion
 }

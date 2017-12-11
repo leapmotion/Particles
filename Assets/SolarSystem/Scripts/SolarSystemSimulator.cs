@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.DevGui;
@@ -7,6 +8,9 @@ using Leap.Unity.Attributes;
 public class SolarSystemSimulator : MonoBehaviour {
 
   public static List<IPropertyMultiplier> speedMultiplier = new List<IPropertyMultiplier>();
+  public static System.Action OnDestroySystem;
+  public static System.Action OnCreateSystem;
+  public static System.Action OnUpdateSystem;
 
   [SerializeField]
   private Planet _planetPrefab;
@@ -352,9 +356,17 @@ public class SolarSystemSimulator : MonoBehaviour {
 
     //Restart the comet paths
     RestartPaths();
+
+    if (OnCreateSystem != null) {
+      OnCreateSystem();
+    }
   }
 
   private void destroySimulation() {
+    if (OnDestroySystem != null) {
+      OnDestroySystem();
+    }
+
     _currState = null;
     _prevState = null;
 
@@ -370,6 +382,10 @@ public class SolarSystemSimulator : MonoBehaviour {
     while (_simTime > _currState.simTime) {
       _prevState.CopyFrom(_currState);
       _currState.Step();
+    }
+
+    if (OnUpdateSystem != null) {
+      OnUpdateSystem();
     }
   }
 

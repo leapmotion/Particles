@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
 using Leap.Unity.DevGui;
+using Leap.Unity.Animation;
 using Leap.Unity.Attributes;
 
 public class SolarSystemSimulator : MonoBehaviour {
@@ -30,9 +31,18 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField, DevValue]
   private float _simulationSpeed = 1;
 
+  [SerializeField, DevValue]
+  private bool _autoLoop = true;
+
+  [SerializeField, DevValue]
+  private float _loopTime = 10;
+
   [Header("Solar System Generation"), DevCategory]
   [SerializeField, DevValue]
   private int _planetCount = 4;
+
+  [SerializeField, DevValue]
+  private bool _autoResetWhenExplode = true;
 
   [MinMax(0, 1)]
   [SerializeField]
@@ -111,6 +121,21 @@ public class SolarSystemSimulator : MonoBehaviour {
   public struct CometState {
     public Vector3 position;
     public Vector3 velocity;
+
+    public static CometState Lerp(CometState a, CometState b, float t) {
+      CometState c;
+      c.position = Vector3.Lerp(a.position, b.position, t);
+      c.velocity = Vector3.Lerp(a.velocity, b.velocity, t);
+      return c;
+    }
+
+    public void Generate2States(float prevTime, float currTime, float stateTime, out CometState prev, out CometState curr) {
+      prev.position = position + velocity * (prevTime - stateTime);
+      prev.velocity = velocity;
+
+      curr.position = position + velocity * (currTime - stateTime);
+      curr.velocity = velocity;
+    }
   }
 
   public class SolarSystemState {
@@ -231,6 +256,12 @@ public class SolarSystemSimulator : MonoBehaviour {
     }
   }
 
+  public SolarSystemState prevState {
+    get {
+      return _prevState;
+    }
+  }
+
   public void RestartPaths() {
     _cometPathState = _currState.Clone();
 
@@ -255,6 +286,19 @@ public class SolarSystemSimulator : MonoBehaviour {
   private void LateUpdate() {
     if (Input.GetKeyDown(KeyCode.Space)) {
       createSimulation();
+    }
+
+    if (_autoLoop && _currState.simTime >= _loopTime) {
+      createSimulation();
+    }
+
+    if (_autoResetWhenExplode) {
+      foreach (var comet in _currState.comets) {
+        if (comet.position.magnitude > 20) {
+          createSimulation();
+          break;
+        }
+      }
     }
 
     if (_simulate && _simBlockers == 0) {
@@ -382,10 +426,10 @@ public class SolarSystemSimulator : MonoBehaviour {
     while (_simTime > _currState.simTime) {
       _prevState.CopyFrom(_currState);
       _currState.Step();
-    }
 
-    if (OnUpdateSystem != null) {
-      OnUpdateSystem();
+      if (OnUpdateSystem != null) {
+        OnUpdateSystem();
+      }
     }
   }
 

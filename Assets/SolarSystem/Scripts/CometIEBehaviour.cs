@@ -14,7 +14,7 @@ public class CometIEBehaviour : MonoBehaviour {
   public Vector2 distanceToMultiplier;
 
   [Header("Speed Control")]
-  public Transform speedAnchor;
+  public Transform speedHandle;
   public float speedToDistance = 1;
   public float maxPinchDist = 0.05f;
   [MinMax(0, 1)]
@@ -26,7 +26,7 @@ public class CometIEBehaviour : MonoBehaviour {
   public void UpdateState(SolarSystemSimulator.CometState comet) {
     transform.localPosition = comet.position;
     transform.localRotation = Quaternion.LookRotation(comet.velocity);
-    speedAnchor.localPosition = new Vector3(0, 0, comet.velocity.magnitude * speedToDistance);
+    speedHandle.localPosition = new Vector3(0, 0, comet.velocity.magnitude * speedToDistance);
   }
 
   public float GetMultiplier(SolarSystemSimulator.CometState comet) {
@@ -41,7 +41,7 @@ public class CometIEBehaviour : MonoBehaviour {
     float minDist = distanceToMultiplier.y;
     foreach (var hand in provider.CurrentFrame.Hands) {
       float grabDist = Vector3.Distance(hand.PalmPosition.ToVector3(), transform.position);
-      float pinchDist = Vector3.Distance(hand.GetPredictedPinchPosition(), speedAnchor.position);
+      float pinchDist = Vector3.Distance(hand.GetPredictedPinchPosition(), speedHandle.position);
 
       minDist = Mathf.Min(grabDist, minDist);
       minDist = Mathf.Min(pinchDist, minDist);
@@ -59,7 +59,7 @@ public class CometIEBehaviour : MonoBehaviour {
   public bool GetModifiedState(ref SolarSystemSimulator.CometState comet) {
     if (ie.isGrasped || _isPinched) {
       comet.position = transform.localPosition;
-      comet.velocity = (transform.localRotation * Vector3.forward) * speedAnchor.localPosition.z / speedToDistance;
+      comet.velocity = (transform.localRotation * Vector3.forward) * speedHandle.localPosition.z / speedToDistance;
       return true;
     } else {
       return false;
@@ -86,21 +86,21 @@ public class CometIEBehaviour : MonoBehaviour {
       }
 
       float speedDistance;
-      Vector3 pinchDelta = pinchingHand.GetPinchPosition() - speedAnchor.parent.position;
-      if (Vector3.Dot(pinchDelta, speedAnchor.parent.forward) < 0) {
+      Vector3 pinchDelta = pinchingHand.GetPinchPosition() - speedHandle.parent.position;
+      if (Vector3.Dot(pinchDelta, speedHandle.parent.forward) < 0) {
         speedDistance = 0;
       } else {
-        Vector3 projected = Vector3.Project(pinchDelta, speedAnchor.parent.forward);
-        Vector3 local = speedAnchor.parent.InverseTransformVector(projected);
+        Vector3 projected = Vector3.Project(pinchDelta, speedHandle.parent.forward);
+        Vector3 local = speedHandle.parent.InverseTransformVector(projected);
         speedDistance = local.magnitude;
       }
 
-      speedAnchor.localPosition = new Vector3(0, 0, speedDistance);
+      speedHandle.localPosition = new Vector3(0, 0, speedDistance);
     } else {
       Hand pinchingHand = null;
       foreach (var hand in provider.CurrentFrame.Hands) {
         if (hand.PinchStrength > pinchRange.y &&
-            Vector3.Distance(hand.GetPinchPosition(), speedAnchor.position) < maxPinchDist) {
+            Vector3.Distance(hand.GetPinchPosition(), speedHandle.position) < maxPinchDist) {
           pinchingHand = hand;
           break;
         }

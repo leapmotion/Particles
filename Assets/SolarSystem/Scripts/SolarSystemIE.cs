@@ -46,7 +46,18 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
     for (int i = 0; i < sim.currState.comets.Count; i++) {
       var comet = sim.currState.comets[i];
       if (_spawned[i].GetModifiedState(ref comet)) {
-        sim.currState.comets[i] = comet;
+
+        SolarSystemSimulator.CometState prev, curr;
+        comet.Generate2States(sim.prevState.simTime,
+                              sim.currState.simTime,
+                              sim.simulationTime,
+                              out prev,
+                              out curr);
+
+        sim.currState.comets[i] = curr;
+        sim.prevState.comets[i] = prev;
+
+        sim.RestartPaths();
       }
     }
   }
@@ -70,7 +81,13 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
 
   private void onUpdateSystem() {
     for (int i = 0; i < sim.currState.comets.Count; i++) {
-      _spawned[i].UpdateState(sim.currState.comets[i]);
+      var currComet = sim.currState.comets[i];
+      var prevComet = sim.prevState.comets[i];
+      float interp = Mathf.InverseLerp(sim.prevState.simTime, sim.currState.simTime, sim.simulationTime);
+
+      var interpComet = SolarSystemSimulator.CometState.Lerp(currComet, prevComet, interp);
+
+      _spawned[i].UpdateState(interpComet);
     }
   }
 }

@@ -14,9 +14,6 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private Transform _displayAnchor;
 
-  [SerializeField]
-  private int _generationSeed = 0;
-
   [Header("Simulation"), DevCategory("Solar System Simulation")]
   [SerializeField, DevValue]
   private bool _simulate;
@@ -272,8 +269,6 @@ public class SolarSystemSimulator : MonoBehaviour {
   #region SIMULATION
 
   private void createSimulation() {
-    //Random.InitState(_generationSeed);
-
     _simTime = 0;
     if (_currState != null || _prevState != null) {
       destroySimulation();

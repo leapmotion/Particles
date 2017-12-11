@@ -44,8 +44,10 @@ public class CometIEBehaviour : MonoBehaviour {
 
     float minDist = distanceToMultiplier.y;
     foreach (var hand in provider.CurrentFrame.Hands) {
-      float grabDist = Vector3.Distance(hand.PalmPosition.ToVector3(), transform.position);
-      float pinchDist = Vector3.Distance(hand.GetPredictedPinchPosition(), speedHandle.position);
+      float grabDist = Mathf.Min(Vector3.Distance(hand.PalmPosition.ToVector3(), transform.position),
+                                 Vector3.Distance(hand.GetIndex().TipPosition.ToVector3(), transform.position));
+      float pinchDist = Mathf.Min(Vector3.Distance(hand.GetPredictedPinchPosition(), speedHandle.position),
+                                  Vector3.Distance(hand.GetIndex().TipPosition.ToVector3(), speedHandle.position));
 
       minDist = Mathf.Min(grabDist, minDist);
       minDist = Mathf.Min(pinchDist, minDist);

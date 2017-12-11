@@ -301,7 +301,7 @@ public class SolarSystemSimulator : MonoBehaviour {
       }
     }
 
-    if (_simulate && _simBlockers == 0) {
+    if (_simulate && _simBlockers == 0 && simulationSpeed > Mathf.Epsilon) {
       stepSimulation();
       updatePlanetPositions();
     }
@@ -426,10 +426,10 @@ public class SolarSystemSimulator : MonoBehaviour {
     while (_simTime > _currState.simTime) {
       _prevState.CopyFrom(_currState);
       _currState.Step();
+    }
 
-      if (OnUpdateSystem != null) {
-        OnUpdateSystem();
-      }
+    if (OnUpdateSystem != null) {
+      OnUpdateSystem();
     }
   }
 

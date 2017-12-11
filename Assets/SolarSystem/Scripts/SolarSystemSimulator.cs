@@ -37,12 +37,15 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField, DevValue]
   private float _loopTime = 10;
 
+  [SerializeField, DevValue]
+  private bool _autoReset = true;
+
+  [SerializeField, DevValue]
+  private float _autoResetDistance = 4;
+
   [Header("Solar System Generation"), DevCategory]
   [SerializeField, DevValue]
   private int _planetCount = 4;
-
-  [SerializeField, DevValue]
-  private bool _autoResetWhenExplode = true;
 
   [MinMax(0, 1)]
   [SerializeField]
@@ -292,9 +295,9 @@ public class SolarSystemSimulator : MonoBehaviour {
       createSimulation();
     }
 
-    if (_autoResetWhenExplode) {
+    if (_autoReset) {
       foreach (var comet in _currState.comets) {
-        if (comet.position.magnitude > 20) {
+        if (comet.position.magnitude > _autoResetDistance) {
           createSimulation();
           break;
         }

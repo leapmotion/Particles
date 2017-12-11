@@ -15,6 +15,7 @@ public class CometIEBehaviour : MonoBehaviour {
 
   [Header("Speed Control")]
   public Transform speedHandle;
+  public Transform rodHandle;
   public float speedToDistance = 1;
   public float maxPinchDist = 0.05f;
   [MinMax(0, 1)]
@@ -26,7 +27,10 @@ public class CometIEBehaviour : MonoBehaviour {
   public void UpdateState(SolarSystemSimulator.CometState comet) {
     transform.localPosition = comet.position;
     transform.localRotation = Quaternion.LookRotation(comet.velocity);
-    speedHandle.localPosition = new Vector3(0, 0, comet.velocity.magnitude * speedToDistance);
+
+    float dist = comet.velocity.magnitude * speedToDistance;
+    speedHandle.localPosition = new Vector3(0, 0, dist);
+    rodHandle.localScale = new Vector3(1, 1, dist);
   }
 
   public float GetMultiplier(SolarSystemSimulator.CometState comet) {
@@ -96,6 +100,7 @@ public class CometIEBehaviour : MonoBehaviour {
       }
 
       speedHandle.localPosition = new Vector3(0, 0, speedDistance);
+      rodHandle.localScale = new Vector3(1, 1, speedDistance);
     } else {
       Hand pinchingHand = null;
       foreach (var hand in provider.CurrentFrame.Hands) {

@@ -94,7 +94,7 @@ public class CometIEBehaviour : MonoBehaviour {
         return;
       }
 
-      if (ie.isGrasped || system.canArrowControlOrientation) {
+      if (ie.isGrasped || !system.requireGraspToRotate) {
         rotationAnchor.LookAt(pinchingHand.GetPinchPosition());
       }
 

@@ -12,7 +12,7 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
   public CometIEBehaviour handlePrefab;
 
   [DevValue]
-  public bool canArrowControlOrientation = true;
+  public bool requireGraspToRotate = false;
 
   public float multiplier { get; set; }
   private List<CometIEBehaviour> _spawned = new List<CometIEBehaviour>();

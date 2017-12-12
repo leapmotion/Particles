@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
+using Leap.Unity.DevGui;
 
 public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
 
@@ -9,6 +10,9 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
   public SolarSystemSimulator sim;
   public Transform spawnAnchor;
   public CometIEBehaviour handlePrefab;
+
+  [DevValue]
+  public bool canArrowControlOrientation = true;
 
   public float multiplier { get; set; }
   private List<CometIEBehaviour> _spawned = new List<CometIEBehaviour>();

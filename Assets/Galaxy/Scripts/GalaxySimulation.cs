@@ -254,6 +254,8 @@ public unsafe class GalaxySimulation : MonoBehaviour {
 
     simulationTime = 0;
     mainState = NBodyC.CreateGalaxy(blackHoleCount);
+    mainState->time = 0;
+    mainState->frames = 0;
 
     {
       Random.InitState(_seed);
@@ -369,6 +371,8 @@ public unsafe class GalaxySimulation : MonoBehaviour {
   }
 
   private IEnumerator Start() {
+    NBodyC.SetGravity(gravConstant);
+
     _trailMesh = new Mesh();
     _trailMesh.MarkDynamic();
 
@@ -403,6 +407,10 @@ public unsafe class GalaxySimulation : MonoBehaviour {
       NBodyC.DestroyGalaxy(_trailState);
       _trailState = null;
     }
+  }
+
+  private void OnValidate() {
+    NBodyC.SetGravity(gravConstant);
   }
 
   private unsafe void updateShaderConstants() {

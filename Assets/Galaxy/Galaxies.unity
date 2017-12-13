@@ -4047,7 +4047,7 @@ MonoBehaviour:
   blackHoleMassVariance: 0.75
   blackHoleMassAffectsSize: 1
   blackHoleMassAffectsDensity: 1
-  blackHoleCount: 10
+  blackHoleCount: 1
   gravConstant: 0.00001
   fuzzValue: 0.0005
   blackHoleVelocity: 0.004

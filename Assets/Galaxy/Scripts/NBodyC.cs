@@ -3,6 +3,9 @@
 public static class NBodyC {
 
   [DllImport("NBody")]
+  public static unsafe extern int GetOffsetOfVelocity();
+
+  [DllImport("NBody")]
   public static unsafe extern void SetGravity(float gravity);
 
   [DllImport("NBody")]

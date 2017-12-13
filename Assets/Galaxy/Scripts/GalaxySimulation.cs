@@ -197,7 +197,7 @@ public unsafe class GalaxySimulation : MonoBehaviour {
     }
   }
 
-  [StructLayout(LayoutKind.Sequential)]
+  [StructLayout(LayoutKind.Sequential, Size = 64)]
   public unsafe struct BlackHole {
     public Vector4 position;
     public Vector4 velocity;

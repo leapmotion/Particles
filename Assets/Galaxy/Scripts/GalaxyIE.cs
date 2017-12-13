@@ -96,24 +96,24 @@ public class GalaxyIE : MonoBehaviour, IPropertyMultiplier {
   }
 
   public void OnMove(BlackHoleBehaviour movedBehaviour) {
-    if (_numGrasped > 0) {
-      for (int i = 0; i < _sim.mainState.count; i++) {
-        var ie = _spawned[i].GetComponent<InteractionBehaviour>();
-        if (!ie.isGrasped) {
-          continue;
+    unsafe {
+      if (_numGrasped > 0) {
+        for (int i = 0; i < _sim.mainState->numBlackHoles; i++) {
+          var ie = _spawned[i].GetComponent<InteractionBehaviour>();
+          if (!ie.isGrasped) {
+            continue;
+          }
+
+          _sim.UpdateDrag(_renderer.displayAnchor.worldToLocalMatrix * _spawned[i].transform.localToWorldMatrix, i);
         }
 
-        _sim.UpdateDrag(_renderer.displayAnchor.worldToLocalMatrix * _spawned[i].transform.localToWorldMatrix, i);
-      }
-
-      unsafe {
-        GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
-        for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
-          (*ptr).position = _renderer.displayAnchor.InverseTransformPoint(_spawned[i].transform.position);
-          (*ptr).velocity = _renderer.displayAnchor.InverseTransformDirection(_spawned[i].transform.forward * (*ptr).velocity.magnitude);
+        GalaxySimulation.BlackHole* ptr = _sim.mainState->blackHoles;
+        for (int i = 0; i < _sim.mainState->numBlackHoles; i++, ptr++) {
+          ptr->position = _renderer.displayAnchor.InverseTransformPoint(_spawned[i].transform.position);
+          ptr->velocity = _renderer.displayAnchor.InverseTransformDirection(_spawned[i].transform.forward * (*ptr).velocity.magnitude);
         }
+        _sim.ResetTrails();
       }
-      _sim.ResetTrails();
     }
   }
 
@@ -124,8 +124,8 @@ public class GalaxyIE : MonoBehaviour, IPropertyMultiplier {
     _spawned.Clear();
 
     unsafe {
-      GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
-      for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
+      GalaxySimulation.BlackHole* ptr = _sim.mainState->blackHoles;
+      for (int i = 0; i < _sim.mainState->numBlackHoles; i++, ptr++) {
         var obj = Instantiate(_iePrefab);
         _spawned.Add(obj);
 
@@ -138,8 +138,8 @@ public class GalaxyIE : MonoBehaviour, IPropertyMultiplier {
     }
   }
 
-  private void onStepSim() {
-    if (_sim.mainState.count != _spawned.Count) {
+  private unsafe void onStepSim() {
+    if (_sim.mainState->numBlackHoles != _spawned.Count) {
       onResetSim();
     }
 
@@ -153,12 +153,10 @@ public class GalaxyIE : MonoBehaviour, IPropertyMultiplier {
       }
     }
 
-    unsafe {
-      GalaxySimulation.BlackHoleMainState* ptr = _sim.mainState.mainState;
-      for (int i = 0; i < _sim.mainState.count; i++, ptr++) {
-        _spawned[i].transform.position = _renderer.displayAnchor.TransformPoint((*ptr).position);
-        _spawned[i].transform.rotation = _renderer.displayAnchor.rotation * Quaternion.LookRotation((*ptr).velocity);
-      }
+    GalaxySimulation.BlackHole* ptr = _sim.mainState->blackHoles;
+    for (int i = 0; i < _sim.mainState->numBlackHoles; i++, ptr++) {
+      _spawned[i].transform.position = _renderer.displayAnchor.TransformPoint(ptr->position);
+      _spawned[i].transform.rotation = _renderer.displayAnchor.rotation * Quaternion.LookRotation(ptr->velocity);
     }
 
     float minDist = float.MaxValue;

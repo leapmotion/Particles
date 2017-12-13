@@ -4057,8 +4057,8 @@ MonoBehaviour:
   _enableTrails: 1
   _trailColor: {r: 0, g: 0, b: 0, a: 0}
   _maxTrailLength: 1000
-  _trailUpdateRate: 150
-  _trailShowLength: 500
+  _trailUpdateRate: 1000
+  _trailShowLength: 1000
   _onlyResetWhenComplete: 1
   _trailMaterial: {fileID: 2100000, guid: 90d523cd676e0c34887ae1af7c929e61, type: 2}
   _profileTrails: 0

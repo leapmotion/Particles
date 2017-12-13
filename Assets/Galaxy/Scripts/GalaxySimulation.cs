@@ -136,7 +136,7 @@ public unsafe class GalaxySimulation : MonoBehaviour {
   [SerializeField, DevValue]
   private int _maxTrailLength = 100;
 
-  [Range(2, 500)]
+  [Range(2, 10000)]
   [SerializeField, DevValue]
   private int _trailUpdateRate = 2;
 

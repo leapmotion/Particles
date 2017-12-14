@@ -114,7 +114,7 @@ public unsafe class GalaxySimulation : MonoBehaviour {
   [DevValue("Spawn Radius")]
   public float blackHoleSpawnRadius = 0.5f;
 
-  [Range(0, 0.1f)]
+  [Range(0, 0.2f)]
   [DevValue("Combine Dist")]
   public float blackHoleCombineDistance = 0.05f;
 
@@ -182,7 +182,6 @@ public unsafe class GalaxySimulation : MonoBehaviour {
   }
 
   private int _seed = 0;
-  private int _nextId = 0;
 
   public struct Drag {
     public Matrix4x4 startTransform;
@@ -214,13 +213,18 @@ public unsafe class GalaxySimulation : MonoBehaviour {
     public int frames;
   }
 
+  public class TrailRecord {
+    public int startFrame;
+    public Deque<Vector3> queue = new Deque<Vector3>(1000);
+  }
+
   public float simulationTime = 0;
   public UniverseState* mainState;
   public UniverseState* prevState;
 
   private UniverseState* _trailState;
   private bool _trailResetQueued = false;
-  private Dictionary<int, List<Vector3>> _trails = new Dictionary<int, List<Vector3>>();
+  private Dictionary<int, TrailRecord> _trails = new Dictionary<int, TrailRecord>();
 
   private float[] _floatArray = new float[100];
   private Vector4[] _vectorArray = new Vector4[100];
@@ -261,18 +265,19 @@ public unsafe class GalaxySimulation : MonoBehaviour {
       Random.InitState(_seed);
       BlackHole* dst = mainState->blackHoles;
 
-      for (int i = 0; i < blackHoleCount; i++, dst++, _nextId++) {
+      int nextId = 1;
+      for (int i = 0; i < blackHoleCount; i++, dst++) {
         Vector3 position = Random.onUnitSphere * blackHoleSpawnRadius;
 
         *dst = new BlackHole() {
           position = position,
           velocity = Vector3.Slerp(Vector3.zero - position, Random.onUnitSphere, initialDirVariance).normalized * blackHoleVelocity,
           mass = Random.Range(1 - blackHoleMassVariance, 1 + blackHoleMassVariance),
-          id = _nextId,
+          id = nextId,
           rotation = Random.rotationUniform
         };
 
-        _trails[_nextId] = new List<Vector3>();
+        nextId = nextId << 1;
       }
     }
 
@@ -339,7 +344,7 @@ public unsafe class GalaxySimulation : MonoBehaviour {
     prevState = NBodyC.Clone(mainState);
     prevState->time = mainState->time - 1.0f / REFERENCE_FRAMERATE;
 
-    _trailState = NBodyC.Clone(mainState);
+    ResetTrails(forceReset: true);
 
     if (OnReset != null) {
       OnReset();
@@ -364,14 +369,14 @@ public unsafe class GalaxySimulation : MonoBehaviour {
       unsafe {
         BlackHole* src = mainState->blackHoles;
         for (int i = 0; i < mainState->numBlackHoles; i++, src++) {
-          _trails[src->id] = new List<Vector3>();
+          _trails[src->id] = new TrailRecord();
         }
       }
     }
   }
 
   private IEnumerator Start() {
-    NBodyC.SetGravity(gravConstant);
+    NBodyC.SetParams(gravConstant, blackHoleCombineDistance);
 
     _trailMesh = new Mesh();
     _trailMesh.MarkDynamic();
@@ -410,7 +415,9 @@ public unsafe class GalaxySimulation : MonoBehaviour {
   }
 
   private void OnValidate() {
-    NBodyC.SetGravity(gravConstant);
+    if (Application.isPlaying) {
+      NBodyC.SetParams(gravConstant, blackHoleCombineDistance);
+    }
   }
 
   private unsafe void updateShaderConstants() {
@@ -480,8 +487,16 @@ public unsafe class GalaxySimulation : MonoBehaviour {
 
             unsafe {
               BlackHole* src = _trailState->blackHoles;
+              TrailRecord trail;
               for (int j = 0; j < _trailState->numBlackHoles; j++, src++) {
-                _trails[src->id].Add(src->position);
+                if (!_trails.TryGetValue(src->id, out trail)) {
+                  trail = new TrailRecord() {
+                    startFrame = _trailState->frames
+                  };
+                  _trails[src->id] = trail;
+                }
+
+                trail.queue.PushBack(src->position);
               }
             }
 
@@ -502,15 +517,13 @@ public unsafe class GalaxySimulation : MonoBehaviour {
 
           using (new ProfilerSample("Build Vertex List")) {
             foreach (var pair in _trails) {
-              bool isFirst = true;
-              foreach (var point in pair.Value) {
-                if (!isFirst) {
+              for (int i = 0; i < pair.Value.queue.Count; i++) {
+                if (i != 0) {
                   _trailIndices.Add(_trailVerts.Count);
                   _trailIndices.Add(_trailVerts.Count - 1);
                 }
 
-                _trailVerts.Add(point);
-                isFirst = false;
+                _trailVerts.Add(pair.Value.queue[i]);
               }
             }
           }
@@ -656,8 +669,8 @@ public unsafe class GalaxySimulation : MonoBehaviour {
       //Update trails
       {
         foreach (var pair in _trails) {
-          if (pair.Value.Count > 0) {
-            pair.Value.RemoveAt(0);
+          if (mainState->frames > pair.Value.startFrame && pair.Value.queue.Count > 0) {
+            pair.Value.queue.PopFront();
           }
         }
       }

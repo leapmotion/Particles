@@ -4051,7 +4051,7 @@ MonoBehaviour:
   gravConstant: 0.00001
   fuzzValue: 0.0005
   blackHoleVelocity: 0.004
-  initialDirVariance: 0.4154
+  initialDirVariance: 0
   blackHoleSpawnRadius: 3.806
   blackHoleCombineDistance: 0.05
   _enableTrails: 1

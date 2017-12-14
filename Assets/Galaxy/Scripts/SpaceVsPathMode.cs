@@ -19,7 +19,7 @@ public class SpaceVsPathMode : MonoBehaviour, IPropertyMultiplier {
   public float multiplier { get; set; }
 
   private void Start() {
-    EnterSpaceMode();
+    EnterPathMode();
   }
 
   private void OnEnable() {

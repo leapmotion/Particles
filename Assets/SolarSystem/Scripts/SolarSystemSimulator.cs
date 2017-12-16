@@ -90,6 +90,9 @@ public class SolarSystemSimulator : MonoBehaviour {
   private int _planetOrbitResolution = 32;
 
   [Header("Comet Paths"), DevCategory]
+  [Range(0, 10)]
+  private int _cometCount = 1;
+
   [SerializeField, DevValue]
   private int _cometPathLength = 1000;
 
@@ -319,6 +322,7 @@ public class SolarSystemSimulator : MonoBehaviour {
 
   #region SIMULATION
 
+  [DevButton("Restart Simulation")]
   private void createSimulation() {
     _simTime = 0;
     if (_currState != null || _prevState != null) {
@@ -366,11 +370,14 @@ public class SolarSystemSimulator : MonoBehaviour {
       _spawnedPlanets.Add(planet);
     }
 
-    //Add a DEBUG comet
-    _currState.comets.Add(new CometState() {
-      position = Vector3.right * 0.3f + Vector3.up * 0.05f,
-      velocity = Vector3.forward * 0.4f
-    });
+    //Add starting commets
+    for (int i = 0; i < _cometCount; i++) {
+      var rot = Quaternion.Euler(0, Random.Range(0, 360), 0);
+      _currState.comets.Add(new CometState() {
+        position = rot * (Vector3.right * 0.3f + Vector3.up * 0.05f),
+        velocity = rot * (Vector3.forward * 0.4f)
+      });
+    }
 
     _prevState = _currState.Clone();
 

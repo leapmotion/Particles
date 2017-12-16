@@ -405,7 +405,7 @@ MonoBehaviour:
   sim: {fileID: 1279336354}
   spawnAnchor: {fileID: 1416119071}
   handlePrefab: {fileID: 592745161}
-  canArrowControlOrientation: 1
+  requireGraspToRotate: 0
 --- !u!1 &450694776
 GameObject:
   m_ObjectHideFlags: 0
@@ -1110,7 +1110,7 @@ MonoBehaviour:
   _planetPrefab: {fileID: 1807328025}
   _displayAnchor: {fileID: 1416119071}
   _simulate: 1
-  _simulationSpeed: 0.5
+  _simulationSpeed: 1
   _autoLoop: 0
   _loopTime: 3
   _autoReset: 1
@@ -1151,6 +1151,7 @@ MonoBehaviour:
   _planetOrbitMaterial: {fileID: 2100000, guid: 83ad3da31437a6a479fbecf03aaa0b4b,
     type: 2}
   _planetOrbitResolution: 64
+  _cometCount: 1
   _cometPathLength: 200
   _maxPathStepsPerFrame: 200
   _cometPathMaterial: {fileID: 2100000, guid: be730b31c63465f4fa73bad0f786cd0f, type: 2}

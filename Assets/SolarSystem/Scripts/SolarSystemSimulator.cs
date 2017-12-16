@@ -89,8 +89,9 @@ public class SolarSystemSimulator : MonoBehaviour {
   [SerializeField]
   private int _planetOrbitResolution = 32;
 
-  [Header("Comet Paths"), DevCategory]
+  [Header("Comets"), DevCategory]
   [Range(0, 10)]
+  [SerializeField, DevValue]
   private int _cometCount = 1;
 
   [SerializeField, DevValue]
@@ -322,7 +323,7 @@ public class SolarSystemSimulator : MonoBehaviour {
 
   #region SIMULATION
 
-  [DevButton("Restart Simulation")]
+  [DevButton("Restart Simulation"), DevCategory("Solar System Simulation")]
   private void createSimulation() {
     _simTime = 0;
     if (_currState != null || _prevState != null) {

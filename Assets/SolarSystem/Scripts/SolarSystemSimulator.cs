@@ -338,6 +338,9 @@ public class SolarSystemSimulator : MonoBehaviour {
     for (int i = 0; i < _planetCount; i++) {
       var planet = Instantiate(_planetPrefab);
       planet.transform.parent = _displayAnchor;
+      planet.transform.localPosition = Vector3.zero;
+      planet.transform.localRotation = Quaternion.identity;
+      planet.transform.localScale = Vector3.one;
 
       var planetState = new PlanetState();
 
@@ -536,7 +539,9 @@ public class SolarSystemSimulator : MonoBehaviour {
         cometPos = Vector3.Lerp(_prevState.comets[i].position, _currState.comets[i].position, interpFactor);
       }
 
-      Matrix4x4 transform = Matrix4x4.TRS(cometPos, Quaternion.identity, Vector3.one * _cometScale);
+      Matrix4x4 transform = _displayAnchor.localToWorldMatrix *
+                            Matrix4x4.TRS(cometPos, Quaternion.identity, Vector3.one * _cometScale);
+
       Graphics.DrawMesh(_cometMesh, transform, _cometMaterial, 0);
     }
   }

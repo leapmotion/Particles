@@ -289,6 +289,72 @@ AudioListener:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 309945700}
   m_Enabled: 1
+--- !u!1 &331801891
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 331801892}
+  - component: {fileID: 331801893}
+  m_Layer: 0
+  m_Name: RightTap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &331801892
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 331801891}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1319880507}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &331801893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 331801891}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b437f02f1e2805f4f9cdb74a71b6ad14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _eventTable:
+    _entries:
+    - enumValue: 100
+      callback:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1319880506}
+            m_MethodName: ToggleMode
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+  tappedHand: 1
+  targetSide: 1
+  areaRadius: 0.05
+  areaHeight: 0.04
+  palmNormalTolerance: 45
+  radialAngleTolerance: 90
+  hysteresis: 0.01
 --- !u!1 &385057523
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,7 +469,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   provider: {fileID: 925657015}
   sim: {fileID: 1279336354}
-  spawnAnchor: {fileID: 1416119071}
+  spawnAnchor: {fileID: 448363915}
   handlePrefab: {fileID: 592745161}
   requireGraspToRotate: 0
 --- !u!1 &450694776
@@ -599,6 +665,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   system: {fileID: 448363916}
+  displayAnchor: {fileID: 1416119071}
   provider: {fileID: 925657015}
   ie: {fileID: 592745162}
   renderers:
@@ -733,6 +800,72 @@ Transform:
   m_Father: {fileID: 1909282825}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &760089811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 760089812}
+  - component: {fileID: 760089813}
+  m_Layer: 0
+  m_Name: LeftTap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &760089812
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 760089811}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1319880507}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &760089813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 760089811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b437f02f1e2805f4f9cdb74a71b6ad14, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _eventTable:
+    _entries:
+    - enumValue: 100
+      callback:
+        m_PersistentCalls:
+          m_Calls:
+          - m_Target: {fileID: 1319880506}
+            m_MethodName: ToggleMode
+            m_Mode: 1
+            m_Arguments:
+              m_ObjectArgument: {fileID: 0}
+              m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+              m_IntArgument: 0
+              m_FloatArgument: 0
+              m_StringArgument: 
+              m_BoolArgument: 0
+            m_CallState: 2
+        m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+          Culture=neutral, PublicKeyToken=null
+  tappedHand: 0
+  targetSide: 1
+  areaRadius: 0.05
+  areaHeight: 0.04
+  palmNormalTolerance: 45
+  radialAngleTolerance: 90
+  hysteresis: 0.01
 --- !u!1 &820966979
 GameObject:
   m_ObjectHideFlags: 0
@@ -747,7 +880,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &820966980
 Transform:
   m_ObjectHideFlags: 0
@@ -1217,6 +1350,65 @@ MonoBehaviour:
   canAct: 1
   sim: {fileID: 1279336354}
   velocityScale: 6
+--- !u!1 &1319880505
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1319880507}
+  - component: {fileID: 1319880506}
+  m_Layer: 0
+  m_Name: SpaceVsPathController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1319880506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1319880505}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 425b98346095419408b896a029f4b66a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftHandRenderer: {fileID: 1675959284}
+  rightHandRenderer: {fileID: 1332137784}
+  galaxySim: {fileID: 0}
+  galaxyRenderer: {fileID: 0}
+  spaceBehaviour: {fileID: 1796908944}
+  galaxyIE: {fileID: 0}
+  solarIE: {fileID: 448363916}
+  pathSettings:
+    leftMaterial: {fileID: 2100000, guid: 166ecde2831eccd4b992d6bd0b12faa6, type: 2}
+    rightMaterial: {fileID: 2100000, guid: 90443e8b41e174c4ba85fde053bab9a5, type: 2}
+    trailColor: {r: 0.77205884, g: 0.9622718, b: 1, a: 1}
+    starBrightness: 0.3
+  spaceSettings:
+    leftMaterial: {fileID: 2100000, guid: 76c9094b806cbf84a9927b314b832a54, type: 2}
+    rightMaterial: {fileID: 2100000, guid: 467367e1e533dfd46b39158ee9fc98cd, type: 2}
+    trailColor: {r: 0.1420311, g: 0.19852942, b: 0.13137977, a: 1}
+    starBrightness: 1
+--- !u!4 &1319880507
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1319880505}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 760089812}
+  - {fileID: 331801892}
+  m_Father: {fileID: 0}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1332137781
 Prefab:
   m_ObjectHideFlags: 0
@@ -2260,6 +2452,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1332137781}
   m_Script: {fileID: 11500000, guid: 9e0ed5922e911b343b8400997c95409c, type: 3}
+--- !u!137 &1332137784 stripped
+SkinnedMeshRenderer:
+  m_PrefabParentObject: {fileID: 137723638835135990, guid: 2276723046d707c4f94d431ceb80ab92,
+    type: 2}
+  m_PrefabInternal: {fileID: 1332137781}
 --- !u!1 &1416119070
 GameObject:
   m_ObjectHideFlags: 0
@@ -2296,7 +2493,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1416119070}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 16a1f1e7fe03f4967aedc21b646b884a, type: 3}
   m_Name: 
@@ -3449,6 +3646,11 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1675959281}
   m_Script: {fileID: 11500000, guid: 9e0ed5922e911b343b8400997c95409c, type: 3}
+--- !u!137 &1675959284 stripped
+SkinnedMeshRenderer:
+  m_PrefabParentObject: {fileID: 137091762490896592, guid: 2aa010a1e75292e49a24f3f71bb9cddb,
+    type: 2}
+  m_PrefabInternal: {fileID: 1675959281}
 --- !u!1 &1691820733
 GameObject:
   m_ObjectHideFlags: 0

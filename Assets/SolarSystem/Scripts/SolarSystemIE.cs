@@ -6,6 +6,7 @@ using Leap.Unity.DevGui;
 
 public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
 
+  public bool canAct = true;
   public LeapProvider provider;
   public SolarSystemSimulator sim;
   public Transform spawnAnchor;
@@ -41,6 +42,10 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
       multiplier = Mathf.Min(multiplier, _spawned[i].GetMultiplier(sim.currState.comets[i]));
     }
 
+    if (!canAct) {
+      multiplier = 1;
+    }
+
     //Update all handles with the new multiplier
     foreach (var spawned in _spawned) {
       spawned.OnMultiplierChange(multiplier);
@@ -49,7 +54,7 @@ public class SolarSystemIE : MonoBehaviour, IPropertyMultiplier {
     //Allow each behavior to individually modify the state if needed
     for (int i = 0; i < sim.currState.comets.Count; i++) {
       var comet = sim.currState.comets[i];
-      if (_spawned[i].GetModifiedState(ref comet)) {
+      if (canAct && _spawned[i].GetModifiedState(ref comet)) {
 
         SolarSystemSimulator.CometState prev, curr;
         comet.Generate2States(sim.prevState.simTime,

@@ -7,6 +7,7 @@ using Leap.Unity.Interaction;
 public class CometIEBehaviour : MonoBehaviour {
 
   public SolarSystemIE system;
+  public Transform displayAnchor;
   public LeapProvider provider;
   public InteractionBehaviour ie;
   public Renderer[] renderers;
@@ -27,8 +28,9 @@ public class CometIEBehaviour : MonoBehaviour {
   private int _pinchingId = 0;
 
   public void UpdateState(SolarSystemSimulator.CometState comet) {
-    transform.localPosition = comet.position;
-    transform.localRotation = Quaternion.LookRotation(comet.velocity);
+    transform.localPosition = displayAnchor.TransformPoint(comet.position);
+    transform.localRotation = displayAnchor.TransformRotation(Quaternion.LookRotation(comet.velocity));
+
     rotationAnchor.localRotation = Quaternion.identity;
 
     float dist = comet.velocity.magnitude * speedToDistance;
@@ -67,8 +69,8 @@ public class CometIEBehaviour : MonoBehaviour {
 
   public bool GetModifiedState(ref SolarSystemSimulator.CometState comet) {
     if (ie.isGrasped || _isPinched) {
-      comet.position = transform.localPosition;
-      comet.velocity = (transform.parent.InverseTransformRotation(rotationAnchor.rotation) * Vector3.forward) * speedHandle.localPosition.z / speedToDistance;
+      comet.position = displayAnchor.InverseTransformPoint(transform.position);
+      comet.velocity = displayAnchor.InverseTransformDirection(rotationAnchor.rotation * Vector3.forward) * speedHandle.localPosition.z / speedToDistance;
       return true;
     } else {
       return false;

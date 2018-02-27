@@ -1,4 +1,6 @@
-﻿Shader "Particle Demo/IEParticle" {
+﻿// Upgrade NOTE: upgraded instancing buffer 'MyProperties' to new syntax.
+
+Shader "Particle Demo/IEParticle" {
 	Properties {
     _ToonRamp("Toon Ramp", 2D) = "white" {}
     _LightDir("Light Direction", Vector) = (0.577, 0.577, 0.577, 0)
@@ -21,9 +23,10 @@
     float3 normal : NORMAL;
   };
 
-  UNITY_INSTANCING_CBUFFER_START(MyProperties)
+  UNITY_INSTANCING_BUFFER_START(MyProperties)
   UNITY_DEFINE_INSTANCED_PROP(fixed4, _Color)
-  UNITY_INSTANCING_CBUFFER_END
+#define _Color_arr MyProperties
+  UNITY_INSTANCING_BUFFER_END(MyProperties)
 
   sampler2D _ToonRamp;
   half4 _LightDir;
@@ -33,7 +36,7 @@
 
     v2f o;
     o.position = UnityObjectToClipPos(v.vertex);
-    o.color = UNITY_ACCESS_INSTANCED_PROP(_Color);
+    o.color = UNITY_ACCESS_INSTANCED_PROP(_Color_arr, _Color);
     o.normal = normalize(mul(UNITY_MATRIX_IT_MV, float4(v.normal, 1)));
     return o;
   }

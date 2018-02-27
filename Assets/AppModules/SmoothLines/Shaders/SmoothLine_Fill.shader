@@ -9,12 +9,10 @@
 		Tags { "RenderType"="Opaque" }
 		LOD 100
 
-    ColorMask RGB
-
     ZTest Off
     ZWrite Off
     Cull Off
-    Blend DstAlpha One
+    Blend DstAlpha One, Zero Zero
 
 		Pass
 		{

@@ -3,6 +3,7 @@
 	Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
+    _Power   ("Power", Float) = 1
 	}
 	SubShader
 	{
@@ -38,6 +39,7 @@
 			};
 
 			sampler2D _MainTex;
+      float _Power;
 			
 			v2f vert (appdata v) {
 				v2f o;
@@ -48,7 +50,7 @@
 			
 			fixed4 frag (v2f i) : SV_Target
 			{
-        return tex2D(_MainTex, i.uv).a;
+        return pow(tex2D(_MainTex, i.uv).a, _Power);
 			}
 			ENDCG
 		}

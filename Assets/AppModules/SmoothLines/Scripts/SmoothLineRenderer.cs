@@ -26,10 +26,10 @@ public class SmoothLineRenderer : MonoBehaviour {
 
     drawTheThing();
 
-    //fillmat.mainTexture = _circleTexture;
-    //fillmat.SetPass(0);
+    fillmat.mainTexture = _circleTexture;
+    fillmat.SetPass(0);
 
-    //drawTheThing();
+    drawTheThing();
   }
 
   private void drawTheThing() {

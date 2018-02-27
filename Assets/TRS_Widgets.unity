@@ -123,11 +123,7 @@ GameObject:
   - component: {fileID: 87496857}
   - component: {fileID: 87496861}
   - component: {fileID: 87496860}
-  - component: {fileID: 87496859}
   - component: {fileID: 87496858}
-  - component: {fileID: 87496863}
-  - component: {fileID: 87496864}
-  - component: {fileID: 87496862}
   m_Layer: 0
   m_Name: CenterEyeAnchor
   m_TagString: MainCamera
@@ -163,19 +159,6 @@ MonoBehaviour:
   _eyeType:
     _orderType: 3
   _overrideEyePosition: 0
---- !u!114 &87496859
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 11462492, guid: 18d6bf9063dcb1842be63f411fd9fc26,
-    type: 2}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 87496856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4499ae867a57a90449cb9069c466ade0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _depthTextureMode: 0
 --- !u!20 &87496860
 Camera:
   m_ObjectHideFlags: 0
@@ -221,68 +204,6 @@ AudioListener:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 87496856}
   m_Enabled: 1
---- !u!114 &87496862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 87496856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 249d5f66f74c5864a8625b4f15a3f2f3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _presetSelection: 0
-  _basic: {fileID: 11400000, guid: 99a6f97a817b49e49b0e03026c3a6fef, type: 2}
-  _speedRamp: {fileID: 11400000, guid: 903fb7abdb1cf22408ab96aa199b290a, type: 2}
-  _accelRamp: {fileID: 11400000, guid: 3ea5228263c4f6b4293e571e695bb4b7, type: 2}
-  _byDirection: {fileID: 11400000, guid: 00734a0de0b21854bb1a8d4df224bde9, type: 2}
-  _byStartingBlackHole: {fileID: 11400000, guid: df867983269c8474db9ef205ff0b26bf,
-    type: 2}
-  _heatMap: {fileID: 11400000, guid: 113066a5cc1bd1d43865369d6f482423, type: 2}
---- !u!114 &87496863
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 87496856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf1d6247ec6379b428f48769d18b6bde, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  nearClipPlane: 0.2
---- !u!114 &87496864
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 87496856}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a64c23d3b646e454e94cbd3b3edb264a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _sim: {fileID: 0}
-  _displayAnchor: {fileID: 753507340}
-  _scale: 1
-  _renderBlackHoles: 0
-  _blackHoleSize: 0.05
-  _blackHoleMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 3}
-  _blackHoleMat: {fileID: 2100000, guid: 9d30d8bee9d12a742a4235d76c16b104, type: 2}
-  _renderStars: 1
-  _starSize: 0.0099
-  _starBrightness: 0.192
-  _renderType: 2
-  _pointMat: {fileID: 2100000, guid: 28e9d03bbe30a5a498613801de4babc0, type: 2}
-  _quadMat: {fileID: 2100000, guid: e782bced61a904542a2237b51b6caf3b, type: 2}
-  _lightMat: {fileID: 2100000, guid: 53d7d531484e74c48912b680d8ae7e0d, type: 2}
-  preset: {fileID: 11400000, guid: df867983269c8474db9ef205ff0b26bf, type: 2}
-  _postProcessMat: {fileID: 2100000, guid: 2e0337d99c2de644195a8d4d2d6968ec, type: 2}
-  _gammaValue: 1
-  _enableBoxFilter: 1
-  _adjacentFilter: 0.75
-  _diagonalFilter: 0.5
 --- !u!1 &116223185
 GameObject:
   m_ObjectHideFlags: 0
@@ -3474,8 +3395,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _rendererLod: 2
-  _subMeshLod: 3
-  _material: {fileID: 2100000, guid: c498c29b1148c464a84ccf2cf8f9b2ff, type: 2}
+  _subMeshLod: 2
+  _material: {fileID: 2100000, guid: 03fbe7769449efb47af527d163e173d8, type: 2}
   _overrideShadowDistance: 0
 --- !u!1 &891335625
 GameObject:
@@ -3809,7 +3730,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1148676135}
   m_Layer: 0
-  m_Name: Mode1
+  m_Name: Mode1 (3Balls)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3889,7 +3810,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1213777160}
   m_Layer: 0
-  m_Name: Mode4
+  m_Name: Mode4 (regular TRS)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3920,7 +3841,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1231026810}
   m_Layer: 0
-  m_Name: Mode2
+  m_Name: Mode2 (4balls)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

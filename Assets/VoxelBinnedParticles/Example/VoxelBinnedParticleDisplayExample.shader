@@ -1,4 +1,4 @@
-﻿Shader "Custom/ParticleDisplay" {
+﻿Shader "Leap Motion/AppModules/Voxel Binned Particles/Display Example" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}

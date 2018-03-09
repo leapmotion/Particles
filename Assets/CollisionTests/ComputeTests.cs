@@ -140,9 +140,9 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
       _shader.SetBuffer(index, "_Capsules", _capsules);
       _shader.SetBuffer(index, "_ParticleFront", _particleFront);
       _shader.SetBuffer(index, "_ParticleBack", _particleBack);
-      _shader.SetBuffer(index, "_Count", _count);
-      _shader.SetBuffer(index, "_BoxStart", _boxStart);
-      _shader.SetBuffer(index, "_BoxEnd", _boxEnd);
+      _shader.SetBuffer(index, "_BinParticleCount", _count);
+      _shader.SetBuffer(index, "_BinStart", _boxStart);
+      _shader.SetBuffer(index, "_BinEnd", _boxEnd);
       _shader.SetBuffer(index, "_DebugData", _debugData);
     }
 

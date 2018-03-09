@@ -132,7 +132,11 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
     }
     _particleFront.SetData(particles);
 
-    foreach (var index in new int[] { _integrate, _resolveCollisions, _accumulate_x, _accumulate_y, _accumulate_z, _copy, _sort }) {
+    foreach (var index in new int[] { _integrate,
+                                      _resolveCollisions,
+                                      _accumulate_x, _accumulate_y, _accumulate_z,
+                                      _copy, _sort }
+    ) {
       _shader.SetBuffer(index, "_Capsules", _capsules);
       _shader.SetBuffer(index, "_ParticleFront", _particleFront);
       _shader.SetBuffer(index, "_ParticleBack", _particleBack);
@@ -197,7 +201,6 @@ public class ComputeTests : MonoBehaviour, IRuntimeGizmoComponent {
       using (new ProfilerSample("Copy")) {
         _shader.Dispatch(_copy, BOX_COUNT / 64, 1, 1);
       }
-
       using (new ProfilerSample("Sort")) {
         _shader.Dispatch(_sort, MAX_PARTICLES / 64, 1, 1);
       }

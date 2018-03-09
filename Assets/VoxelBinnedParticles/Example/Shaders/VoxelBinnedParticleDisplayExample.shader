@@ -14,7 +14,7 @@
 		#pragma target 5.0
     #pragma multi_compile_instancing
     #pragma instancing_options procedural:setup
-    #include "Assets/Shaders/ParticleData.cginc"
+    #include "./ParticleData.cginc"
 
 #ifdef SHADER_API_D3D11
     StructuredBuffer<Particle> _Particles;

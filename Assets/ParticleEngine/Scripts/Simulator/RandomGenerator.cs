@@ -42,10 +42,25 @@ public class RandomGenerator : MonoBehaviour {
     Random.InitState(metaSeeds[currMetaSeed++]);
     for (int s = 0; s < MAX_SPECIES; s++) {
       for (int o = 0; o < MAX_SPECIES; o++) {
-        desc.socialData[s, o] = new SocialDescription() {
-          socialForce = Random.Range(-manager.maxSocialForce, manager.maxSocialForce),
-          socialRange = Random.value * manager.maxSocialRange
-        };
+        if (o == s) {
+          float socialForce = Random.Range(-manager.maxSocialForce, manager.maxSocialForce);
+          float socialRange;
+          if (socialForce > 0) {
+            socialRange = Random.value * manager.maxSocialRange;
+          } else {
+            socialRange = Random.value * manager.maxSocialRange * manager.maxSelfHateFactor;
+          }
+
+          desc.socialData[s, o] = new SocialDescription() {
+            socialForce = socialForce,
+            socialRange = socialRange
+          };
+        } else {
+          desc.socialData[s, o] = new SocialDescription() {
+            socialForce = Random.Range(-manager.maxSocialForce, manager.maxSocialForce),
+            socialRange = Random.value * manager.maxSocialRange
+          };
+        }
       }
     }
 

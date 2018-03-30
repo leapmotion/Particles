@@ -49,6 +49,14 @@ public class GeneratorManager : MonoBehaviour {
     set { _maxSocialForce = value; }
   }
 
+  [Range(0, 1)]
+  [SerializeField]
+  private float _maxSelfHateFactor = 0.25f;
+  public float maxSelfHateFactor {
+    get { return _maxSelfHateFactor; }
+    set { _maxSelfHateFactor = value; }
+  }
+
   [Range(0, 1f)]
   [SerializeField]
   private float _maxSocialRange = 0.5f;
@@ -86,17 +94,11 @@ public class GeneratorManager : MonoBehaviour {
     set { _collisionForceRange.y = value; }
   }
 
-  [MinMax(0, 1)]
+  [Range(0, 1)]
   [SerializeField]
-  private Vector2 _hueRange = new Vector2(0, 1);
-  public float minHue {
-    get { return _hueRange.x; }
-    set { _hueRange.x = value; }
-  }
-
-  public float maxHue {
-    get { return _hueRange.y; }
-    set { _hueRange.y = value; }
+  private float _hueRange = 0.8f;
+  public float hueRange {
+    get { return _hueRange; }
   }
 
   [MinMax(0, 1)]
@@ -135,11 +137,15 @@ public class GeneratorManager : MonoBehaviour {
 
   public Color[] GetRandomColors() {
     List<Color> colors = new List<Color>();
+    float hueOffset = Random.value;
+
     for (int i = 0; i < MAX_SPECIES; i++) {
       Color newColor;
       int maxTries = 1000;
       while (true) {
-        float h = Random.Range(minHue, maxHue);
+        float h = Random.value * _hueRange + hueOffset;
+        h -= (int)h;
+
         float s = Random.Range(minSaturation, maxSaturation);
         float v = Random.Range(minValue, maxValue);
 

@@ -231,6 +231,9 @@
       }
     }
 
+	//FLATTEN to 2D
+	//velocity.z -= 1 * particle.z;
+
     return velocity;
   }
 

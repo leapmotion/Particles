@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -26,6 +26,9 @@ namespace Leap.Unity.Interaction {
   public class InteractionHand : InteractionController {
 
     #region Inspector
+
+    [SerializeField]
+    private LeapProvider _leapProvider;
 
     [Header("Hand Configuration")]
 
@@ -54,8 +57,6 @@ namespace Leap.Unity.Interaction {
     #endregion
 
     #region Hand Data
-
-    private LeapProvider _leapProvider;
     /// <summary>
     /// If the hand data mode for this InteractionHand is set to Custom, you must also
     /// manually specify the provider from which to retrieve Leap frames containing
@@ -179,6 +180,12 @@ namespace Leap.Unity.Interaction {
       }
     }
 
+    private void OnDestroy() {
+      if (_leapProvider != null) {
+        _leapProvider.OnFixedFrame -= onProviderFixedFrame;
+      }
+    }
+
     private void onProviderFixedFrame(Leap.Frame frame) {
       _hand = handAccessorFunc(frame);
 
@@ -239,6 +246,13 @@ namespace Leap.Unity.Interaction {
     /// </summary>
     public override Vector3 position {
       get { return _handData.PalmPosition.ToVector3(); }
+    }
+
+    /// <summary>
+    /// Gets the last-tracked rotation of the underlying Leap hand.
+    /// </summary>
+    public override Quaternion rotation {
+      get { return _handData.Rotation.ToQuaternion(); }
     }
 
     /// <summary>
@@ -694,12 +708,20 @@ namespace Leap.Unity.Interaction {
       return false;
     }
 
+    public override void SwapGrasp(IInteractionBehaviour replacement) {
+      var original = graspedObject;
+
+      base.SwapGrasp(replacement);
+
+      grabClassifier.SwapClassifierState(original, replacement);
+    }
+
     protected override void fixedUpdateGraspingState() {
       grabClassifier.FixedUpdateClassifierHandState();
     }
 
     protected override void onGraspedObjectForciblyReleased(IInteractionBehaviour objectToBeReleased) {
-      grabClassifier.NotifyGraspReleased(objectToBeReleased);
+      grabClassifier.NotifyGraspForciblyReleased(objectToBeReleased);
     }
 
     protected override bool checkShouldRelease(out IInteractionBehaviour objectToRelease) {
@@ -729,8 +751,7 @@ namespace Leap.Unity.Interaction {
         }
 
         if (_testHand == null && provider != null) {
-          _testHand = TestHandFactory.MakeTestHand(0, 0, this.isLeft)
-                                     .TransformedCopy(UnityMatrixExtension.GetLeapMatrix(provider.transform));
+          _testHand = provider.MakeTestHand(this.isLeft);
         }
 
         // Hover Point

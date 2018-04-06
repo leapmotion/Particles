@@ -36,6 +36,12 @@ sysinfo.txt
 *.zip
 *_Data/
 
+.vs/
+.vscode/
+
+*_ElementData*
+UnityPlayer.dll
+
 # =========================
 # Operating System Files
 # =========================

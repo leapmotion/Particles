@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -476,8 +476,12 @@ namespace Leap.Unity.GraphicalRenderer {
             var sprite = dataObj.sprite;
             if (sprite == null) continue;
 
-            Rect rect = SpriteAtlasUtil.GetAtlasedRect(sprite);
-            _atlasUvs.SetRect(spriteFeature.channel.Index(), sprite, rect);
+            Rect rect;
+            if (SpriteAtlasUtil.TryGetAtlasedRect(sprite, out rect)) {
+              _atlasUvs.SetRect(spriteFeature.channel.Index(), sprite, rect);
+            } else {
+              _atlasUvs.SetRect(spriteFeature.channel.Index(), sprite, default(Rect));
+            }
           }
         }
       }

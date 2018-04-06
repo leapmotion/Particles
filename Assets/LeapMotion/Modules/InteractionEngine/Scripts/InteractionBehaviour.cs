@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -314,6 +314,20 @@ namespace Leap.Unity.Interaction {
     /// OnSuspensionBegin.
     /// </summary>
     public bool isSuspended { get { return _suspendingController != null; } }
+
+    /// <summary>
+    /// Nonkinematic grasping motion applies clamped velocities to Interaction Behaviours
+    /// when they are grasped to move them to their target position and rotation in the
+    /// grasping hand. If a controller applies its SwapGrasp method to an interaction
+    /// object that didn't reach its target pose due to velocity clamping, the
+    /// swapped-out object will inherit the offset as a new target pose relative to the
+    /// hand.
+    /// 
+    /// To prevent slippage in this scenario, we always track the latest scheduled grasp
+    /// pose for interaction objects here, and use it whenever possible in the SwapGrasp
+    /// method.
+    /// </summary>
+    public Pose? latestScheduledGraspPose = null;
 
     #region Grasp Events
 
@@ -656,10 +670,18 @@ namespace Leap.Unity.Interaction {
            + "Without this property checked, objects will still receive grasp callbacks, "
            + "but you will need to move them manually via script.")]
     [SerializeField]
+    [OnEditorChange("moveObjectWhenGrasped")]
     private bool _moveObjectWhenGrasped = true;
     public bool moveObjectWhenGrasped {
       get { return _moveObjectWhenGrasped; }
-      set { _moveObjectWhenGrasped = value; }
+      set {
+        if (_moveObjectWhenGrasped != value && value == false) {
+          if (graspedPoseHandler != null) {
+            graspedPoseHandler.ClearControllers();
+          }
+        }
+        _moveObjectWhenGrasped = value;
+      }
     }
 
     public enum GraspedMovementType {
@@ -675,22 +697,6 @@ namespace Leap.Unity.Interaction {
            + "grasped.")]
     [DisableIf("_moveObjectWhenGrasped", isEqualTo: false)]
     public GraspedMovementType graspedMovementType;
-
-    /// <summary>s
-    /// The RigidbodyWarper manipulates the graphical (but not physical) position ofs
-    /// grasped objects based on the movement of the Leap hand so they appear move with
-    /// less latency.
-    /// </summary>
-    /// TODO: This is not actually implemented.
-    [HideInInspector]
-    public RigidbodyWarper rigidbodyWarper;
-
-    [Header("Advanced Settings")]
-
-    [Tooltip("Warping manipulates the graphical (but not physical) position of grasped "
-           + "objects based on the movement of the grasping interaction controller so "
-           + "the objects appear to move with less latency.")]
-    public bool graspHoldWarpingEnabled__curIgnored = true; // TODO: Warping not yet implemented.
 
     [Header("Layer Overrides")]
 
@@ -760,7 +766,6 @@ namespace Leap.Unity.Interaction {
 
       rigidbody = GetComponent<Rigidbody>();
       rigidbody.maxAngularVelocity = MAX_ANGULAR_VELOCITY;
-      rigidbodyWarper = new RigidbodyWarper(manager, this.transform, rigidbody, 0.25F);
     }
 
     protected virtual void OnEnable() {
@@ -781,10 +786,18 @@ namespace Leap.Unity.Interaction {
       // Make sure we have a list of all of this object's colliders.
       RefreshInteractionColliders();
 
+      // Refresh curved space. Currently a maximum of one (1) LeapSpace is supported per
+      // InteractionBehaviour.
+      foreach (var collider in _interactionColliders) {
+        var leapSpace = collider.transform.GetComponentInParent<ISpaceComponent>();
+        if (leapSpace != null) {
+          space = leapSpace;
+          break;
+        }
+      }
+
       // Ensure physics layers are set up properly.
       initLayers();
-
-      space = GetComponentInChildren<ISpaceComponent>();
     }
 
     protected virtual void OnDisable() {
@@ -810,7 +823,6 @@ namespace Leap.Unity.Interaction {
     /// FixedUpdate().
     /// </summary>
     public void FixedUpdateObject() {
-      if (!ignoreGrasping) fixedUpdateGrasping();
       fixedUpdateLayers();
 
       if (_appliedForces) { FixedUpdateForces(); }
@@ -1147,9 +1159,7 @@ namespace Leap.Unity.Interaction {
     #region Grasping
 
     private HashSet<InteractionController> _graspingControllers = new HashSet<InteractionController>();
-
-    private bool _graspingInitialized = false;
-    private bool _moveObjectWhenGrasped__WasEnabledLastFrame;
+    
     private bool _wasKinematicBeforeGrasp;
     private bool _justGrasped = false;
 
@@ -1170,8 +1180,25 @@ namespace Leap.Unity.Interaction {
       }
     }
 
-    private KinematicGraspedMovement _kinematicGraspedMovement;
-    private NonKinematicGraspedMovement _nonKinematicGraspedMovement;
+    private KinematicGraspedMovement _lazyKinematicGraspedMovement;
+    private KinematicGraspedMovement _kinematicGraspedMovement {
+      get {
+        if (_lazyKinematicGraspedMovement == null) {
+          _lazyKinematicGraspedMovement = new KinematicGraspedMovement();
+        }
+        return _lazyKinematicGraspedMovement;
+      }
+    }
+
+    private NonKinematicGraspedMovement _lazyNonKinematicGraspedMovement;
+    private NonKinematicGraspedMovement _nonKinematicGraspedMovement {
+      get {
+        if (_lazyNonKinematicGraspedMovement == null) {
+          _lazyNonKinematicGraspedMovement = new NonKinematicGraspedMovement();
+        }
+        return _lazyNonKinematicGraspedMovement;
+      }
+    }
 
     private IThrowHandler _throwHandler;
     /// <summary> Gets or sets the throw handler for this Interaction object. </summary>
@@ -1184,28 +1211,6 @@ namespace Leap.Unity.Interaction {
       }
       set {
         _throwHandler = value;
-      }
-    }
-
-    private void initGrasping() {
-      _moveObjectWhenGrasped__WasEnabledLastFrame = moveObjectWhenGrasped;
-
-      _kinematicGraspedMovement = new KinematicGraspedMovement();
-      _nonKinematicGraspedMovement = new NonKinematicGraspedMovement();
-
-      _graspingInitialized = true;
-    }
-
-    private void fixedUpdateGrasping() {
-      using (new ProfilerSample("Interaction Behaviour: fixedUpdateGrasping")) {
-        if (!_graspingInitialized) {
-          initGrasping();
-        }
-
-        if (!moveObjectWhenGrasped && _moveObjectWhenGrasped__WasEnabledLastFrame) {
-          graspedPoseHandler.ClearControllers();
-        }
-        _moveObjectWhenGrasped__WasEnabledLastFrame = moveObjectWhenGrasped;
       }
     }
 
@@ -1309,12 +1314,9 @@ namespace Leap.Unity.Interaction {
 
         graspedPoseHandler.GetGraspedPosition(out newPosition, out newRotation);
 
-        IGraspedMovementHandler graspedMovementHandler = rigidbody.isKinematic ?
-                                                       (IGraspedMovementHandler)_kinematicGraspedMovement
-                                                     : (IGraspedMovementHandler)_nonKinematicGraspedMovement;
-        graspedMovementHandler.MoveTo(newPosition, newRotation, this, _justGrasped);
-
-        OnGraspedMovement(origPosition, origRotation, newPosition, newRotation, controllers);
+        fixedUpdateGraspedMovement(new Pose(origPosition, origRotation),
+                                   new Pose(newPosition, newRotation),
+                                   controllers);
 
         throwHandler.OnHold(this, controllers);
       }
@@ -1322,6 +1324,20 @@ namespace Leap.Unity.Interaction {
       OnGraspStay();
 
       _justGrasped = false;
+    }
+
+    protected virtual void fixedUpdateGraspedMovement(Pose origPose, Pose newPose,
+                                              List<InteractionController> controllers) {
+      IGraspedMovementHandler graspedMovementHandler
+          = rigidbody.isKinematic ?
+              (IGraspedMovementHandler)_kinematicGraspedMovement
+            : (IGraspedMovementHandler)_nonKinematicGraspedMovement;
+      graspedMovementHandler.MoveTo(newPose.position, newPose.rotation,
+                                    this, _justGrasped);
+
+      OnGraspedMovement(origPose.position, origPose.rotation,
+                        newPose.position, newPose.rotation,
+                        controllers);
     }
 
     protected InteractionController _suspendingController = null;
@@ -1384,6 +1400,9 @@ namespace Leap.Unity.Interaction {
       Utils.FindColliders<Collider>(this.gameObject, _interactionColliders,
                                     includeInactiveObjects: false);
 
+      _interactionColliders.RemoveAll(
+        c => c.GetComponent<IgnoreColliderForInteraction>() != null);
+
       // Since the interaction colliders might have changed, or appeared for the first
       // time, set their layers appropriately.
       refreshInteractionColliderLayers();
@@ -1444,11 +1463,11 @@ namespace Leap.Unity.Interaction {
 
         // Update the manager if necessary.
 
-        if (interactionLayer != _lastInteractionLayer) {
-          (manager as IInternalInteractionManager).NotifyIntObjHasNewInteractionLayer(this, oldInteractionLayer: _lastInteractionLayer,
-                                                                                            newInteractionLayer: interactionLayer);
-          _lastInteractionLayer = noContactLayer;
-        }
+      if (interactionLayer != _lastInteractionLayer) {
+        (manager as IInternalInteractionManager).NotifyIntObjHasNewInteractionLayer(this, oldInteractionLayer: _lastInteractionLayer,
+                                                                                          newInteractionLayer: interactionLayer);
+        _lastInteractionLayer = interactionLayer;
+      }
 
         if (noContactLayer != _lastNoContactLayer) {
           (manager as IInternalInteractionManager).NotifyIntObjHasNewNoContactLayer(this, oldNoContactLayer: _lastNoContactLayer,

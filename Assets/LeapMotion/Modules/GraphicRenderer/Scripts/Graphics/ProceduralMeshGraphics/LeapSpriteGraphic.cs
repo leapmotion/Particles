@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -30,12 +30,22 @@ namespace Leap.Unity.GraphicalRenderer {
 
       var sprite = spriteData.sprite;
 
-      mesh = new Mesh();
+      if (mesh == null) {
+        mesh = new Mesh();
+      }
+
       mesh.name = "Sprite Mesh";
       mesh.hideFlags = HideFlags.HideAndDontSave;
+
+      mesh.Clear(keepVertexLayout: false);
       mesh.vertices = sprite.vertices.Query().Select(v => (Vector3)v).ToArray();
       mesh.triangles = sprite.triangles.Query().Select(i => (int)i).ToArray();
-      mesh.uv = SpriteAtlasUtil.GetAtlasedUvs(sprite);
+
+      Vector2[] uvs;
+      if (SpriteAtlasUtil.TryGetAtlasedUvs(sprite, out uvs)) {
+        mesh.uv = uvs;
+      }
+
       mesh.RecalculateBounds();
 
       //We are using atlas uvs, so no remapping allowed!

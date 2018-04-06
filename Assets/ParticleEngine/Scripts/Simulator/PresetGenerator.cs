@@ -1779,4 +1779,23 @@ steps = (int)( 5 * Random.value );
 
     return description;
   }
+
+}
+
+public static class PresetGeneratorExtensions {
+
+  public static T[] Fill<T>(this T[] arr, T value) {
+    for (int i = 0; i < arr.Length; i++) {
+      arr[i] = value;
+    }
+    return arr;
+  }
+
+  public static T[] Fill<T>(this T[] arr, System.Func<T> valueFunc) {
+    for (int i = 0; i < arr.Length; i++) {
+      arr[i] = valueFunc();
+    }
+    return arr;
+  }
+
 }

@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -23,7 +23,7 @@ namespace Leap.Unity{
   * and in the Unity FixedUpdate() phase for physics objects. InitHand() is called once,
   * when the hand is created and is followed by a call to UpdateHand().
   */
-  public abstract class HandModel : IHandModel {
+  public abstract class HandModel : HandModelBase {
 
     [SerializeField]
     private Chirality handedness;

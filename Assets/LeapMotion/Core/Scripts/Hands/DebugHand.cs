@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -19,7 +19,7 @@ namespace Leap.Unity {
    * not in the Game view. Use debug hands when you aren't using visible hands in a scene
    * so that you can see where the hands are in the scene view.
    * */
-  public class DebugHand : IHandModel {
+  public class DebugHand : HandModelBase {
     private Hand hand_;
 
     [SerializeField]

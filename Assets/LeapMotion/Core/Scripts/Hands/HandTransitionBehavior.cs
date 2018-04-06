@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -11,29 +11,29 @@ using UnityEngine;
 using System.Collections;
 
 namespace Leap.Unity {
-  /**A Component to be attached to an IHandModel to handle starting and ending of tracking */
+  /**A Component to be attached to a HandModelBase to handle starting and ending of tracking */
   public abstract class HandTransitionBehavior : MonoBehaviour {
 
     protected abstract void HandReset();
     protected abstract void HandFinish();
-    protected IHandModel iHandModel;
+    protected HandModelBase handModelBase;
     protected virtual void Awake(){
-      iHandModel = GetComponent<IHandModel>();
-      if (iHandModel == null) {
-        Debug.LogWarning("HandTransitionBehavior components require an IHandModel component attached to the same GameObject");
+      handModelBase = GetComponent<HandModelBase>();
+      if (handModelBase == null) {
+        Debug.LogWarning("HandTransitionBehavior components require a HandModelBase component attached to the same GameObject");
         return;
       }
-      iHandModel.OnBegin += HandReset;
-      iHandModel.OnFinish += HandFinish;
+      handModelBase.OnBegin += HandReset;
+      handModelBase.OnFinish += HandFinish;
     }
     protected virtual void OnDestroy() {
-      IHandModel iHandModel = GetComponent<IHandModel>();
-      if (iHandModel == null) {
-        Debug.LogWarning("HandTransitionBehavior components require an IHandModel component attached to the same GameObject");
+      HandModelBase handModelBase = GetComponent<HandModelBase>();
+      if (handModelBase == null) {
+        Debug.LogWarning("HandTransitionBehavior components require a HandModelBase component attached to the same GameObject");
         return;
       }
-      iHandModel.OnBegin -= HandReset;
-      iHandModel.OnFinish -= HandFinish;
+      handModelBase.OnBegin -= HandReset;
+      handModelBase.OnFinish -= HandFinish;
     }
   } 
 }

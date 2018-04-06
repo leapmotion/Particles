@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -35,6 +35,7 @@ namespace Leap.Unity.Interaction {
       Vector3 currCenterOfMass = intObj.rigidbody.rotation * intObj.rigidbody.centerOfMass + intObj.rigidbody.position;
 
       Vector3 targetVelocity = PhysicsUtility.ToLinearVelocity(currCenterOfMass, solvedCenterOfMass, Time.fixedDeltaTime);
+
       Vector3 targetAngularVelocity = PhysicsUtility.ToAngularVelocity(intObj.rigidbody.rotation, solvedRotation, Time.fixedDeltaTime);
 
       // Clamp targetVelocity by _maxVelocity.
@@ -58,7 +59,11 @@ namespace Leap.Unity.Interaction {
       intObj.rigidbody.velocity = lerpedVelocity;
       intObj.rigidbody.angularVelocity = lerpedAngularVelocity;
 
-      _lastSolvedCoMPosition = currCenterOfMass;
+      _lastSolvedCoMPosition = solvedCenterOfMass;
+
+      // Store the target position and rotation to prevent slippage in SwapGrasp
+      // scenarios.
+      intObj.latestScheduledGraspPose = new Pose(solvedPosition, solvedRotation);
     }
   }
 

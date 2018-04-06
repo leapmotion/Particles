@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -111,6 +111,12 @@ namespace Leap.Unity.Examples {
       // Update rotation.
       Quaternion newRotation = Quaternion.Euler(_angularVelocity * Time.deltaTime) * this.transform.rotation;
       this.transform.rotation = newRotation;
+
+      // Sync transforms with the Physics engine so Rigidbody changes reflect
+      // the movement of the ship. (Required for 2017.3 and newer.)
+#if UNITY_2017_3_OR_NEWER
+      Physics.SyncTransforms();
+#endif
     }
 
     #region Ship Forces API

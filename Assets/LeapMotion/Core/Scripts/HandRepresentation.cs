@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -11,13 +11,13 @@ using System.Collections.Generic;
 
 namespace Leap.Unity {
   /**
-   * HandRepresentation is a container class that facillitates the IHandModel lifecycle
+   * HandRepresentation is a container class that facillitates the HandModelBase lifecycle
    * @param parent The HandPool which creates HandRepresentations
-   * @param handModel the IHandModel to be paired with Leap Hand data.
-   * @param hand The Leap Hand data to paired with an IHandModel
+   * @param handModel the HandModelBase to be paired with Leap Hand data.
+   * @param hand The Leap Hand data to paired with a HandModelBase
    */
   public class HandRepresentation {
-    HandPool parent;
+    HandModelManager parent;
     public int HandID { get; private set; }
     public int LastUpdatedTime { get; set; }
     public bool IsMarked { get; set; }
@@ -25,9 +25,9 @@ namespace Leap.Unity {
     public ModelType RepType { get; protected set; }
     public Hand MostRecentHand { get; protected set; }
     public Hand PostProcessHand { get; set; }
-    public List<IHandModel> handModels;
+    public List<HandModelBase> handModels;
 
-    public HandRepresentation(HandPool parent, Hand hand, Chirality repChirality, ModelType repType) {
+    public HandRepresentation(HandModelManager parent, Hand hand, Chirality repChirality, ModelType repType) {
       this.parent = parent;
       HandID = hand.Id;
       this.RepChirality = repChirality;
@@ -48,9 +48,9 @@ namespace Leap.Unity {
       parent.RemoveHandRepresentation(this);
     }
 
-    public void AddModel(IHandModel model) {
+    public void AddModel(HandModelBase model) {
       if (handModels == null) {
-        handModels = new List<IHandModel>();
+        handModels = new List<HandModelBase>();
       }
       handModels.Add(model);
       if (model.GetLeapHand() == null) {
@@ -65,14 +65,14 @@ namespace Leap.Unity {
       }
     }
 
-    public void RemoveModel(IHandModel model) {
+    public void RemoveModel(HandModelBase model) {
       if (handModels != null) {
         model.FinishHand();
         handModels.Remove(model);
       }
     }
 
-    /** Calls Updates in IHandModels that are part of this HandRepresentation */
+    /** Calls Updates in HandModelBases that are part of this HandRepresentation */
     public void UpdateRepresentation(Hand hand) {
       MostRecentHand = hand;
       if (handModels != null) {

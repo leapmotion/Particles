@@ -36,7 +36,8 @@ public class RandomGenerator : MonoBehaviour {
     //each of the following steps.  We do this so that even if the length of the steps
     //change, it will not have an effect on the results of the following steps.
     Random.InitState(seed.GetHashCode());
-    List<int> metaSeeds = new List<int>().FillEach(10, () => Random.Range(int.MinValue, int.MaxValue));
+    List<int> metaSeeds
+      = new List<int>().Add(() => Random.Range(int.MinValue, int.MaxValue), times: 10);
     int currMetaSeed = 0;
 
     Random.InitState(metaSeeds[currMetaSeed++]);
@@ -75,4 +76,15 @@ public class RandomGenerator : MonoBehaviour {
 
     return desc;
   }
+}
+
+public static class RandomGeneratorExtensions {
+
+  public static List<T> Add<T>(this List<T> list, System.Func<T> valueFunc, int times) {
+    for (int i = 0; i < times; i++) {
+      list.Add(valueFunc());
+    }
+    return list;
+  }
+
 }

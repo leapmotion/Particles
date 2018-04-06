@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -8,6 +8,7 @@
  ******************************************************************************/
 
 using System;
+using UnityEngine;
 using UnityEditor;
 
 namespace Leap.Unity.GraphicalRenderer {
@@ -26,6 +27,22 @@ namespace Leap.Unity.GraphicalRenderer {
           return channelFeature.propertyName;
         }
       };
+
+      var spriteProp = property.FindPropertyRelative("_sprite");
+
+      drawCustom(rect => {
+        if (rect.height != 0) {
+          var indentedRect = EditorGUI.IndentedRect(rect);
+          EditorGUI.HelpBox(indentedRect, "Sprite is not packed!", MessageType.Error);
+        }
+      }, () => {
+        Sprite sprite = spriteProp.objectReferenceValue as Sprite;
+        if (sprite != null && !sprite.packed) {
+          return EditorGUIUtility.singleLineHeight * 2;
+        } else {
+          return 0;
+        }
+      });
 
       drawProperty("_sprite", nameFunc);
     }

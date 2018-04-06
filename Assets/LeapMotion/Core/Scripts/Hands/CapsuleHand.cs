@@ -1,6 +1,6 @@
 /******************************************************************************
- * Copyright (C) Leap Motion, Inc. 2011-2017.                                 *
- * Leap Motion proprietary and  confidential.                                 *
+ * Copyright (C) Leap Motion, Inc. 2011-2018.                                 *
+ * Leap Motion proprietary and confidential.                                  *
  *                                                                            *
  * Use subject to the terms of the Leap Motion SDK Agreement available at     *
  * https://developer.leapmotion.com/sdk_agreement, or another agreement       *
@@ -14,7 +14,7 @@ using Leap.Unity.Attributes;
 
 namespace Leap.Unity {
   /** A basic Leap hand model constructed dynamically vs. using pre-existing geometry*/
-  public class CapsuleHand : IHandModel {
+  public class CapsuleHand : HandModelBase {
     private const int TOTAL_JOINT_COUNT = 4 * 5;
     private const float CYLINDER_MESH_RESOLUTION = 0.1f; //in centimeters, meshes within this resolution will be re-used
     private const int THUMB_BASE_INDEX = (int)Finger.FingerType.TYPE_THUMB * 4;

@@ -92,3 +92,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+WinPixEventRuntime.dll

@@ -56,9 +56,6 @@ namespace Leap.Unity {
       get {
         if (s_leapRig == null) {
           InitStatic();
-          if (s_leapRig == null) {
-            Debug.LogWarning("Camera has no parent; Rig will return null.");
-          }
         }
         return s_leapRig;
       }
@@ -71,9 +68,6 @@ namespace Leap.Unity {
       get {
         if (s_provider == null) {
           InitStatic();
-          if (s_provider == null) {
-            Debug.LogWarning("No LeapProvider found in the scene.");
-          }
         }
         return s_provider;
       }

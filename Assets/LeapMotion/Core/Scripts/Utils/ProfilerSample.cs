@@ -28,7 +28,11 @@ namespace Leap.Unity {
     }
 
     public ProfilerSample(string sampleName, UnityEngine.Object obj) {
-      Profiler.BeginSample(sampleName, obj);
+      if (obj == null) {
+        Profiler.BeginSample(sampleName);
+      } else {
+        Profiler.BeginSample(sampleName, obj);
+      }
     }
 
     public void Dispose() {

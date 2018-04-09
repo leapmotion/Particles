@@ -285,8 +285,9 @@ public class SimulationManager : MonoBehaviour {
   //#######################//
   [Header("Ecosystems")]
   [SerializeField]
-  private bool _loadEcosystemOnStart = true;
+  private ToLoadOnStart _toLoadOnStart = ToLoadOnStart.Random;
 
+  [DisableIf("_toLoadOnStart", isNotEqualTo: ToLoadOnStart.Preset)]
   [SerializeField]
   private EcosystemPreset _presetToLoad = EcosystemPreset.BlackHole;
 
@@ -504,8 +505,13 @@ public class SimulationManager : MonoBehaviour {
 
   #region UNITY MESSAGES
   private void Start() {
-    if (_loadEcosystemOnStart) {
-      RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);
+    switch (_toLoadOnStart) {
+      case ToLoadOnStart.Preset:
+        RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);
+        break;
+      case ToLoadOnStart.Random:
+        RandomizeSimulation(ResetBehavior.ResetPositions);
+        break;
     }
   }
 
@@ -531,7 +537,7 @@ public class SimulationManager : MonoBehaviour {
 
   private void handleUserInput() {
     if (buttonOrKey("Restart", _resetParticlePositionsKey)) {
-      RestartSimulation();
+      RestartSimulation(ResetBehavior.ResetPositions);
     }
 
     if (buttonOrKey("Load Preset", _loadPresetEcosystemKey)) {
@@ -539,7 +545,7 @@ public class SimulationManager : MonoBehaviour {
     }
 
     if (buttonOrKey("Randomize Ecosystem", _randomizeEcosystemKey)) {
-      RandomizeSimulation(ResetBehavior.SmoothTransition);
+      RandomizeSimulation(ResetBehavior.ResetPositions);
     }
 
     if (buttonOrKey("Randomize Colors", _ranzomizeColorsKey)) {
@@ -660,6 +666,12 @@ public class SimulationManager : MonoBehaviour {
       default:
         throw new System.InvalidOperationException();
     }
+  }
+
+  private enum ToLoadOnStart {
+    None,
+    Random,
+    Preset
   }
 
   #endregion

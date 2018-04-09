@@ -808,7 +808,7 @@ public class TextureSimulator : MonoBehaviour {
         currMesh.SetNormals(normals);
         currMesh.SetUVs(0, uvs);
         currMesh.SetTriangles(tris, 0, calculateBounds: true);
-        currMesh.UploadMeshData(markNoLogerReadable: true);
+        currMesh.UploadMeshData(markNoLongerReadable: true);
         currMesh = null;
       }
 
@@ -834,7 +834,7 @@ public class TextureSimulator : MonoBehaviour {
     currMesh.SetNormals(normals);
     currMesh.SetUVs(0, uvs);
     currMesh.SetTriangles(tris, 0, calculateBounds: true);
-    currMesh.UploadMeshData(markNoLogerReadable: true);
+    currMesh.UploadMeshData(markNoLongerReadable: true);
   }
 
   public void RebuildTrailTexture() {
@@ -1384,7 +1384,7 @@ public class TextureSimulator : MonoBehaviour {
     if (includeRectUv) {
       _blitMeshInteraction.SetUVs(2, uv2);
     }
-    _blitMeshInteraction.UploadMeshData(markNoLogerReadable: false);
+    _blitMeshInteraction.UploadMeshData(markNoLongerReadable: false);
 
     verts.Clear();
     tris.Clear();
@@ -1424,7 +1424,7 @@ public class TextureSimulator : MonoBehaviour {
     _blitMeshParticle.SetVertices(verts);
     _blitMeshParticle.SetTriangles(tris, 0, calculateBounds: true);
     _blitMeshParticle.SetUVs(0, uv0);
-    _blitMeshParticle.UploadMeshData(markNoLogerReadable: false);
+    _blitMeshParticle.UploadMeshData(markNoLongerReadable: false);
 
     verts.Clear();
     tris.Clear();
@@ -1453,7 +1453,7 @@ public class TextureSimulator : MonoBehaviour {
     _blitMeshQuad.SetVertices(verts);
     _blitMeshQuad.SetTriangles(tris, 0, calculateBounds: true);
     _blitMeshQuad.SetUVs(0, uv0);
-    _blitMeshQuad.UploadMeshData(markNoLogerReadable: false);
+    _blitMeshQuad.UploadMeshData(markNoLongerReadable: false);
   }
 
   #endregion

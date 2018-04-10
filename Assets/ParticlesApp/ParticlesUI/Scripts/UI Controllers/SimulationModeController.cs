@@ -1,4 +1,5 @@
-﻿using Leap.Unity.Attributes;
+﻿using Leap.Unity;
+using Leap.Unity.Attributes;
 using Leap.Unity.Interaction;
 using System.Collections;
 using System.Collections.Generic;
@@ -82,26 +83,26 @@ public class SimulationModeController : MonoBehaviour {
     }
 
     if (fieldForceSlider == null) {
-      fieldForceSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetBoundingForce>().GetComponent<InteractionSlider>();
+      fieldForceSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetBoundingForce>().GetComponent<InteractionSlider>();
     }
     if (fieldRadiusSlider == null) {
-      fieldRadiusSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetBoundingRadius>().GetComponent<InteractionSlider>();
+      fieldRadiusSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetBoundingRadius>().GetComponent<InteractionSlider>();
     }
     if (socialForceSlider == null) {
-      socialForceSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetMaxForce>().GetComponent<InteractionSlider>();
+      socialForceSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetMaxForce>().GetComponent<InteractionSlider>();
     }
     if (socialRadiusSlider == null) {
-      socialRadiusSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetMaxRange>().GetComponent<InteractionSlider>();
+      socialRadiusSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetMaxRange>().GetComponent<InteractionSlider>();
     }
     if (dragSlider == null) {
-      dragSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetDrag>().GetComponent<InteractionSlider>();
+      dragSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetDrag>().GetComponent<InteractionSlider>();
     }
     if (particleCountSlider == null) {
-      particleCountSlider = NewUtils.FindObjectInHierarchy<SimulatorSliderSetParticleCount>().GetComponent<InteractionSlider>();
+      particleCountSlider = Utils.FindObjectInHierarchy<SimulatorSliderSetParticleCount>().GetComponent<InteractionSlider>();
     }
 
     if (zoomController == null) {
-      zoomController = NewUtils.FindObjectInHierarchy<SimulationZoomController>();
+      zoomController = Utils.FindObjectInHierarchy<SimulationZoomController>();
     }
   }
 

@@ -1611,7 +1611,7 @@ public class TextureSimulator : MonoBehaviour {
     public HandActor(TextureSimulator sim) {
       _sim = sim;
       _block = new MaterialPropertyBlock();
-      _startingAlpha = sim._influenceMat.GetFloat("_Glossiness");
+      _startingAlpha = sim._influenceMat.GetColor("_Color").a;
       _smoothedGrab.delay = sim.influenceGrabSmoothing;
     }
 

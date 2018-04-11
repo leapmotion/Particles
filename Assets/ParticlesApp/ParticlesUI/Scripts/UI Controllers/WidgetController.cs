@@ -41,13 +41,15 @@ public class WidgetController : MonoBehaviour {
 
   //private bool _firstFixedUpdate = true;
 
-  void Start() {
+  void Awake() {
     _panelWidgetDeltaPos = panelPivot.position - widget.rigidbody.position;
     _panelWidgetDeltaRot = panelPivot.rotation * Quaternion.Inverse(widget.rigidbody.rotation);
 
     _rendererPanelDeltaPos = graphicRenderer.transform.position - panelPivot.position;
     _rendererPanelDeltaRot = graphicRenderer.transform.rotation * Quaternion.Inverse(panelPivot.rotation);
+  }
 
+  void Start() {
     widget.OnGraspedMovement += onGraspedMovement;
     widget.OnGraspEnd += onGraspEnd;
   }

@@ -7,6 +7,12 @@ public class PanelStateController : MonoBehaviour {
 
   public InteractionBehaviour widget;
   public PanelTransitionController transitionController;
+  
+  /// <summary>
+  /// Used by managing class, i.e. the Advanced Mode controller, to forcibly
+  /// close the panel during state transitions.
+  /// </summary>
+  public bool overrideClosePanel = false;
 
   [Header("Auto")]
   public State state = State.Open;
@@ -21,11 +27,12 @@ public class PanelStateController : MonoBehaviour {
   }
 
   void Update() {
-    if (widget.isGrasped && state == State.Open) {
+    if ((widget.isGrasped && state == State.Open)
+        || overrideClosePanel) {
       transitionToClosed();
     }
 
-    if (widget.isGrasped) {
+    if (widget.isGrasped && !overrideClosePanel) {
       Vector3 grabPosition = widget.rigidbody.position;
 
       _grabIdleDuration += Time.deltaTime;
@@ -45,7 +52,7 @@ public class PanelStateController : MonoBehaviour {
       _lastGrabPosition = grabPosition;
     }
 
-    if (!widget.isGrasped) {
+    if (!widget.isGrasped && !overrideClosePanel) {
       transitionToOpen();
     }
   }

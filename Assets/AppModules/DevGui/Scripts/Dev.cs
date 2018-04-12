@@ -100,7 +100,7 @@ namespace Leap.Unity.DevGui {
     }
 
     private void Update() {
-      if (Input.GetKeyDown(KeyCode.F12)) {
+      if (Input.GetKeyDown(KeyCode.F11)) {
         _enabled = !_enabled;
         if (_enabled) {
           onOpenGui();

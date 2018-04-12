@@ -561,16 +561,16 @@ public class SimulationManager : MonoBehaviour {
   }
 
   private void OnGUI() {
-    _showScreenGUI = GUILayout.Toggle(_showScreenGUI, "Show GUI");
-    if (_showScreenGUI) {
-      _inGui = true;
-      handleUserInput();
-      _inGui = false;
+    //_showScreenGUI = GUILayout.Toggle(_showScreenGUI, "Show GUI");
+    //if (_showScreenGUI) {
+    //  _inGui = true;
+    //  handleUserInput();
+    //  _inGui = false;
 
-      if (_currentDescription != null) {
-        GUILayout.Label(_currentDescription.name);
-      }
-    }
+    //  if (_currentDescription != null) {
+    //    GUILayout.Label(_currentDescription.name);
+    //  }
+    //}
   }
   #endregion
 

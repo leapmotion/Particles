@@ -848,7 +848,7 @@ namespace Leap.Unity.Interaction {
     /// <summary>
     /// Stores data for drawing Soft Contacts for interaction controllers.
     /// </summary>
-    private List<PhysicsUtility.SoftContact> _softContactsToDraw;
+    private List<PhysicsUtility.SoftContact> _softContactsToDraw = new List<PhysicsUtility.SoftContact>();
 
     #endregion
 

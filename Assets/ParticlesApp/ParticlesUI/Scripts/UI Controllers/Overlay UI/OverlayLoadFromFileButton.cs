@@ -1,35 +1,30 @@
 ﻿using Leap.Unity.Query;
 using SFB;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace Leap.Unity.Particles {
 
   public class OverlayLoadFromFileButton : OverlayButton {
 
-    protected override void OnClick() {
-      TryLoadFromFile();
+    protected override EventResult DoClickOperation() {
+      return TryLoadFromFile();
     }
 
-    public void TryLoadFromFile() {
+    public EventResult TryLoadFromFile() {
       var path = StandaloneFileBrowser.OpenFilePanel(
         "Open Ecosystem Description", "", allowedExtensions, multiselect: false)
         .Query().FirstOrDefault();
       if (string.IsNullOrEmpty(path)) {
         // Assume intentional cancellation; no error displayed.
+        return EventResult.Nothing;
       }
       else {
         if (!simManager.LoadEcosystem(path)) {
           // Failed to load.
-          if (failureNotification != null) {
-            failureNotification.Notify();
-          }
+          return EventResult.Failure;
         }
         else {
           // Successfully loaded ecosystem.
-          if (successNotification != null) {
-            successNotification.Notify();
-          }
+          return EventResult.Success;
         }
       }
     }

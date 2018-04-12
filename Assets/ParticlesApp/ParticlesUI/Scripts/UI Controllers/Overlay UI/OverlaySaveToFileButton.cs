@@ -1,18 +1,15 @@
-﻿using Leap.Unity.Query;
-using SFB;
+﻿using SFB;
 using System.IO;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace Leap.Unity.Particles {
 
   public class OverlaySaveToFileButton : OverlayButton {
 
-    protected override void OnClick() {
-      TrySaveToFile();
+    protected override EventResult DoClickOperation() {
+      return TrySaveToFile();
     }
 
-    public void TrySaveToFile() {
+    public EventResult TrySaveToFile() {
       var currentEcosystemName = simSetters.GetEcosystemName();
       var defaultFileName = Path.ChangeExtension(currentEcosystemName, ".json");
 
@@ -21,19 +18,16 @@ namespace Leap.Unity.Particles {
 
       if (string.IsNullOrEmpty(path)) {
         // Assume intentional cancellation; no error displayed.
+        return EventResult.Nothing;
       }
       else {
         if (!simManager.SaveEcosystem(path)) {
           // Failed to save.
-          if (failureNotification != null) {
-            failureNotification.Notify();
-          }
+          return EventResult.Failure;
         }
         else {
           // Successfully saved ecosystem.
-          if (successNotification != null) {
-            successNotification.Notify();
-          }
+          return EventResult.Success;
         }
       }
     }

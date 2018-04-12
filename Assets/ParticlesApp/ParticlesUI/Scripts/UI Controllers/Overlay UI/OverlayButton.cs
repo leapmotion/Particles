@@ -38,10 +38,27 @@ namespace Leap.Unity.Particles {
     }
 
     protected virtual void Start() {
-      button.onClick.AddListener(OnClick);
+      button.onClick.AddListener(onClick);
     }
 
-    protected abstract void OnClick();
+    private void onClick() {
+      var clickResult = DoClickOperation();
+      if (clickResult == EventResult.Success && successNotification != null) {
+        successNotification.Notify();
+      }
+      if (clickResult == EventResult.Failure && failureNotification != null) {
+        failureNotification.Notify();
+      }
+    }
+
+    public enum EventResult { Nothing, Success, Failure }
+
+    /// <summary>
+    /// Return EventResult.Nothing to avoid firing any success or failure notifications,
+    /// otherwise return the appropriate EventResult to automatically activate those 
+    /// notifications if the appropriate notifications are attached.
+    /// </summary>
+    protected abstract EventResult DoClickOperation();
 
   }
 

@@ -498,14 +498,13 @@ public class SimulationManager : MonoBehaviour {
   /// <summary>
   /// Returns true if successful, otherwise returns false.
   /// </summary>
-  public bool SaveEcosystem(string directoryPath) {
+  public bool SaveEcosystem(string filePath) {
     try {
-      var filePath = currentDescription.name + ".json";
-      var totalPath = Path.Combine(directoryPath, filePath);
-      File.WriteAllText(totalPath,
+      File.WriteAllText(filePath,
         JsonUtility.ToJson(currentDescription, prettyPrint: true));
       return true;
-    } catch (System.Exception) {
+    } catch (System.Exception e) {
+      Debug.LogError(e.ToString());
       return false;
     }
   }
@@ -559,7 +558,9 @@ public class SimulationManager : MonoBehaviour {
   }
 
   private void Update() {
-    handleUserInput();
+    // Commented out to prevent typing into simulation seed name field from overlapping
+    // and activating keyboard commands.
+    //handleUserInput();
   }
 
   private void OnGUI() {

@@ -582,7 +582,7 @@ public class TextureSimulator : MonoBehaviour {
   private MaterialPropertyBlock _displayBlock;
   private Texture2D _displayColorA;
   private Texture2D _displayColorB;
-  private Color[] _displayColorArray = new Color[4096];
+  private Color[] _displayColorArray = new Color[SimulationManager.MAX_PARTICLES];
 
   //Hand interaction
   private Vector4[] _capsuleA = new Vector4[128];
@@ -755,29 +755,30 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (_stochasticSamplingEnabled) {
-      _simulationMat.EnableKeyword(KEYWORD_STOCHASTIC);
+      Debug.LogError("Stochastic Sampling is not currently supported.");
+      //_simulationMat.EnableKeyword(KEYWORD_STOCHASTIC);
 
-      Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
-      coordinates.filterMode = FilterMode.Point;
-      coordinates.wrapMode = TextureWrapMode.Clamp;
+      //Texture2D coordinates = new Texture2D(256, _stochasticCycleCount, TextureFormat.ARGB32, mipmap: false, linear: true);
+      //coordinates.filterMode = FilterMode.Point;
+      //coordinates.wrapMode = TextureWrapMode.Clamp;
 
-      List<Color> colors = new List<Color>();
-      for (int i = 0; i < _stochasticCycleCount; i++) {
+      //List<Color> colors = new List<Color>();
+      //for (int i = 0; i < _stochasticCycleCount; i++) {
 
-        List<Color> block = new List<Color>();
-        for (int dx = 0; dx < 16; dx++) {
-          for (int dy = 0; dy < 16; dy++) {
-            block.Add(new Color(dx / 64.0f, dy / 64.0f, 0, 0));
-          }
-        }
-        block.Shuffle();
+      //  List<Color> block = new List<Color>();
+      //  for (int dx = 0; dx < 16; dx++) {
+      //    for (int dy = 0; dy < 16; dy++) {
+      //      block.Add(new Color(dx / 64.0f, dy / 64.0f, 0, 0));
+      //    }
+      //  }
+      //  block.Shuffle();
 
-        colors.AddRange(block);
-      }
+      //  colors.AddRange(block);
+      //}
 
-      coordinates.SetPixels(colors.ToArray());
-      coordinates.Apply();
-      _simulationMat.SetTexture(PROP_STOCHASTIC, coordinates);
+      //coordinates.SetPixels(colors.ToArray());
+      //coordinates.Apply();
+      //_simulationMat.SetTexture(PROP_STOCHASTIC, coordinates);
     } else {
       _simulationMat.DisableKeyword(KEYWORD_STOCHASTIC);
     }
@@ -796,8 +797,8 @@ public class TextureSimulator : MonoBehaviour {
 
     Mesh currMesh = null;
     for (int i = 0; i < MAX_PARTICLES; i++) {
-      float x = (i % 64) / 64.0f;
-      float y = (i / 64) / 64.0f;
+      float x = (i % SimulationManager.TEXTURE_SIZE) / (float)SimulationManager.TEXTURE_SIZE;
+      float y = (i / SimulationManager.TEXTURE_SIZE) / (float)SimulationManager.TEXTURE_SIZE;
 
       if (currMesh != null && verts.Count + _manager.particleMesh.vertexCount >= 65536) {
         if (_particlesPerMesh == 0) {
@@ -864,9 +865,9 @@ public class TextureSimulator : MonoBehaviour {
     BuildDisplayMeshes();
 
     _displayBlock = new MaterialPropertyBlock();
-    _displayColorA = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorA = new Texture2D(SimulationManager.TEXTURE_SIZE, SimulationManager.TEXTURE_SIZE, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorA.filterMode = FilterMode.Point;
-    _displayColorB = new Texture2D(64, 64, TextureFormat.ARGB32, mipmap: false, linear: true);
+    _displayColorB = new Texture2D(SimulationManager.TEXTURE_SIZE, SimulationManager.TEXTURE_SIZE, TextureFormat.ARGB32, mipmap: false, linear: true);
     _displayColorB.filterMode = FilterMode.Point;
     _handActors.Fill(() => new HandActor(this));
   }
@@ -1071,9 +1072,13 @@ public class TextureSimulator : MonoBehaviour {
                 uploadColorTexture(_displayColorA);
               }
 
-              Texture2D randomTexture = new Texture2D(64, 64, TextureFormat.RGBAFloat, mipmap: false, linear: true);
+              Texture2D randomTexture = new Texture2D(SimulationManager.TEXTURE_SIZE,
+                                                      SimulationManager.TEXTURE_SIZE,
+                                                      TextureFormat.RGBAFloat,
+                                                      mipmap: false,
+                                                      linear: true);
               randomTexture.filterMode = FilterMode.Point;
-              randomTexture.SetPixels(new Color[4096].Fill(() => (Vector4)Random.insideUnitSphere * _manager.fieldRadius));
+              randomTexture.SetPixels(new Color[SimulationManager.MAX_PARTICLES].Fill(() => (Vector4)Random.insideUnitSphere * _manager.fieldRadius));
               randomTexture.Apply();
 
               blitCopy(randomTexture, _socialTemp, PASS_RANDOM_INIT);
@@ -1290,7 +1295,7 @@ public class TextureSimulator : MonoBehaviour {
           int x = dx + rect.x;
           int y = dy + rect.y;
 
-          int index = y * 64 + x;
+          int index = y * SimulationManager.TEXTURE_SIZE + x;
 
           Color toAssign = color;
           if (!forceTrueAlpha) {
@@ -1341,17 +1346,17 @@ public class TextureSimulator : MonoBehaviour {
         verts.Add(new Vector3(rectM.x + rectM.width, rectM.y + rectM.height));
         verts.Add(new Vector3(rectM.x, rectM.y + rectM.height));
 
-        float uvMx0 = rectM.x / 64.0f;
-        float uvMx1 = (rectM.x + rectM.width) / 64.0f;
+        float uvMx0 = rectM.x / (float)SimulationManager.TEXTURE_SIZE;
+        float uvMx1 = (rectM.x + rectM.width) / (float)SimulationManager.TEXTURE_SIZE;
 
-        float uvMy0 = rectM.y / 64.0f;
-        float uvMy1 = (rectM.y + rectM.height) / 64.0f;
+        float uvMy0 = rectM.y / (float)SimulationManager.TEXTURE_SIZE;
+        float uvMy1 = (rectM.y + rectM.height) / (float)SimulationManager.TEXTURE_SIZE;
 
-        float uvOx0 = rectO.x / 64.0f;
-        float uvOx1 = (rectO.x + rectO.width) / 64.0f;
+        float uvOx0 = rectO.x / (float)SimulationManager.TEXTURE_SIZE;
+        float uvOx1 = (rectO.x + rectO.width) / (float)SimulationManager.TEXTURE_SIZE;
 
-        float uvOy0 = rectO.y / 64.0f;
-        float uvOy1 = (rectO.y + rectO.height) / 64.0f;
+        float uvOy0 = rectO.y / (float)SimulationManager.TEXTURE_SIZE;
+        float uvOy1 = (rectO.y + rectO.height) / (float)SimulationManager.TEXTURE_SIZE;
 
         uv0.Add(new Vector4(uvMx0, uvMy0, uvOx0, uvOy0));
         uv0.Add(new Vector4(uvMx1, uvMy0, uvOx0, uvOy0));
@@ -1409,10 +1414,10 @@ public class TextureSimulator : MonoBehaviour {
       float socialSteps = speciesData[rect.species].forceSteps;
       float dragMult = 1.0f - speciesData[rect.species].drag;    //use 1-drag so we can just multiply by it in shader
 
-      float uvx0 = rect.x / 64.0f;
-      float uvy0 = rect.y / 64.0f;
-      float uvx1 = (rect.x + rect.width) / 64.0f;
-      float uvy1 = (rect.y + rect.height) / 64.0f;
+      float uvx0 = rect.x / (float)SimulationManager.TEXTURE_SIZE;
+      float uvy0 = rect.y / (float)SimulationManager.TEXTURE_SIZE;
+      float uvx1 = (rect.x + rect.width) / (float)SimulationManager.TEXTURE_SIZE;
+      float uvy1 = (rect.y + rect.height) / (float)SimulationManager.TEXTURE_SIZE;
 
       uv0.Add(new Vector4(uvx0, uvy0, socialSteps, dragMult));
       uv0.Add(new Vector4(uvx1, uvy0, socialSteps, dragMult));

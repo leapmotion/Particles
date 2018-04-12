@@ -50,8 +50,10 @@ public class SimulationManager : MonoBehaviour {
   [SerializeField]
   private IESimulator _ieSimulator;
 
+  #pragma warning disable 0414 // screen GUI code was commented out.
   [SerializeField]
   private bool _showScreenGUI = true;
+  #pragma warning restore 0414
 
   //##################//
   ///      Field      //

@@ -17,9 +17,13 @@ public class SimulatorSetters : MonoBehaviour {
     }
   }
 
-  public void SetEcosystem(string name) {
-    name = name.ToLower();
-    switch (name) {
+  /// <summary>
+  /// Throws System.ArgumentException if the argument name does not correspond to
+  /// a preset ecosystem.
+  /// </summary>
+  public void SetEcosystemPreset(string presetName) {
+    presetName = presetName.ToLower();
+    switch (presetName) {
       case "red menace":
         simManager.RestartSimulation(EcosystemPreset.RedMenace);
         break;
@@ -108,9 +112,13 @@ public class SimulatorSetters : MonoBehaviour {
         simManager.RestartSimulation(EcosystemPreset.Tutorial_3000_2_Ranges);
         break;
       default:
-        Debug.LogError("No ecosystem with name " + name);
-        break;
+        throw new System.ArgumentException(
+          "No ecosystem with name " + presetName);
     }
+  }
+
+  public void SetEcosystemSeed(string seed) {
+    simManager.RandomizeSimulation(seed, ResetBehavior.FadeInOut);
   }
 
   public void SetSpeciesCount(float count) {
@@ -243,4 +251,25 @@ public class SimulatorSetters : MonoBehaviour {
     _skybox.SetColor("_MiddleColor", c);
     _skybox.SetColor("_BottomColor", c * 0.9f);
   }
+
+  public string GetEcosystemName() {
+    return simManager.currentDescription.name;
+  }
+
+  /// <summary>
+  /// Checks the input string (non-case-sensitively) against a preset name, and loads
+  /// the preset if it matches one, or interprets the input as a random simulation seed
+  /// and loads that instead.
+  /// </summary>
+  public void LoadEcosystemPresetOrSeed(string presetOrSeed) {
+    try {
+      // First, check if the input corresponds to a preset.
+      SetEcosystemPreset(presetOrSeed);
+    }
+    catch (System.ArgumentException) {
+      // Throwing an argument exception implies no preset; assume seed instead.
+      SetEcosystemSeed(presetOrSeed);
+    }
+  }
+
 }

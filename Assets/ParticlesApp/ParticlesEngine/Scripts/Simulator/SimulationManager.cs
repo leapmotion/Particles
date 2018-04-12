@@ -394,6 +394,13 @@ public class SimulationManager : MonoBehaviour {
   }
 
   /// <summary>
+  /// Loads a random simulation based on the given string seed.
+  /// </summary>
+  public void LoadSimulationWithSeed(string seed, ResetBehavior resetBehavior) {
+    RestartSimulation(_generator.GetRandomEcosystem(seed), resetBehavior);
+  }
+
+  /// <summary>
   /// Restarts the simulation using a random description calculated using
   /// the seed value.  The same seed value should always result in the same
   /// simulation description.
@@ -479,7 +486,21 @@ public class SimulationManager : MonoBehaviour {
   /// </summary>
   public bool SaveEcosystem() {
     try {
-      File.WriteAllText(currentDescription.name + ".json", JsonUtility.ToJson(currentDescription, prettyPrint: false));
+      return SaveEcosystem("");
+    } catch (System.Exception) {
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool SaveEcosystem(string directoryPath) {
+    try {
+      var filePath = currentDescription.name + ".json";
+      var totalPath = Path.Combine(directoryPath, filePath);
+      File.WriteAllText(totalPath,
+        JsonUtility.ToJson(currentDescription, prettyPrint: true));
       return true;
     } catch (System.Exception) {
       return false;
@@ -491,12 +512,31 @@ public class SimulationManager : MonoBehaviour {
   /// </summary>
   public bool LoadEcosystem() {
     try {
-      var file = Directory.GetFiles(_loadingFolder.Path).Query().FirstOrDefault(t => t.EndsWith(".json"));
-      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(file));
+      var file = Directory.GetFiles(_loadingFolder.Path).Query()
+                          .FirstOrDefault(t => t.EndsWith(".json"));
+      return LoadEcosystem(file);
+    }
+    catch (System.Exception) {
+      return false;
+    }
+  }
+
+  /// <summary>
+  /// Returns true if successful, otherwise returns false.
+  /// </summary>
+  public bool LoadEcosystem(string filePath) {
+    try {
+      var description
+        = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(filePath));
+      if (description.isMalformed) {
+        return false;
+      }
+
       RestartSimulation(description, ResetBehavior.ResetPositions);
 
       return true;
-    } catch (System.Exception) {
+    }
+    catch (System.Exception) {
       return false;
     }
   }

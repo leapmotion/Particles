@@ -189,9 +189,9 @@ public class GeneratorManager : MonoBehaviour {
     return randomGenerator.GetRandomEcosystemDescription();
   }
 
-  public EcosystemDescription GetRandomEcosystem(string name) {
+  public EcosystemDescription GetRandomEcosystem(string seed) {
     var randomGenerator = GetComponentInChildren<RandomGenerator>();
-    return randomGenerator.GetRandomEcosystemDescription(name);
+    return randomGenerator.GetRandomEcosystemDescription(seed);
   }
 
   private void copyDescriptionToSliders(EcosystemDescription desc) {

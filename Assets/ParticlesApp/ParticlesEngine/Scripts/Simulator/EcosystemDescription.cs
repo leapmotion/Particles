@@ -45,6 +45,20 @@ public class EcosystemDescription : ISerializationCallbackReceiver {
     };
   }
 
+  /// <summary>
+  /// Returns true if this description fails a "sanity-check", useful for
+  /// checking whether JsonUtility was able to successfully parse a description from
+  /// a json file.
+  /// </summary>
+  public bool isMalformed {
+    get {
+      return string.IsNullOrEmpty(name)
+        || (socialData == null || socialData.Length == 0)
+        || (speciesData == null || speciesData.Length == 0)
+        || toSpawn == null;
+    }
+  }
+
   public EcosystemDescription(bool isRandomDescription) {
     this.isRandomDescription = isRandomDescription;
   }

@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Leap.Unity;
@@ -516,8 +517,7 @@ public class SimulationManager : MonoBehaviour {
       var file = Directory.GetFiles(_loadingFolder.Path).Query()
                           .FirstOrDefault(t => t.EndsWith(".json"));
       return LoadEcosystem(file);
-    }
-    catch (System.Exception) {
+    } catch (System.Exception) {
       return false;
     }
   }
@@ -536,8 +536,7 @@ public class SimulationManager : MonoBehaviour {
       RestartSimulation(description, ResetBehavior.ResetPositions);
 
       return true;
-    }
-    catch (System.Exception) {
+    } catch (System.Exception) {
       return false;
     }
   }
@@ -545,7 +544,20 @@ public class SimulationManager : MonoBehaviour {
   #endregion
 
   #region UNITY MESSAGES
-  private void Start() {
+  private IEnumerator Start() {
+    switch (_toLoadOnStart) {
+      case ToLoadOnStart.Preset:
+        RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);
+        break;
+      case ToLoadOnStart.Random:
+        RandomizeSimulation(ResetBehavior.ResetPositions);
+        break;
+    }
+
+    yield return null;
+    yield return null;
+    yield return null;
+
     switch (_toLoadOnStart) {
       case ToLoadOnStart.Preset:
         RestartSimulation(_presetToLoad, ResetBehavior.ResetPositions);

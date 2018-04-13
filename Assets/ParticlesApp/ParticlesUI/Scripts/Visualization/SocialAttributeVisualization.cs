@@ -69,7 +69,7 @@ public class SocialAttributeVisualization : MonoBehaviour {
 
   #region Unity Events
 
-  void Reset() {
+  private void Reset() {
     if (simManager == null) {
       simManager = FindObjectOfType<SimulationManager>();
     }
@@ -83,10 +83,14 @@ public class SocialAttributeVisualization : MonoBehaviour {
     }
   }
 
-  void Start() {
+  private void Awake() {
     simManager.OnEcosystemEndedTransition += onEcosystemChanged;
 
     modeController.OnIndexToggled += onModeIndexToggled;
+  }
+
+  private void OnEnable() {
+    //onEcosystemChanged();
   }
 
   #endregion

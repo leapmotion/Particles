@@ -121,6 +121,10 @@ public class SimulatorSetters : MonoBehaviour {
     simManager.RandomizeSimulation(seed, ResetBehavior.FadeInOut);
   }
 
+  public bool IsCurrentEcosystemAPreset() {
+    return !simManager.currentDescription.isRandomDescription;
+  }
+
   public void SetSpeciesCount(float count) {
     genManager.speciesCount = Mathf.RoundToInt(count);
   }

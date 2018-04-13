@@ -1618,6 +1618,11 @@ public class TextureSimulator : MonoBehaviour {
       _block = new MaterialPropertyBlock();
       _startingAlpha = sim._influenceMat.GetColor("_Color").a;
       _smoothedGrab.delay = sim.influenceGrabSmoothing;
+
+      rotation = Quaternion.identity;
+      prevRotation = Quaternion.identity;
+      _prevTrackedRotation = Quaternion.identity;
+      _currTrackedRotation = Quaternion.identity;
     }
 
     public Vector4 sphere {

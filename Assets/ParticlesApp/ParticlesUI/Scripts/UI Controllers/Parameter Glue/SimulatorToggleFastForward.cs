@@ -13,7 +13,7 @@ public class SimulatorToggleFastForward : SimulatorToggleControl {
   }
 
   protected override void onToggle() {
-    simManager.simulationTimescale = 2F;
+    simManager.simulationTimescale = 3F;
   }
 
   protected override void onUntoggle() {

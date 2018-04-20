@@ -574,6 +574,7 @@ public class TextureSimulator : MonoBehaviour {
   private float _currScaledTime = 0;
   private float _currSimulationTime = 0;
   private float _prevSimulationTime = 0;
+  private float _prevSimulationScale = 0;
   private float _headRadiusTransitionDelta = 0;
 
   //Display
@@ -917,6 +918,10 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (_manager.simulationEnabled) {
+      if(_prevSimulationScale != _manager.simulationTimescale) {
+        _currSimulationTime = _prevSimulationTime = _currScaledTime;
+        _prevSimulationScale = _manager.simulationTimescale;
+      }
       _currScaledTime += Time.deltaTime * _manager.simulationTimescale;
       if (_dynamicTimestepEnabled) {
         while (_currSimulationTime < _currScaledTime) {
@@ -925,7 +930,7 @@ public class TextureSimulator : MonoBehaviour {
 
           stepSimulation(Mathf.InverseLerp(_currSimulationTime, _prevSimulationTime, _currScaledTime));
 
-          if (_limitStepsPerFrame) {
+          if (_limitStepsPerFrame && (_currScaledTime - _currSimulationTime) > 0.1f) {
             break;
           }
         }

@@ -66,10 +66,10 @@ namespace Leap.Unity {
     [SerializeField]
     protected float _physicsExtrapolationTime = 1.0f / 90.0f;
 
-    [Tooltip("When checked, profiling data from the LeapCSharp dll will be used to populate the UnityProfiler.")]
+    [Tooltip("When checked, profiling data from the LeapCSharp worker thread will be used to populate the UnityProfiler.")]
     [EditTimeOnly]
     [SerializeField]
-    protected bool _enableDllProfiling = false;
+    protected bool _workerThreadProfiling = false;
 
     #endregion
 
@@ -87,6 +87,7 @@ namespace Leap.Unity {
 #endif
 
     protected Controller _leapController;
+    protected bool _isDestroyed;
 
     protected SmoothedFloat _fixedOffset = new SmoothedFloat();
     protected SmoothedFloat _smoothedTrackingLatency = new SmoothedFloat();
@@ -243,7 +244,7 @@ namespace Leap.Unity {
     }
 
     protected virtual void Update() {
-      if (_enableDllProfiling) {
+      if (_workerThreadProfiling) {
         LeapProfiling.Update();
       }
 
@@ -326,6 +327,7 @@ namespace Leap.Unity {
 
     protected virtual void OnDestroy() {
       destroyController();
+      _isDestroyed = true;
     }
 
     protected virtual void OnApplicationPause(bool isPaused) {
@@ -341,6 +343,7 @@ namespace Leap.Unity {
 
     protected virtual void OnApplicationQuit() {
       destroyController();
+      _isDestroyed = true;
     }
 
     public float CalculatePhysicsExtrapolation() {
@@ -367,7 +370,7 @@ namespace Leap.Unity {
     public Controller GetLeapController() {
       #if UNITY_EDITOR
       // Null check to deal with hot reloading.
-      if (_leapController == null) {
+      if (!_isDestroyed && _leapController == null) {
         createController();
       }
       #endif
@@ -441,7 +444,7 @@ namespace Leap.Unity {
         _leapController.Device += onHandControllerConnect;
       }
 
-      if (_enableDllProfiling) {
+      if (_workerThreadProfiling) {
         //A controller will report profiling statistics for the duration of it's lifetime
         //so these events will never be unsubscribed from.
         _leapController.EndProfilingBlock += LeapProfiling.EndProfilingBlock;

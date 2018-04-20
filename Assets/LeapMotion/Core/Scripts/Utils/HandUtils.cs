@@ -62,7 +62,16 @@ namespace Leap.Unity {
     }
 
     /// <summary>
-    /// Static convenience accessor for the LeapProvider.
+    /// Static convenience accessor for a LeapProvider in the scene. Preference is given
+    /// to a LeapServiceProvider if there is one.
+    /// 
+    /// If static memory currently has no reference for the provider (or if it was
+    /// destroyed), this call will search the scene for a LeapProvider and cache it to be
+    /// returned next time.
+    /// 
+    /// If there is no LeapProvider in your scene, this getter
+    /// will return null. Be warned that calling this regularly can be expensive if
+    /// LeapProviders often don't exist in your scene or are frequently destroyed.
     /// </summary>
     public static LeapProvider Provider {
       get {
@@ -72,9 +81,6 @@ namespace Leap.Unity {
         return s_provider;
       }
     }
-
-    [System.Serializable]
-    public class HandEvent : UnityEvent<Hand> { }
 
     /// <summary>
     /// Returns the first hand of the argument Chirality in the current frame,
@@ -178,6 +184,20 @@ namespace Leap.Unity {
     /// </summary>
     public static Finger GetPinky(this Hand hand) {
       return hand.Fingers[(int)Leap.Finger.FingerType.TYPE_PINKY];
+    }
+
+    /// <summary>
+    /// Returns a Pose consisting of the tracked hand's palm position and rotation.
+    /// </summary>
+    public static Pose GetPalmPose(this Hand hand) {
+      return new Pose(hand.PalmPosition.ToVector3(), hand.Rotation.ToQuaternion());
+    }
+
+    /// <summary>
+    /// As Hand.SetTransform(), but takes a Pose as input for convenience.
+    /// </summary>
+    public static void SetPalmPose(this Hand hand, Pose newPalmPose) {
+      hand.SetTransform(newPalmPose.position, newPalmPose.rotation);
     }
 
     /// <summary>
@@ -413,9 +433,7 @@ namespace Leap.Unity {
                             int fingerId,
                             float timeVisible,
                             Vector tipPosition,
-                            Vector tipVelocity,
                             Vector direction,
-                            Vector stabilizedTipPosition,
                             float width,
                             float length,
                             bool isExtended,
@@ -428,8 +446,6 @@ namespace Leap.Unity {
       toFill.HandId                 = handId;
       toFill.TimeVisible            = timeVisible;
       toFill.TipPosition            = tipPosition;
-      toFill.TipVelocity            = tipVelocity;
-      toFill.StabilizedTipPosition  = stabilizedTipPosition;
       toFill.Direction              = direction;
       toFill.Width                  = width;
       toFill.Length                 = length;
@@ -463,18 +479,13 @@ namespace Leap.Unity {
     }
 
     /// <summary>
-    /// Fills the hand's PalmVelocity and each finger's TipVelocity data based on the
+    /// Fills the hand's PalmVelocity data based on the
     /// previous hand object and the provided delta time between the two hands.
     /// </summary>
     public static void FillTemporalData(this Hand toFill,
                                         Hand previousHand, float deltaTime) {
       toFill.PalmVelocity = (toFill.PalmPosition - previousHand.PalmPosition)
                              / deltaTime;
-      for (int i = 0; i < toFill.Fingers.Count; i++) {
-        toFill.Fingers[i].TipVelocity = (toFill.Fingers[i].TipPosition
-                                           - previousHand.Fingers[i].TipPosition)
-                                         / deltaTime;
-      }
     }
     
     #region Frame Utils

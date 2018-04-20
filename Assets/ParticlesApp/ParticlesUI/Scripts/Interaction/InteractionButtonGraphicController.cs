@@ -39,7 +39,7 @@ public class InteractionButtonGraphicController : MonoBehaviour {
 
       if (buttonGraphic != null) {
         Color targetButtonColor = buttonGraphicColor;
-        if (button.isDepressed) targetButtonColor = buttonDepressedColor;
+        if (button.isPressed) targetButtonColor = buttonDepressedColor;
         if (!buttonEnabled) targetButtonColor = buttonDisabledColor;
         targetButtonColor = targetButtonColor.Multiply(buttonTint);
         if (!buttonEnabled) targetButtonColor = Color.Lerp(targetButtonColor, buttonDisabledColor, 0.5F);

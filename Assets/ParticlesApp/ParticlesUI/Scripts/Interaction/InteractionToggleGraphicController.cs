@@ -41,7 +41,7 @@ public class InteractionToggleGraphicController : MonoBehaviour {
 
       if (toggleGraphic != null) {
         Color targetToggleColor = toggle.isToggled ? toggledColor : untoggledColor;
-        if (toggle.isDepressed) targetToggleColor = depressedColor;
+        if (toggle.isPressed) targetToggleColor = depressedColor;
         if (!toggleEnabled) targetToggleColor = disabledColor;
         targetToggleColor = targetToggleColor.Multiply(toggleTint);
         if (!toggleEnabled) targetToggleColor = Color.Lerp(targetToggleColor, disabledColor, 0.5F);

@@ -1,5 +1,6 @@
 ﻿using Leap.Unity.Animation;
 using Leap.Unity.Attributes;
+using Leap.Unity.RuntimeGizmos;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,8 +19,16 @@ namespace Leap.Unity.Particles {
     public Transform[] panelWidgetTransforms;
     public PanelStateController[] panelStateControllers;
 
+    [Header("Optional - draw lines when switching to Advanced")]
+    public Transform drawLineFromTransform = null;
+    public Color drawLinesColor = Color.white;
+
     private bool _targetOn = false;
     private float _onAmount = 0f;
+
+    private bool _flashLine = false;
+    private float _lineAlpha = 0f;
+    private float _lineDrawLerpCoeff = 5f;
 
     private void Start() {
       if (startingMode == MenuMode.Simple) {
@@ -38,6 +47,26 @@ namespace Leap.Unity.Particles {
       }
 
       updateTransition(_onAmount, isActivating: _targetOn);
+
+      // Optional line to each menu:
+      if (_flashLine) {
+        if (drawLineFromTransform != null) {
+          _lineAlpha = 1f;
+        }
+        _flashLine = false;
+      }
+      if (_lineAlpha > 0.001f) {
+        RuntimeGizmoDrawer drawer;
+        if (RuntimeGizmoManager.TryGetGizmoDrawer(out drawer)) {
+          drawer.color = drawLinesColor.WithAlpha(_lineAlpha);
+          foreach (var widgetTransform in panelWidgetTransforms) {
+            drawer.DrawDashedLine(drawLineFromTransform.position,
+              widgetTransform.position,
+              segmentsPerMeter: 20);
+          }
+        }
+        _lineAlpha = Mathf.Lerp(_lineAlpha, 0f, _lineDrawLerpCoeff * Time.deltaTime);
+      }
     }
 
 
@@ -109,10 +138,12 @@ namespace Leap.Unity.Particles {
 
     public void On() {
       _targetOn = true;
+      _flashLine = true;
     }
 
     public void OnNow() {
       _targetOn = true;
+      _flashLine = true;
       _onAmount = 1f;
       updateTransition(1f, isActivating: true);
     }

@@ -22,7 +22,8 @@ public class PanelStateController : MonoBehaviour {
   private float _grabIdleThreshold = 0.01F;
   private float _outlineHintDelay = 0.5F;
 
-  void Start() {
+  void OnEnable() {
+    widget.OnGraspBegin -= onGraspBegin;
     widget.OnGraspBegin += onGraspBegin;
   }
 

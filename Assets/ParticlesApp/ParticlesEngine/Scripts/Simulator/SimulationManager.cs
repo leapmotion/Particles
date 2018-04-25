@@ -433,16 +433,16 @@ public class SimulationManager : MonoBehaviour {
 
     _currentSimulationMethod = newMethod;
 
+    isPerformingTransition = true;
+    if (OnEcosystemBeginTransition != null) {
+      OnEcosystemBeginTransition();
+    }
+
     if (oldMethod != newMethod) {
       restartSimulator(oldMethod, EcosystemDescription.empty, resetBehavior);
       restartSimulator(newMethod, ecosystemDescription, resetBehavior);
     } else {
       restartSimulator(_currentSimulationMethod, ecosystemDescription, resetBehavior);
-    }
-
-    isPerformingTransition = true;
-    if (OnEcosystemBeginTransition != null) {
-      OnEcosystemBeginTransition();
     }
   }
 

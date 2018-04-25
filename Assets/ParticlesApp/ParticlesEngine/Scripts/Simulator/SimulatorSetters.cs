@@ -260,6 +260,10 @@ public class SimulatorSetters : MonoBehaviour {
     return simManager.currentDescription.name;
   }
 
+  public bool IsTransitionInProgress() {
+    return simManager.isPerformingTransition;
+  }
+
   /// <summary>
   /// Checks the input string (non-case-sensitively) against a preset name, and loads
   /// the preset if it matches one, or interprets the input as a random simulation seed

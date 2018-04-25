@@ -66,8 +66,13 @@ namespace Leap.Unity {
     [SerializeField]
     protected float _physicsExtrapolationTime = 1.0f / 90.0f;
 
+#if UNITY_2017_3_OR_NEWER
     [Tooltip("When checked, profiling data from the LeapCSharp worker thread will be used to populate the UnityProfiler.")]
     [EditTimeOnly]
+#else
+    [Tooltip("Worker thread profiling requires a Unity version of 2017.3 or greater.")]
+    [Disable]
+#endif
     [SerializeField]
     protected bool _workerThreadProfiling = false;
 
@@ -393,6 +398,19 @@ namespace Leap.Unity {
     public void RetransformFrames() {
       transformFrame(_untransformedUpdateFrame, _transformedUpdateFrame);
       transformFrame(_untransformedFixedFrame, _transformedFixedFrame);
+    }
+
+    /// <summary>
+    /// Copies property settings from this LeapServiceProvider to the target
+    /// LeapXRServiceProvider where applicable. Does not modify any XR-specific settings
+    /// that only exist on the LeapXRServiceProvider.
+    /// </summary>
+    public void CopySettingsToLeapXRServiceProvider(
+        LeapXRServiceProvider leapXRServiceProvider) {
+      leapXRServiceProvider._frameOptimization = _frameOptimization;
+      leapXRServiceProvider._physicsExtrapolation = _physicsExtrapolation;
+      leapXRServiceProvider._physicsExtrapolationTime = _physicsExtrapolationTime;
+      leapXRServiceProvider._workerThreadProfiling = _workerThreadProfiling;
     }
 
     #endregion

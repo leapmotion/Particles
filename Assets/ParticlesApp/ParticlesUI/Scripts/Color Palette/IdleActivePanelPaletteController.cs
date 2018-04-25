@@ -12,8 +12,7 @@ public class IdleActivePanelPaletteController : MonoBehaviour {
   public int idlePaletteIdx = 1;
 
   public float waitTimeBeforeIdle = 3f;
-
-  private bool _haveInitializedInteractionObjects = false;
+  
   private float _timeSinceLastPrimaryHover = 0f;
   private List<InteractionBehaviour> _intObjs = new List<InteractionBehaviour>();
 
@@ -28,21 +27,17 @@ public class IdleActivePanelPaletteController : MonoBehaviour {
   }
 
   void OnEnable() {
-    if (!_haveInitializedInteractionObjects) {
-      findInteractionObjectsWithin.GetComponentsInChildren(true, _intObjs);
-      foreach (var intObj in _intObjs) {
-        intObj.OnPrimaryHoverStay += onPrimaryHoverStay;
-      }
-
-      _haveInitializedInteractionObjects = true;
+    _intObjs.Clear();
+    findInteractionObjectsWithin.GetComponentsInChildren(true, _intObjs);
+    foreach (var intObj in _intObjs) {
+      intObj.OnPrimaryHoverStay -= onPrimaryHoverStay;
+      intObj.OnPrimaryHoverStay += onPrimaryHoverStay;
     }
   }
 
   void OnDisable() {
-    if (_haveInitializedInteractionObjects) {
-      foreach (var intObj in _intObjs) {
-        intObj.OnPrimaryHoverStay -= onPrimaryHoverStay;
-      }
+    foreach (var intObj in _intObjs) {
+      intObj.OnPrimaryHoverStay -= onPrimaryHoverStay;
     }
   }
 

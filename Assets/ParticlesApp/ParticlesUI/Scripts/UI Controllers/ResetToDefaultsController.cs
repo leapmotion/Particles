@@ -16,6 +16,7 @@ public class ResetToDefaultsController : MonoBehaviour {
     foreach (var control in _simulatorSliderControls) {
       control.value = control.slider.defaultHorizontalValue;
     }
+    FindObjectOfType<SimulationManager>().ApplySliderValues();
   }
 
 }

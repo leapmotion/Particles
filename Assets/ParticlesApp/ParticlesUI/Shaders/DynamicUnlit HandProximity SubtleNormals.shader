@@ -52,6 +52,16 @@
         // curvature-warping applied to it.
         // o.vertex would contain that world-space v.vertex, projected into clip space.
         // Here we store this world vertex position for the pixel shader.
+        //
+        // IMPORANT CAVEAT: There's currently a bug where the value of v.vertex is
+        // inconsistent depending on whether you have a LeapSpace (e.g. spherical or
+        // cylindrical space) attached to your Graphic Renderer versus if you have no
+        // space attached -- this trick only works while there's a space attached.
+        // The easy workaround is to attach, say, a spherical space, and then make its
+        // radius really really big so there's effectively no local warping effects.
+        // This isn't ideal because it incurs e.g. some Interaction Engine overhead and
+        // warping overhead, but it's the quick-fix for this shader.
+        //
         o.vertex_world = v.vertex;
 
         return o;

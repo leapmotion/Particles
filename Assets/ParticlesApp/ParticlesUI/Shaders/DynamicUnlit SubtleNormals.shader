@@ -41,10 +41,10 @@
 
 #ifdef GRAPHIC_RENDERER_VERTEX_NORMALS
 
+      // Fake, subtle "lighting" based on object normals.
       float litAmount = dot(normalize(i.normal.xyz), normalize(float3(1, 1.3, 0)));
       color = litAmount * 0.25 + color;
 
-      //color *= 0.1 * abs(dot(normalize(i.normal.xyz), float3(0, 0, 1))) + 0.9;
 #endif
 
 #ifdef GRAPHIC_RENDERER_VERTEX_UV_0

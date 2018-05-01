@@ -218,13 +218,6 @@ namespace Leap.Unity {
     }
 
     /// <summary>
-    /// Returns a copy of the input Vector4 with a different W component.
-    /// </summary>
-    public static Vector4 WithW(this Vector3 v, float w) {
-      return new Vector4(v.x, v.y, v.z, w);
-    }
-
-    /// <summary>
     /// Returns the values of this vector clamped component-wise with minimums from minV
     /// and maximums from maxV.
     /// </summary>

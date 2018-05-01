@@ -15,6 +15,7 @@ public class LeapGraphicButtonPaletteController : GraphicPaletteController {
   public int pressedColorIdx;
 
   private Pulsator _pressPulsator;
+  public Pulsator pressPulsator { get { return _pressPulsator; } } // DEBUG ONLY
 
   public Color primaryHoveredColor { get { return palette[primaryHoverColorIdx]; } }
   public Color pressedColor { get { return palette[pressedColorIdx]; } }
@@ -67,7 +68,7 @@ public class LeapGraphicButtonPaletteController : GraphicPaletteController {
     var targetColor = restingColor;
     
     if (!_pressPulsator.isResting) {
-      if (_pressPulsator.value < 1.0F) {
+      if (_pressPulsator.value < 0.95F) {
         targetColor = Color.Lerp(restingColor, pressedColor, _pressPulsator.value);
       }
       else {

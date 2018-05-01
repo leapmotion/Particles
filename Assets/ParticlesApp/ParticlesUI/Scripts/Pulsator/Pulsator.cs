@@ -86,7 +86,9 @@ public class Pulsator : IPoolable {
     if (_value == null) _value = new SmoothedFloat();
   }
 
-  public void OnSpawn() { }
+  public void OnSpawn() {
+    Enable();
+  }
 
   public void OnRecycle() {
     Reset();

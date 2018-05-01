@@ -35,7 +35,7 @@
       // This takes up the UV2 slot.
       struct custom_v2f {
         V2F_GRAPHICAL
-        float3 vertex_world : TEXCOORD2;
+        float3 vertex_world : TEXCOORD1;
       };
       
       custom_v2f vert (appdata_graphic_dynamic v) {
@@ -51,8 +51,7 @@
         // after it has been interpreted in space relative to its anchor and has had any
         // curvature-warping applied to it.
         // o.vertex would contain that world-space v.vertex, projected into clip space.
-        // Here we store this world vertex position for the pixel shader, across uv2 and
-        // uv3.
+        // Here we store this world vertex position for the pixel shader.
         o.vertex_world = v.vertex;
 
         return o;

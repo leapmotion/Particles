@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: b85077ce944c96f43b8818ed57d1888d
-timeCreated: 1499817079
-licenseType: Free
+timeCreated: 1524767711
+licenseType: Pro
 PluginImporter:
   externalObjects: {}
   serializedVersion: 2
@@ -11,25 +11,11 @@ PluginImporter:
   isOverridable: 0
   platformData:
   - first:
-      '': Any
-    second:
-      enabled: 0
-      settings:
-        Exclude Android: 1
-        Exclude Editor: 0
-        Exclude Linux: 1
-        Exclude Linux64: 0
-        Exclude LinuxUniversal: 1
-        Exclude OSXUniversal: 1
-        Exclude Win: 1
-        Exclude Win64: 0
-        Exclude WindowsStoreApps: 1
-  - first:
       Android: Android
     second:
       enabled: 0
       settings:
-        CPU: ARMv7
+        CPU: AnyCPU
   - first:
       Any: 
     second:
@@ -42,7 +28,7 @@ PluginImporter:
       settings:
         CPU: x86_64
         DefaultValueInitialized: true
-        OS: Windows
+        OS: AnyOS
   - first:
       Facebook: Win
     second:
@@ -103,16 +89,6 @@ PluginImporter:
       enabled: 1
       settings:
         CPU: AnyCPU
-  - first:
-      Windows Store Apps: WindowsStoreApps
-    second:
-      enabled: 0
-      settings:
-        CPU: AnyCPU
-        DontProcess: False
-        PlaceholderPath: 
-        SDK: AnySDK
-        ScriptingBackend: AnyScriptingBackend
   userData: 
   assetBundleName: 
   assetBundleVariant: 

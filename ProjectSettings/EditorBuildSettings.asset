@@ -4,4 +4,11 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/ParticlesApp/Particles Splash Screen.unity
+    guid: 8583912d9a372434abaddce03925213f
+  - enabled: 1
+    path: Assets/ParticlesApp/Particles Main Scene.unity
+    guid: a564dd1696447a94fb99526063211748
+  m_configObjects: {}

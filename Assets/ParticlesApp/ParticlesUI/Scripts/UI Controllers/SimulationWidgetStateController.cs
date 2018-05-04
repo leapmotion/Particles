@@ -16,8 +16,12 @@ public class SimulationWidgetStateController : MonoBehaviour {
 
   public float delayToIdle = 1f;
 
+  [Header("Is-Being-Activated feedback")]
+  public GraphicPaletteController paletteController;
+  public int notBeingActivatedColorIdx = 1;
+  public int beingActivatedColorIdx = 2;
 
-  private float maxActivationDistance = 0.02f;
+  private float maxActivationDistance = 0.065f;
 
   private float _deactivateTimer = 100f;
   private bool _activationInProcess = false;
@@ -54,6 +58,10 @@ public class SimulationWidgetStateController : MonoBehaviour {
                   && intObj.primaryHoverDistance < maxActivationDistance * 1.2f))) {
         _deactivateTimer = 0f;
 
+        if (paletteController != null) {
+          paletteController.restingColorIdx = beingActivatedColorIdx;
+        }
+
         if (_state == State.Idle) {
           transitionToWarm();
         }
@@ -62,6 +70,10 @@ public class SimulationWidgetStateController : MonoBehaviour {
         }
       }
       else {
+        if (paletteController != null) {
+          paletteController.restingColorIdx = notBeingActivatedColorIdx;
+        }
+
         if (_state == State.Active) {
           if (_deactivateTimer < delayToIdle) {
             _deactivateTimer += Time.deltaTime;

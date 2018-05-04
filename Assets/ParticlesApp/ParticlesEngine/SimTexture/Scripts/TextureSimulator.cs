@@ -818,6 +818,7 @@ public class TextureSimulator : MonoBehaviour {
         currMesh = new Mesh();
         currMesh.name = "Particle Mesh";
         currMesh.hideFlags = HideFlags.HideAndDontSave;
+        currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 100000);
         _displayMeshes.Add(currMesh);
 
         verts.Clear();
@@ -918,7 +919,7 @@ public class TextureSimulator : MonoBehaviour {
     }
 
     if (_manager.simulationEnabled) {
-      if(_prevSimulationScale != _manager.simulationTimescale) {
+      if (_prevSimulationScale != _manager.simulationTimescale) {
         _currSimulationTime = _prevSimulationTime = _currScaledTime;
         _prevSimulationScale = _manager.simulationTimescale;
       }

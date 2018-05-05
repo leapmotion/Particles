@@ -31,6 +31,17 @@ namespace Leap.Unity.Particles {
     private float _lineDrawLerpCoeff = 5f;
 
     private void Start() {
+      OnNow();
+
+      StartCoroutine(WaitAFrameThenSetStartingState());
+    }
+
+    // Workaround for a bug in the GR where graphic state causes an error when the
+    // visualization menu enables/disables graphics before the renderer has first
+    // initialized.
+    private IEnumerator WaitAFrameThenSetStartingState() {
+      yield return new WaitForEndOfFrame();
+
       if (startingMode == MenuMode.Simple) {
         OffNow();
       }
@@ -40,6 +51,7 @@ namespace Leap.Unity.Particles {
     }
 
     private void Update() {
+
       var targetAmount = _targetOn ? 1f : 0f;
       if (_onAmount != targetAmount) {
         var speed = 1 / openWidgetsTime * (_targetOn ? 1f : -1f);

@@ -18,12 +18,12 @@ public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
 
     // Species count slider isn't valid while a Preset ecosystem is loaded.
     if (simManager.currentDescription.isRandomDescription) {
-      slider.controlEnabled = false;
-      slider.ignoreGrasping = true;
-    }
-    else {
       slider.controlEnabled = true;
       slider.ignoreGrasping = false;
+    }
+    else {
+      slider.controlEnabled = false;
+      slider.ignoreGrasping = true;
     }
   }
 

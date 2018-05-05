@@ -285,8 +285,8 @@ public class SocialAttributeVisualization : MonoBehaviour {
           graphic.SetMesh(visionRangeMesh);
           graphic.RefreshMeshData();
 
-          graphic.SetRuntimeTint(Color.Lerp(Color.black, Color.white, 0.8f)) ;
-          graphic.SetBlendShapeAmount(socialVisionRange.Map(0, 1, 0, 1));
+          graphic.SetRuntimeTint(Color.Lerp(Color.black, Color.white, 0.8f));
+          graphic.SetBlendShapeAmount(socialVisionRange.Map(0, 1, 1, 0));
 
           layoutAttributeGraphic(graphic, row, col, visionRangeMeshParams);
 

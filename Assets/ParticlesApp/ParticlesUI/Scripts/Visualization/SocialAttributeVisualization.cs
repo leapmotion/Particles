@@ -65,6 +65,10 @@ public class SocialAttributeVisualization : MonoBehaviour {
   public Mesh visionRangeMesh;
   public MeshDisplayParams visionRangeMeshParams;
 
+  [Header("Associated GameObjects")]
+  public GameObject[] activateOnlyInSocialForceMode;
+  public GameObject[] activateOnlyInSocialRangeMode;
+
   #endregion
 
   #region Unity Events
@@ -266,6 +270,13 @@ public class SocialAttributeVisualization : MonoBehaviour {
           graphic.SetBlendShapeAmount(1f - Mathf.Abs(attractionRepulsionAmount.Map(0, 1, -1, 1)));
 
           layoutAttributeGraphic(graphic, row, col, targetParams);
+
+          foreach (var gameObj in activateOnlyInSocialForceMode) {
+            if (gameObj != null) gameObj.SetActive(true);
+          }
+          foreach (var gameObj in activateOnlyInSocialRangeMode) {
+            if (gameObj != null) gameObj.SetActive(false);
+          }
           
           break;
         case VisualizationMode.SocialVision:
@@ -278,6 +289,13 @@ public class SocialAttributeVisualization : MonoBehaviour {
           graphic.SetBlendShapeAmount(socialVisionRange.Map(0, 1, 0, 1));
 
           layoutAttributeGraphic(graphic, row, col, visionRangeMeshParams);
+
+          foreach (var gameObj in activateOnlyInSocialForceMode) {
+            if (gameObj != null) gameObj.SetActive(false);
+          }
+          foreach (var gameObj in activateOnlyInSocialRangeMode) {
+            if (gameObj != null) gameObj.SetActive(true);
+          }
 
           break;
       }

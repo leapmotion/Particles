@@ -809,7 +809,7 @@ public class TextureSimulator : MonoBehaviour {
         currMesh.SetVertices(verts);
         currMesh.SetNormals(normals);
         currMesh.SetUVs(0, uvs);
-        currMesh.SetTriangles(tris, 0, calculateBounds: true);
+        currMesh.SetTriangles(tris, 0, calculateBounds: false);
         currMesh.UploadMeshData(markNoLongerReadable: true);
         currMesh = null;
       }
@@ -836,7 +836,7 @@ public class TextureSimulator : MonoBehaviour {
     currMesh.SetVertices(verts);
     currMesh.SetNormals(normals);
     currMesh.SetUVs(0, uvs);
-    currMesh.SetTriangles(tris, 0, calculateBounds: true);
+    currMesh.SetTriangles(tris, 0, calculateBounds: false);
     currMesh.UploadMeshData(markNoLongerReadable: true);
   }
 

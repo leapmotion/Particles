@@ -17,7 +17,14 @@ public class SimulatorSliderSetSpeciesCount : SimulatorSliderControl {
     base.Update();
 
     // Species count slider isn't valid while a Preset ecosystem is loaded.
-    slider.controlEnabled = simManager.currentDescription.isRandomDescription;
+    if (simManager.currentDescription.isRandomDescription) {
+      slider.controlEnabled = true;
+      slider.ignoreGrasping = false;
+    }
+    else {
+      slider.controlEnabled = false;
+      slider.ignoreGrasping = true;
+    }
   }
 
   protected override float filterSliderValue(float sliderValue) {

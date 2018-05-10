@@ -810,6 +810,7 @@ public class TextureSimulator : MonoBehaviour {
         currMesh.SetNormals(normals);
         currMesh.SetUVs(0, uvs);
         currMesh.SetTriangles(tris, 0, calculateBounds: false);
+        currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1000);
         currMesh.UploadMeshData(markNoLongerReadable: true);
         currMesh = null;
       }
@@ -818,7 +819,7 @@ public class TextureSimulator : MonoBehaviour {
         currMesh = new Mesh();
         currMesh.name = "Particle Mesh";
         currMesh.hideFlags = HideFlags.HideAndDontSave;
-        currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 100000);
+        currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1000);
         _displayMeshes.Add(currMesh);
 
         verts.Clear();
@@ -837,6 +838,7 @@ public class TextureSimulator : MonoBehaviour {
     currMesh.SetNormals(normals);
     currMesh.SetUVs(0, uvs);
     currMesh.SetTriangles(tris, 0, calculateBounds: false);
+    currMesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1000);
     currMesh.UploadMeshData(markNoLongerReadable: true);
   }
 

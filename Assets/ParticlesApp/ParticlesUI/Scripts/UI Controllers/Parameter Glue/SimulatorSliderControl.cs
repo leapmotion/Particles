@@ -43,6 +43,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     
     slider.HorizontalSlideEvent += onSlideEvent;
     slider.OnUnpress += onUnpress;
+    slider.OnContactEnd += onContactEnd;
 
     _refreshMode = GetRefreshMode();
   }
@@ -63,11 +64,32 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
     simManager.ApplySliderValues();
   }
 
+  private float _timeSinceLastContactEnd = 100f;
+  private float _contactEndWait = 0.5f;
+  /// <summary>
+  /// Sliders send contact end pretty often because the collision checks are imperfect--
+  /// arguably this is a bug in the Interaction Engine, as a workaround for now we wait
+  /// for contact end callbacks to stop happening for half a second before assuming 
+  /// contact has "truly" ended, and then we update the simulation with the slider's
+  /// value.
+  /// </summary>
+  private void onContactEnd() {
+    _timeSinceLastContactEnd = 0f;
+  }
+
   protected virtual void Update() {
     if (_firstUpdate) {
       refreshSimValue();
 
       _firstUpdate = false;
+    }
+
+    if (_timeSinceLastContactEnd <= _contactEndWait) {
+      _timeSinceLastContactEnd += Time.deltaTime;
+
+      if (_timeSinceLastContactEnd > _contactEndWait) {
+        simManager.ApplySliderValues();
+      }
     }
 
     if (_refreshMode == SliderRefreshMode.EveryUpdate) {

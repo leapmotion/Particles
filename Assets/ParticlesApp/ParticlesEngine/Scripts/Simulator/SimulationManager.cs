@@ -91,7 +91,6 @@ public class SimulationManager : MonoBehaviour {
       float ratio = _zoomController._targetZoomedInScale / _zoomController._targetZoomedOutScale;
       float currZoomRatio = _displayAnchor.lossyScale.x / _zoomController._targetZoomedOutScale;
       float percent = Mathf.InverseLerp(1, ratio, currZoomRatio);
-      Debug.Log(percent);
       return Mathf.Lerp(_headRadiusRange.x, _headRadiusRange.y, percent);
     }
   }

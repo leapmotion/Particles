@@ -1,10 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Leap.Unity.Attributes;
 
 public class SimulationZoomController : MonoBehaviour {
 
+  [QuickButton("Zoom In", "ZoomIn")]
   public float _targetZoomedInScale = 5f;
+  [QuickButton("Zoom Out", "ZoomOut")]
   public float _targetZoomedOutScale = 0.2F;
 
   /// <summary>
@@ -55,6 +58,7 @@ public class SimulationZoomController : MonoBehaviour {
     _targetScale = Mathf.Lerp(_targetZoomedOutScale, _targetZoomedInScale, _targetZoomInAmount);
   }
 
+  [ContextMenu("Zoom Out")]
   public void ZoomOut()
   {
     _targetZoomInAmount = 0f;
@@ -65,6 +69,7 @@ public class SimulationZoomController : MonoBehaviour {
     _targetZoomInAmount = Mathf.Clamp01(_targetZoomInAmount - zoomAmount);
   }
 
+  [ContextMenu("Zoom In")]
   public void ZoomIn()
   {
     _targetZoomInAmount = 1f;

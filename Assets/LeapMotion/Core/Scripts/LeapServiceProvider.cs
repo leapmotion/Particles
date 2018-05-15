@@ -37,6 +37,18 @@ namespace Leap.Unity {
     /// </summary>
     protected const string HAND_ARRAY_GLOBAL_NAME = "_LeapHandTransforms";
 
+    /// <summary>
+    /// The maximum number of times the provider will 
+    /// attempt to reconnect to the service before giving up.
+    /// </summary>
+    protected const int MAX_RECONNECTION_ATTEMPTS = 5;
+
+    /// <summary>
+    /// The number of frames to wait between each
+    /// reconnection attempt.
+    /// </summary>
+    protected const int RECONNECTION_INTERVAL = 180;
+
     #endregion
 
     #region Inspector
@@ -252,6 +264,8 @@ namespace Leap.Unity {
       if (_workerThreadProfiling) {
         LeapProfiling.Update();
       }
+
+      if (!checkConnectionIntegrity()) { return; }
 
 #if UNITY_EDITOR
       if (UnityEditor.EditorApplication.isCompiling) {
@@ -485,6 +499,37 @@ namespace Leap.Unity {
         _leapController.StopConnection();
         _leapController = null;
       }
+    }
+
+    private int _framesSinceServiceConnectionChecked = 0;
+    private int _numberOfReconnectionAttempts = 0;
+    /// <summary>
+    /// Checks whether this provider is connected to a service;
+    /// If it is not, attempt to reconnect at regular intervals
+    /// for MAX_RECONNECTION_ATTEMPTS
+    /// </summary>
+    protected bool checkConnectionIntegrity() {
+      if (_leapController.IsServiceConnected) {
+        _framesSinceServiceConnectionChecked = 0;
+        _numberOfReconnectionAttempts = 0;
+        return true;
+      } else if (_numberOfReconnectionAttempts < MAX_RECONNECTION_ATTEMPTS) {
+        _framesSinceServiceConnectionChecked ++;
+
+        if (_framesSinceServiceConnectionChecked > RECONNECTION_INTERVAL) {
+          _framesSinceServiceConnectionChecked = 0;
+          _numberOfReconnectionAttempts++;
+
+          Debug.LogWarning("Leap Service not connected; attempting to reconnect for try " +
+                           _numberOfReconnectionAttempts + "/" + MAX_RECONNECTION_ATTEMPTS +
+                           "...", this);
+          using (new ProfilerSample("Reconnection Attempt")) {
+            destroyController();
+            createController();
+          }
+        }
+      }
+      return false;
     }
 
     protected void onHandControllerConnect(object sender, LeapEventArgs args) {

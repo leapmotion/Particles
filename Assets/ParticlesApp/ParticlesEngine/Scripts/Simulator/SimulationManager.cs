@@ -83,12 +83,16 @@ public class SimulationManager : MonoBehaviour {
     set { _fieldForce = value; }
   }
 
-  [MinValue(0)]
+  [MinMax(0, 1)]
   [SerializeField]
-  private float _headRadius = 0.15f;
+  private Vector2 _headRadiusRange = new Vector2(0.15f, 0.15f);
   public float headRadius {
-    get { return _headRadius; }
-    set { _headRadius = value; }
+    get {
+      float ratio = _zoomController._targetZoomedInScale / _zoomController._targetZoomedOutScale;
+      float currZoomRatio = _displayAnchor.lossyScale.x / _zoomController._targetZoomedOutScale;
+      float percent = Mathf.InverseLerp(1, ratio, currZoomRatio);
+      return Mathf.Lerp(_headRadiusRange.x, _headRadiusRange.y, percent);
+    }
   }
 
   //#######################//
@@ -175,6 +179,9 @@ public class SimulationManager : MonoBehaviour {
   public Transform displayAnchor {
     get { return _displayAnchor; }
   }
+
+  [SerializeField]
+  private SimulationZoomController _zoomController;
 
   [SerializeField]
   private Mesh _particleMesh;

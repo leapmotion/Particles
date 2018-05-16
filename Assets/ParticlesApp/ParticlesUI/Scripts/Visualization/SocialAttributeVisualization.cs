@@ -226,12 +226,12 @@ public class SocialAttributeVisualization : MonoBehaviour {
       
       rowSpeciesGraphics[i].SetMesh(speciesLabelMesh);
       rowSpeciesGraphics[i].RefreshMeshData();
-      rowSpeciesGraphics[i].SetRuntimeTint(speciesColor);
+      rowSpeciesGraphics[i].SetRuntimeTint(speciesColor.gamma);
       layoutRowSpeciesGraphic(rowSpeciesGraphics[i], i, speciesLabelMeshParams);
 
       colSpeciesGraphics[i].SetMesh(speciesLabelMesh);
       colSpeciesGraphics[i].RefreshMeshData();
-      colSpeciesGraphics[i].SetRuntimeTint(speciesColor);
+      colSpeciesGraphics[i].SetRuntimeTint(speciesColor.gamma);
       layoutColSpeciesGraphic(colSpeciesGraphics[i], i, speciesLabelMeshParams);
     }
   }

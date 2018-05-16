@@ -10,6 +10,12 @@ public class SimulationZoomController : MonoBehaviour {
   [QuickButton("Zoom Out", "ZoomOut")]
   public float _targetZoomedOutScale = 0.2F;
 
+  [EditTimeOnly]
+  [Range(0f, 1f)]
+  [Tooltip("Target zoom-in amount set during the Start() callback of this component. " +
+           "this amount is normalized between 0 and 1.")]
+  public float _initialZoomInAmount = 0f;
+
   /// <summary>
   /// 0 to 1, lerps between _targetZoomedInScale and _targetZoomedOutScale.
   /// </summary>
@@ -31,7 +37,11 @@ public class SimulationZoomController : MonoBehaviour {
 
   public Transform displayAnchor;
 
-  void Update() {
+  private void Start() {
+    _targetZoomInAmount = _initialZoomInAmount;
+  }
+
+  private void Update() {
     updateTargetScale();
 
     float scale = displayAnchor.transform.localScale.x;
@@ -53,30 +63,25 @@ public class SimulationZoomController : MonoBehaviour {
     _isZoomedIn = !_isZoomedIn;
   }
 
-  private void updateTargetScale()
-  {
+  private void updateTargetScale()  {
     _targetScale = Mathf.Lerp(_targetZoomedOutScale, _targetZoomedInScale, _targetZoomInAmount);
   }
 
   [ContextMenu("Zoom Out")]
-  public void ZoomOut()
-  {
+  public void ZoomOut() {
     _targetZoomInAmount = 0f;
   }
 
-  public void ZoomOut(float zoomAmount)
-  {
+  public void ZoomOut(float zoomAmount) {
     _targetZoomInAmount = Mathf.Clamp01(_targetZoomInAmount - zoomAmount);
   }
 
   [ContextMenu("Zoom In")]
-  public void ZoomIn()
-  {
+  public void ZoomIn() {
     _targetZoomInAmount = 1f;
   }
 
-  public void ZoomIn(float zoomAmount)
-  {
+  public void ZoomIn(float zoomAmount) {
     _targetZoomInAmount = Mathf.Clamp01(_targetZoomInAmount + zoomAmount);
   }
 

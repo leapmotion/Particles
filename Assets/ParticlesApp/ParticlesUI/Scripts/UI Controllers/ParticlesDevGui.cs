@@ -100,7 +100,7 @@ public class ParticlesDevGui : MonoBehaviour {
 
   [DevValue]
   [DevRange(0, 63)]
-  private int maxForceSteps {
+  private int maxDelay {
     get {
       return genManager.maxForceSteps;
     }
@@ -167,16 +167,14 @@ public class ParticlesDevGui : MonoBehaviour {
       simManager.simulationTimescale = value;
     }
   }
-
-  private EcosystemPreset _mostRecentPreset = EcosystemPreset.RedMenace;
+  
   [DevCategory("Presets")]
   [DevValue]
   private EcosystemPreset preset {
     get {
-      return _mostRecentPreset;
+      return (EcosystemPreset)(-100);
     }
     set {
-      _mostRecentPreset = value;
       simManager.RestartSimulation(value, ResetBehavior.ResetPositions);
     }
   }

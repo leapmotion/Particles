@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Leap.Unity.Attributes;
 using Leap.Unity.DevGui;
 
@@ -47,9 +45,6 @@ public class CameraMouseController : MonoBehaviour {
   [Range(0, 1)]
   [SerializeField]
   private float _zoomSmoothing;
-
-  [SerializeField]
-  private float _distance = 2.7f;
 
   [MinMax(0, 10)]
   [SerializeField]
@@ -141,5 +136,4 @@ public class CameraMouseController : MonoBehaviour {
                          Vector4.Lerp(a.GetColumn(2), b.GetColumn(2), t),
                          Vector4.Lerp(a.GetColumn(3), b.GetColumn(3), t));
   }
-
 }

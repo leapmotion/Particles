@@ -47,4 +47,14 @@ namespace Leap.Unity.DevGui {
       this.tooltip = tooltip;
     }
   }
+
+  [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
+  public class DevRangeAttribute : Attribute {
+    public readonly float min, max;
+
+    public DevRangeAttribute(float min, float max) {
+      this.min = min;
+      this.max = max;
+    }
+  }
 }

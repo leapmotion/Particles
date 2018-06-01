@@ -119,29 +119,33 @@ namespace Leap.Unity.DevGui {
         return null;
       }
 
-      var rangeAtt = info.GetCustomAttributes(typeof(RangeAttribute), inherit: true).Query().
-                                                                               Cast<RangeAttribute>().
-                                                                               FirstOrNone();
+      var rangeAtt = info.GetCustomAttributes(typeof(RangeAttribute), inherit: true).
+                          Query().
+                          Cast<RangeAttribute>().
+                          FirstOrNone();
 
-      var minAtt = info.GetCustomAttributes(typeof(MinValue), inherit: true).Query().
-                                                                             Cast<MinValue>().
-                                                                             FirstOrNone();
+      var devRangeAtt = info.GetCustomAttributes(typeof(DevRangeAttribute), inherit: true).
+                             Query().
+                             Cast<DevRangeAttribute>().
+                             FirstOrNone();
 
-      var maxAtt = info.GetCustomAttributes(typeof(MaxValue), inherit: true).Query().
-                                                                             Cast<MaxValue>().
-                                                                             FirstOrNone();
+      var minAtt = info.GetCustomAttributes(typeof(MinValue), inherit: true).
+                        Query().
+                        Cast<MinValue>().
+                        FirstOrNone();
 
-      var minValue = minAtt.Query().
-                            Select(t => t.minValue).
-                            Concat(rangeAtt.Query().
-                                            Select(t => t.min)).
-                            FirstOrNone();
+      var maxAtt = info.GetCustomAttributes(typeof(MaxValue), inherit: true).
+                        Query().
+                        Cast<MaxValue>().
+                        FirstOrNone();
 
-      var maxValue = maxAtt.Query().
-                            Select(t => t.maxValue).
-                            Concat(rangeAtt.Query().
-                                            Select(t => t.max)).
-                            FirstOrNone();
+      var minValue = devRangeAtt.Flatten(a => a.min).
+                                 Flatten(minAtt, a => a.minValue).
+                                 Flatten(rangeAtt, a => a.min);
+
+      var maxValue = devRangeAtt.Flatten(a => a.max).
+                                 Flatten(maxAtt, a => a.maxValue).
+                                 Flatten(rangeAtt, a => a.max);
 
       if (type == typeof(int)) {
         return new DevElementInt() {

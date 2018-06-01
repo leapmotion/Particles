@@ -460,6 +460,21 @@ public class TextureSimulator : MonoBehaviour {
     get { return _simulationMat; }
   }
 
+  [SerializeField]
+  private Vector3 _restrictionPlane;
+  public Vector3 restrictionPlane {
+    get { return _restrictionPlane; }
+    set { _restrictionPlane = value; }
+  }
+
+  [Range(0, 1)]
+  [SerializeField]
+  private float _restrictionPlaneStrength = 0;
+  public float restrictionPlaneStrength {
+    get { return _restrictionPlaneStrength; }
+    set { _restrictionPlaneStrength = value; }
+  }
+
   //################################//
   ///      Stochastic Sampling      //
   //################################//
@@ -1820,6 +1835,8 @@ public class TextureSimulator : MonoBehaviour {
       _simulationMat.SetVector("_HeadPos", _manager.displayAnchor.InverseTransformPoint(_provider.transform.position));
       _simulationMat.SetFloat("_HeadRadius", (_manager.headRadius + _headRadiusTransitionDelta) / _manager.displayAnchor.lossyScale.x);
     }
+
+    _simulationMat.SetVector("_RestrictionPlane", _restrictionPlane * _restrictionPlaneStrength);
 
     _simulationMat.SetInt("_StochasticCount", Mathf.RoundToInt(Mathf.Lerp(0, 256, _stochasticPercent)));
     _simulationMat.SetFloat("_StochasticOffset", (Time.frameCount % _stochasticCycleCount) / (float)_stochasticCycleCount);

@@ -84,6 +84,8 @@
   uniform int _SphereCount;
   uniform half _SphereForce;
 
+  uniform half4 _RestrictionPlane;
+
   uniform int _DebugMode;
   uniform half4 _DebugData;
 
@@ -149,6 +151,8 @@
     if (distToHead < _HeadRadius) {
       pos.xyz = _HeadPos + fromHead / distToHead * _HeadRadius;
     }
+
+    pos.xyz -= dot(pos.xyz, _RestrictionPlane.xyz) * _RestrictionPlane.xyz;
 
     return pos;
   }

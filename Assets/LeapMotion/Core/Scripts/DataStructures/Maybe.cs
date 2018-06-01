@@ -191,6 +191,23 @@ namespace Leap.Unity {
       }
     }
 
+    public Maybe<K> Flatten<K>(Func<T, K> selector) {
+      if (hasValue) {
+        return new Maybe<K>(selector(_t));
+      } else {
+        return Maybe<K>.None;
+      }
+    }
+
+    public Maybe<T> Flatten<K>(Maybe<K> other, Func<K, T> selector) {
+      if (hasValue) {
+        return this;
+      } else {
+        return other.Match(k => Some(selector(k)),
+                           () => None);
+      }
+    }
+
     public override int GetHashCode() {
       return hasValue ? _t.GetHashCode() : 0;
     }

@@ -21,6 +21,14 @@ public class ParticlesDevGui : MonoBehaviour {
       return genManager.speciesCount;
     }
     set {
+      if (value < 1) {
+        value = 1;
+      }
+
+      if (value > 31) {
+        value = 31;
+      }
+
       genManager.speciesCount = value;
       ensureReset();
     }
@@ -135,7 +143,7 @@ public class ParticlesDevGui : MonoBehaviour {
   }
 
   [DevValue]
-  [DevRange(0, 2)]
+  [DevRange(0, 4)]
   private float boundingRadius {
     get {
       return simManager.fieldRadius;
@@ -167,7 +175,7 @@ public class ParticlesDevGui : MonoBehaviour {
       simManager.simulationTimescale = value;
     }
   }
-  
+
   [DevCategory("Presets")]
   [DevValue]
   private EcosystemPreset preset {
@@ -177,6 +185,12 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       simManager.RestartSimulation(value, ResetBehavior.ResetPositions);
     }
+  }
+
+  [DevCategory("Generation")]
+  [DevButton("Reset To Defaults")]
+  private void resetGenerationValues() {
+    //TODO
   }
 
   [DevButton("Randomize")]

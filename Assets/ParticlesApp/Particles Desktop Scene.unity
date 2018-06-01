@@ -733,7 +733,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -90.70001, y: -15.100006}
+  m_AnchoredPosition: {x: -90.70001, y: -15.099976}
   m_SizeDelta: {x: 180.4, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &155413086
@@ -1803,14 +1803,15 @@ MonoBehaviour:
   _pivot: {fileID: 1607871664}
   _focusPoint: {fileID: 970796842}
   _texSim: {fileID: 2024664445}
-  _rotationSpeed: 1
+  _rotationSpeed: 0.3
   _rotationSmoothing: 0.634
-  _moveFactor: 1
+  _moveFactor: 0.8
+  _keyboardMoveSpeed: 2
+  _speedFocusDistance: 0.45
   _moveSmoothing: 0.831
   _maxMoveDistance: 2
   _zoomSpeed: 0.18
   _zoomSmoothing: 0.273
-  _distance: 2.7
   _distanceRange: {x: 0.1, y: 5}
   _2dModeEnabled: 0
   _2dPercent: 0

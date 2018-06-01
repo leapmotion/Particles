@@ -30,6 +30,13 @@ public class CameraMouseController : MonoBehaviour {
   [SerializeField]
   private float _moveFactor = 1;
 
+  [MinValue(0)]
+  [SerializeField]
+  private float _keyboardMoveSpeed = 1f;
+
+  [SerializeField]
+  private float _speedFocusDistance = 0;
+
   [Range(0, 1)]
   [SerializeField]
   private float _moveSmoothing;
@@ -87,16 +94,13 @@ public class CameraMouseController : MonoBehaviour {
     Vector2 mouseDelta = (Vector2)Input.mousePosition - _prevMousePos;
     _prevMousePos = Input.mousePosition;
 
+    Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance + _speedFocusDistance));
+    Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance + _speedFocusDistance));
+    float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1);
+
     if (GUIUtility.hotControl == 0 && !Dev.hasMouseCursor) {
       if (Input.GetKey(MOVE_CODE) && !Input.GetKeyDown(MOVE_CODE)) {
-        Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance));
-        Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance));
-        float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1);
-
         _focalPointPosition -= (Vector3)mouseDelta * _moveFactor / pixelsToMeter;
-        if (_focalPointPosition.magnitude > _maxMoveDistance) {
-          _focalPointPosition = _focalPointPosition.normalized * _maxMoveDistance;
-        }
       }
 
       if (Input.GetKey(ROTATE_CODE) && !Input.GetKeyDown(ROTATE_CODE) && !_2dModeEnabled) {
@@ -105,9 +109,16 @@ public class CameraMouseController : MonoBehaviour {
       }
     }
 
+    _focalPointPosition += (Input.GetAxis("Horizontal") * _keyboardMoveSpeed * Vector3.right +
+                            Input.GetAxis("Vertical") * _keyboardMoveSpeed * Vector3.up) / pixelsToMeter;
+
     if (!Dev.hasMouseCursor) {
       float deltaAmount = Mathf.Pow(1 + _zoomSpeed, -Input.mouseScrollDelta.y);
       _cameraDistance = Mathf.Clamp(_cameraDistance * deltaAmount, _distanceRange.x, _distanceRange.y);
+    }
+
+    if (_focalPointPosition.magnitude > _maxMoveDistance) {
+      _focalPointPosition = _focalPointPosition.normalized * _maxMoveDistance;
     }
 
     _2dPercent = Mathf.MoveTowards(_2dPercent, _2dModeEnabled ? 1 : 0, Time.deltaTime / _2dTransitionTime);

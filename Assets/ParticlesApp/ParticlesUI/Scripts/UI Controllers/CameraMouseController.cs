@@ -92,7 +92,7 @@ public class CameraMouseController : MonoBehaviour {
     Vector2 mouseDelta = (Vector2)Input.mousePosition - _prevMousePos;
     _prevMousePos = Input.mousePosition;
 
-    if (GUIUtility.hotControl == 0) {
+    if (GUIUtility.hotControl == 0 && !Dev.hasMouseCursor) {
       if (Input.GetKey(MOVE_CODE) && !Input.GetKeyDown(MOVE_CODE)) {
         Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance));
         Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance));
@@ -110,11 +110,13 @@ public class CameraMouseController : MonoBehaviour {
       }
     }
 
+    if (!Dev.hasMouseCursor) {
+      _cameraDistance = Mathf.Clamp(_cameraDistance - Input.mouseScrollDelta.y * _zoomSpeed, _distanceRange.x, _distanceRange.y);
+    }
+
     _2dPercent = Mathf.MoveTowards(_2dPercent, _2dModeEnabled ? 1 : 0, Time.deltaTime / _2dTransitionTime);
     _texSim.restrictionPlane = _pivot.forward;
     _texSim.restrictionPlaneStrength = _2dStrengthCurve.Evaluate(_2dPercent);
-
-    _cameraDistance = Mathf.Clamp(_cameraDistance - Input.mouseScrollDelta.y * _zoomSpeed, _distanceRange.x, _distanceRange.y);
 
     _pivot.rotation = Quaternion.Slerp(transform.rotation, _pivotRotation, _rotationSmoothing);
     _focusPoint.localPosition = Vector3.Lerp(_focusPoint.localPosition, _focalPointPosition, _moveSmoothing);

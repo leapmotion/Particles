@@ -7,6 +7,8 @@ namespace Leap.Unity.DevGui {
   using Query;
 
   public class Dev : MonoBehaviour {
+    public static bool hasMouseCursor { get; private set; }
+
     private static bool _enabled = false;
     private static Vector2 _scroll;
 
@@ -181,6 +183,10 @@ namespace Leap.Unity.DevGui {
 
         GUILayout.EndVertical();
         GUILayout.EndScrollView();
+
+        if (Event.current.type == EventType.Repaint) {
+          hasMouseCursor = GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition);
+        }
       }
     }
   }

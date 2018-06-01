@@ -287,6 +287,18 @@ namespace Leap.Unity.Animation {
     }
 
     /// <summary>
+    /// Invokes all interpolators at the current progress level.  You can use this to ensure
+    /// that a tween starts in a state that is consistent with how it will behave once it
+    /// is started.
+    /// </summary>
+    public unsafe Tween Invoke() {
+      throwIfInvalid();
+
+      _instance.interpolatePercent();
+      return this;
+    }
+
+    /// <summary>
     /// Starts playing this Tween in a specific direction.  It will condition from the same
     /// position it left off on.  The direction will change even if the Tween is already playing.
     /// </summary>

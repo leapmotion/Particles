@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.SceneManagement;
 
 namespace Leap.Unity.Particles {
+  using Animation;
 
   public class SplashScreenDriver : MonoBehaviour {
 
@@ -19,81 +21,70 @@ namespace Leap.Unity.Particles {
     public float stayTime = 4f;
 
     [Header("Renderer Binding (drives material alpha channel)")]
-    public Renderer boundRenderer;
-    public string fadeColorProperty = "_Color";
-    public int _fadeColorPropId = -1;
+    public SpriteRenderer splashRenderer;
 
     [Header("(Optioanl) Vignette Fade Out Binding")]
     public PostProcessVolume postProcessVolume;
 
-    private enum FadeState { Hidden, FadingIn, Staying, FadingOut }
-    private FadeState _currState = FadeState.Hidden;
-
-    private float _currT = 0f;
-    private bool _doSceneLoad = false;
-    private bool _sceneLoadRequested = false;
-    private bool _animComplete = false;
-
     private void Start() {
-      _fadeColorPropId = Shader.PropertyToID(fadeColorProperty);
+      StartCoroutine(fadeCoroutine());
     }
 
     private void Update() {
-      updateTransitions();
-
       updateLerpFaceTarget();
-
-      updateVisuals();
-
-      _currT += Time.deltaTime;
-
-      if (_doSceneLoad) {
-        if (!_sceneLoadRequested) {
-          SceneManager.LoadSceneAsync(loadSceneWhenFinished, LoadSceneMode.Single);
-          _sceneLoadRequested = true;
-        }
-      }
-
-      if (_animComplete) {
-        _currT = 0f;
-      }
     }
 
-    private void updateTransitions() {
-      if (_currT > hiddenTime && _currState == FadeState.Hidden) {
-        _currState = FadeState.FadingIn;
-        _currT = 0f;
-      }
+    IEnumerator fadeCoroutine() {
+      Vignette vignette;
+      postProcessVolume.profile.TryGetSettings(out vignette);
 
-      if (_currT > fadeTime && _currState == FadeState.FadingIn) {
-        _currState = FadeState.Staying;
-        _currT = 0f;
-      }
+      //Start loading the next scene right away
+      //but don't let it activate
+      var sceneLoadAsync = SceneManager.LoadSceneAsync(loadSceneWhenFinished, LoadSceneMode.Single);
+      sceneLoadAsync.allowSceneActivation = false;
 
-      if (_currT > stayTime && _currState == FadeState.Staying) {
-        _currState = FadeState.FadingOut;
-        _currT = 0f;
-      }
+      //Construct a fade tween that allows us to fade the vignette and the 
+      //sprite at the same time
+      var fadeTween = Tween.Persistent().
+                            Value(0, 1, alpha => {
+                              splashRenderer.color = splashRenderer.color.WithAlpha(alpha);
+                              vignette.color.value = Color.Lerp(Color.black, Color.white, alpha);
+                            }).
+                            OverTime(fadeTime).
+                            Smooth(fadeCurve);
 
-      if (_currT > stayTime && _currState == FadeState.FadingOut) {
-        _currState = FadeState.Hidden;
-        _currT = 0f;
+      //Make sure everything starts faded out
+      fadeTween.Invoke();
 
-        _doSceneLoad = true;
-        _animComplete = true;
-      }
+      //Wait for the hidden time first
+      yield return new WaitForSeconds(hiddenTime);
+
+      //Once we are finished waiting, move this transform directly to the 
+      //target position so it doesn't start in the wrong location
+      transform.position = getTargetPosition();
+
+      //Then fade everything in
+      yield return fadeTween.Play(Direction.Forward).
+                             Yield();
+
+      //Wait for the stay time
+      yield return new WaitForSeconds(stayTime);
+
+      //then fade everything back out
+      yield return fadeTween.Play(Direction.Backward).
+                             Yield();
+
+      //Finally release the tween, and allow the scene to activate
+      //it should be loaded by now, and so should be an instant load
+      fadeTween.Release();
+      sceneLoadAsync.allowSceneActivation = true;
     }
 
     private void updateLerpFaceTarget() {
-      if (_currState == FadeState.Hidden) {
-        this.transform.position = getTargetPosition();
-      }
-      else {
-        var targetPosition = getTargetPosition();
+      var targetPosition = getTargetPosition();
 
-        this.transform.position = Vector3.Lerp(this.transform.position, targetPosition,
-          lerpSpeed * Time.deltaTime);
-      }
+      this.transform.position = Vector3.Lerp(this.transform.position, targetPosition,
+           lerpSpeed * Time.deltaTime);
 
       this.transform.rotation = Utils.FaceTargetWithoutTwist(this.transform.position,
         targetCamera.position, flip180: true);
@@ -114,46 +105,12 @@ namespace Leap.Unity.Particles {
 
         if (Vector3.Dot(camForward, Vector3.up) > 0f) { // Looking almost perfectly up.
           return -Vector3.ProjectOnPlane(camUp, Vector3.up).normalized;
-        }
-        else { // Looking almost perfectly down.
+        } else { // Looking almost perfectly down.
           return Vector3.ProjectOnPlane(camUp, Vector3.up).normalized;
         }
-      }
-      else {
+      } else {
         return camForwardXZ.normalized;
       }
     }
-
-    private void updateVisuals() {
-      var alpha = 0f;
-      switch (_currState) {
-        case FadeState.Hidden:
-          alpha = 0f;
-          break;
-        case FadeState.FadingIn:
-          alpha = Mathf.Lerp(0f, 1f, fadeCurve.Evaluate(_currT / fadeTime));
-          break;
-        case FadeState.Staying:
-          alpha = 1f;
-          break;
-        case FadeState.FadingOut:
-          alpha = Mathf.Lerp(1f, 0f, fadeCurve.Evaluate(_currT / fadeTime));
-          break;
-      }
-
-      if (postProcessVolume != null) {
-        if (_animComplete || _currState == FadeState.FadingOut) {
-          Vignette vignette;
-          if (postProcessVolume.profile.TryGetSettings(out vignette)) {
-            vignette.color.value = Color.Lerp(Color.black, Color.white, alpha);
-          }
-        }
-      }
-
-      boundRenderer.sharedMaterial.SetColor(_fadeColorPropId,
-        boundRenderer.sharedMaterial.GetColor(_fadeColorPropId).WithAlpha(alpha));
-    }
-
   }
-
 }

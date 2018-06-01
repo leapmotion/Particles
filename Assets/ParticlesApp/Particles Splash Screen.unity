@@ -1733,8 +1733,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 1326494276}
-  - component: {fileID: 1326494279}
-  - component: {fileID: 1326494278}
   - component: {fileID: 1326494277}
   m_Layer: 0
   m_Name: Splash Screen
@@ -1812,42 +1810,6 @@ MonoBehaviour:
   fadeColorProperty: _Color
   _fadeColorPropId: -1
   postProcessVolume: {fileID: 341079471}
---- !u!95 &1326494278
-Animator:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1326494275}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 1
-  m_LinearVelocityBlending: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorControllerStateOnDisable: 0
---- !u!320 &1326494279
-PlayableDirector:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1326494275}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_PlayableAsset: {fileID: 11400000, guid: 8c2ea9147521c024888426e1cd453cb3, type: 2}
-  m_InitialState: 1
-  m_WrapMode: 2
-  m_DirectorUpdateMode: 1
-  m_InitialTime: 0
-  m_SceneBindings:
-  - key: {fileID: 114898682796200330, guid: 8c2ea9147521c024888426e1cd453cb3, type: 2}
-    value: {fileID: 1326494275}
-  m_ExposedReferences:
-    m_References: []
 --- !u!1 &1439445241
 GameObject:
   m_ObjectHideFlags: 0

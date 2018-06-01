@@ -92,20 +92,22 @@ public class CameraMouseController : MonoBehaviour {
     Vector2 mouseDelta = (Vector2)Input.mousePosition - _prevMousePos;
     _prevMousePos = Input.mousePosition;
 
-    if (Input.GetKey(MOVE_CODE) && !Input.GetKeyDown(MOVE_CODE)) {
-      Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance));
-      Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance));
-      float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1);
+    if (GUIUtility.hotControl == 0) {
+      if (Input.GetKey(MOVE_CODE) && !Input.GetKeyDown(MOVE_CODE)) {
+        Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance));
+        Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance));
+        float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1);
 
-      _focalPointPosition -= (Vector3)mouseDelta * _moveFactor / pixelsToMeter;
-      if (_focalPointPosition.magnitude > _maxMoveDistance) {
-        _focalPointPosition = _focalPointPosition.normalized * _maxMoveDistance;
+        _focalPointPosition -= (Vector3)mouseDelta * _moveFactor / pixelsToMeter;
+        if (_focalPointPosition.magnitude > _maxMoveDistance) {
+          _focalPointPosition = _focalPointPosition.normalized * _maxMoveDistance;
+        }
       }
-    }
 
-    if (Input.GetKey(ROTATE_CODE) && !Input.GetKeyDown(ROTATE_CODE) && !_2dModeEnabled) {
-      _pivotRotation = _pivotRotation * Quaternion.AngleAxis(mouseDelta.x * _rotationSpeed, Vector3.up);
-      _pivotRotation = _pivotRotation * Quaternion.AngleAxis(-mouseDelta.y * _rotationSpeed, Vector3.right);
+      if (Input.GetKey(ROTATE_CODE) && !Input.GetKeyDown(ROTATE_CODE) && !_2dModeEnabled) {
+        _pivotRotation = _pivotRotation * Quaternion.AngleAxis(mouseDelta.x * _rotationSpeed, Vector3.up);
+        _pivotRotation = _pivotRotation * Quaternion.AngleAxis(-mouseDelta.y * _rotationSpeed, Vector3.right);
+      }
     }
 
     _2dPercent = Mathf.MoveTowards(_2dPercent, _2dModeEnabled ? 1 : 0, Time.deltaTime / _2dTransitionTime);

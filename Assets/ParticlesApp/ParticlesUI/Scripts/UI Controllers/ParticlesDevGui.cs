@@ -15,6 +15,7 @@ public class ParticlesDevGui : MonoBehaviour {
 
   [DevCategory("Basic Controls")]
   [DevValue]
+  [DevRange(1, 16)]
   private int numberOfSpecies {
     get {
       return genManager.speciesCount;
@@ -81,7 +82,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       genManager.maxSocialForce = value;
-      ensureReset();
+      simManager.RestartSimulation(ResetBehavior.None);
     }
   }
 
@@ -93,7 +94,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       genManager.maxSocialRange = value;
-      ensureReset();
+      simManager.RestartSimulation(ResetBehavior.None);
     }
   }
 
@@ -105,7 +106,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       genManager.maxForceSteps = value;
-      ensureReset();
+      simManager.RestartSimulation(ResetBehavior.None);
     }
   }
 
@@ -117,7 +118,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       genManager.dragCenter = value;
-      ensureReset();
+      simManager.RestartSimulation(ResetBehavior.None);
     }
   }
 
@@ -198,6 +199,13 @@ public class ParticlesDevGui : MonoBehaviour {
   }
 
   private void ensureReset() {
-    _timeToReset = 10;
+    _timeToReset = 25;
+  }
+
+  private void Update() {
+    _timeToReset--;
+    if (_timeToReset == 0) {
+      simManager.RestartSimulation(ResetBehavior.SmoothTransition);
+    }
   }
 }

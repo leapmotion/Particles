@@ -88,10 +88,14 @@ public class SimulationManager : MonoBehaviour {
   private Vector2 _headRadiusRange = new Vector2(0.15f, 0.15f);
   public float headRadius {
     get {
-      float ratio = _zoomController._targetZoomedInScale / _zoomController._targetZoomedOutScale;
-      float currZoomRatio = _displayAnchor.lossyScale.x / _zoomController._targetZoomedOutScale;
-      float percent = Mathf.InverseLerp(1, ratio, currZoomRatio);
-      return Mathf.Lerp(_headRadiusRange.x, _headRadiusRange.y, percent);
+      if (_zoomController == null) {
+        return 0;
+      } else {
+        float ratio = _zoomController._targetZoomedInScale / _zoomController._targetZoomedOutScale;
+        float currZoomRatio = _displayAnchor.lossyScale.x / _zoomController._targetZoomedOutScale;
+        float percent = Mathf.InverseLerp(1, ratio, currZoomRatio);
+        return Mathf.Lerp(_headRadiusRange.x, _headRadiusRange.y, percent);
+      }
     }
   }
 

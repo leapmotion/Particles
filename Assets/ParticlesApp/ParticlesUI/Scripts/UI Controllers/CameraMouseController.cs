@@ -111,7 +111,8 @@ public class CameraMouseController : MonoBehaviour {
     }
 
     if (!Dev.hasMouseCursor) {
-      _cameraDistance = Mathf.Clamp(_cameraDistance - Input.mouseScrollDelta.y * _zoomSpeed, _distanceRange.x, _distanceRange.y);
+      float deltaAmount = Mathf.Pow(1 + _zoomSpeed, -Input.mouseScrollDelta.y);
+      _cameraDistance = Mathf.Clamp(_cameraDistance * deltaAmount, _distanceRange.x, _distanceRange.y);
     }
 
     _2dPercent = Mathf.MoveTowards(_2dPercent, _2dModeEnabled ? 1 : 0, Time.deltaTime / _2dTransitionTime);

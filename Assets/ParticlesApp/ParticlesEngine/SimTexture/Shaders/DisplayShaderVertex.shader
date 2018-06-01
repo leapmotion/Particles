@@ -147,6 +147,10 @@
 
     return i.color *NdotL;
   }
+
+  fixed4 frag_back(v2f i) : SV_Target {
+    return i.color;
+  }
   ENDCG
 
   SubShader {
@@ -154,9 +158,20 @@
     LOD 200
     
     Pass {
+      Cull Back
+
       CGPROGRAM
       #pragma vertex vert
       #pragma fragment frag
+      ENDCG
+    }
+
+    Pass{
+      Cull Front
+
+      CGPROGRAM
+      #pragma vertex vert
+      #pragma fragment frag_back
       ENDCG
     }
   }

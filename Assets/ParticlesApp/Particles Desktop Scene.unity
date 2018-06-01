@@ -1808,8 +1808,8 @@ MonoBehaviour:
   _moveFactor: 1
   _moveSmoothing: 0.831
   _maxMoveDistance: 2
-  _zoomSpeed: 0.2
-  _zoomSmoothing: 0.37
+  _zoomSpeed: 0.18
+  _zoomSmoothing: 0.273
   _distance: 2.7
   _distanceRange: {x: 0.1, y: 5}
   _2dModeEnabled: 0

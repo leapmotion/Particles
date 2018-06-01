@@ -8,7 +8,7 @@ namespace Leap.Unity.Particles {
 
     [Header("Splash Screen")]
     public Transform targetCamera;
-    public string loadSceneWhenFinished;
+    public int loadSceneWhenFinished;
     public float maintainDistance = 3f;
     public float lerpSpeed = 3f;
 

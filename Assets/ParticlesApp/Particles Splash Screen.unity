@@ -1769,7 +1769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetCamera: {fileID: 979185102}
-  loadSceneWhenFinished: Particles Main Scene
+  loadSceneWhenFinished: 1
   maintainDistance: 4
   lerpSpeed: 1
   hiddenTime: 0.5

@@ -124,7 +124,7 @@ public class CameraMouseController : MonoBehaviour {
   private void OnPreRender() {
     Matrix4x4 perspectiveMat = Matrix4x4.Perspective(_camera.fieldOfView, _camera.aspect, _camera.nearClipPlane, _camera.farClipPlane);
 
-    float orthoHeight = _cameraDistance * Mathf.Tan(_camera.fieldOfView / 2.0f);
+    float orthoHeight = _cameraDistance * Mathf.Tan(Mathf.Deg2Rad * _camera.fieldOfView / 2.0f);
     float orthoWidth = _camera.aspect * orthoHeight;
     Matrix4x4 orthographicMat = Matrix4x4.Ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, 0, 1000);
 

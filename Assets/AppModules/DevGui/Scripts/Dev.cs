@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,13 +8,18 @@ namespace Leap.Unity.DevGui {
   public class Dev : MonoBehaviour {
     public static bool hasMouseCursor { get; private set; }
 
-    private static bool _enabled = false;
     private static Vector2 _scroll;
 
     private static Dictionary<object, List<DevElement>> _registered;
 
     private static HashSet<string> _expandedCategories;
     private static List<CategoryInfo> _categories;
+
+    [SerializeField]
+    private bool _showGui = false;
+
+    [SerializeField]
+    private string _windowName = "-- Leap Motion Dev Window --";
 
     private class CategoryInfo {
       public string name;
@@ -45,7 +49,6 @@ namespace Leap.Unity.DevGui {
         _devInstance = FindObjectOfType<Dev>();
         if (_devInstance == null) {
           _devInstance = new GameObject("__Dev").AddComponent<Dev>();
-          DontDestroyOnLoad(_devInstance.gameObject);
         }
       }
     }
@@ -101,10 +104,19 @@ namespace Leap.Unity.DevGui {
       _categories.Sort((a, b) => a.name.CompareTo(b.name));
     }
 
+    private void Start() {
+      if (_showGui) {
+        onOpenGui();
+      }
+
+      _devInstance = this;
+      DontDestroyOnLoad(gameObject);
+    }
+
     private void Update() {
       if (Input.GetKeyDown(KeyCode.F11)) {
-        _enabled = !_enabled;
-        if (_enabled) {
+        _showGui = !_showGui;
+        if (_showGui) {
           onOpenGui();
         }
       }
@@ -115,7 +127,7 @@ namespace Leap.Unity.DevGui {
         return;
       }
 
-      if (_enabled) {
+      if (_showGui) {
         GUIStyle boxStyle = new GUIStyle();
         boxStyle.normal.background = Resources.Load<Texture2D>("ImageBackground");
         boxStyle.border = new RectOffset(4, 4, 4, 4);
@@ -142,7 +154,7 @@ namespace Leap.Unity.DevGui {
 
         _scroll = GUILayout.BeginScrollView(_scroll, GUIStyle.none, GUIStyle.none);
         GUILayout.BeginVertical(boxStyle);
-        GUILayout.Label("-- Leap Motion Dev Window --");
+        GUILayout.Label(_windowName);
 
         for (int i = 0; i < _categories.Count; i++) {
           var category = _categories[i];

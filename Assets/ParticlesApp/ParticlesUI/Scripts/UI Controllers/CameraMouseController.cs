@@ -17,6 +17,11 @@ public class CameraMouseController : MonoBehaviour {
   [SerializeField]
   private TextureSimulator _texSim;
 
+  [DevCategory("Basic Controls")]
+  [DevValue]
+  [SerializeField]
+  private bool _followVRPlayer = true;
+
   [Header("Movement Settings")]
   [MinValue(0)]
   [SerializeField]
@@ -90,7 +95,9 @@ public class CameraMouseController : MonoBehaviour {
     _cameraDistance = -transform.localPosition.z;
   }
 
-  private void Update() {
+  private void LateUpdate() {
+    _camera.enabled = !_followVRPlayer;
+
     Vector2 mouseDelta = (Vector2)Input.mousePosition - _prevMousePos;
     _prevMousePos = Input.mousePosition;
 
@@ -133,7 +140,7 @@ public class CameraMouseController : MonoBehaviour {
   private void OnPreRender() {
     Matrix4x4 perspectiveMat = Matrix4x4.Perspective(_camera.fieldOfView, _camera.aspect, _camera.nearClipPlane, _camera.farClipPlane);
 
-    float orthoHeight = _cameraDistance * Mathf.Tan(Mathf.Deg2Rad * _camera.fieldOfView / 2.0f);
+    float orthoHeight = _cameraDistance * transform.lossyScale.x * Mathf.Tan(Mathf.Deg2Rad * _camera.fieldOfView / 2.0f);
     float orthoWidth = _camera.aspect * orthoHeight;
     Matrix4x4 orthographicMat = Matrix4x4.Ortho(-orthoWidth, orthoWidth, -orthoHeight, orthoHeight, 0, 1000);
 

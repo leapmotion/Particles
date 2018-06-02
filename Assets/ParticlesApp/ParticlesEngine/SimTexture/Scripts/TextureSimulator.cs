@@ -521,6 +521,9 @@ public class TextureSimulator : MonoBehaviour {
     get { return _particleMat; }
   }
 
+  [SerializeField]
+  private SingleLayer _displayLayer;
+
   //##################//
   ///      Debug      //
   //##################//
@@ -1893,7 +1896,7 @@ public class TextureSimulator : MonoBehaviour {
 
   private void displaySimulation() {
     foreach (var mesh in _displayMeshes) {
-      Graphics.DrawMesh(mesh, _manager.displayAnchor.localToWorldMatrix, _particleMat, 0, null, 0, _displayBlock);
+      Graphics.DrawMesh(mesh, _manager.displayAnchor.localToWorldMatrix, _particleMat, _displayLayer.layerIndex, null, 0, _displayBlock);
     }
   }
 

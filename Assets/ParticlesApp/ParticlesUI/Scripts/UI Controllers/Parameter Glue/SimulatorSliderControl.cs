@@ -22,7 +22,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
       onSlideEvent(slider.HorizontalSliderValue);
     }
   }
-  
+
   public enum SliderRefreshMode {
     EveryUpdate,
     OnEcosystemLoad
@@ -40,7 +40,7 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
 
   protected virtual void Awake() {
     simManager.OnEcosystemEndedTransition += onEcosystemEndedTransition;
-    
+
     slider.HorizontalSlideEvent += onSlideEvent;
     slider.OnUnpress += onUnpress;
     slider.OnContactEnd += onContactEnd;
@@ -98,6 +98,12 @@ public abstract class SimulatorSliderControl : SimulatorUIControl {
 
     if (textOutput != null) {
       textOutput.text = slider.HorizontalSliderValue.ToString(outputFormat);
+    }
+  }
+
+  public static void RefreshAllSliders() {
+    foreach (var slider in FindObjectsOfType<SimulatorSliderControl>()) {
+      slider.refreshSimValue();
     }
   }
 

@@ -10,6 +10,7 @@ public class ParticlesDevGui : MonoBehaviour {
   public SimulatorSetters setters;
   public SimulationManager simManager;
   public GeneratorManager genManager;
+  public ResetToDefaultsController resetController;
 
   private int _timeToReset = 0;
 
@@ -31,6 +32,7 @@ public class ParticlesDevGui : MonoBehaviour {
 
       genManager.speciesCount = value;
       ensureReset();
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -45,6 +47,7 @@ public class ParticlesDevGui : MonoBehaviour {
       } else {
         simManager.simulationTimescale = 1.0f;
       }
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -57,6 +60,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.particleRadius = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -68,6 +72,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.trailSize = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -78,6 +83,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.colorMode = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -91,6 +97,7 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       genManager.maxSocialForce = value;
       simManager.RestartSimulation(ResetBehavior.None);
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -103,6 +110,7 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       genManager.maxSocialRange = value;
       simManager.RestartSimulation(ResetBehavior.None);
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -115,6 +123,7 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       genManager.maxForceSteps = value;
       simManager.RestartSimulation(ResetBehavior.None);
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -127,6 +136,7 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       genManager.dragCenter = value;
       simManager.RestartSimulation(ResetBehavior.None);
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -139,6 +149,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.fieldForce = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -150,6 +161,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.fieldRadius = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -162,6 +174,7 @@ public class ParticlesDevGui : MonoBehaviour {
     set {
       genManager.particleCount = value;
       ensureReset();
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -173,6 +186,7 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.simulationTimescale = value;
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
@@ -184,24 +198,25 @@ public class ParticlesDevGui : MonoBehaviour {
     }
     set {
       simManager.RestartSimulation(value, ResetBehavior.ResetPositions);
+      SimulatorSliderControl.RefreshAllSliders();
     }
   }
 
   [DevCategory("Generation")]
   [DevButton("Reset To Defaults")]
   private void resetGenerationValues() {
-    //TODO
+    resetController.ResetToDefaults();
   }
 
   [DevButton("Randomize")]
   [DevCategory("Basic Controls")]
   private void randomizeEcosystem() {
-    simManager.RandomizeSimulation(ResetBehavior.SmoothTransition);
+    simManager.RandomizeSimulation(ResetBehavior.ResetPositions);
   }
 
   [DevButton("Reset")]
   private void resetEcosystem() {
-    simManager.RandomizeSimulation(ResetBehavior.SmoothTransition);
+    simManager.RestartSimulation(ResetBehavior.ResetPositions);
   }
 
   [DevButton("Randomize Colors")]
@@ -217,7 +232,7 @@ public class ParticlesDevGui : MonoBehaviour {
   private void Update() {
     _timeToReset--;
     if (_timeToReset == 0) {
-      simManager.RestartSimulation(ResetBehavior.SmoothTransition);
+      simManager.RestartSimulation(ResetBehavior.ResetPositions);
     }
   }
 }

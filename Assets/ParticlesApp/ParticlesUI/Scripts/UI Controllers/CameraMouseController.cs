@@ -101,11 +101,12 @@ public class CameraMouseController : MonoBehaviour {
     Vector2 mouseDelta = (Vector2)Input.mousePosition - _prevMousePos;
     _prevMousePos = Input.mousePosition;
 
-    Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, _cameraDistance + _speedFocusDistance));
-    Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, _cameraDistance + _speedFocusDistance));
-    float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1);
+    float cameraSamplePos = (_cameraDistance + _speedFocusDistance) * transform.lossyScale.x;
+    Vector3 p0 = _camera.ScreenToWorldPoint(new Vector3(0, 0, cameraSamplePos));
+    Vector3 p1 = _camera.ScreenToWorldPoint(new Vector3(_camera.pixelWidth, 0, cameraSamplePos));
+    float pixelsToMeter = _camera.pixelWidth / Vector3.Distance(p0, p1) * transform.lossyScale.x;
 
-    if (GUIUtility.hotControl == 0 && !Dev.hasMouseCursor) {
+    if (GUIUtility.hotControl == 0) {
       if (Input.GetKey(MOVE_CODE) && !Input.GetKeyDown(MOVE_CODE)) {
         _focalPointPosition -= (Vector3)mouseDelta * _moveFactor / pixelsToMeter;
       }

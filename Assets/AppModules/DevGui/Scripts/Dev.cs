@@ -105,6 +105,12 @@ namespace Leap.Unity.DevGui {
     }
 
     private void Start() {
+      foreach (var other in FindObjectsOfType<Dev>()) {
+        if (other != this) {
+          DestroyImmediate(other);
+        }
+      }
+
       if (_showGui) {
         onOpenGui();
       }

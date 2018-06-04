@@ -539,12 +539,14 @@ public class SimulationManager : MonoBehaviour {
   /// </summary>
   public bool LoadEcosystem(string filePath) {
     try {
-      var description
-        = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(filePath));
+      var description = JsonUtility.FromJson<EcosystemDescription>(File.ReadAllText(filePath));
       if (description.isMalformed) {
         return false;
       }
 
+      //Always treat descriptions loaded from file as a preset, whether or not
+      //they were originally derived from random settings.
+      description.isRandomDescription = false;
       RestartSimulation(description, ResetBehavior.ResetPositions);
 
       return true;

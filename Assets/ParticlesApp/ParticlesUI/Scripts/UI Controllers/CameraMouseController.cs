@@ -58,6 +58,11 @@ public class CameraMouseController : MonoBehaviour {
   [SerializeField]
   private float _zoomSmoothing;
 
+  [Range(-360, 360)]
+  [SerializeField]
+  [DevValue, DevCategory("Basic Controls")]
+  private float _autoOrbitSpeed = 0;
+
   [MinMax(0, 10)]
   [SerializeField]
   private Vector2 _distanceRange = new Vector2(0.1f, 5f);
@@ -115,6 +120,10 @@ public class CameraMouseController : MonoBehaviour {
         _pivotRotation = _pivotRotation * Quaternion.AngleAxis(mouseDelta.x * _rotationSpeed, Vector3.up);
         _pivotRotation = _pivotRotation * Quaternion.AngleAxis(-mouseDelta.y * _rotationSpeed, Vector3.right);
       }
+    }
+
+    if ((GUIUtility.hotControl != 0 || !Input.GetKey(ROTATE_CODE)) && !_2dModeEnabled) {
+      _pivotRotation = _pivotRotation * Quaternion.AngleAxis(_autoOrbitSpeed * Time.deltaTime, Vector3.up);
     }
 
     _focalPointPosition += (Input.GetAxis("Horizontal") * _keyboardMoveSpeed * Vector3.right +
